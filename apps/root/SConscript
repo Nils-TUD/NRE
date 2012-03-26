@@ -2,10 +2,14 @@
 
 Import('env')
 
-prog = env.Program('root', Glob('*.cc'))
-env.Depends(prog, env['SYSLIBPATH'] + '/crt0.o')
-env.Depends(prog, env['SYSLIBPATH'] + '/crt1.o')
-env.Depends(prog, env['SYSLIBPATH'] + '/crtn.o')
+env['LINKFLAGS'] += ' -Wl,-T,apps/root/linker.ld'
+prog = env.Program('root', Glob('*.cc'), LIBS = 'supc++', LIBPATH = [env['LIBPATH'], env['SYSLIBPATH']])
+env.Depends(prog, env['SYSGCCLIBPATH'] + '/crt0.o')
+env.Depends(prog, env['SYSGCCLIBPATH'] + '/crt1.o')
+env.Depends(prog, env['SYSGCCLIBPATH'] + '/crtn.o')
 env.Depends(prog, env['LIBPATH'] + '/libstdc++.a')
+env.Depends(prog, env['LIBPATH'] + '/libc.a')
 env.Depends(prog, env['LIBPATH'] + '/libm.a')
+env.Depends(prog, env['LIBPATH'] + '/libg.a')
 
+env.Install(env['BINARYDIR'], prog)

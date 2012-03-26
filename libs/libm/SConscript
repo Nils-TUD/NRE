@@ -2,6 +2,5 @@
 
 Import('env')
 
-lib = env.StaticLibrary('libm', Glob('*.cc'))
+lib = env.StaticLibrary('libm', Glob('*.c'))
 env.Install(env['LIBPATH'], lib)
-

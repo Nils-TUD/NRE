@@ -2,5 +2,5 @@
 
 Import('env')
 
-lib = env.StaticLibrary('libstdc++', Glob('*.cc'))
+lib = env.StaticLibrary('libg', Glob('*.c'))
 env.Install(env['LIBPATH'], lib)
