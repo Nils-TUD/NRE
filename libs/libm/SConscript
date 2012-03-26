@@ -1,0 +1,7 @@
+# -*- Mode: Python -*-
+
+Import('env')
+
+lib = env.StaticLibrary('libm', Glob('*.cc'))
+env.Install(env['LIBPATH'], lib)
+

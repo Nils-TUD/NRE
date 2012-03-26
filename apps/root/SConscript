@@ -1,0 +1,11 @@
+# -*- Mode: Python -*-
+
+Import('env')
+
+prog = env.Program('root', Glob('*.cc'))
+env.Depends(prog, env['SYSLIBPATH'] + '/crt0.o')
+env.Depends(prog, env['SYSLIBPATH'] + '/crt1.o')
+env.Depends(prog, env['SYSLIBPATH'] + '/crtn.o')
+env.Depends(prog, env['LIBPATH'] + '/libstdc++.a')
+env.Depends(prog, env['LIBPATH'] + '/libm.a')
+
