@@ -8,54 +8,70 @@
  */
 
 typedef unsigned long size_t;
+typedef unsigned char uchar;
+typedef unsigned int uint;
 
-void* memcpy(void *dst,const void *src,size_t count) {
-	void *ret = dst;
-	asm volatile ("rep movsb" : "+D"(dst), "+S"(src), "+c" (count) : : "memory");
-	return ret;
-}
-
-void* memmove(void *dst,const void *src,size_t count) {
-	char *d = (char*)dst;
-	const char *s = (const char*)src;
-	if(d > s) {
-		d += count - 1;
-		s += count - 1;
-		asm volatile ("std; rep movsb; cld;" : "+D"(d), "+S"(s), "+c"(count) : : "memory");
+void* memcpy(void *dest,const void *src,size_t len) {
+	uchar *bdest,*bsrc;
+	/* copy dwords first with loop-unrolling */
+	uint *ddest = (uint*)dest;
+	uint *dsrc = (uint*)src;
+	while(len >= sizeof(uint) * 8) {
+		*ddest = *dsrc;
+		*(ddest + 1) = *(dsrc + 1);
+		*(ddest + 2) = *(dsrc + 2);
+		*(ddest + 3) = *(dsrc + 3);
+		*(ddest + 4) = *(dsrc + 4);
+		*(ddest + 5) = *(dsrc + 5);
+		*(ddest + 6) = *(dsrc + 6);
+		*(ddest + 7) = *(dsrc + 7);
+		ddest += 8;
+		dsrc += 8;
+		len -= sizeof(uint) * 8;
 	}
-	else
-		asm volatile ("rep movsb" : "+D"(d), "+S"(s), "+c"(count) : : "memory");
-	return dst;
+	/* copy remaining dwords */
+	while(len >= sizeof(uint)) {
+		*ddest++ = *dsrc++;
+		len -= sizeof(uint);
+	}
+
+	/* copy remaining bytes */
+	bdest = (uchar*)ddest;
+	bsrc = (uchar*)dsrc;
+	while(len-- > 0)
+		*bdest++ = *bsrc++;
+	return dest;
 }
 
-void* memset(void *dst,int n,size_t count) {
-	void *res = dst;
-	asm volatile ("rep stosb" : "+D"(dst), "+a"(n), "+c"(count) : : "memory");
-	return res;
-}
+void *memset(void *addr,int value,size_t count) {
+	uchar *baddr;
+	uint dwval = (value << 24) | (value << 16) | (value << 8) | value;
+	uint *dwaddr = (uint*)addr;
+	while(count >= sizeof(uint)) {
+		*dwaddr++ = dwval;
+		count -= sizeof(uint);
+	}
 
-size_t strnlen(const char *src,size_t maxlen) {
-	unsigned long count = maxlen;
-	unsigned char ch = 0;
-	asm volatile ("repne scasb; setz %0;" : "+a"(ch), "+D"(src), "+c"(count));
-	if(ch)
-		count--;
-	return maxlen - count;
+	baddr = (uchar*)dwaddr;
+	while(count-- > 0)
+		*baddr++ = value;
+	return addr;
 }
 
 size_t strlen(const char *src) {
-	return strnlen(src,~0ul);
+	size_t len = 0;
+	while(*src++)
+		len++;
+	return len;
 }
 
-int memcmp(const void *dst,const void *src,size_t count) {
-	const char *d = (const char*)dst;
-	const char *s = (const char*)src;
-	unsigned i;
-	for(i = 0; i < count; i++)
-		if(s[i] > d[i])
-			return 1;
-		else if(s[i] < d[i])
-			return -1;
+int memcmp(const void *str1,const void *str2,size_t count) {
+	const uchar *s1 = (const uchar*)str1;
+	const uchar *s2 = (const uchar*)str2;
+	while(count-- > 0) {
+		if(*s1++ != *s2++)
+			return s1[-1] < s2[-1] ? -1 : 1;
+	}
 	return 0;
 }
 

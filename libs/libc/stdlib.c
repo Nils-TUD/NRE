@@ -8,11 +8,9 @@
  */
 
 void abort() {
-	while(1)
-		;
+	*(char*)0 = 4;
 }
 
 void exit(int x) {
 	abort();
 }
-

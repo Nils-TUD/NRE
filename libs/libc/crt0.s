@@ -7,7 +7,7 @@
 
 _start:
 	# mark the beginning of the call-trace
-	mov	$0,%ebp
+	mov		$0,%ebp
 
 	# call function in .init-section
 	call	_init
@@ -17,5 +17,4 @@ _start:
 	push	%eax
 	call	exit
 	# just to be sure
-	1: jmp	1b
-
+	1:		jmp	1b
