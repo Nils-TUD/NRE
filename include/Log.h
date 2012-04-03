@@ -7,21 +7,27 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <Types.h>
+#pragma once
 
-static char buffer[4096];
-static size_t pos = 0;
+#include <Format.h>
 
-void* malloc(size_t size) {
-	void* res;
-	if(pos + size >= sizeof(buffer))
-		return 0;
-	
-	res = buffer + pos;
-	pos += size;
-	return res;
-}
+class Log : public Format {
+private:
+	enum {
+		COM1	= 0x3F8,
+		COM2	= 0x2E8,
+		COM3	= 0x2F8,
+		COM4	= 0x3E8
+	};
+	enum {
+		port = COM1
+	};
 
-void free(void* p) {
-	// do nothing for now
-}
+public:
+	Log();
+	virtual ~Log() {
+	}
+
+protected:
+	virtual void printc(char c);
+};

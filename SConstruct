@@ -30,12 +30,15 @@ if int(verbose) == 0:
 
 builddir = 'build'
 debug = ARGUMENTS.get('debug', 0)
-if int(debug):
+env.Append(CXXFLAGS = ' -O0')
+env.Append(CFLAGS = ' -O0')
+
+#if int(debug):
 	#builddir = 'build/debug'
-	env.Append(CXXFLAGS = ' -O0')
-else:
+	#env.Append(CXXFLAGS = ' -O0')
+#else:
 	#builddir = 'build/release'
-	env.Append(CXXFLAGS = ' -O2')
+	#env.Append(CXXFLAGS = ' -O2')
 
 env.Append(
 	BUILDDIR = '#' + builddir,

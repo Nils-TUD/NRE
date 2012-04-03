@@ -7,21 +7,12 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <Types.h>
+#pragma once
 
-static char buffer[4096];
-static size_t pos = 0;
-
-void* malloc(size_t size) {
-	void* res;
-	if(pos + size >= sizeof(buffer))
-		return 0;
-	
-	res = buffer + pos;
-	pos += size;
-	return res;
-}
-
-void free(void* p) {
-	// do nothing for now
-}
+class Exception {
+public:
+	Exception() throw() {
+	}
+	virtual ~Exception() throw() {
+	}
+};

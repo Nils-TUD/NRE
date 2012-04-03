@@ -7,9 +7,7 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-typedef unsigned long size_t;
-typedef unsigned char uchar;
-typedef unsigned int uint;
+#include <String.h>
 
 void* memcpy(void *dest,const void *src,size_t len) {
 	uchar *bdest,*bsrc;
@@ -40,6 +38,32 @@ void* memcpy(void *dest,const void *src,size_t len) {
 	bsrc = (uchar*)dsrc;
 	while(len-- > 0)
 		*bdest++ = *bsrc++;
+	return dest;
+}
+
+void *memmove(void *dest,const void *src,size_t count) {
+	uchar *s,*d;
+	/* nothing to do? */
+	if((uchar*)dest == (uchar*)src || count == 0)
+		return dest;
+
+	/* moving forward */
+	if((uintptr_t)dest > (uintptr_t)src) {
+		uint *dsrc = (uint*)((uintptr_t)src + count - sizeof(uint));
+		uint *ddest = (uint*)((uintptr_t)dest + count - sizeof(uint));
+		while(count >= sizeof(uint)) {
+			*ddest-- = *dsrc--;
+			count -= sizeof(uint);
+		}
+		s = (uchar*)dsrc + (sizeof(uint) - 1);
+		d = (uchar*)ddest + (sizeof(uint) - 1);
+		while(count-- > 0)
+			*d-- = *s--;
+	}
+	/* moving backwards */
+	else
+		memcpy(dest,src,count);
+
 	return dest;
 }
 
