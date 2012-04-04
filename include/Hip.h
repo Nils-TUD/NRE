@@ -45,6 +45,7 @@ public:
 	typedef const Hip_mem* mem_const_iterator;
 	typedef const Hip_cpu* cpu_const_iterator;
 
+private:
 	uint32_t signature;
 	uint16_t checksum;		// HIP checksum
 	uint16_t length;		// HIP length
@@ -53,6 +54,7 @@ public:
 	uint16_t mem_offs;		// Offset of first MEM descriptor
 	uint16_t mem_size;
 	uint32_t api_flg;		// API feature flags
+public:
 	uint32_t api_ver;		// API version
 	uint32_t cfg_cap;		// Number of CAPs (SEL)
 	uint32_t cfg_exc;		// Number of Exception portals (EXC)

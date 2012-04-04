@@ -22,7 +22,14 @@ public:
 	ErrorCode error_code() const throw() {
 		return _code;
 	}
+	const char *error_msg() const throw();
+
+	virtual void print(Format& fmt) const {
+		fmt.print("Systemcall failed: %s (%d)\n",error_msg(),error_code());
+		print_backtrace(fmt);
+	}
 
 private:
 	ErrorCode _code;
+	static const char *_msgs[];
 };

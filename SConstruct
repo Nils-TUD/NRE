@@ -12,6 +12,7 @@ env = Environment(
 	CXXFLAGS = '-Wall -Weffc++ -Wextra -ansi -g',
 	LINKFLAGS = '-static -Wl,-static -static-libgcc -g',
 	ENV = {'PATH' : crossdir + "/bin:" + os.environ['PATH']},
+	CPPPATH = '#include',
 	CXX = cross + '-g++',
 	LD = cross + '-ld',
 	AS = cross + '-as',

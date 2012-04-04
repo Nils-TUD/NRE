@@ -62,13 +62,13 @@ enum {
 };
 
 class Desc {
-protected:
+private:
 	unsigned _value;
-	Desc(unsigned v) :
-			_value(v) {
+protected:
+	Desc(unsigned v) : _value(v) {
 	}
 public:
-	unsigned value() {
+	unsigned value() const {
 		return _value;
 	}
 };
@@ -78,20 +78,20 @@ public:
  */
 class Crd: public Desc {
 public:
-	unsigned order() {
-		return ((_value >> 7) & 0x1f);
+	unsigned order() const {
+		return ((value() >> 7) & 0x1f);
 	}
-	unsigned size() {
+	unsigned size() const {
 		return 1 << (order() + 12);
 	}
-	unsigned base() {
-		return _value & ~0xfff;
+	unsigned base() const {
+		return value() & ~0xfff;
 	}
-	unsigned attr() {
-		return _value & 0x1f;
+	unsigned attr() const {
+		return value() & 0x1f;
 	}
-	unsigned cap() {
-		return _value >> 12;
+	unsigned cap() const {
+		return value() >> 12;
 	}
 	explicit Crd(unsigned offset,unsigned order,unsigned attr) :
 			Desc((offset << 12) | (order << 7) | attr) {
@@ -115,8 +115,8 @@ public:
 class Syscalls {
 public:
 	enum ECType {
-		EC_GLOBAL,
-		EC_LOCAL
+		EC_GENERAL,
+		EC_WORKER
 	};
 
 private:
@@ -150,7 +150,7 @@ public:
 
 	static inline void create_ec(cap_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
 			ECType type,cap_t dstpd) {
-		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_ECCLIENT),dstpd,
+		SyscallABI::syscall(ec << 8 | (type == EC_WORKER ? CREATE_EC : CREATE_ECCLIENT),dstpd,
 		        reinterpret_cast<SyscallABI::arg_t>(utcb) | cpunr,
 		        reinterpret_cast<SyscallABI::arg_t>(esp),
 		        excpt_base);
