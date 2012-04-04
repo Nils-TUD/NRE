@@ -1,6 +1,6 @@
 #!/usr/bin/env novaboot
 # -*-sh-*-
-QEMU_FLAGS=-cpu phenom -m 256 
+QEMU_FLAGS=-cpu phenom -m 256 -smp 2
 HYPERVISOR_PARAMS=spinner
 bin/apps/root
 
