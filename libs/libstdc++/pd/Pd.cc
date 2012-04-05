@@ -7,10 +7,9 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#pragma once
+#include <pd/Pd.h>
+#include <ec/Ec.h>
 
-class PageAllocator {
-public:
-	uintptr_t allocate(size_t count);
-};
-
+Pd *Pd::current() {
+	return Ec::current()->pd();
+}

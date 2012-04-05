@@ -7,10 +7,8 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#pragma once
+#include <ec/Ec.h>
 
-class PageAllocator {
-public:
-	uintptr_t allocate(size_t count);
-};
-
+void *Ec::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)];
+size_t Ec::_stack = 0;
+uintptr_t Ec::_utcb_addr = 0x1000000;

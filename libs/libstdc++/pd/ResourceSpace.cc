@@ -7,10 +7,10 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <pd/CapSpace.h>
+#include <pd/ResourceSpace.h>
 #include <Syscalls.h>
 
-void CapSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target) {
+void ResourceSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target) {
 	/*Utcb *utcb = Ec::current()->utcb();
 	unsigned *item = utcb->msg;
 	item[1] = target << 12 | MAP_HBIT;

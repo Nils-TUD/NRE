@@ -9,6 +9,7 @@ _start:
 	mov		%esp, %ecx				# esp = HIP
 	lea		-0x1000(%esp), %edx		# UTCB is below HIP
 	mov		$stack, %esp			# switch to our stack
+	sub		$4,%esp					# leave space for Ec
 	push	%ecx					# push HIP
 	push	%edx					# push UTCB
 	push	%eax					# push cpu number

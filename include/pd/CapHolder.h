@@ -10,31 +10,31 @@
 #pragma once
 
 #include <pd/CapSpace.h>
-#include <pd/ResourceSpace.h>
 
-class Pd {
+class CapHolder {
 public:
-	static Pd *current();
-
-	Pd(cap_t cap) : _io(0,0), _mem(0,0), _obj(), _cap(cap) {
+	CapHolder(CapSpace& space)
+		: _space(space), _owned(true) {
+		_cap = _space.allocate();
 	}
-
-	cap_t cap() const {
+	~CapHolder() {
+		if(_owned)
+			_space.free(_cap);
+	}
+	cap_t get() const {
 		return _cap;
 	}
-	ResourceSpace &io() {
-		return _io;
-	}
-	ResourceSpace &mem() {
-		return _mem;
-	}
-	CapSpace &obj() {
-		return _obj;
+	cap_t release() {
+		_owned = false;
+		return _cap;
 	}
 
 private:
-	ResourceSpace _io;
-	ResourceSpace _mem;
-	CapSpace _obj;
+	CapHolder(const CapHolder&);
+	CapHolder& operator=(const CapHolder&);
+
+private:
+	CapSpace &_space;
 	cap_t _cap;
+	bool _owned;
 };

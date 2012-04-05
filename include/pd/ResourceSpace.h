@@ -11,21 +11,19 @@
 
 #include <Types.h>
 
-class CapSpace {
+class ResourceSpace {
 public:
-	CapSpace(cap_t off = 0) : _off(off) {
-	}
-	cap_t allocate(unsigned count = 1) {
-		return _off++;
-	}
-	void free(cap_t cap,unsigned count = 1) {
-		// ignore
+	explicit ResourceSpace(cap_t portal,unsigned type)
+		: _pt(portal), _type(type) {
 	}
 
-private:
-	CapSpace(const CapSpace&);
-	CapSpace& operator=(const CapSpace&);
+	void allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target = 0);
 
 private:
-	cap_t _off;
+	ResourceSpace(const ResourceSpace&);
+	ResourceSpace& operator=(const ResourceSpace&);
+
+private:
+	cap_t _pt;
+	unsigned _type;
 };
