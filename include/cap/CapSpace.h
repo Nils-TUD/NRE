@@ -9,20 +9,23 @@
 
 #pragma once
 
-class Pt {
+#include <Types.h>
+
+class CapSpace {
 public:
-	typedef unsigned pid_t;
-
-public:
-	Pt();
-	virtual ~Pt();
-
-private:
-	virtual void call(pid_t pid) = 0;
-
-	static void start(pid_t pid,void *thiz,Utcb *utcb) {
-		static_cast<Pt*>(thiz)->call(pid);
+	explicit CapSpace(cap_t off = 0) : _off(off) {
+	}
+	cap_t allocate(unsigned = 1) {
+		return _off++;
+	}
+	void free(cap_t,unsigned = 1) {
+		// TODO implement me
 	}
 
 private:
+	CapSpace(const CapSpace&);
+	CapSpace& operator=(const CapSpace&);
+
+private:
+	cap_t _off;
 };

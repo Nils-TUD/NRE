@@ -7,7 +7,7 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <pd/ResourceSpace.h>
+#include <cap/ResourceSpace.h>
 #include <Syscalls.h>
 
 void ResourceSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target) {

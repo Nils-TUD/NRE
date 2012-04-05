@@ -67,6 +67,8 @@ private:
 protected:
 	Desc(unsigned v) : _value(v) {
 	}
+	virtual ~Desc() {
+	}
 public:
 	unsigned value() const {
 		return _value;
@@ -163,4 +165,10 @@ public:
 	static inline void create_pt(cap_t pt,cap_t ec,uintptr_t eip,unsigned mtd,cap_t dstpd) {
 		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd,eip);
 	}
+
+private:
+	Syscalls();
+	~Syscalls();
+	Syscalls(const Syscalls&);
+	Syscalls& operator=(const Syscalls&);
 };

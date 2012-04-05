@@ -14,7 +14,7 @@
 
 class SyscallException : public Exception {
 public:
-	SyscallException(ErrorCode code) throw() : Exception(), _code(code) {
+	explicit SyscallException(ErrorCode code) throw() : Exception(), _code(code) {
 	}
 	virtual ~SyscallException() throw() {
 	}

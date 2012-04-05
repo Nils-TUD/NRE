@@ -9,19 +9,28 @@
 
 #pragma once
 
-#include <pd/CapSpace.h>
-#include <pd/ResourceSpace.h>
+#include <kobj/KObject.h>
+#include <cap/CapSpace.h>
+#include <cap/ResourceSpace.h>
 
-class Pd {
+class Utcb;
+class Hip;
+
+extern "C" int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+
+class Pd : public KObject {
+	friend int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+
 public:
 	static Pd *current();
 
-	Pd(cap_t cap) : _io(0,0), _mem(0,0), _obj(), _cap(cap) {
+private:
+	explicit Pd(cap_t cap,bool) : KObject(this,cap), _io(0,0), _mem(0,0), _obj() {
+	}
+public:
+	explicit Pd(cap_t cap) : KObject(current(),cap), _io(0,0), _mem(0,0), _obj() {
 	}
 
-	cap_t cap() const {
-		return _cap;
-	}
 	ResourceSpace &io() {
 		return _io;
 	}
@@ -33,8 +42,11 @@ public:
 	}
 
 private:
+	Pd(const Pd&);
+	Pd& operator=(const Pd&);
+
+private:
 	ResourceSpace _io;
 	ResourceSpace _mem;
 	CapSpace _obj;
-	cap_t _cap;
 };

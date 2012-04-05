@@ -22,7 +22,7 @@ public:
 	typedef const uintptr_t *backtrace_iterator;
 
 public:
-	Exception() throw();
+	explicit Exception() throw();
 	virtual ~Exception() throw() {
 	}
 

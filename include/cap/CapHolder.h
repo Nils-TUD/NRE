@@ -9,13 +9,12 @@
 
 #pragma once
 
-#include <pd/CapSpace.h>
+#include <cap/CapSpace.h>
 
 class CapHolder {
 public:
-	CapHolder(CapSpace& space)
-		: _space(space), _owned(true) {
-		_cap = _space.allocate();
+	explicit CapHolder(CapSpace& space)
+		: _space(space), _cap(_space.allocate()), _owned(true) {
 	}
 	~CapHolder() {
 		if(_owned)

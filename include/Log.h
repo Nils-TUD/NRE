@@ -24,7 +24,7 @@ private:
 	};
 
 public:
-	Log();
+	explicit Log();
 	virtual ~Log() {
 	}
 

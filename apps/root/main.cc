@@ -1,5 +1,6 @@
-#include <ec/GlobalEc.h>
-#include <ec/LocalEc.h>
+#include <kobj/GlobalEc.h>
+#include <kobj/LocalEc.h>
+#include <kobj/Sc.h>
 #include <Syscalls.h>
 #include <String.h>
 #include <Utcb.h>
@@ -12,28 +13,12 @@
 
 typedef void (*thread_func)();
 
-enum {
-	PD_ROOT	= 32,
-	MIN_SHIFT = 12,
-	MAX_STACKS = 4
-};
-
 extern "C" void abort();
-extern "C" void idc_reply_and_wait_fast(void*);
 extern "C" int start(cpu_t cpu,Utcb *utcb,Hip *hip);
-static cap_t create_ec(void (*func)(void*),cpu_t cpunr,Syscalls::ECType type,unsigned exbase);
 static void portal_startup(unsigned pid) __attribute__((regparm(1)));
 static void portal_map(unsigned pid) __attribute__((regparm(1)));
 static void mythread();
 
-//static Log log;
-
-static void *stacks[MAX_STACKS][PAGE_SIZE / sizeof(void*)] __attribute__((aligned(PAGE_SIZE)));
-static size_t stack = 0;
-
-static uintptr_t utcb_addr = 0x1000000;
-static cap_t cur_cap = 3;
-static cap_t map_pt;
 static Log *log;
 
 void verbose_terminate() {
@@ -50,14 +35,10 @@ void verbose_terminate() {
 }
 
 int start(cpu_t cpu,Utcb *utcb,Hip *hip) {
-	GlobalEc::set_current(new GlobalEc(utcb,hip->cfg_exc + 1,cpu,new Pd(hip->cfg_exc + 0)));
+	GlobalEc::set_current(new GlobalEc(utcb,hip->cfg_exc + 1,cpu,new Pd(hip->cfg_exc + 0,true)));
 
 	LocalEc *echo = new LocalEc(cpu);
-	map_pt = echo->create_portal(portal_map,0);
-
-	//cap_t echo_ec0 = create_ec(idc_reply_and_wait_fast,0,Syscalls::EC_WORKER,0x20);
-	//map_pt = cur_cap++;
-	//Syscalls::create_pt(map_pt,echo_ec0,reinterpret_cast<uintptr_t>(portal_map),0,PD_ROOT);
+	cap_t map_pt = echo->create_portal(portal_map,0);
 
 	//Pd::current()->io().delegate(Pd::current(),0x3F8,5);
 	//Pd::current()->mem().delegate(Pd::current(),0x100,16);
@@ -101,15 +82,9 @@ int start(cpu_t cpu,Utcb *utcb,Hip *hip) {
 	try {
 		LocalEc *echo1 = new LocalEc(1);
 		echo1->create_portal_for(0x1E,portal_startup,MTD_RSP);
-		//cap_t echo_ec1 = create_ec(idc_reply_and_wait_fast,1,Syscalls::EC_WORKER,0);
-		//Syscalls::create_pt(0x1E,echo_ec1,reinterpret_cast<uintptr_t>(portal_startup),MTD_RSP,PD_ROOT);
 
 		GlobalEc *ec = new GlobalEc(mythread,1);
-		Syscalls::create_sc(Pd::current()->obj().allocate(),ec->cap(),Qpd(),1,PD_ROOT);
-
-		//cap_t ec = create_ec(mythread,1,Syscalls::EC_GENERAL,0);
-		//Syscalls::create_sc(cur_cap++,ec,Qpd(),1,PD_ROOT);
-		//Syscalls::create_sc(cur_cap++,ec,Qpd(),1,PD_ROOT);
+		new Sc(ec,Qpd());
 	}
 	catch(const SyscallException& e) {
 		e.print(*log);
@@ -118,22 +93,6 @@ int start(cpu_t cpu,Utcb *utcb,Hip *hip) {
 	while(1)
 		;
 	return 0;
-}
-
-static cap_t create_ec(thread_func func,cpu_t cpunr,Syscalls::ECType type,unsigned exbase) {
-	Utcb *utcb = reinterpret_cast<Utcb*>(utcb_addr);
-	cap_t cap = cur_cap;
-	unsigned stack_top = sizeof(stacks[stack]) / sizeof(void*);
-	stacks[stack][--stack_top] = utcb; // push UTCB -- needed for myutcb()
-	stacks[stack][--stack_top] = reinterpret_cast<void*>(0xDEAD);
-	stacks[stack][--stack_top] = utcb; // push UTCB -- as function parameter
-	stacks[stack][--stack_top] = 0; // tls
-	stacks[stack][--stack_top] = reinterpret_cast<void*>(func);
-	Syscalls::create_ec(cap,utcb,stacks[stack] + stack_top,cpunr,exbase,type,PD_ROOT);
-	cur_cap++;
-	stack++;
-	utcb_addr -= PAGE_SIZE;
-	return cap;
 }
 
 static void portal_startup(unsigned pid) {

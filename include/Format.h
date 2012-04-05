@@ -28,7 +28,7 @@ private:
 	};
 
 public:
-	Format() {
+	explicit Format() {
 	}
 	virtual ~Format() {
 	}

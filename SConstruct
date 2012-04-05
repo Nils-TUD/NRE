@@ -24,6 +24,7 @@ env = Environment(
 verbose = ARGUMENTS.get('VERBOSE',0);
 if int(verbose) == 0:
 	env['ASCOMSTR'] = "AS $TARGET"
+	env['CCCOMSTR'] = "CC $TARGET"
 	env['CXXCOMSTR'] = "CXX $TARGET"
 	env['LINKCOMSTR'] = "LD $TARGET"
 	env['ARCOMSTR'] = "AR $TARGET"

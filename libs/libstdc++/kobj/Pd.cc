@@ -7,8 +7,8 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <pd/Pd.h>
-#include <ec/Ec.h>
+#include <kobj/Pd.h>
+#include <kobj/Ec.h>
 
 Pd *Pd::current() {
 	return Ec::current()->pd();

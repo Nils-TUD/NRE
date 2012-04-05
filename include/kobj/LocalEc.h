@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include <ec/Ec.h>
+#include <kobj/Ec.h>
 
 class LocalEc : public Ec {
 public:
 	typedef void (*portal_func)(unsigned) __attribute__((regparm(1)));
 
-	LocalEc(cpu_t cpu,cap_t event_base = 0) : Ec(cpu,Pd::current(),event_base) {
+	explicit LocalEc(cpu_t cpu,cap_t event_base = 0) : Ec(cpu,Pd::current(),event_base) {
 		create(Syscalls::EC_WORKER,create_stack());
 	}
 	virtual ~LocalEc() {

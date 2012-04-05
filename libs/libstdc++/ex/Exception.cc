@@ -8,7 +8,7 @@
  */
 
 #include <ex/Exception.h>
-#include <ec/Ec.h>
+#include <kobj/Ec.h>
 
 // the x86-call instruction is 5 bytes long
 #define CALL_INSTR_SIZE		5
