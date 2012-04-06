@@ -4,9 +4,7 @@ import sys, os
 
 cross = 'i686-pc-nulnova'
 crossver = '4.6.1'
-#crossver = '4.4.3'
 crossdir = os.path.abspath('../cross/dist')
-#crossdir = os.path.abspath('../cross4.4.3/dist')
 
 env = Environment(
 	CXXFLAGS = '-Wall -Weffc++ -Wextra -ansi',
