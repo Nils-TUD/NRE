@@ -31,7 +31,7 @@ public:
 	typedef const uintptr_t *backtrace_iterator;
 
 public:
-	explicit Exception() throw();
+	explicit Exception(const char *msg = 0) throw();
 	virtual ~Exception() throw() {
 	}
 
@@ -42,16 +42,21 @@ public:
 		return _backtrace + _count;
 	}
 
-	virtual void print(Format& fmt) const = 0;
+	virtual void print(Format& fmt) const {
+		if(_msg)
+			fmt.print(_msg);
+		print_backtrace(fmt);
+	}
 
 protected:
 	void print_backtrace(Format& fmt) const {
 		fmt.print("Backtrace:\n");
-		for(Exception::backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
+		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
 			fmt.print("\t%p\n",*it);
 	}
 
 private:
+	const char *_msg;
 	uintptr_t _backtrace[MAX_TRACE_DEPTH];
 	size_t _count;
 };

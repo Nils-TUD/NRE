@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <Types.h>
+
 class Util {
 public:
 	template<typename T>
@@ -28,5 +30,11 @@ public:
 	template<typename T>
 	static inline T max(T a,T b) {
 		return a < b ? b : a;
+	}
+
+	static uint64_t tsc() {
+		uint32_t u,l;
+		asm volatile("rdtsc" : "=a"(l), "=d"(u));
+		return (uint64_t)u << 32 | l;
 	}
 };

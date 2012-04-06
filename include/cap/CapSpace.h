@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <ex/Exception.h>
 #include <Types.h>
 #include <Hip.h>
 
@@ -25,8 +26,12 @@ class CapSpace {
 public:
 	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _off(off) {
 	}
-	cap_t allocate(unsigned = 1) {
-		return _off++;
+	cap_t allocate(unsigned count = 1) {
+		cap_t res = _off;
+		if(res + count < res || res + count > Hip::get().cfg_cap)
+			throw Exception("Out of caps");
+		_off += count;
+		return res;
 	}
 	void free(cap_t,unsigned = 1) {
 		// TODO implement me

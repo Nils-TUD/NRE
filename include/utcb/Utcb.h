@@ -23,7 +23,7 @@
 #include <assert.h>
 
 class Utcb : public UtcbHead {
-	friend class UtcbFrame;
+	friend class UtcbFrameRef;
 
 	uint32_t msg[(4096 - sizeof(UtcbHead)) / sizeof(uint32_t)];
 	enum {

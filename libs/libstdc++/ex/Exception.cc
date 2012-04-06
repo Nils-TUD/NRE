@@ -22,7 +22,7 @@
 // the x86-call instruction is 5 bytes long
 #define CALL_INSTR_SIZE		5
 
-Exception::Exception() throw() : _backtrace(), _count(0) {
+Exception::Exception(const char *msg) throw() : _msg(msg), _backtrace(), _count(0) {
 	// TODO this is architecture dependent
 	uintptr_t end,start;
 	uint32_t *ebp;

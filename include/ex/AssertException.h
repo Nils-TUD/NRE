@@ -25,18 +25,6 @@ public:
 	explicit AssertException(const char *code,const char *file,int line) throw()
 		: Exception(), _code(code), _file(file), _line(line) {
 	}
-	AssertException(const AssertException& ae)
-		: Exception(ae), _code(ae._code), _file(ae._file), _line(ae._line) {
-	}
-	AssertException& operator=(const AssertException& ae) {
-		if(&ae == this)
-			return *this;
-		Exception::operator=(ae);
-		_code = ae._code;
-		_file = ae._file;
-		_line = ae._line;
-		return *this;
-	}
 	virtual ~AssertException() throw() {
 	}
 

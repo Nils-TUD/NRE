@@ -77,6 +77,7 @@ int start(cpu_t cpu,Utcb *utcb) {
 	}
 
 	log = new Log();
+	std::set_terminate(verbose_terminate);
 
 	cap_t pt = CPU::get(cpu).ec->create_portal(portal_test);
 	{
@@ -92,8 +93,6 @@ int start(cpu_t cpu,Utcb *utcb) {
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
 		Syscalls::call(CPU::get(cpu).map_pt);
 	}
-
-	std::set_terminate(verbose_terminate);
 
 	*(char*)0x200000 = 4;
 	*(char*)(0x200000 + PAGE_SIZE * 16 - 1) = 4;
@@ -113,6 +112,33 @@ int start(cpu_t cpu,Utcb *utcb) {
 			log->print("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
+	utcb->mtr = 0;
+	const size_t NUM = 10000;
+	static uint64_t calls[NUM];
+	static uint64_t prepares[NUM];
+	for(size_t j = 0; j < 10; j++) {
+		for(size_t i = 0; i < NUM; i++) {
+			uint64_t t1 = Util::tsc();
+			UtcbFrame uf;
+			uf << 4 << 344 << 0x1234;
+			uint64_t t2 = Util::tsc();
+			Syscalls::call(pt);
+			uint64_t t3 = Util::tsc();
+			prepares[i] = t2 - t1;
+			calls[i] = t3 - t2;
+		}
+	}
+
+	uint64_t calls_total = 0;
+	uint64_t prepares_total = 0;
+	for(size_t i = 0; i < NUM; i++) {
+		calls_total += calls[i];
+		prepares_total += prepares[i];
+	}
+	log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);
+
+	while(1);
+
 	try {
 		sm = new Sm(1);
 
@@ -128,23 +154,28 @@ int start(cpu_t cpu,Utcb *utcb) {
 	return 0;
 }
 
-static void portal_map(unsigned pid) {
+static void portal_map(unsigned) {
 	TypedItem ti;
-	UtcbFrame uf(UtcbFrame::REUSE);
+	UtcbFrameRef uf;
 	while(uf.has_more()) {
 		uf >> ti;
 		uf.add_typed(ti);
 	}
 }
 
-static void portal_test(unsigned pid) {
-	UtcbFrame uf(UtcbFrame::REUSE);
-	unsigned a,b,c;
-	uf >> a >> b >> c;
-	log->print("a=%u, b=%u, c=%u\n",a,b,c);
+static void portal_test(unsigned) {
+	UtcbFrameRef uf;
+	try {
+		unsigned a,b,c;
+		uf >> a >> b >> c;
+	}
+	catch(const Exception& e) {
+		e.print(*log);
+		uf.reset();
+	}
 }
 
-static void portal_startup(unsigned pid) {
+static void portal_startup(unsigned) {
 	UtcbExc *utcb = Ec::current()->exc_utcb();
 	utcb->mtd = MTD_RIP_LEN;
 	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);

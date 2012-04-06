@@ -23,10 +23,10 @@
 #include <Format.h>
 #include <assert.h>
 
-class UtcbFrame;
+class UtcbFrameRef;
 
 class TypedItem {
-	friend class UtcbFrame;
+	friend class UtcbFrameRef;
 public:
 	enum {
 		TYPE_XLT		= 0,
@@ -61,26 +61,22 @@ public:
 	}
 };
 
-class UtcbFrame {
+class UtcbFrameRef {
 public:
-	enum Type {
-		PUSH,
-		REUSE
-	};
-
-	UtcbFrame(Type type = PUSH) : _type(type), _utcb(*Ec::current()->utcb()), _count(_utcb.untyped) {
-		if(_type == PUSH)
-			_utcb.push();
+	UtcbFrameRef() : _utcb(*Ec::current()->utcb()), _count(_utcb.untyped) {
 	}
-	~UtcbFrame() {
-		if(_type == PUSH)
-			_utcb.pop();
+	virtual ~UtcbFrameRef() {
 	}
 
 	bool has_more() const {
 		return _utcb.untyped > 0;
 	}
 
+	void reset() {
+		_utcb.mtr = 0;
+		_utcb.crd = 0;
+		_utcb.crd_translate = 0;
+	}
 	void set_receive_crd(Crd crd) {
 		_utcb.crd = crd.value();
 	}
@@ -90,24 +86,24 @@ public:
 		_utcb.msg[Utcb::MAX_WORDS - ++_utcb.typed] = item._aux;
 	}
 
-	UtcbFrame &operator <<(unsigned value) {
+	UtcbFrameRef &operator <<(unsigned value) {
 		assert(_utcb.typed + _utcb.untyped + 1 <= Utcb::MAX_WORDS);
 		_utcb.msg[_utcb.untyped++] = value;
 		return *this;
 	}
-	UtcbFrame &operator <<(const TypedItem &item) {
+	UtcbFrameRef &operator <<(const TypedItem &item) {
 		assert(_utcb.typed + _utcb.untyped + 2 <= Utcb::MAX_WORDS);
 		_utcb.msg[_utcb.untyped++] = item._crd.value();
 		_utcb.msg[_utcb.untyped++] = item._aux;
 		return *this;
 	}
 
-	UtcbFrame &operator >>(unsigned &value) {
+	UtcbFrameRef &operator >>(unsigned &value) {
 		assert(_utcb.untyped >= 1);
 		value = _utcb.msg[_count - _utcb.untyped--];
 		return *this;
 	}
-	UtcbFrame &operator >>(TypedItem &item) {
+	UtcbFrameRef &operator >>(TypedItem &item) {
 		assert(_utcb.untyped >= 2);
 		item._aux = _utcb.msg[_count - _utcb.untyped--];
 		item._crd = Crd(_utcb.msg[_count - _utcb.untyped--]);
@@ -119,10 +115,20 @@ public:
 	}
 
 private:
-	UtcbFrame(const UtcbFrame&);
-	UtcbFrame& operator=(const UtcbFrame&);
+	UtcbFrameRef(const UtcbFrameRef&);
+	UtcbFrameRef& operator=(const UtcbFrameRef&);
 
-	Type _type;
+protected:
 	Utcb &_utcb;
 	size_t _count;
+};
+
+class UtcbFrame : public UtcbFrameRef {
+public:
+	UtcbFrame() : UtcbFrameRef() {
+		_utcb.push();
+	}
+	virtual ~UtcbFrame() {
+		_utcb.pop();
+	}
 };
