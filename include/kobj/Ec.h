@@ -30,7 +30,7 @@ public:
 	}
 
 protected:
-	explicit Ec(cpu_t cpu,Pd *pd,cap_t event_base = 0,cap_t cap = INVALID,Utcb *utcb = 0)
+	explicit Ec(cpu_t cpu,Pd *pd,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
 			: KObject(pd,cap), _utcb(utcb), _event_base(event_base), _cpu(cpu) {
 		if(!_utcb) {
 			// TODO
@@ -46,6 +46,7 @@ protected:
 
 public:
 	virtual ~Ec() {
+		// TODO stack, utcb
 	}
 
 	cap_t event_base() const {

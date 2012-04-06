@@ -16,10 +16,10 @@
 class Utcb;
 class Hip;
 
-extern "C" int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+extern "C" int start(cpu_t cpu,Utcb *utcb);
 
 class Pd : public KObject {
-	friend int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+	friend int start(cpu_t cpu,Utcb *utcb);
 
 public:
 	static Pd *current();

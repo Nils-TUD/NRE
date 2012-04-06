@@ -19,23 +19,18 @@
 
 #pragma once
 
-#include <kobj/KObject.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Pd.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
+#include <Types.h>
 
-class Sc : public KObject {
-public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
-		cap(ch.release());
-	}
-	virtual ~Sc() {
-	}
-
+class UtcbHead {
 private:
-	Sc(const Sc&);
-	Sc& operator=(const Sc&);
+	union {
+		struct {
+			uint16_t untyped;
+			uint16_t typed;
+		};
+		uint32_t mtr;
+	};
+	uint32_t crd_translate;
+	uint32_t crd;
+	uint32_t nul_cpunr;
 };

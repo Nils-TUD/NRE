@@ -10,40 +10,23 @@
 #pragma once
 
 #include <Types.h>
+#include <Util.h>
 
-class Hip_cpu {
-public:
-	uint8_t flags;
-	uint8_t thread;
-	uint8_t core;
-	uint8_t package;
-private:
-	uint32_t reserved;
-
-public:
-	bool enabled() const {
-		return (flags & 1) != 0;
-	}
-};
-
-class Hip_mem {
-public:
-	enum {
-		AVAILABLE	= 1,
-		HYPERVISOR	= -1,
-		MB_MODULE	= -2
-	};
-
-	uint64_t addr;
-	uint64_t size;
-	int32_t type;
-	uint32_t aux;
-};
+class Hip_cpu;
+class Hip_mem;
 
 class Hip {
 public:
+	enum {
+		MAX_CPUS	= 32
+	};
 	typedef const Hip_mem* mem_const_iterator;
 	typedef const Hip_cpu* cpu_const_iterator;
+
+	static const Hip &get() {
+		extern Hip *_hip;
+		return *_hip;
+	}
 
 private:
 	uint32_t signature;
@@ -64,6 +47,19 @@ public:
 	uint32_t cfg_utcb;		// UTCB sizes
 	uint32_t freq_tsc;		// TSC freq in khz
 	uint32_t freq_bus;		// BUS freq in khz
+
+	/**
+	 * @return the number of capabilities used by the HV for exceptions and VM intercepts
+	 */
+	cap_t event_caps() const {
+		return Util::max(cfg_exc,cfg_vm);
+	}
+	/**
+	 * @return the first capability used for object capabilities
+	 */
+	cap_t object_caps() const {
+		return event_caps() * MAX_CPUS;
+	}
 
 	bool has_vmx() const {
 		return api_flg & (1 << 1);
@@ -93,4 +89,36 @@ public:
 	cpu_const_iterator cpu_end() const {
 		return reinterpret_cast<cpu_const_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
+};
+
+class Hip_cpu {
+public:
+	uint8_t flags;
+	uint8_t thread;
+	uint8_t core;
+	uint8_t package;
+private:
+	uint32_t reserved;
+
+public:
+	cpu_t id() const {
+		return this - Hip::get().cpu_begin();
+	}
+	bool enabled() const {
+		return (flags & 1) != 0;
+	}
+};
+
+class Hip_mem {
+public:
+	enum {
+		AVAILABLE	= 1,
+		HYPERVISOR	= -1,
+		MB_MODULE	= -2
+	};
+
+	uint64_t addr;
+	uint64_t size;
+	int32_t type;
+	uint32_t aux;
 };

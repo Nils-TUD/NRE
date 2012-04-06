@@ -115,18 +115,11 @@ public:
 };
 
 class Syscalls {
-public:
-	enum ECType {
-		EC_GENERAL,
-		EC_WORKER
-	};
-
 private:
 	enum {
 		FLAG0	= 1 << 4,
 		FLAG1	= 1 << 5,
 	};
-
 	enum {
 		IPC_CALL,
 		IPC_REPLY,
@@ -139,10 +132,21 @@ private:
 		LOOKUP,
 		RECALL,
 		SC_CTL,
-		SEMCTL,
+		SM_CTL,
 		ASSIGN_PCI,
 		ASSIGN_GSI,
 		CREATE_ECCLIENT = CREATE_EC | FLAG0,
+	};
+
+public:
+	enum ECType {
+		EC_GENERAL,
+		EC_WORKER
+	};
+	enum SmOp {
+		SM_UP	= 0,
+		SM_DOWN = FLAG0,
+		SM_ZERO	= FLAG1
 	};
 
 public:
@@ -158,12 +162,20 @@ public:
 		        excpt_base);
 	}
 
-	static inline void create_sc(cap_t sc,cap_t ec,Qpd qpd,cpu_t cpu,cap_t dstpd) {
-		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value(),cpu);
+	static inline void create_sc(cap_t sc,cap_t ec,Qpd qpd,cap_t dstpd) {
+		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value(),0);
 	}
 
 	static inline void create_pt(cap_t pt,cap_t ec,uintptr_t eip,unsigned mtd,cap_t dstpd) {
 		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd,eip);
+	}
+
+	static inline void create_sm(cap_t sm,unsigned initial,cap_t dstpd) {
+		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial,0,0);
+	}
+
+	static inline void sm_ctrl(cap_t sm,SmOp op) {
+		SyscallABI::syscall(sm << 8 | SM_CTL | op);
 	}
 
 private:

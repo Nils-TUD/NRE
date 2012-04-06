@@ -19,23 +19,15 @@
 
 #pragma once
 
-#include <kobj/KObject.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Pd.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
-
-class Sc : public KObject {
+class Util {
 public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
-		cap(ch.release());
-	}
-	virtual ~Sc() {
+	template<typename T>
+	static inline T min(T a,T b) {
+		return a < b ? a : b;
 	}
 
-private:
-	Sc(const Sc&);
-	Sc& operator=(const Sc&);
+	template<typename T>
+	static inline T max(T a,T b) {
+		return a < b ? b : a;
+	}
 };

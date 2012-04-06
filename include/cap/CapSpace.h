@@ -10,10 +10,11 @@
 #pragma once
 
 #include <Types.h>
+#include <Hip.h>
 
 class CapSpace {
 public:
-	explicit CapSpace(cap_t off = 0) : _off(off) {
+	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _off(off) {
 	}
 	cap_t allocate(unsigned = 1) {
 		return _off++;

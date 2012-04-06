@@ -19,23 +19,25 @@
 
 #pragma once
 
-#include <kobj/KObject.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Pd.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
+#include <Hip.h>
+#include <assert.h>
 
-class Sc : public KObject {
+class LocalEc;
+
+class CPU {
 public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
-		cap(ch.release());
+	static CPU &get(cpu_t id) {
+		assert(id < Hip::MAX_CPUS);
+		return cpus[id];
 	}
-	virtual ~Sc() {
+
+	CPU() : id(), map_pt(), ec() {
 	}
+
+	cpu_t id;
+	cap_t map_pt;
+	LocalEc * ec;
 
 private:
-	Sc(const Sc&);
-	Sc& operator=(const Sc&);
+	static CPU cpus[Hip::MAX_CPUS];
 };

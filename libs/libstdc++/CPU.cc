@@ -17,25 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#include <CPU.h>
 
-#include <kobj/KObject.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Pd.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
-
-class Sc : public KObject {
-public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
-		cap(ch.release());
-	}
-	virtual ~Sc() {
-	}
-
-private:
-	Sc(const Sc&);
-	Sc& operator=(const Sc&);
-};
+CPU CPU::cpus[Hip::MAX_CPUS];

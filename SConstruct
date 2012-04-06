@@ -9,8 +9,8 @@ crossdir = os.path.abspath('../cross/dist')
 #crossdir = os.path.abspath('../cross4.4.3/dist')
 
 env = Environment(
-	CXXFLAGS = '-Wall -Weffc++ -Wextra -ansi -g',
-	LINKFLAGS = '-static -Wl,-static -static-libgcc -g',
+	CXXFLAGS = '-Wall -Weffc++ -Wextra -ansi',
+	LINKFLAGS = '-static -Wl,-static -static-libgcc',
 	ENV = {'PATH' : crossdir + "/bin:" + os.environ['PATH']},
 	CPPPATH = '#include',
 	CXX = cross + '-g++',
@@ -32,8 +32,10 @@ if int(verbose) == 0:
 
 builddir = 'build'
 debug = ARGUMENTS.get('debug', 0)
-env.Append(CXXFLAGS = ' -O0')
-env.Append(CFLAGS = ' -O0')
+env.Append(CXXFLAGS = ' -O0 -g')
+env.Append(CFLAGS = ' -O0 -g')
+#env.Append(CXXFLAGS = ' -O2')
+#env.Append(CFLAGS = ' -O2')
 
 #if int(debug):
 	#builddir = 'build/debug'

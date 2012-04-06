@@ -20,22 +20,22 @@
 #pragma once
 
 #include <kobj/KObject.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Pd.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
 
-class Sc : public KObject {
+class Sm : public KObject {
 public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
+	Sm(unsigned initial = 0) : KObject(Pd::current()) {
+		CapHolder ch(pd()->obj());
+		Syscalls::create_sm(ch.get(),initial,pd()->cap());
 		cap(ch.release());
 	}
-	virtual ~Sc() {
-	}
 
-private:
-	Sc(const Sc&);
-	Sc& operator=(const Sc&);
+	void down() {
+		Syscalls::sm_ctrl(cap(),Syscalls::SM_DOWN);
+	}
+	void zero() {
+		Syscalls::sm_ctrl(cap(),Syscalls::SM_ZERO);
+	}
+	void up() {
+		Syscalls::sm_ctrl(cap(),Syscalls::SM_UP);
+	}
 };

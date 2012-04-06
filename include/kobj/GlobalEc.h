@@ -10,14 +10,16 @@
 #pragma once
 
 #include <kobj/Ec.h>
+#include <kobj/LocalEc.h>
+#include <CPU.h>
 
 class Utcb;
 class Hip;
 
-extern "C" int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+extern "C" int start(cpu_t cpu,Utcb *utcb);
 
 class GlobalEc : public Ec {
-	friend int start(cpu_t cpu,Utcb *utcb,Hip *hip);
+	friend int start(cpu_t cpu,Utcb *utcb);
 
 public:
 	typedef void (*func_t)();
@@ -33,7 +35,8 @@ private:
 	}
 
 public:
-	explicit GlobalEc(func_t start,cpu_t cpu,Pd *pd = Pd::current()) : Ec(cpu,pd) {
+	explicit GlobalEc(func_t start,cpu_t cpu,Pd *pd = Pd::current())
+			: Ec(cpu,pd,CPU::get(cpu).ec->event_base()) {
 		create(Syscalls::EC_GENERAL,create_stack(start));
 	}
 

@@ -6,11 +6,10 @@
 .extern _init
 
 _start:
-	mov		%esp, %ecx				# esp = HIP
+	mov		%esp, _hip				# store pointer to HIP
 	lea		-0x1000(%esp), %edx		# UTCB is below HIP
 	mov		$stack, %esp			# switch to our stack
 	sub		$4,%esp					# leave space for Ec
-	push	%ecx					# push HIP
 	push	%edx					# push UTCB
 	push	%eax					# push cpu number
 
@@ -25,7 +24,6 @@ _start:
 	# just to be sure
 	1:		jmp	1b
 
-
 # A fast reply to our client, called by a return to a portal
 # function.
 .global idc_reply_and_wait_fast
@@ -36,6 +34,12 @@ idc_reply_and_wait_fast:
 	# ecx: stack
 	lea     -4(%esp), %ecx
 	sysenter
+
+# pointer to HIP
+.section .bss.hip
+.global _hip
+_hip:
+	.long	0
 
 .section .bss.stack
 .align 0x1000
