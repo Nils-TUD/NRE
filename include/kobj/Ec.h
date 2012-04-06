@@ -21,8 +21,9 @@
 #include <cap/CapHolder.h>
 #include <kobj/KObject.h>
 #include <kobj/Pd.h>
+#include <utcb/Utcb.h>
+#include <utcb/UtcbExc.h>
 #include <Syscalls.h>
-#include <Utcb.h>
 
 class Ec : public KObject {
 public:
@@ -63,6 +64,9 @@ public:
 	}
 	Utcb *utcb() {
 		return _utcb;
+	}
+	UtcbExc *exc_utcb() {
+		return reinterpret_cast<UtcbExc*>(_utcb);
 	}
 	cpu_t cpu() const {
 		return _cpu;

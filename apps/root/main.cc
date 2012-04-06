@@ -19,9 +19,11 @@
 #include <kobj/LocalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
+#include <utcb/UtcbFrame.h>
+#include <utcb/UtcbExc.h>
+#include <utcb/Utcb.h>
 #include <Syscalls.h>
 #include <String.h>
-#include <Utcb.h>
 #include <Hip.h>
 #include <Log.h>
 #include <CPU.h>
@@ -30,12 +32,11 @@
 
 #define PAGE_SIZE	0x1000
 
-typedef void (*thread_func)();
-
 extern "C" void abort();
 extern "C" int start(cpu_t cpu,Utcb *utcb);
-static void portal_startup(unsigned pid) __attribute__((regparm(1)));
-static void portal_map(unsigned pid) __attribute__((regparm(1)));
+PORTAL static void portal_startup(unsigned pid);
+PORTAL static void portal_test(unsigned pid);
+PORTAL static void portal_map(unsigned pid);
 static void mythread();
 
 static Log *log;
@@ -68,28 +69,29 @@ int start(cpu_t cpu,Utcb *utcb) {
 		}
 	}
 
-	//Pd::current()->io().delegate(Pd::current(),0x3F8,5);
-	//Pd::current()->mem().delegate(Pd::current(),0x100,16);
-
-	// put Crd's in our utcb as untyped items to send them to the map-portal
-	unsigned *item = utcb->msg;
-	item[1] = MAP_HBIT;
-	item[0] = Crd(0x3F8,3,DESC_IO_ALL).value();
-	// prepare dst-utcb (our)
-	utcb->head.untyped = 2;
-	utcb->head.crd = Crd(0, 20, DESC_IO_ALL).value();
-	Syscalls::call(CPU::get(cpu).map_pt);
+	{
+		UtcbFrame uf;
+		uf << DelItem(Crd(0x3F8,3,DESC_IO_ALL),DelItem::FROM_HV);
+		uf.set_receive_crd(Crd(0, 20, DESC_IO_ALL));
+		Syscalls::call(CPU::get(cpu).map_pt);
+	}
 
 	log = new Log();
 
-	item = utcb->msg;
-	item[1] = 0x200 << 12 | MAP_HBIT;
-	item[0] = Crd(0x100,4,DESC_MEM_ALL).value();
-	utcb->head.untyped = 2;
-	utcb->head.crd = Crd(0, 31, DESC_MEM_ALL).value();
-	Syscalls::call(CPU::get(cpu).map_pt);
+	cap_t pt = CPU::get(cpu).ec->create_portal(portal_test);
+	{
+		UtcbFrame uf;
+		uf << 4 << 344 << 0x1234;
+		uf.print(*log);
+		Syscalls::call(pt);
+	}
 
-	while(1);
+	{
+		UtcbFrame uf;
+		uf << DelItem(Crd(0x100,4,DESC_MEM_ALL),DelItem::FROM_HV,0x200);
+		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
+		Syscalls::call(CPU::get(cpu).map_pt);
+	}
 
 	std::set_terminate(verbose_terminate);
 
@@ -126,29 +128,36 @@ int start(cpu_t cpu,Utcb *utcb) {
 	return 0;
 }
 
+static void portal_map(unsigned pid) {
+	TypedItem ti;
+	UtcbFrame uf(UtcbFrame::REUSE);
+	while(uf.has_more()) {
+		uf >> ti;
+		uf.add_typed(ti);
+	}
+}
+
+static void portal_test(unsigned pid) {
+	UtcbFrame uf(UtcbFrame::REUSE);
+	unsigned a,b,c;
+	uf >> a >> b >> c;
+	log->print("a=%u, b=%u, c=%u\n",a,b,c);
+}
+
 static void portal_startup(unsigned pid) {
-	Utcb *utcb = Ec::current()->utcb();
+	UtcbExc *utcb = Ec::current()->exc_utcb();
 	utcb->mtd = MTD_RIP_LEN;
 	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);
 }
 
-static void portal_map(unsigned pid) {
-	Utcb *utcb = Ec::current()->utcb();
-	utcb->set_header(0,utcb->head.untyped / 2);
-	memmove(utcb->item_start(),utcb->msg,sizeof(unsigned) * utcb->head.typed * 2);
-}
-
 static void mythread() {
-	Utcb *utcb = Ec::current()->utcb();
-	unsigned *item = utcb->msg;
-	item[1] = (0x200 + Ec::current()->cap()) << 12 | MAP_HBIT;
-	item[0] = Crd(0x100 + Ec::current()->cap(),4,DESC_MEM_ALL).value();
-	utcb->head.untyped = 2;
-	utcb->head.crd = Crd(0, 20, DESC_MEM_ALL).value();
-	Syscalls::call(CPU::get(Ec::current()->cpu()).map_pt);
-
-	while(1)
-		;
+	{
+		UtcbFrame uf;
+		uf << DelItem(Crd(0x100 + Ec::current()->cap(),4,DESC_MEM_ALL),
+				DelItem::FROM_HV,0x200 + Ec::current()->cap());
+		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
+		Syscalls::call(CPU::get(Ec::current()->cpu()).map_pt);
+	}
 
 	while(1) {
 		sm->down();

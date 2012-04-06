@@ -18,28 +18,9 @@
 
 #pragma once
 
-#include <Types.h>
+#include <utcb/UtcbHead.h>
 
-class UtcbHead {
-private:
-	union {
-		struct {
-			uint16_t untyped;
-			uint16_t typed;
-		};
-		uint32_t mtr;
-	};
-	uint32_t crd_translate;
-	uint32_t crd;
-	uint32_t nul_cpunr;
-};
-
-class Utcb : public UtcbHead {
-private:
-	uint32_t msg[(4096 - sizeof(UtcbHead)) / sizeof(uint32_t)];
-};
-
-class UtcbExcFrame : public UtcbHead {
+class UtcbExc : public UtcbHead {
 private:
 	struct Descriptor {
 		uint16_t sel,ar;

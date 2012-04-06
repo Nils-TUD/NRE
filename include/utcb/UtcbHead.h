@@ -21,7 +21,8 @@
 #include <Types.h>
 
 class UtcbHead {
-private:
+// TODO
+public:
 	union {
 		struct {
 			uint16_t untyped;
