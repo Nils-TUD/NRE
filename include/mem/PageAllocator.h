@@ -18,8 +18,13 @@
 
 #pragma once
 
+#include <Types.h>
+
+namespace nul {
+
 class PageAllocator {
 public:
 	uintptr_t allocate(size_t count);
 };
 
+}

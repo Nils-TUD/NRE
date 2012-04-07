@@ -19,6 +19,10 @@
 #include <kobj/Pd.h>
 #include <kobj/Ec.h>
 
+namespace nul {
+
 Pd *Pd::current() {
 	return Ec::current()->pd();
+}
+
 }

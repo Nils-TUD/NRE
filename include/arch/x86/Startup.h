@@ -18,29 +18,25 @@
 
 #pragma once
 
-#include <Format.h>
+#include <Compiler.h>
+#include <Types.h>
+
+#define INIT_PRIO(X)		INIT_PRIORITY(101 + (X))
+#define INIT_PRIO_PD		INIT_PRIO(0)
+#define INIT_PRIO_GLOBALEC	INIT_PRIO(1)
 
 namespace nul {
 
-class Log : public Format {
-private:
-	enum {
-		COM1	= 0x3F8,
-		COM2	= 0x2E8,
-		COM3	= 0x2F8,
-		COM4	= 0x3E8
-	};
-	enum {
-		port = COM1
-	};
+class Utcb;
+class Hip;
 
-public:
-	explicit Log();
-	virtual ~Log() {
-	}
-
-protected:
-	virtual void printc(char c);
+struct StartupInfo {
+	Hip *hip;
+	Utcb *utcb;
+	uint32_t cpu;
 };
 
 }
+
+extern "C" void _setup();
+extern nul::StartupInfo _startup_info;

@@ -20,6 +20,8 @@
 
 #include <utcb/UtcbHead.h>
 
+namespace nul {
+
 class UtcbExc : public UtcbHead {
 private:
 	struct Descriptor {
@@ -51,3 +53,5 @@ public:
 	Descriptor es,cs,ss,ds,fs,gs;
 	Descriptor ld,tr,gd,id;
 };
+
+}

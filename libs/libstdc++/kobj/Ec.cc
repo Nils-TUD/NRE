@@ -17,8 +17,10 @@
  */
 
 #include <kobj/Ec.h>
+#include <Compiler.h>
+
+namespace nul {
 
 uintptr_t Ec::_utcb_addr = 0x1000000;
 
-void *ec_stacks[Ec::MAX_STACKS][Ec::STACK_SIZE / sizeof(void*)] __attribute__((aligned(Ec::STACK_SIZE)));
-size_t ec_stack = 0;
+}

@@ -16,31 +16,15 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
+#include <arch/Startup.h>
+#include <kobj/Pd.h>
+#include <kobj/GlobalEc.h>
 
-#include <Format.h>
+using namespace nul;
 
-namespace nul {
-
-class Log : public Format {
-private:
-	enum {
-		COM1	= 0x3F8,
-		COM2	= 0x2E8,
-		COM3	= 0x2F8,
-		COM4	= 0x3E8
-	};
-	enum {
-		port = COM1
-	};
-
-public:
-	explicit Log();
-	virtual ~Log() {
-	}
-
-protected:
-	virtual void printc(char c);
-};
-
+void _setup() {
+	static Pd initpd(Hip::get().cfg_exc + 0,true);
+	static GlobalEc initec(
+		_startup_info.utcb,Hip::get().cfg_exc + 1,_startup_info.cpu,&initpd
+	);
 }

@@ -19,6 +19,8 @@
 #include <Log.h>
 #include <Ports.h>
 
+namespace nul {
+
 Log::Log() : Format() {
 	Ports::out<uint8_t>(port + 1,0x00); // Disable all interrupts
 	Ports::out<uint8_t>(port + 3,0x80); // Enable DLAB (set baud rate divisor)
@@ -33,4 +35,6 @@ void Log::printc(char c) {
 	while((Ports::in<uint8_t>(port + 5) & 0x20) == 0)
 		;
 	Ports::out<uint8_t>(port,c);
+}
+
 }

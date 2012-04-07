@@ -18,15 +18,17 @@
 
 #pragma once
 
+#include <arch/ExecutionEnv.h>
 #include <kobj/KObject.h>
 #include <kobj/LocalEc.h>
+#include <Compiler.h>
 #include <Syscalls.h>
 
-#define PORTAL	__attribute__((regparm(1)))
+namespace nul {
 
 class Pt : public KObject {
 public:
-	typedef PORTAL void (*portal_func)(unsigned);
+	typedef ExecutionEnv::portal_func portal_func;
 
 	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject(Pd::current()) {
 		CapHolder ptcap(pd()->obj());
@@ -42,3 +44,5 @@ public:
 		Syscalls::call(cap());
 	}
 };
+
+}

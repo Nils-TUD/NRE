@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <arch/ExecutionEnv.h>
 #include <cap/CapHolder.h>
 #include <kobj/KObject.h>
 #include <kobj/Pd.h>
@@ -25,18 +26,12 @@
 #include <utcb/UtcbExc.h>
 #include <Syscalls.h>
 
+namespace nul {
+
 class Ec : public KObject {
 public:
-	enum {
-		// TODO grab pagesize from HIP
-		STACK_SIZE = 4096,
-		MAX_STACKS = 8
-	};
-
 	static Ec *current() {
-		uint32_t esp;
-	    asm volatile ("mov %%esp, %0" : "=g"(esp));
-	    return *reinterpret_cast<Ec**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - 1 * sizeof(void*)));
+		return ExecutionEnv::get_current_ec();
 	}
 
 protected:
@@ -76,7 +71,6 @@ private:
 	Ec(const Ec&);
 	Ec& operator=(const Ec&);
 
-private:
 	Utcb *_utcb;
 	cap_t _event_base;
 	cpu_t _cpu;
@@ -86,5 +80,4 @@ protected:
 	static uintptr_t _utcb_addr;
 };
 
-extern void *ec_stacks[Ec::MAX_STACKS][Ec::STACK_SIZE / sizeof(void*)];
-extern size_t ec_stack;
+}

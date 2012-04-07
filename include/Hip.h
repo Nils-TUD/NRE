@@ -18,8 +18,10 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Startup.h>
 #include <Util.h>
+
+namespace nul {
 
 class Hip_cpu;
 class Hip_mem;
@@ -33,8 +35,7 @@ public:
 	typedef const Hip_cpu* cpu_const_iterator;
 
 	static const Hip &get() {
-		extern Hip *_hip;
-		return *_hip;
+		return *_startup_info.hip;
 	}
 
 private:
@@ -131,3 +132,5 @@ public:
 	int32_t type;
 	uint32_t aux;
 };
+
+}

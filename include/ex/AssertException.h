@@ -20,6 +20,8 @@
 
 #include <ex/Exception.h>
 
+namespace nul {
+
 class AssertException : public Exception {
 public:
 	explicit AssertException(const char *code,const char *file,int line) throw()
@@ -48,3 +50,5 @@ private:
 	const char *_file;
 	int _line;
 };
+
+}

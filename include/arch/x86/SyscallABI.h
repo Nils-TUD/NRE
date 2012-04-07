@@ -22,6 +22,8 @@
 #include <Errors.h>
 #include <Types.h>
 
+namespace nul {
+
 class SyscallABI {
 public:
 	typedef uint32_t arg_t;
@@ -70,3 +72,5 @@ public:
 			*out2 = w2;
 	}
 };
+
+}

@@ -21,6 +21,8 @@
 #include <ex/Exception.h>
 #include <Errors.h>
 
+namespace nul {
+
 class SyscallException : public Exception {
 public:
 	explicit SyscallException(ErrorCode code) throw() : Exception(), _code(code) {
@@ -42,3 +44,5 @@ private:
 	ErrorCode _code;
 	static const char *_msgs[];
 };
+
+}

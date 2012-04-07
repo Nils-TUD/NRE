@@ -21,6 +21,8 @@
 #include <ex/SyscallException.h>
 #include <Syscalls.h>
 
+namespace nul {
+
 KObject::~KObject() {
 	if(_cap != INVALID) {
 		// the destructor shouldn't throw
@@ -32,4 +34,6 @@ KObject::~KObject() {
 		}
 		_pd->obj().free(_cap);
 	}
+}
+
 }

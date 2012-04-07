@@ -23,6 +23,8 @@
 #include <Format.h>
 #include <assert.h>
 
+namespace nul {
+
 class UtcbFrameRef;
 
 class TypedItem {
@@ -73,9 +75,7 @@ public:
 	}
 
 	void reset() {
-		_utcb.mtr = 0;
-		_utcb.crd = 0;
-		_utcb.crd_translate = 0;
+		_utcb.reset();
 	}
 	void set_receive_crd(Crd crd) {
 		_utcb.crd = crd.value();
@@ -132,3 +132,5 @@ public:
 		_utcb.pop();
 	}
 };
+
+}

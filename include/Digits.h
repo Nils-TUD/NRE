@@ -20,6 +20,8 @@
 
 #include <Types.h>
 
+namespace nul {
+
 class Digits {
 public:
 	template<typename T>
@@ -53,3 +55,5 @@ private:
 	Digits(const Digits&);
 	Digits& operator=(const Digits&);
 };
+
+}

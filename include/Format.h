@@ -21,6 +21,8 @@
 #include <stdarg.h>
 #include <Types.h>
 
+namespace nul {
+
 class Format {
 private:
 	enum {
@@ -60,3 +62,5 @@ private:
 	static char _hexchars_big[];
 	static char _hexchars_small[];
 };
+
+}

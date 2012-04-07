@@ -22,6 +22,8 @@
 #include <Types.h>
 #include <Hip.h>
 
+namespace nul {
+
 class CapSpace {
 public:
 	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _off(off) {
@@ -44,3 +46,5 @@ private:
 private:
 	cap_t _off;
 };
+
+}

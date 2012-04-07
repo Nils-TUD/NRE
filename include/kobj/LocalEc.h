@@ -18,28 +18,24 @@
 
 #pragma once
 
+#include <arch/ExecutionEnv.h>
 #include <kobj/Ec.h>
 #include <CPU.h>
 
-extern "C" void idc_reply_and_wait_fast(void*);
+extern "C" void idc_reply_and_wait_fast(void);
+
+namespace nul {
 
 class LocalEc : public Ec {
 public:
 	explicit LocalEc(cpu_t cpu) : Ec(cpu,Pd::current(),CPU::get(cpu).ec->event_base()) {
-		create(Syscalls::EC_WORKER,create_stack());
+		create(Syscalls::EC_WORKER,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
 	}
 	explicit LocalEc(cpu_t cpu,cap_t event_base) : Ec(cpu,Pd::current(),event_base) {
-		create(Syscalls::EC_WORKER,create_stack());
+		create(Syscalls::EC_WORKER,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
 	}
 	virtual ~LocalEc() {
 	}
-
-private:
-	void *create_stack() {
-		unsigned stack_top = sizeof(ec_stacks[ec_stack]) / sizeof(void*);
-		ec_stacks[ec_stack][--stack_top] = this; // put Ec instance on stack-top
-		ec_stacks[ec_stack][--stack_top] = reinterpret_cast<void*>(0xDEADBEEF);
-		ec_stacks[ec_stack][--stack_top] = reinterpret_cast<void*>(idc_reply_and_wait_fast);
-		return ec_stacks[ec_stack++] + stack_top;
-	}
 };
+
+}

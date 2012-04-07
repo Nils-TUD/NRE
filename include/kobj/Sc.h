@@ -24,6 +24,8 @@
 #include <cap/CapHolder.h>
 #include <Syscalls.h>
 
+namespace nul {
+
 class Sc : public KObject {
 public:
 	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
@@ -38,3 +40,5 @@ private:
 	Sc(const Sc&);
 	Sc& operator=(const Sc&);
 };
+
+}

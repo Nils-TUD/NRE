@@ -20,6 +20,8 @@
 
 #include <Types.h>
 
+namespace nul {
+
 class Util {
 public:
 	template<typename T>
@@ -38,3 +40,5 @@ public:
 		return (uint64_t)u << 32 | l;
 	}
 };
+
+}

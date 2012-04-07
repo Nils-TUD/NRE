@@ -16,29 +16,42 @@
  * General Public License version 2 for more details.
  */
 
-#include <ex/Exception.h>
-#include <kobj/Ec.h>
+#include <arch/x86/ExecutionEnv.h>
+#include <Compiler.h>
 
-// the x86-call instruction is 5 bytes long
-#define CALL_INSTR_SIZE		5
+namespace nul {
 
-Exception::Exception(const char *msg) throw() : _msg(msg), _backtrace(), _count(0) {
-	// TODO this is architecture dependent
+void *ExecutionEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecutionEnv::PAGE_SIZE);
+size_t ExecutionEnv::_stack;
+
+void *ExecutionEnv::setup_stack(Ec *ec,startup_func start) {
+	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
+	_stacks[_stack][--stack_top] = ec; // put Ec instance on stack-top
+	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(0xDEADBEEF);
+	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(start);
+	return _stacks[_stack++] + stack_top;
+}
+
+size_t ExecutionEnv::collect_backtrace(uintptr_t *frames,size_t max) {
 	uintptr_t end,start;
 	uint32_t *ebp;
-	uintptr_t *frame = &_backtrace[0];
+	uintptr_t *frame = frames;
+	size_t count = 0;
 	asm volatile ("mov %%ebp,%0" : "=a" (ebp));
-	end = ((uintptr_t)ebp + (Ec::STACK_SIZE - 1)) & ~(Ec::STACK_SIZE - 1);
-	start = end - Ec::STACK_SIZE;
-	for(size_t i = 0; i < MAX_TRACE_DEPTH - 1; i++) {
+	end = ((uintptr_t)ebp + (ExecutionEnv::STACK_SIZE - 1)) & ~(ExecutionEnv::STACK_SIZE - 1);
+	start = end - ExecutionEnv::STACK_SIZE;
+	for(size_t i = 0; i < max - 1; i++) {
 		// prevent page-fault
 		if((uintptr_t)ebp < start || (uintptr_t)ebp >= end)
 			break;
 		*frame = *(ebp + 1) - CALL_INSTR_SIZE;
 		frame++;
-		_count++;
+		count++;
 		ebp = (uint32_t*)*ebp;
 	}
 	// terminate
 	*frame = 0;
+	return count;
+}
+
 }

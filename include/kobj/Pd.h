@@ -18,25 +18,22 @@
 
 #pragma once
 
+#include <arch/Startup.h>
 #include <kobj/KObject.h>
 #include <cap/CapSpace.h>
 #include <cap/ResourceSpace.h>
 
-class Utcb;
-class Hip;
-
-extern "C" int start(cpu_t cpu,Utcb *utcb);
+namespace nul {
 
 class Pd : public KObject {
-	friend int start(cpu_t cpu,Utcb *utcb);
+	friend void ::_setup();
+
+	explicit Pd(cap_t cap,bool) : KObject(this,cap), _io(0,0), _mem(0,0), _obj() {
+	}
 
 public:
 	static Pd *current();
 
-private:
-	explicit Pd(cap_t cap,bool) : KObject(this,cap), _io(0,0), _mem(0,0), _obj() {
-	}
-public:
 	explicit Pd(cap_t cap) : KObject(current(),cap), _io(0,0), _mem(0,0), _obj() {
 	}
 
@@ -54,8 +51,9 @@ private:
 	Pd(const Pd&);
 	Pd& operator=(const Pd&);
 
-private:
 	ResourceSpace _io;
 	ResourceSpace _mem;
 	CapSpace _obj;
 };
+
+}

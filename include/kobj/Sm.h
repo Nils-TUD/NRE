@@ -20,6 +20,8 @@
 
 #include <kobj/KObject.h>
 
+namespace nul {
+
 class Sm : public KObject {
 public:
 	Sm(unsigned initial = 0) : KObject(Pd::current()) {
@@ -38,3 +40,5 @@ public:
 		Syscalls::sm_ctrl(cap(),Syscalls::SM_UP);
 	}
 };
+
+}

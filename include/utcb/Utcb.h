@@ -22,6 +22,8 @@
 #include <Syscalls.h>
 #include <assert.h>
 
+namespace nul {
+
 class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
 
@@ -31,6 +33,11 @@ class Utcb : public UtcbHead {
 	};
 
 public:
+	void reset() {
+		mtr = 0;
+		crd = 0;
+		crd_translate = 0;
+	}
 	void push() {
 		// TODO
 	}
@@ -47,3 +54,5 @@ public:
 			fmt.print("\t%zu: %x\n",i,msg[Utcb::MAX_WORDS - i - 1]);
 	}
 };
+
+}

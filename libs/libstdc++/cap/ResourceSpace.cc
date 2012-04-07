@@ -19,6 +19,8 @@
 #include <cap/ResourceSpace.h>
 #include <Syscalls.h>
 
+namespace nul {
+
 void ResourceSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target) {
 	/*Utcb *utcb = Ec::current()->utcb();
 	unsigned *item = utcb->msg;
@@ -27,4 +29,6 @@ void ResourceSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_
 	utcb->head.untyped = 2;
 	utcb->head.crd = Crd(0, 20, _type | rights).value();
 	Syscalls::call(_pt);*/
+}
+
 }

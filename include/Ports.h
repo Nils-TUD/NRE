@@ -18,6 +18,8 @@
 
 #pragma once
 
+namespace nul {
+
 class Ports {
 public:
 	template<typename T>
@@ -38,3 +40,5 @@ private:
     Ports(const Ports&);
     Ports& operator=(const Ports&);
 };
+
+}

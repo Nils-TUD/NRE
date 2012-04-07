@@ -21,6 +21,8 @@
 #include <Hip.h>
 #include <assert.h>
 
+namespace nul {
+
 class LocalEc;
 class Pt;
 
@@ -41,3 +43,5 @@ public:
 private:
 	static CPU cpus[Hip::MAX_CPUS];
 };
+
+}

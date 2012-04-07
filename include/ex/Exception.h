@@ -18,11 +18,13 @@
 
 #pragma once
 
+#include <arch/ExecutionEnv.h>
 #include <Types.h>
 #include <Format.h>
 
+namespace nul {
+
 class Exception {
-private:
 	enum {
 		MAX_TRACE_DEPTH = 16
 	};
@@ -31,7 +33,9 @@ public:
 	typedef const uintptr_t *backtrace_iterator;
 
 public:
-	explicit Exception(const char *msg = 0) throw();
+	explicit Exception(const char *msg = 0) throw() : _msg(msg), _backtrace(), _count() {
+		_count = ExecutionEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
+	}
 	virtual ~Exception() throw() {
 	}
 
@@ -60,3 +64,5 @@ private:
 	uintptr_t _backtrace[MAX_TRACE_DEPTH];
 	size_t _count;
 };
+
+}

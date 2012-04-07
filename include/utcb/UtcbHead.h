@@ -20,9 +20,16 @@
 
 #include <Types.h>
 
+namespace nul {
+
+class UtcbFrame;
+class UtcbFrameRef;
+
 class UtcbHead {
-// TODO
-public:
+	friend class UtcbFrame;
+	friend class UtcbFrameRef;
+
+protected:
 	union {
 		struct {
 			uint16_t untyped;
@@ -34,3 +41,5 @@ public:
 	uint32_t crd;
 	uint32_t nul_cpunr;
 };
+
+}

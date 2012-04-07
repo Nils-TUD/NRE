@@ -21,18 +21,21 @@
 .global _start
 .extern start
 .extern exit
+.extern _setup
 .extern _init
 
 _start:
-	mov		%esp, _hip				# store pointer to HIP
+	mov		%esp, _startup_info		# store pointer to HIP
 	lea		-0x1000(%esp), %edx		# UTCB is below HIP
+	mov		%edx, _startup_info + 4 # store pointer to UTCB
+	mov		%eax, _startup_info + 8	# store cpu
 	mov		$stack, %esp			# switch to our stack
 	sub		$4,%esp					# leave space for Ec
-	push	%edx					# push UTCB
-	push	%eax					# push cpu number
 
 	# call function in .init-section
 	call	_init
+	# create initial Pd and Ec
+	call	_setup
 	# finally, call start
 	call	start
 	add		$12, %esp
@@ -53,11 +56,13 @@ idc_reply_and_wait_fast:
 	lea     -4(%esp), %ecx
 	sysenter
 
-# pointer to HIP
-.section .bss.hip
-.global _hip
-_hip:
-	.long	0
+# information for startup
+.section .bss.startup_info
+.global _startup_info
+_startup_info:
+	.long	0	# HIP
+	.long	0	# UTCB
+	.long	0	# cpu
 
 .section .bss.stack
 .align 0x1000

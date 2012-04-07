@@ -20,6 +20,8 @@
 
 #include <cap/CapSpace.h>
 
+namespace nul {
+
 class CapHolder {
 public:
 	explicit CapHolder(CapSpace& space)
@@ -46,3 +48,5 @@ private:
 	cap_t _cap;
 	bool _owned;
 };
+
+}

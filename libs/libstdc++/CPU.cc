@@ -18,4 +18,8 @@
 
 #include <CPU.h>
 
+namespace nul {
+
 CPU CPU::cpus[Hip::MAX_CPUS];
+
+}

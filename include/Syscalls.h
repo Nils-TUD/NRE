@@ -19,10 +19,12 @@
 #pragma once
 
 #ifdef __i386__
-#include <arch/x86/SyscallABI.h>
+#include <arch/SyscallABI.h>
 #else
 #error "Unsupported architecture"
 #endif
+
+namespace nul {
 
 enum {
 	MTD_GPR_ACDB = 1ul << 0,
@@ -198,3 +200,5 @@ private:
 	Syscalls(const Syscalls&);
 	Syscalls& operator=(const Syscalls&);
 };
+
+}

@@ -38,7 +38,7 @@ namespace std {
 	/**
 	 * Is called by the runtime if exception-handling must be aborted
 	 */
-	void terminate(void) __attribute__ ((__noreturn__));
+	void terminate(void) NORETURN;
 	/**
 	 * Sets the unexpected-handler
 	 *
@@ -50,7 +50,7 @@ namespace std {
 	 * Is called by the runtime if an exception is thrown which violates the functions exception
 	 * specification
 	 */
-	void unexpected(void) __attribute__ ((__noreturn__));
+	void unexpected(void) NORETURN;
 	/**
 	 * @return true if the caught exception violates the throw specification.
 	 */

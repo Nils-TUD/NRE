@@ -20,6 +20,8 @@
 #include <String.h>
 #include <Digits.h>
 
+namespace nul {
+
 char Format::_hexchars_big[] = "0123456789ABCDEF";
 char Format::_hexchars_small[] = "0123456789abcdef";
 
@@ -291,4 +293,6 @@ int Format::puts(const char *str) {
 		str++;
 	}
 	return str - begin;
+}
+
 }

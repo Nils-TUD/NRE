@@ -18,6 +18,8 @@
 
 #include <ex/SyscallException.h>
 
+namespace nul {
+
 const char *SyscallException::_msgs[] = {
 	/* SUCCESS */ "Successful Operation",
 	/* COM_TIM */ "Communication Timeout",
@@ -34,4 +36,6 @@ const char *SyscallException::error_msg() const throw() {
 	if(_code < sizeof(_msgs) / sizeof(_msgs[0]))
 		return _msgs[_code];
 	return "Unknown error";
+}
+
 }

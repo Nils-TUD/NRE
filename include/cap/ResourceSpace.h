@@ -20,6 +20,8 @@
 
 #include <Types.h>
 
+namespace nul {
+
 class ResourceSpace {
 public:
 	explicit ResourceSpace(cap_t portal,unsigned type)
@@ -36,3 +38,5 @@ private:
 	cap_t _pt;
 	unsigned _type;
 };
+
+}

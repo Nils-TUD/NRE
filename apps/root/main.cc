@@ -15,6 +15,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details.
  */
+
 #include <kobj/GlobalEc.h>
 #include <kobj/LocalEc.h>
 #include <kobj/Sc.h>
@@ -33,8 +34,10 @@
 
 #define PAGE_SIZE	0x1000
 
+using namespace nul;
+
 extern "C" void abort();
-extern "C" int start(cpu_t cpu,Utcb *utcb);
+extern "C" int start();
 PORTAL static void portal_startup(unsigned pid);
 PORTAL static void portal_test(unsigned pid);
 PORTAL static void portal_map(unsigned pid);
@@ -56,9 +59,10 @@ void verbose_terminate() {
 	abort();
 }
 
-int start(cpu_t cpu,Utcb *utcb) {
+int start() {
+	Ec *ec = Ec::current();
+	cpu_t cpu = ec->cpu();
 	const Hip &hip = Hip::get();
-	GlobalEc::set_current(new GlobalEc(utcb,hip.cfg_exc + 1,cpu,new Pd(hip.cfg_exc + 0,true)));
 
 	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
@@ -113,7 +117,7 @@ int start(cpu_t cpu,Utcb *utcb) {
 			uf.print(*log);
 			pt.call();
 		}
-		utcb->mtr = 0;
+		ec->utcb()->reset();
 		const size_t NUM = 10000;
 		static uint64_t calls[NUM];
 		static uint64_t prepares[NUM];

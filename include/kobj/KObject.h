@@ -20,6 +20,8 @@
 
 #include <Types.h>
 
+namespace nul {
+
 class Pd;
 
 class KObject {
@@ -48,7 +50,8 @@ private:
 	KObject(const KObject&);
 	KObject& operator=(const KObject&);
 
-private:
 	Pd *_pd;
 	cap_t _cap;
 };
+
+}

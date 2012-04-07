@@ -18,6 +18,8 @@
 
 #pragma once
 
+namespace nul {
+
 enum ErrorCode {
 	ESUCCESS = 0,
 	ETIMEOUT,
@@ -29,3 +31,5 @@ enum ErrorCode {
 	ECPU,
 	EDEV,
 };
+
+}
