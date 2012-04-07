@@ -30,10 +30,10 @@ if int(verbose) == 0:
 
 builddir = 'build'
 debug = ARGUMENTS.get('debug', 0)
-#env.Append(CXXFLAGS = ' -O0 -g')
-#env.Append(CFLAGS = ' -O0 -g')
-env.Append(CXXFLAGS = ' -O3 -DNDEBUG')
-env.Append(CFLAGS = ' -O3 -DNDEBUG')
+env.Append(CXXFLAGS = ' -O0 -g')
+env.Append(CFLAGS = ' -O0 -g')
+#env.Append(CXXFLAGS = ' -O3 -DNDEBUG')
+#env.Append(CFLAGS = ' -O3 -DNDEBUG')
 
 #if int(debug):
 	#builddir = 'build/debug'

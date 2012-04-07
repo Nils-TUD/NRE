@@ -22,6 +22,7 @@
 #include <assert.h>
 
 class LocalEc;
+class Pt;
 
 class CPU {
 public:
@@ -34,7 +35,7 @@ public:
 	}
 
 	cpu_t id;
-	cap_t map_pt;
+	Pt *map_pt;
 	LocalEc * ec;
 
 private:

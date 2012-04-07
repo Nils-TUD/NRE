@@ -16,20 +16,29 @@
  * General Public License version 2 for more details.
  */
 
+#pragma once
+
 #include <kobj/KObject.h>
-#include <kobj/Pd.h>
-#include <ex/SyscallException.h>
+#include <kobj/LocalEc.h>
 #include <Syscalls.h>
 
-KObject::~KObject() {
-	if(_cap != INVALID) {
-		// the destructor shouldn't throw
-		try {
-			Syscalls::revoke(Crd(_cap,0,DESC_CAP_ALL),true);
-		}
-		catch(const SyscallException&) {
-			// ignore it
-		}
-		_pd->obj().free(_cap);
+#define PORTAL	__attribute__((regparm(1)))
+
+class Pt : public KObject {
+public:
+	typedef PORTAL void (*portal_func)(unsigned);
+
+	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject(Pd::current()) {
+		CapHolder ptcap(pd()->obj());
+		Syscalls::create_pt(ptcap.get(),ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
+		cap(ptcap.release());
 	}
-}
+	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(Pd::current(),pt) {
+		Syscalls::create_pt(ec->event_base() + pt,ec->cap(),
+				reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
+	}
+
+	void call() {
+		Syscalls::call(cap());
+	}
+};

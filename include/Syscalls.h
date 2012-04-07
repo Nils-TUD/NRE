@@ -145,6 +145,7 @@ private:
 		ASSIGN_PCI,
 		ASSIGN_GSI,
 		CREATE_ECCLIENT = CREATE_EC | FLAG0,
+		REVOKE_MYSELF  = REVOKE | FLAG0,
 	};
 
 public:
@@ -185,6 +186,10 @@ public:
 
 	static inline void sm_ctrl(cap_t sm,SmOp op) {
 		SyscallABI::syscall(sm << 8 | SM_CTL | op);
+	}
+
+	static inline void revoke(Crd crd,bool myself) {
+		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value(),0,0,0);
 	}
 
 private:

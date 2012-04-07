@@ -21,14 +21,10 @@
 #include <kobj/Ec.h>
 #include <CPU.h>
 
-#define PORTAL	__attribute__((regparm(1)))
-
 extern "C" void idc_reply_and_wait_fast(void*);
 
 class LocalEc : public Ec {
 public:
-	typedef PORTAL void (*portal_func)(unsigned);
-
 	explicit LocalEc(cpu_t cpu) : Ec(cpu,Pd::current(),CPU::get(cpu).ec->event_base()) {
 		create(Syscalls::EC_WORKER,create_stack());
 	}
@@ -36,15 +32,6 @@ public:
 		create(Syscalls::EC_WORKER,create_stack());
 	}
 	virtual ~LocalEc() {
-	}
-
-	cap_t create_portal(portal_func func,unsigned mtd = 0) {
-		CapHolder ptcap(pd()->obj());
-		Syscalls::create_pt(ptcap.get(),cap(),reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
-		return ptcap.release();
-	}
-	void create_portal_for(cap_t pt,portal_func func,unsigned mtd = 0) {
-		Syscalls::create_pt(event_base() + pt,cap(),reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
 	}
 
 private:

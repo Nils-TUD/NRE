@@ -19,6 +19,7 @@
 #include <kobj/LocalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
+#include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <utcb/UtcbExc.h>
 #include <utcb/Utcb.h>
@@ -64,8 +65,8 @@ int start(cpu_t cpu,Utcb *utcb) {
 			CPU &cpu = CPU::get(it->id());
 			cpu.id = it->id();
 			cpu.ec = new LocalEc(cpu.id,hip.event_caps() * (cpu.id + 1));
-			cpu.map_pt = cpu.ec->create_portal(portal_map,cpu.id);
-			cpu.ec->create_portal_for(0x1E,portal_startup,MTD_RSP);
+			cpu.map_pt = new Pt(cpu.ec,portal_map);
+			new Pt(cpu.ec,0x1E,portal_startup,MTD_RSP);
 		}
 	}
 
@@ -73,25 +74,17 @@ int start(cpu_t cpu,Utcb *utcb) {
 		UtcbFrame uf;
 		uf << DelItem(Crd(0x3F8,3,DESC_IO_ALL),DelItem::FROM_HV);
 		uf.set_receive_crd(Crd(0, 20, DESC_IO_ALL));
-		Syscalls::call(CPU::get(cpu).map_pt);
+		CPU::get(cpu).map_pt->call();
 	}
 
 	log = new Log();
 	std::set_terminate(verbose_terminate);
 
-	cap_t pt = CPU::get(cpu).ec->create_portal(portal_test);
-	{
-		UtcbFrame uf;
-		uf << 4 << 344 << 0x1234;
-		uf.print(*log);
-		Syscalls::call(pt);
-	}
-
 	{
 		UtcbFrame uf;
 		uf << DelItem(Crd(0x100,4,DESC_MEM_ALL),DelItem::FROM_HV,0x200);
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		Syscalls::call(CPU::get(cpu).map_pt);
+		CPU::get(cpu).map_pt->call();
 	}
 
 	*(char*)0x200000 = 4;
@@ -112,30 +105,39 @@ int start(cpu_t cpu,Utcb *utcb) {
 			log->print("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
-	utcb->mtr = 0;
-	const size_t NUM = 10000;
-	static uint64_t calls[NUM];
-	static uint64_t prepares[NUM];
-	for(size_t j = 0; j < 10; j++) {
-		for(size_t i = 0; i < NUM; i++) {
-			uint64_t t1 = Util::tsc();
+	{
+		Pt pt(CPU::get(cpu).ec,portal_test);
+		{
 			UtcbFrame uf;
 			uf << 4 << 344 << 0x1234;
-			uint64_t t2 = Util::tsc();
-			Syscalls::call(pt);
-			uint64_t t3 = Util::tsc();
-			prepares[i] = t2 - t1;
-			calls[i] = t3 - t2;
+			uf.print(*log);
+			pt.call();
 		}
-	}
+		utcb->mtr = 0;
+		const size_t NUM = 10000;
+		static uint64_t calls[NUM];
+		static uint64_t prepares[NUM];
+		for(size_t j = 0; j < 10; j++) {
+			for(size_t i = 0; i < NUM; i++) {
+				uint64_t t1 = Util::tsc();
+				UtcbFrame uf;
+				uf << 4 << 344 << 0x1234;
+				uint64_t t2 = Util::tsc();
+				pt.call();
+				uint64_t t3 = Util::tsc();
+				prepares[i] = t2 - t1;
+				calls[i] = t3 - t2;
+			}
+		}
 
-	uint64_t calls_total = 0;
-	uint64_t prepares_total = 0;
-	for(size_t i = 0; i < NUM; i++) {
-		calls_total += calls[i];
-		prepares_total += prepares[i];
+		uint64_t calls_total = 0;
+		uint64_t prepares_total = 0;
+		for(size_t i = 0; i < NUM; i++) {
+			calls_total += calls[i];
+			prepares_total += prepares[i];
+		}
+		log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);
 	}
-	log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);
 
 	while(1);
 
@@ -182,12 +184,13 @@ static void portal_startup(unsigned) {
 }
 
 static void mythread() {
+	Ec *ec = Ec::current();
 	{
 		UtcbFrame uf;
-		uf << DelItem(Crd(0x100 + Ec::current()->cap(),4,DESC_MEM_ALL),
-				DelItem::FROM_HV,0x200 + Ec::current()->cap());
+		uf << DelItem(Crd(0x100 + ec->cap(),4,DESC_MEM_ALL),
+				DelItem::FROM_HV,0x200 + ec->cap());
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		Syscalls::call(CPU::get(Ec::current()->cpu()).map_pt);
+		CPU::get(ec->cpu()).map_pt->call();
 	}
 
 	while(1) {
