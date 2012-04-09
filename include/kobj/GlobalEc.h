@@ -40,7 +40,7 @@ public:
 
 	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current())
 			: Ec(cpu,pd,CPU::get(cpu).ec->event_base()) {
-		create(Syscalls::EC_GENERAL,ExecutionEnv::setup_stack(this,start));
+		create(Syscalls::EC_GLOBAL,ExecutionEnv::setup_stack(this,start));
 	}
 };
 

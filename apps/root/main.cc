@@ -78,7 +78,7 @@ int start() {
 		UtcbFrame uf;
 		uf << DelItem(Crd(0x3F8,3,DESC_IO_ALL),DelItem::FROM_HV);
 		uf.set_receive_crd(Crd(0, 20, DESC_IO_ALL));
-		CPU::get(cpu).map_pt->call();
+		CPU::current().map_pt->call();
 	}
 
 	log = new Log();
@@ -88,7 +88,7 @@ int start() {
 		UtcbFrame uf;
 		uf << DelItem(Crd(0x100,4,DESC_MEM_ALL),DelItem::FROM_HV,0x200);
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		CPU::get(cpu).map_pt->call();
+		CPU::current().map_pt->call();
 	}
 
 	*(char*)0x200000 = 4;
@@ -110,7 +110,7 @@ int start() {
 	}
 
 	{
-		Pt pt(CPU::get(cpu).ec,portal_test);
+		Pt pt(CPU::current().ec,portal_test);
 		{
 			UtcbFrame uf;
 			uf << 4 << 344 << 0x1234;
@@ -194,7 +194,7 @@ static void mythread() {
 		uf << DelItem(Crd(0x100 + ec->cap(),4,DESC_MEM_ALL),
 				DelItem::FROM_HV,0x200 + ec->cap());
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		CPU::get(ec->cpu()).map_pt->call();
+		CPU::current().map_pt->call();
 	}
 
 	while(1) {

@@ -18,11 +18,7 @@
 
 #pragma once
 
-#ifdef __i386__
 #include <arch/SyscallABI.h>
-#else
-#error "Unsupported architecture"
-#endif
 
 namespace nul {
 
@@ -146,14 +142,14 @@ private:
 		SM_CTL,
 		ASSIGN_PCI,
 		ASSIGN_GSI,
-		CREATE_ECCLIENT = CREATE_EC | FLAG0,
+		CREATE_EC_GLOBAL = CREATE_EC | FLAG0,
 		REVOKE_MYSELF  = REVOKE | FLAG0,
 	};
 
 public:
 	enum ECType {
-		EC_GENERAL,
-		EC_WORKER
+		EC_GLOBAL,
+		EC_LOCAL
 	};
 	enum SmOp {
 		SM_UP	= 0,
@@ -168,7 +164,7 @@ public:
 
 	static inline void create_ec(cap_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
 			ECType type,cap_t dstpd) {
-		SyscallABI::syscall(ec << 8 | (type == EC_WORKER ? CREATE_EC : CREATE_ECCLIENT),dstpd,
+		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
 		        reinterpret_cast<SyscallABI::arg_t>(utcb) | cpunr,
 		        reinterpret_cast<SyscallABI::arg_t>(esp),
 		        excpt_base);

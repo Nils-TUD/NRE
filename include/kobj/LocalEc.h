@@ -29,10 +29,10 @@ namespace nul {
 class LocalEc : public Ec {
 public:
 	explicit LocalEc(cpu_t cpu) : Ec(cpu,Pd::current(),CPU::get(cpu).ec->event_base()) {
-		create(Syscalls::EC_WORKER,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
+		create(Syscalls::EC_LOCAL,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
 	}
 	explicit LocalEc(cpu_t cpu,cap_t event_base) : Ec(cpu,Pd::current(),event_base) {
-		create(Syscalls::EC_WORKER,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
+		create(Syscalls::EC_LOCAL,ExecutionEnv::setup_stack(this,idc_reply_and_wait_fast));
 	}
 	virtual ~LocalEc() {
 	}

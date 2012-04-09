@@ -18,34 +18,40 @@
 
 #pragma once
 
-#include <kobj/Ec.h>
-#include <Hip.h>
-#include <assert.h>
+#include <Types.h>
 
 namespace nul {
 
-class LocalEc;
-class Pt;
-
-class CPU {
+class Region {
 public:
-	static CPU &current() {
-		return get(Ec::current()->cpu());
-	}
-	static CPU &get(cpu_t id) {
-		assert(id < Hip::MAX_CPUS);
-		return cpus[id];
+	enum Perm {
+		R	= 1 << 0,
+		W	= 1 << 1,
+		X	= 1 << 2,
+	};
+
+public:
+	Region(uintptr_t begin,size_t size,Perm perms)
+		: _begin(begin), _size(size), _perms(perms) {
 	}
 
-	CPU() : id(), map_pt(), ec() {
+	uintptr_t begin() const {
+		return _begin;
 	}
-
-	cpu_t id;
-	Pt *map_pt;
-	LocalEc * ec;
+	uintptr_t end() const {
+		return _begin + _size;
+	}
+	size_t size() const {
+		return _size;
+	}
+	Perm perms() const {
+		return _perms;
+	}
 
 private:
-	static CPU cpus[Hip::MAX_CPUS];
+	uintptr_t _begin;
+	size_t _size;
+	Perm _perms;
 };
 
 }

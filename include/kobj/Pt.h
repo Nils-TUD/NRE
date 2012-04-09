@@ -31,6 +31,9 @@ public:
 	typedef ExecutionEnv::portal_func portal_func;
 
 	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject(Pd::current()) {
+		// TODO use a specific cap-range for portals, so that we can provide per-portal-data with
+		// a simple array (or at least for some portals). we will need that for pagefault-portals
+		// for example because we need a way to find the client that caused it.
 		CapHolder ptcap(pd()->obj());
 		Syscalls::create_pt(ptcap.get(),ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
 		cap(ptcap.release());
