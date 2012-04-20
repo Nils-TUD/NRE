@@ -22,19 +22,24 @@
 #include <kobj/KObject.h>
 #include <cap/CapSpace.h>
 #include <cap/ResourceSpace.h>
+#include <cap/CapHolder.h>
+#include <Syscalls.h>
 
 namespace nul {
 
 class Pd : public KObject {
 	friend void ::_setup();
 
-	explicit Pd(cap_t cap,bool) : KObject(this,cap), _io(0,0), _mem(0,0), _obj() {
+	explicit Pd(cap_t cap,bool) : KObject(cap), _io(0,0), _mem(0,0) {
 	}
 
 public:
 	static Pd *current();
 
-	explicit Pd(cap_t cap) : KObject(current(),cap), _io(0,0), _mem(0,0), _obj() {
+	explicit Pd(Pd *pd = Pd::current()) : KObject(), _io(0,0), _mem(0,0) {
+		CapHolder ch;
+		Syscalls::create_pd(ch.get(),Crd(0),pd->cap());
+		cap(ch.release());
 	}
 
 	ResourceSpace &io() {
@@ -43,9 +48,6 @@ public:
 	ResourceSpace &mem() {
 		return _mem;
 	}
-	CapSpace &obj() {
-		return _obj;
-	}
 
 private:
 	Pd(const Pd&);
@@ -53,7 +55,6 @@ private:
 
 	ResourceSpace _io;
 	ResourceSpace _mem;
-	CapSpace _obj;
 };
 
 }

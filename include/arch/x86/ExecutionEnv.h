@@ -26,6 +26,7 @@
 namespace nul {
 
 class Ec;
+class Pd;
 
 class ExecutionEnv {
 	enum {
@@ -43,19 +44,23 @@ public:
 		MAX_STACKS = 8	// TODO remove
 	};
 
+	static inline Pd *get_current_pd() {
+		return static_cast<Pd*>(get_current(2));
+	}
+
+	static inline void set_current_pd(Pd *pd) {
+		set_current(2,pd);
+	}
+
 	static inline Ec *get_current_ec() {
-		uint32_t esp;
-	    asm volatile ("mov %%esp, %0" : "=g"(esp));
-	    return *reinterpret_cast<Ec**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - 1 * sizeof(void*)));
+		return static_cast<Ec*>(get_current(1));
 	}
 
 	static inline void set_current_ec(Ec *ec) {
-		uint32_t esp;
-	    asm volatile ("mov %%esp, %0" : "=g"(esp));
-	    *reinterpret_cast<Ec**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - 1 * sizeof(void*))) = ec;
+		set_current(1,ec);
 	}
 
-	static void *setup_stack(Ec *ec,startup_func start);
+	static void *setup_stack(Pd *pd,Ec *ec,startup_func start);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 
 private:
@@ -63,6 +68,18 @@ private:
 	~ExecutionEnv();
 	ExecutionEnv(const ExecutionEnv&);
 	ExecutionEnv& operator=(const ExecutionEnv&);
+
+	static inline void *get_current(size_t no) {
+		uint32_t esp;
+	    asm volatile ("mov %%esp, %0" : "=g"(esp));
+	    return *reinterpret_cast<void**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - no * sizeof(void*)));
+	}
+
+	static inline void set_current(size_t  no,void *obj) {
+		uint32_t esp;
+	    asm volatile ("mov %%esp, %0" : "=g"(esp));
+	    *reinterpret_cast<void**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - no * sizeof(void*))) = obj;
+	}
 
 	static void *_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)];
 	static size_t _stack;

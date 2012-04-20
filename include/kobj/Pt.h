@@ -30,17 +30,19 @@ class Pt : public KObject {
 public:
 	typedef ExecutionEnv::portal_func portal_func;
 
-	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject(Pd::current()) {
+	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject() {
 		// TODO use a specific cap-range for portals, so that we can provide per-portal-data with
 		// a simple array (or at least for some portals). we will need that for pagefault-portals
 		// for example because we need a way to find the client that caused it.
-		CapHolder ptcap(pd()->obj());
-		Syscalls::create_pt(ptcap.get(),ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
+		Pd *pd = Pd::current();
+		CapHolder ptcap;
+		Syscalls::create_pt(ptcap.get(),ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd->cap());
 		cap(ptcap.release());
 	}
-	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(Pd::current(),pt) {
+	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(pt) {
+		Pd *pd = Pd::current();
 		Syscalls::create_pt(ec->event_base() + pt,ec->cap(),
-				reinterpret_cast<uintptr_t>(func),mtd,pd()->cap());
+				reinterpret_cast<uintptr_t>(func),mtd,pd->cap());
 	}
 
 	void call() {

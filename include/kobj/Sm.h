@@ -24,9 +24,9 @@ namespace nul {
 
 class Sm : public KObject {
 public:
-	Sm(unsigned initial = 0) : KObject(Pd::current()) {
-		CapHolder ch(pd()->obj());
-		Syscalls::create_sm(ch.get(),initial,pd()->cap());
+	Sm(unsigned initial = 0,Pd *pd = Pd::current()) : KObject() {
+		CapHolder ch;
+		Syscalls::create_sm(ch.get(),initial,pd->cap());
 		cap(ch.release());
 	}
 

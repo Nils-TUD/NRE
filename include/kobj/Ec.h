@@ -35,17 +35,17 @@ public:
 	}
 
 protected:
-	explicit Ec(cpu_t cpu,Pd *pd,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
-			: KObject(pd,cap), _utcb(utcb), _event_base(event_base), _cpu(cpu) {
+	explicit Ec(cpu_t cpu,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
+			: KObject(cap), _utcb(utcb), _event_base(event_base), _cpu(cpu) {
 		if(!_utcb) {
 			// TODO
 			_utcb = reinterpret_cast<Utcb*>(_utcb_addr);
 			_utcb_addr -= 0x1000;
 		}
 	}
-	void create(Syscalls::ECType type,void *sp) {
-		CapHolder ch(pd()->obj());
-		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd()->cap());
+	void create(Pd *pd,Syscalls::ECType type,void *sp) {
+		CapHolder ch;
+		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->cap());
 		cap(ch.release());
 	}
 

@@ -178,6 +178,10 @@ public:
 		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd,eip);
 	}
 
+	static inline void create_pd(cap_t pd,Crd pt_crd,unsigned dstpd) {
+		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value(),0,0);
+	}
+
 	static inline void create_sm(cap_t sm,unsigned initial,cap_t dstpd) {
 		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial,0,0);
 	}

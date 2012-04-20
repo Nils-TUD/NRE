@@ -32,8 +32,6 @@
 #include <exception>
 #include <assert.h>
 
-#define PAGE_SIZE	0x1000
-
 using namespace nul;
 
 extern "C" void abort();
@@ -45,6 +43,21 @@ static void mythread();
 
 static Log *log;
 static Sm *sm;
+
+class A {
+	int _x;
+
+public:
+	A() : _x() {}
+	A(int x) : _x(x) {}
+
+	void add() {
+		_x++;
+	}
+	int get() const {
+		return _x;
+	}
+};
 
 void verbose_terminate() {
 	try {
@@ -85,6 +98,18 @@ int start() {
 	std::set_terminate(verbose_terminate);
 
 	{
+		int x;
+		x++;
+		log->print("x=%d\n",x);
+	}
+
+	{
+		A a;
+		a.add();
+		log->print("x=%d\n",a.get());
+	}
+
+	{
 		UtcbFrame uf;
 		uf << DelItem(Crd(0x100,4,DESC_MEM_ALL),DelItem::FROM_HV,0x200);
 		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
@@ -92,7 +117,7 @@ int start() {
 	}
 
 	*(char*)0x200000 = 4;
-	*(char*)(0x200000 + PAGE_SIZE * 16 - 1) = 4;
+	*(char*)(0x200000 + ExecutionEnv::PAGE_SIZE * 16 - 1) = 4;
 	assert(*(char*)0x200000 == 4);
 	//assert(*(char*)0x200000 == 5);
 
@@ -142,6 +167,9 @@ int start() {
 		}
 		log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);
 	}
+
+	Pd *pd = new Pd();
+	new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(0),0,pd);
 
 	while(1);
 

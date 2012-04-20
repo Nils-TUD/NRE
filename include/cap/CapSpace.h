@@ -26,8 +26,15 @@ namespace nul {
 
 class CapSpace {
 public:
+	static CapSpace& get() {
+		return _inst;
+	}
+
+private:
 	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _off(off) {
 	}
+
+public:
 	cap_t allocate(unsigned count = 1) {
 		cap_t res = _off;
 		if(res + count < res || res + count > Hip::get().cfg_cap)
@@ -43,7 +50,7 @@ private:
 	CapSpace(const CapSpace&);
 	CapSpace& operator=(const CapSpace&);
 
-private:
+	static CapSpace _inst;
 	cap_t _off;
 };
 

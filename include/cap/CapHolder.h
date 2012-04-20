@@ -24,12 +24,12 @@ namespace nul {
 
 class CapHolder {
 public:
-	explicit CapHolder(CapSpace& space)
-		: _space(space), _cap(_space.allocate()), _owned(true) {
+	explicit CapHolder()
+		: _cap(CapSpace::get().allocate()), _owned(true) {
 	}
 	~CapHolder() {
 		if(_owned)
-			_space.free(_cap);
+			CapSpace::get().free(_cap);
 	}
 	cap_t get() const {
 		return _cap;
@@ -44,7 +44,6 @@ private:
 	CapHolder& operator=(const CapHolder&);
 
 private:
-	CapSpace &_space;
 	cap_t _cap;
 	bool _owned;
 };

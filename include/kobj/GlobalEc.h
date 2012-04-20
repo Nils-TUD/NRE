@@ -31,16 +31,17 @@ class Utcb;
 class GlobalEc : public Ec {
 	friend void ::_setup();
 
-	explicit GlobalEc(Utcb *utcb,cap_t cap,cpu_t cpu,Pd *pd) : Ec(cpu,pd,0,cap,utcb) {
+	explicit GlobalEc(Utcb *utcb,cap_t cap,cpu_t cpu,Pd *pd) : Ec(cpu,0,cap,utcb) {
 		ExecutionEnv::set_current_ec(this);
+		ExecutionEnv::set_current_pd(pd);
 	}
 
 public:
 	typedef ExecutionEnv::startup_func startup_func;
 
 	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current())
-			: Ec(cpu,pd,CPU::get(cpu).ec->event_base()) {
-		create(Syscalls::EC_GLOBAL,ExecutionEnv::setup_stack(this,start));
+			: Ec(cpu,CPU::get(cpu).ec->event_base()) {
+		create(pd,Syscalls::EC_GLOBAL,ExecutionEnv::setup_stack(pd,this,start));
 	}
 };
 

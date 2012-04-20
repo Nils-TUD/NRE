@@ -22,22 +22,17 @@
 
 namespace nul {
 
-class Pd;
-
 class KObject {
 protected:
 	enum {
 		INVALID = (cap_t)-1
 	};
 
-	KObject(Pd *pd,cap_t cap = INVALID) : _pd(pd), _cap(cap) {
+	KObject(cap_t cap = INVALID) : _cap(cap) {
 	}
 public:
 	virtual ~KObject();
 
-	Pd *pd() {
-		return _pd;
-	}
 	cap_t cap() const {
 		return _cap;
 	}
@@ -50,7 +45,6 @@ private:
 	KObject(const KObject&);
 	KObject& operator=(const KObject&);
 
-	Pd *_pd;
 	cap_t _cap;
 };
 

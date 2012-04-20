@@ -24,9 +24,10 @@ namespace nul {
 void *ExecutionEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecutionEnv::PAGE_SIZE);
 size_t ExecutionEnv::_stack;
 
-void *ExecutionEnv::setup_stack(Ec *ec,startup_func start) {
+void *ExecutionEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
 	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
-	_stacks[_stack][--stack_top] = ec; // put Ec instance on stack-top
+	_stacks[_stack][--stack_top] = ec;
+	_stacks[_stack][--stack_top] = pd;
 	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(0xDEADBEEF);
 	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(start);
 	return _stacks[_stack++] + stack_top;

@@ -28,8 +28,8 @@ namespace nul {
 
 class Sc : public KObject {
 public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject(pd) {
-		CapHolder ch(pd->obj());
+	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject() {
+		CapHolder ch;
 		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
 		cap(ch.release());
 	}

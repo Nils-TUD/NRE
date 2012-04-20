@@ -32,7 +32,7 @@ KObject::~KObject() {
 		catch(const SyscallException&) {
 			// ignore it
 		}
-		_pd->obj().free(_cap);
+		CapSpace::get().free(_cap);
 	}
 }
 

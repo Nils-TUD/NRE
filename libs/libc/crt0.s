@@ -30,7 +30,7 @@ _start:
 	mov		%edx, _startup_info + 4 # store pointer to UTCB
 	mov		%eax, _startup_info + 8	# store cpu
 	mov		$stack, %esp			# switch to our stack
-	sub		$4,%esp					# leave space for Ec
+	sub		$8,%esp					# leave space for Ec and Pd
 
 	# call function in .init-section
 	call	_init
