@@ -39,7 +39,8 @@ public:
 	typedef void (*startup_func)();
 
 	enum {
-		PAGE_SIZE = 4096,
+		PAGE_SHIFT = 12,
+		PAGE_SIZE = 1 << PAGE_SHIFT,
 		STACK_SIZE = PAGE_SIZE,
 		MAX_STACKS = 8	// TODO remove
 	};

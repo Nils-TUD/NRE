@@ -16,6 +16,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Elf.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/LocalEc.h>
 #include <kobj/Sc.h>
@@ -72,6 +73,54 @@ void verbose_terminate() {
 	abort();
 }
 
+class ElfException : public Exception {
+public:
+	ElfException(const char *msg) : Exception(msg) {
+	}
+};
+
+template<typename T>
+static T roundpow2(T val) {
+	for(int i = sizeof(val) * 8 - 1; i >= 0; --i) {
+		T bit = 1 << i;
+		if(val & bit)
+			return i;
+	}
+	return 0;
+}
+
+static void map_mem(uintptr_t phys,size_t size) {
+	UtcbFrame uf;
+	uintptr_t frame = phys >> ExecutionEnv::PAGE_SHIFT;
+	size_t frames = size >> ExecutionEnv::PAGE_SHIFT;
+	while(frames > 0) {
+		size_t order = roundpow2(frames);
+		uf << DelItem(Crd(frame,order,DESC_MEM_ALL),DelItem::FROM_HV,frame);
+		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
+		CPU::current().map_pt->call();
+		frame += 1 << order;
+		frames -= 1 << order;
+	}
+}
+
+static void load_mod(uintptr_t addr,size_t size) {
+	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
+	if(size < sizeof(ElfEh) || sizeof(ElfPh) > elf->e_phentsize || size < elf->e_phoff + elf->e_phentsize * elf->e_phnum)
+		throw ElfException("Invalid ELF");
+    if(!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' && elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
+		throw ElfException("Invalid signature");
+
+    for(size_t i = 0; i < elf->e_phnum; i++) {
+		ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
+		if(ph->p_type != 1)
+			continue;
+		if(size < ph->p_offset + ph->p_filesz)
+			throw ElfException("Load segment invalid");
+
+		log->print("LOAD %zu: %p .. %p (%zu)\n",i,ph->p_vaddr,ph->p_vaddr + ph->p_memsz,ph->p_memsz);
+	}
+}
+
 int start() {
 	Ec *ec = Ec::current();
 	cpu_t cpu = ec->cpu();
@@ -126,6 +175,11 @@ int start() {
 	log->print("Memory:\n");
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		log->print("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
+		if(it->type == Hip_mem::MB_MODULE) {
+			map_mem(it->addr,it->size);
+			load_mod(it->addr,it->size);
+			while(1);
+		}
 	}
 
 	log->print("CPUs:\n");

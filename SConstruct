@@ -6,6 +6,9 @@ cross = 'i686-pc-nulnova'
 crossver = '4.6.1'
 crossdir = os.path.abspath('../cross/dist')
 
+hostenv = Environment(
+	CXXFLAGS = '-Wall -Wextra -ansi',
+)
 env = Environment(
 	CXXFLAGS = '-Wall -Wextra -ansi',
 	LINKFLAGS = '-static -Wl,-static -static-libgcc',
@@ -21,12 +24,12 @@ env = Environment(
 
 verbose = ARGUMENTS.get('VERBOSE',0);
 if int(verbose) == 0:
-	env['ASCOMSTR'] = "AS $TARGET"
-	env['CCCOMSTR'] = "CC $TARGET"
-	env['CXXCOMSTR'] = "CXX $TARGET"
-	env['LINKCOMSTR'] = "LD $TARGET"
-	env['ARCOMSTR'] = "AR $TARGET"
-	env['RANLIBCOMSTR'] = "RANLIB $TARGET"
+	hostenv['ASCOMSTR'] = env['ASCOMSTR'] = "AS $TARGET"
+	hostenv['CCCOMSTR'] = env['CCCOMSTR'] = "CC $TARGET"
+	hostenv['CXXCOMSTR'] = env['CXXCOMSTR'] = "CXX $TARGET"
+	hostenv['LINKCOMSTR'] = env['LINKCOMSTR'] = "LD $TARGET"
+	hostenv['ARCOMSTR'] = env['ARCOMSTR'] = "AR $TARGET"
+	hostenv['RANLIBCOMSTR'] = env['RANLIBCOMSTR'] = "RANLIB $TARGET"
 
 builddir = 'build'
 debug = ARGUMENTS.get('debug', 0)
@@ -53,7 +56,7 @@ env.Append(
 def NulProgram(env, target, source):
 	prog = env.Program(
 		target, source,
-		LIBS = 'supc++',
+		LIBS = ['stdc++','supc++'],
 		LIBPATH = [env['LIBPATH'], env['SYSLIBPATH']]
 	)
 	env.Depends(prog, env['SYSGCCLIBPATH'] + '/crt0.o')
@@ -66,5 +69,6 @@ def NulProgram(env, target, source):
 	env.Install(env['BINARYDIR'], prog)
 
 env.NulProgram = NulProgram
+hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')
 env.SConscript('libs/SConscript', 'env', variant_dir = builddir + '/libs')
 env.SConscript('apps/SConscript', 'env', variant_dir = builddir + '/apps')

@@ -2,5 +2,6 @@
 
 Import('env')
 
-env['LINKFLAGS'] += ' -Wl,-T,apps/root/linker.ld'
-env.NulProgram(env, 'root', Glob('*.cc'))
+myenv = env.Clone()
+myenv['LINKFLAGS'] += ' -Wl,-T,apps/root/linker.ld'
+myenv.NulProgram(myenv, 'root', Glob('*.cc'))

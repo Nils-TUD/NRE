@@ -47,8 +47,10 @@ public:
 	}
 
 	virtual void print(Format& fmt) const {
-		if(_msg)
+		if(_msg) {
 			fmt.print(_msg);
+			fmt.print("\n");
+		}
 		print_backtrace(fmt);
 	}
 
