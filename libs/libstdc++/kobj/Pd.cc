@@ -16,14 +16,14 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/ExecutionEnv.h>
+#include <arch/ExecEnv.h>
 #include <kobj/Pd.h>
 #include <kobj/Ec.h>
 
 namespace nul {
 
 Pd *Pd::current() {
-	return ExecutionEnv::get_current_pd();
+	return ExecEnv::get_current_pd();
 }
 
 }

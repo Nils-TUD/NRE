@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <arch/ExecutionEnv.h>
+#include <arch/ExecEnv.h>
 #include <kobj/KObject.h>
 #include <kobj/LocalEc.h>
 #include <Compiler.h>
@@ -28,7 +28,7 @@ namespace nul {
 
 class Pt : public KObject {
 public:
-	typedef ExecutionEnv::portal_func portal_func;
+	typedef ExecEnv::portal_func portal_func;
 
 	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject() {
 		// TODO use a specific cap-range for portals, so that we can provide per-portal-data with
@@ -41,8 +41,7 @@ public:
 	}
 	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(pt) {
 		Pd *pd = Pd::current();
-		Syscalls::create_pt(ec->event_base() + pt,ec->cap(),
-				reinterpret_cast<uintptr_t>(func),mtd,pd->cap());
+		Syscalls::create_pt(pt,ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd->cap());
 	}
 
 	void call() {

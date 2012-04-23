@@ -16,15 +16,15 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/x86/ExecutionEnv.h>
+#include <arch/x86/ExecEnv.h>
 #include <Compiler.h>
 
 namespace nul {
 
-void *ExecutionEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecutionEnv::PAGE_SIZE);
-size_t ExecutionEnv::_stack;
+void *ExecEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecEnv::PAGE_SIZE);
+size_t ExecEnv::_stack;
 
-void *ExecutionEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
+void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
 	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
 	_stacks[_stack][--stack_top] = ec;
 	_stacks[_stack][--stack_top] = pd;
@@ -33,14 +33,14 @@ void *ExecutionEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
 	return _stacks[_stack++] + stack_top;
 }
 
-size_t ExecutionEnv::collect_backtrace(uintptr_t *frames,size_t max) {
+size_t ExecEnv::collect_backtrace(uintptr_t *frames,size_t max) {
 	uintptr_t end,start;
 	uint32_t *ebp;
 	uintptr_t *frame = frames;
 	size_t count = 0;
 	asm volatile ("mov %%ebp,%0" : "=a" (ebp));
-	end = ((uintptr_t)ebp + (ExecutionEnv::STACK_SIZE - 1)) & ~(ExecutionEnv::STACK_SIZE - 1);
-	start = end - ExecutionEnv::STACK_SIZE;
+	end = ((uintptr_t)ebp + (ExecEnv::STACK_SIZE - 1)) & ~(ExecEnv::STACK_SIZE - 1);
+	start = end - ExecEnv::STACK_SIZE;
 	for(size_t i = 0; i < max - 1; i++) {
 		// prevent page-fault
 		if((uintptr_t)ebp < start || (uintptr_t)ebp >= end)

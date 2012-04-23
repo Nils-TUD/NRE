@@ -28,14 +28,14 @@ namespace nul {
 class Ec;
 class Pd;
 
-class ExecutionEnv {
+class ExecEnv {
 	enum {
 		// the x86-call instruction is 5 bytes long
 		CALL_INSTR_SIZE	= 5
 	};
 
 public:
-	typedef PORTAL void (*portal_func)(unsigned);
+	typedef PORTAL void (*portal_func)(cap_t);
 	typedef void (*startup_func)();
 
 	enum {
@@ -65,10 +65,10 @@ public:
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 
 private:
-	ExecutionEnv();
-	~ExecutionEnv();
-	ExecutionEnv(const ExecutionEnv&);
-	ExecutionEnv& operator=(const ExecutionEnv&);
+	ExecEnv();
+	~ExecEnv();
+	ExecEnv(const ExecEnv&);
+	ExecEnv& operator=(const ExecEnv&);
 
 	static inline void *get_current(size_t no) {
 		uint32_t esp;

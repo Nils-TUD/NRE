@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <arch/ExecutionEnv.h>
+#include <arch/ExecEnv.h>
 #include <Types.h>
 #include <Format.h>
 
@@ -34,7 +34,7 @@ public:
 
 public:
 	explicit Exception(const char *msg = 0) throw() : _msg(msg), _backtrace(), _count() {
-		_count = ExecutionEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
+		_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
 	}
 	virtual ~Exception() throw() {
 	}

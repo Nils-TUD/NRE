@@ -19,7 +19,7 @@
 #pragma once
 
 #ifdef __i386__
-#include <arch/x86/ExecutionEnv.h>
+#include <arch/x86/ExecEnv.h>
 #else
 #error "Unsupported architecture"
 #endif

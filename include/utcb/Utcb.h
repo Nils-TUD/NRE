@@ -39,6 +39,7 @@ public:
 		crd_translate = 0;
 	}
 	void push() {
+		reset();
 		// TODO
 	}
 	void pop() {

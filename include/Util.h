@@ -34,7 +34,45 @@ public:
 		return a < b ? b : a;
 	}
 
-	static uint64_t tsc() {
+	static inline bool overlapped(uintptr_t b1,size_t s1,uintptr_t b2,size_t s2) {
+		uintptr_t e1 = b1 + s1;
+		uintptr_t e2 = b2 + s2;
+		return (b1 >= b2 && b1 < e2) ||			// start in range
+				(e1 > b2 && e1 <= e2) ||		// end in range
+				(b1 < b2 && e1 > e2);			// completely overlapped
+	}
+
+	/**
+	 * Finds the position of the most significant "1" bit
+	 */
+	template<typename T>
+	static inline T bsr(T value) {
+		return __builtin_clz(value) ^ 0x1F;
+	}
+	/**
+	 * Finds the position of the least significant "1" bit
+	 */
+	template<typename T>
+	static inline T bsf(T value) {
+		return __builtin_ctz(value);
+	}
+
+	/**
+	 * Calculates the order (log2 of the size) of the largest naturally
+	 * aligned block that starts at start and is no larger than size.
+	 *
+	 * @param minshift The largest value returned by this function.
+	 *
+	 * @return The calculated order or the minshift parameter is it is
+	 * smaller then the order.
+	 */
+	static inline uint minshift(uintptr_t start,size_t size) {
+		uint basealign = static_cast<uint>(bsf(start | (1ul << (8 * sizeof(uintptr_t) - 1))));
+		uint shiftalign = static_cast<uint>(bsr(size | 1));
+		return min(basealign,shiftalign);
+	}
+
+	static inline uint64_t tsc() {
 		uint32_t u,l;
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));
 		return (uint64_t)u << 32 | l;

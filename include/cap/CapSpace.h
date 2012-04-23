@@ -35,11 +35,11 @@ private:
 	}
 
 public:
-	cap_t allocate(unsigned count = 1) {
-		cap_t res = _off;
+	cap_t allocate(unsigned count = 1,unsigned align = 1) {
+		cap_t res = (_off + align - 1) & ~(align - 1);
 		if(res + count < res || res + count > Hip::get().cfg_cap)
 			throw Exception("Out of caps");
-		_off += count;
+		_off = res + count;
 		return res;
 	}
 	void free(cap_t,unsigned = 1) {

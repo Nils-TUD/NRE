@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <arch/ExecutionEnv.h>
+#include <arch/ExecEnv.h>
 #include <cap/CapHolder.h>
 #include <kobj/KObject.h>
 #include <kobj/Pd.h>
@@ -31,12 +31,12 @@ namespace nul {
 class Ec : public KObject {
 public:
 	static Ec *current() {
-		return ExecutionEnv::get_current_ec();
+		return ExecEnv::get_current_ec();
 	}
 
 protected:
 	explicit Ec(cpu_t cpu,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
-			: KObject(cap), _utcb(utcb), _event_base(event_base), _cpu(cpu) {
+			: KObject(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu) {
 		if(!_utcb) {
 			// TODO
 			_utcb = reinterpret_cast<Utcb*>(_utcb_addr);
@@ -47,6 +47,7 @@ protected:
 		CapHolder ch;
 		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->cap());
 		cap(ch.release());
+		_stack = reinterpret_cast<uintptr_t>(sp) & ~(ExecEnv::PAGE_SIZE - 1);
 	}
 
 public:
@@ -54,6 +55,9 @@ public:
 		// TODO stack, utcb
 	}
 
+	uintptr_t stack() const {
+		return _stack;
+	}
 	cap_t event_base() const {
 		return _event_base;
 	}
@@ -72,6 +76,7 @@ private:
 	Ec& operator=(const Ec&);
 
 	Utcb *_utcb;
+	uintptr_t _stack;
 	cap_t _event_base;
 	cpu_t _cpu;
 

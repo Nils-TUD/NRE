@@ -36,9 +36,9 @@ class Pd : public KObject {
 public:
 	static Pd *current();
 
-	explicit Pd(Pd *pd = Pd::current()) : KObject(), _io(0,0), _mem(0,0) {
+	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current()) : KObject(), _io(0,0), _mem(0,0) {
 		CapHolder ch;
-		Syscalls::create_pd(ch.get(),Crd(0),pd->cap());
+		Syscalls::create_pd(ch.get(),crd,pd->cap());
 		cap(ch.release());
 	}
 

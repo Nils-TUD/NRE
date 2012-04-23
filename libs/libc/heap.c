@@ -18,7 +18,7 @@
 
 #include <Types.h>
 
-static char buffer[4096];
+static char buffer[8192];
 static size_t pos = 0;
 
 void* malloc(size_t size) {

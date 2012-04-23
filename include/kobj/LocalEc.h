@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <arch/ExecutionEnv.h>
+#include <arch/ExecEnv.h>
 #include <kobj/Ec.h>
 #include <CPU.h>
 
@@ -30,11 +30,11 @@ class LocalEc : public Ec {
 public:
 	explicit LocalEc(cpu_t cpu) : Ec(cpu,CPU::get(cpu).ec->event_base()) {
 		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecutionEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
+		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
 	}
 	explicit LocalEc(cpu_t cpu,cap_t event_base) : Ec(cpu,event_base) {
 		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecutionEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
+		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
 	}
 	virtual ~LocalEc() {
 	}

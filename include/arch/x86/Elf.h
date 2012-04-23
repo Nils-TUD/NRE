@@ -30,6 +30,12 @@ struct ElfEh {
 	uint16_t e_shstrndx;
 };
 
+enum ElfPhFlags {
+	PF_X	= 1 << 0,
+	PF_W	= 1 << 1,
+	PF_R	= 1 << 2,
+};
+
 struct ElfPh {
 	uint32_t p_type;
 	uint32_t p_offset;
