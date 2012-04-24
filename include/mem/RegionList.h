@@ -21,7 +21,7 @@ class RegionList {
 	};
 
 	struct Region {
-		const void *src;
+		uintptr_t src;
 		uintptr_t begin;
 		size_t size;
 		uint flags;
@@ -29,15 +29,17 @@ class RegionList {
 
 public:
 	enum Perm {
+		// note that this equals the values in a Crd
 		R	= 1 << 0,
 		W	= 1 << 1,
 		X	= 1 << 2,
 		M	= 1 << 3,	// mapped
 		RW	= R | W,
 		RX	= R | X,
+		RWX	= R | W | X,
 	};
 
-	uint find(uintptr_t addr,const void **src) const {
+	uint find(uintptr_t addr,uintptr_t *src) const {
 		const Region *r = get(addr,1);
 		if(r) {
 			*src = r->src;
@@ -58,16 +60,16 @@ public:
 	void map(uintptr_t addr) {
 		const Region *r = get(addr,1);
 		assert(r);
-		add(addr,ExecEnv::PAGE_SIZE,r->src,r->flags | M);
+		add(addr,ExecEnv::PAGE_SIZE,r->src + addr - r->begin,r->flags | M);
 	}
 
 	void unmap(uintptr_t addr) {
 		const Region *r = get(addr,1);
 		assert(r);
-		add(addr,ExecEnv::PAGE_SIZE,r->src,r->flags & ~M);
+		add(addr,ExecEnv::PAGE_SIZE,r->src + addr - r->begin,r->flags & ~M);
 	}
 
-	void add(uintptr_t addr,size_t size,const void *src,uint flags) {
+	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
 		Region *r = get(addr,size);
 		if(r) {
 			if(addr == r->begin && size == r->size) {
@@ -96,6 +98,7 @@ public:
 				// beginning of region
 				else {
 					r->size = r->begin + r->size - (addr + size);
+					r->src += (addr + size) - r->begin;
 					r->begin = addr + size;
 				}
 			}
@@ -109,6 +112,7 @@ public:
 					nr->begin = addr + size;
 					nr->size = r->begin + r->size - nr->begin;
 					nr->flags = r->flags;
+					nr->src = r->src + (nr->begin - r->begin);
 					r->size = addr - r->begin;
 				}
 			}

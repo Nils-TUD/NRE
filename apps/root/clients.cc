@@ -12,6 +12,7 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Pt.h>
+#include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
 #include <mem/RegionList.h>
 #include <arch/Elf.h>
@@ -64,10 +65,12 @@ extern Log *log;
 static size_t client = 0;
 static Client *clients[MAX_CLIENTS];
 static cap_t portal_caps;
+static Sm *sm;
 
 void start_clients() {
 	int i = 0;
 	const Hip &hip = Hip::get();
+	sm = new Sm(1);
 	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * hip.cfg_exc,hip.cfg_exc);
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
@@ -97,17 +100,58 @@ static void map_mem(uintptr_t phys,size_t size) {
 	CPU::current().map_pt->call();
 }
 
+static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t size,uint perms) {
+	const int shift = ExecEnv::PAGE_SHIFT;
+	size = (size + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+	while(size > 0) {
+		uint minshift = Util::minshift(src | dest,size);
+		uf.add_typed(DelItem(Crd(src >> shift,minshift - shift,DESC_TYPE_MEM | (perms << 2)),0,dest >> shift));
+		size_t amount = 1 << minshift;
+		src += amount;
+		dest += amount;
+		size -= amount;
+	}
+}
+
 static void portal_startup(cap_t pid) {
 	Client *c = get_client(pid);
+	assert(c);
 	UtcbExc *utcb = Ec::current()->exc_utcb();
 	utcb->mtd = MTD_RIP_LEN | MTD_RSP;
 	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);
-	utcb->esp = c->stack + (utcb->esp & ExecEnv::PAGE_SIZE);
+	utcb->esp = c->stack + (utcb->esp & (ExecEnv::PAGE_SIZE - 1));
 }
 
+static uintptr_t lastpf = 0;
+
 static void portal_pf(cap_t pid) {
+	Client *c = get_client(pid);
+	assert(c);
 	UtcbExc *utcb = Ec::current()->exc_utcb();
-	log->print("Page fault @ %p, esp=%p\n",utcb->eip,utcb->esp);
+	uintptr_t pfaddr = utcb->qual[1];
+	uintptr_t eip = utcb->eip;
+
+	sm->down();
+	log->print("\nPagefault for address %p @ %p\n",pfaddr,eip);
+	if(lastpf == pfaddr)
+		while(1);
+	else
+		lastpf = pfaddr;
+
+	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
+	UtcbFrameRef uf;
+	uintptr_t src;
+	uint flags = c->regs.find(pfaddr,&src);
+	uf.reset();
+	if(flags) {
+		uint perms = flags & RegionList::RWX;
+		delegate_mem(uf,pfaddr & ~(ExecEnv::PAGE_SIZE - 1),src,ExecEnv::PAGE_SIZE,perms);
+		c->regs.map(pfaddr);
+	}
+
+	c->regs.print(*log);
+	log->print("\n");
+	sm->up();
 }
 
 static void load_mod(uintptr_t addr,size_t size) {
@@ -120,43 +164,51 @@ static void load_mod(uintptr_t addr,size_t size) {
 		throw ElfException("Invalid signature");
 
 	// create client
-	ScopedPtr<Client> c(new Client());
-	// we have to create the portals first to be able to delegate them to the new Pd
-	cap_t portals = portal_caps + client * Hip::get().cfg_exc;
-	// TODO constants for exceptions
-	c->pf_pt = new Pt(CPU::current().ec,portals + 0xe,portal_pf,MTD_ALL);
-	c->start_pt = new Pt(CPU::current().ec,portals + 0x1e,portal_startup,MTD_RSP);
-	// now create Pd and pass exception-portals
-	c->pd = new Pd(Crd(portals,5,DESC_CAP_ALL));
-	c->ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->pd);
+	Client *c = new Client();
+	try {
+		// we have to create the portals first to be able to delegate them to the new Pd
+		cap_t portals = portal_caps + client * Hip::get().cfg_exc;
+		// TODO constants for exceptions
+		c->pf_pt = new Pt(CPU::current().ec,portals + 0xe,portal_pf,MTD_QUAL | MTD_RIP_LEN);
+		c->start_pt = new Pt(CPU::current().ec,portals + 0x1e,portal_startup,MTD_RSP);
+		// now create Pd and pass exception-portals
+		c->pd = new Pd(Crd(portals,5,DESC_CAP_ALL));
+		c->ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->pd);
 
-	// check load segments and add them to regions
-	for(size_t i = 0; i < elf->e_phnum; i++) {
-		ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
-		if(ph->p_type != 1)
-			continue;
-		if(size < ph->p_offset + ph->p_filesz)
-			throw ElfException("Load segment invalid");
+		// check load segments and add them to regions
+		for(size_t i = 0; i < elf->e_phnum; i++) {
+			ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
+			if(ph->p_type != 1)
+				continue;
+			if(size < ph->p_offset + ph->p_filesz)
+				throw ElfException("Load segment invalid");
 
-		uint perms = 0;
-		if(ph->p_flags & PF_R)
-			perms |= RegionList::R;
-		if(ph->p_flags & PF_W)
-			perms |= RegionList::W;
-		if(ph->p_flags & PF_X)
-			perms |= RegionList::X;
-		c->regs.add(ph->p_vaddr,ph->p_memsz,reinterpret_cast<const void*>(addr + ph->p_offset),perms);
+			uint perms = 0;
+			if(ph->p_flags & PF_R)
+				perms |= RegionList::R;
+			if(ph->p_flags & PF_W)
+				perms |= RegionList::W;
+			if(ph->p_flags & PF_X)
+				perms |= RegionList::X;
+			c->regs.add(ph->p_vaddr,ph->p_memsz,addr + ph->p_offset,perms);
+		}
+
+		// he needs a stack and utcb
+		c->stack = c->regs.find_free(ExecEnv::STACK_SIZE);
+		c->regs.add(c->stack,ExecEnv::STACK_SIZE,c->ec->stack(),RegionList::RW);
+		uintptr_t utcb = c->regs.find_free(ExecEnv::PAGE_SIZE);
+		c->regs.add(utcb,ExecEnv::PAGE_SIZE,reinterpret_cast<uintptr_t>(c->ec->utcb()),RegionList::RW);
+
+		sm->down();
+		c->regs.print(*log);
+		sm->up();
+
+		// start client; we have to put the client into the list before that
+		clients[client++] = c;
+		c->sc = new Sc(c->ec,Qpd(),c->pd);
 	}
-
-	// he needs a stack and utcb
-	c->stack = c->regs.find_free(ExecEnv::STACK_SIZE);
-	c->regs.add(c->stack,ExecEnv::STACK_SIZE,reinterpret_cast<const void*>(c->ec->stack()),RegionList::RW);
-	uintptr_t utcb = c->regs.find_free(ExecEnv::PAGE_SIZE);
-	c->regs.add(utcb,ExecEnv::PAGE_SIZE,c->ec->utcb(),RegionList::RW);
-
-	c->regs.print(*log);
-
-	// start client
-	c->sc = new Sc(c->ec,Qpd(),c->pd);
-	clients[client++] = c.release();
+	catch(...) {
+		delete c;
+		clients[--client] = 0;
+	}
 }

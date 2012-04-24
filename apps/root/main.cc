@@ -111,7 +111,7 @@ int start() {
 
 	start_clients();
 
-	RegionList l;
+	/*RegionList l;
 	l.add(0x1000,0x4000,0,RegionList::RW);
 	l.add(0x8000,0x2000,0,RegionList::R);
 	l.add(0x10000,0x8000,0,RegionList::RX);
@@ -121,14 +121,14 @@ int start() {
 	l.remove(0x1000,0x8000);
 	l.print(*log);
 	l.remove(0x10000,0x4000);
-	l.print(*log);
+	l.print(*log);*/
 
 	{
 		Pt pt(CPU::current().ec,portal_test);
 		{
 			UtcbFrame uf;
 			uf << 4 << 344 << 0x1234;
-			uf.print(*log);
+			//uf.print(*log);
 			pt.call();
 		}
 		ec->utcb()->reset();

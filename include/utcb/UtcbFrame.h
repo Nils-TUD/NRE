@@ -82,8 +82,8 @@ public:
 	}
 	void add_typed(const TypedItem &item) {
 		assert(_utcb.typed + _utcb.untyped + 2 <= Utcb::MAX_WORDS);
-		_utcb.msg[Utcb::MAX_WORDS - ++_utcb.typed] = item._crd.value();
 		_utcb.msg[Utcb::MAX_WORDS - ++_utcb.typed] = item._aux;
+		_utcb.msg[Utcb::MAX_WORDS - ++_utcb.typed] = item._crd.value();
 	}
 
 	UtcbFrameRef &operator <<(unsigned value) {
@@ -105,8 +105,8 @@ public:
 	}
 	UtcbFrameRef &operator >>(TypedItem &item) {
 		assert(_utcb.untyped >= 2);
-		item._aux = _utcb.msg[_count - _utcb.untyped--];
 		item._crd = Crd(_utcb.msg[_count - _utcb.untyped--]);
+		item._aux = _utcb.msg[_count - _utcb.untyped--];
 		return *this;
 	}
 

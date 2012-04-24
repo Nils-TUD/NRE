@@ -49,10 +49,10 @@ public:
 	void print(Format &fmt) const {
 		fmt.print("Typed: %u\n",typed);
 		for(size_t i = 0; i < typed; ++i)
-			fmt.print("\t%zu: %x\n",i,msg[i]);
+			fmt.print("\t%zu: %#x\n",i,msg[i]);
 		fmt.print("Untyped: %u\n",untyped);
 		for(size_t i = 0; i < untyped; ++i)
-			fmt.print("\t%zu: %x\n",i,msg[Utcb::MAX_WORDS - i - 1]);
+			fmt.print("\t%zu: %#x\n",i,msg[Utcb::MAX_WORDS - i - 1]);
 	}
 };
 
