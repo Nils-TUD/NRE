@@ -30,6 +30,8 @@ class UtcbHead {
 	friend class UtcbFrameRef;
 
 protected:
+	uint16_t top;
+	uint16_t bottom;
 	union {
 		struct {
 			uint16_t untyped;

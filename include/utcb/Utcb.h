@@ -24,26 +24,36 @@
 
 namespace nul {
 
+class UtcbFrameRef;
+class UtcbFrame;
+
 class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
+	friend class UtcbFrame;
 
 	uint32_t msg[(4096 - sizeof(UtcbHead)) / sizeof(uint32_t)];
 	enum {
 		MAX_WORDS = sizeof(msg) / sizeof(uint32_t)
 	};
 
+	Utcb *push() {
+		bottom += (sizeof(UtcbHead) / sizeof(uint32_t)) + untyped;
+		top += typed * 2;
+		Utcb *frame = reinterpret_cast<Utcb*>(reinterpret_cast<uint32_t*>(this) + bottom);
+		frame->reset();
+		return frame;
+	}
+	void pop() {
+		Utcb *utcb = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(ExecEnv::PAGE_SIZE - 1));
+		utcb->bottom = this->bottom;
+		utcb->top = this->top;
+	}
+
 public:
 	void reset() {
 		mtr = 0;
 		crd = 0;
 		crd_translate = 0;
-	}
-	void push() {
-		reset();
-		// TODO
-	}
-	void pop() {
-		// TODO
 	}
 
 	void print(Format &fmt) const {

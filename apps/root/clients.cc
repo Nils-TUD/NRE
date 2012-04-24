@@ -31,7 +31,7 @@ public:
 	}
 };
 
-struct Client {
+struct Child {
 	Pd *pd;
 	GlobalEc *ec;
 	Sc *sc;
@@ -42,9 +42,9 @@ struct Client {
 	uintptr_t utcb;
 	uintptr_t hip;
 
-	Client() : pd(), ec(), sc(), pf_pt(), start_pt(), regs(), stack(), utcb(), hip() {
+	Child() : pd(), ec(), sc(), pf_pt(), start_pt(), regs(), stack(), utcb(), hip() {
 	}
-	~Client() {
+	~Child() {
 		if(pd)
 			delete pd;
 		if(ec)
@@ -64,12 +64,12 @@ static void map_mem(uintptr_t phys,size_t size);
 static void load_mod(uintptr_t addr,size_t size);
 
 extern Log *log;
-static size_t client = 0;
-static Client *clients[MAX_CLIENTS];
+static size_t child = 0;
+static Child *childs[MAX_CLIENTS];
 static cap_t portal_caps;
 static Sm *sm;
 
-void start_clients() {
+void start_childs() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	sm = new Sm(1);
@@ -83,14 +83,14 @@ void start_clients() {
 	}
 }
 
-static Client *get_client(cap_t pid) {
-	return clients[((pid - portal_caps) / Hip::get().cfg_exc)];
+static Child *get_child(cap_t pid) {
+	return childs[((pid - portal_caps) / Hip::get().cfg_exc)];
 }
 
-static void destroy_client(cap_t pid) {
+static void destroy_child(cap_t pid) {
 	size_t i = (pid - portal_caps) / Hip::get().cfg_exc;
-	delete clients[i];
-	clients[i] = 0;
+	delete childs[i];
+	childs[i] = 0;
 }
 
 static void map_mem(uintptr_t phys,size_t size) {
@@ -122,7 +122,7 @@ static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t si
 }
 
 static void portal_startup(cap_t pid) {
-	Client *c = get_client(pid);
+	Child *c = get_child(pid);
 	assert(c);
 	UtcbExc *utcb = Ec::current()->exc_utcb();
 	utcb->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
@@ -135,7 +135,7 @@ static void portal_startup(cap_t pid) {
 }
 
 static void portal_pf(cap_t pid) {
-	Client *c = get_client(pid);
+	Child *c = get_child(pid);
 	assert(c);
 	UtcbExc *utcb = Ec::current()->exc_utcb();
 	uintptr_t pfaddr = utcb->qual[1];
@@ -152,8 +152,8 @@ static void portal_pf(cap_t pid) {
 	uint flags = c->regs.find(pfaddr,&src);
 	// not found or already mapped?
 	if(!flags || (flags & RegionList::M)) {
-		log->print("Unable to resolve fault; killing client\n");
-		destroy_client(pid);
+		log->print("Unable to resolve fault; killing child\n");
+		destroy_child(pid);
 	}
 	else {
 		uint perms = flags & RegionList::RWX;
@@ -175,11 +175,11 @@ static void load_mod(uintptr_t addr,size_t size) {
 	if(!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' && elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
 		throw ElfException("Invalid signature");
 
-	// create client
-	Client *c = new Client();
+	// create child
+	Child *c = new Child();
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		cap_t portals = portal_caps + client * Hip::get().cfg_exc;
+		cap_t portals = portal_caps + child * Hip::get().cfg_exc;
 		// TODO constants for exceptions
 		c->pf_pt = new Pt(CPU::current().ec,portals + 0xe,portal_pf,MTD_QUAL | MTD_RIP_LEN);
 		c->start_pt = new Pt(CPU::current().ec,portals + 0x1e,portal_startup,MTD_RSP);
@@ -210,7 +210,7 @@ static void load_mod(uintptr_t addr,size_t size) {
 		c->regs.add(c->stack,ExecEnv::STACK_SIZE,c->ec->stack(),RegionList::RW);
 		c->utcb = c->regs.find_free(ExecEnv::PAGE_SIZE);
 		c->regs.add(c->utcb,ExecEnv::PAGE_SIZE,reinterpret_cast<uintptr_t>(c->ec->utcb()),RegionList::RW);
-		// TODO give the client his own Hip
+		// TODO give the child his own Hip
 		c->hip = reinterpret_cast<uintptr_t>(&Hip::get());
 		c->regs.add(c->hip,ExecEnv::PAGE_SIZE,c->hip,RegionList::R);
 
@@ -218,12 +218,12 @@ static void load_mod(uintptr_t addr,size_t size) {
 		c->regs.print(*log);
 		sm->up();
 
-		// start client; we have to put the client into the list before that
-		clients[client++] = c;
+		// start child; we have to put the child into the list before that
+		childs[child++] = c;
 		c->sc = new Sc(c->ec,Qpd(),c->pd);
 	}
 	catch(...) {
 		delete c;
-		clients[--client] = 0;
+		childs[--child] = 0;
 	}
 }

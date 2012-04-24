@@ -127,7 +127,7 @@ protected:
 class UtcbFrame : public UtcbFrameRef {
 public:
 	UtcbFrame() : UtcbFrameRef() {
-		_utcb.push();
+		_utcb = *_utcb.push();
 	}
 	virtual ~UtcbFrame() {
 		_utcb.pop();

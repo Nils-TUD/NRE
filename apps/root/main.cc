@@ -42,7 +42,7 @@ PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_test(cap_t pid);
 PORTAL static void portal_map(cap_t pid);
 static void mythread();
-extern void start_clients();
+extern void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 Log *log;
@@ -61,6 +61,21 @@ void verbose_terminate() {
 	abort();
 }
 
+static void map(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0) {
+	UtcbFrame uf;
+	uf.set_receive_crd(Crd(0,31,attr));
+	if(hotspot == 0)
+		hotspot = start;
+	while(count > 0) {
+		uint minshift = Util::minshift(start,count);
+		uf << DelItem(Crd(start,minshift,attr),DelItem::FROM_HV,hotspot);
+		start += 1 << minshift;
+		hotspot += 1 << minshift;
+		count -= 1 << minshift;
+	}
+	CPU::current().map_pt->call();
+}
+
 int start() {
 	Ec *ec = Ec::current();
 	cpu_t cpu = ec->cpu();
@@ -76,27 +91,19 @@ int start() {
 		}
 	}
 
-	{
-		UtcbFrame uf;
-		uf << DelItem(Crd(0x3F8,3,DESC_IO_ALL),DelItem::FROM_HV);
-		uf.set_receive_crd(Crd(0, 20, DESC_IO_ALL));
-		CPU::current().map_pt->call();
-	}
+	map(0x3f8,6,DESC_IO_ALL);
 
 	log = new Log();
 	std::set_terminate(verbose_terminate);
 
-	{
-		UtcbFrame uf;
-		uf << DelItem(Crd(0x100,4,DESC_MEM_ALL),DelItem::FROM_HV,0x200);
-		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		CPU::current().map_pt->call();
-	}
+	map(0x100,16,DESC_MEM_ALL,0x200);
 
 	*(char*)0x200000 = 4;
 	*(char*)(0x200000 + ExecEnv::PAGE_SIZE * 16 - 1) = 4;
 	assert(*(char*)0x200000 == 4);
 	//assert(*(char*)0x200000 == 5);
+	while(1)
+		;
 
 	log->print("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
@@ -110,7 +117,7 @@ int start() {
 			log->print("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
-	start_clients();
+	start_childs();
 
 	/*RegionList l;
 	l.add(0x1000,0x4000,0,RegionList::RW);
@@ -207,14 +214,7 @@ static void portal_startup(cap_t) {
 
 static void mythread() {
 	Ec *ec = Ec::current();
-	{
-		UtcbFrame uf;
-		uf << DelItem(Crd(0x100 + ec->cap(),4,DESC_MEM_ALL),
-				DelItem::FROM_HV,0x200 + ec->cap());
-		uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-		CPU::current().map_pt->call();
-	}
-
+	map(0x100 + ec->cap(),16,DESC_MEM_ALL,0x200 + ec->cap());
 	while(1) {
 		sm->down();
 		log->print("I am Ec %u, running on CPU %u\n",Ec::current()->cap(),Ec::current()->cpu());
