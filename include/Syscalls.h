@@ -69,7 +69,6 @@ enum {
 };
 
 class Desc {
-private:
 	unsigned _value;
 protected:
 	Desc(unsigned v) : _value(v) {
@@ -122,7 +121,6 @@ public:
 };
 
 class Syscalls {
-private:
 	enum {
 		FLAG0	= 1 << 4,
 		FLAG1	= 1 << 5,
@@ -157,7 +155,6 @@ public:
 		SM_ZERO	= FLAG1
 	};
 
-public:
 	static inline void call(cap_t pt) {
 		SyscallABI::syscall(pt << 8 | IPC_CALL);
 	}

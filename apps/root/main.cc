@@ -44,6 +44,7 @@ PORTAL static void portal_map(cap_t pid);
 static void mythread();
 extern void start_clients();
 
+uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 Log *log;
 static Sm *sm;
 

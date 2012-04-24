@@ -18,6 +18,7 @@
 
 .section .text
 
+.global _stack
 .global _start
 .extern start
 .extern exit
@@ -25,11 +26,18 @@
 .extern _init
 
 _start:
+	# 0 in %ebx means we're the root-task
+	test	%ebx,%ebx
+	jnz		1f
 	mov		%esp, _startup_info		# store pointer to HIP
 	lea		-0x1000(%esp), %edx		# UTCB is below HIP
+	mov		$_stack, %esp			# switch to our stack
+	jmp		2f
+1:
+	mov		%ecx, _startup_info		# store pointer to HIP
+2:
 	mov		%edx, _startup_info + 4 # store pointer to UTCB
 	mov		%eax, _startup_info + 8	# store cpu
-	mov		$stack, %esp			# switch to our stack
 	sub		$8,%esp					# leave space for Ec and Pd
 
 	# call function in .init-section
@@ -45,17 +53,6 @@ _start:
 	# just to be sure
 	1:		jmp	1b
 
-# A fast reply to our client, called by a return to a portal
-# function.
-.global idc_reply_and_wait_fast
-idc_reply_and_wait_fast:
-	# w0: NOVA_IPC_REPLY
-	mov     $1,     %al
-	# keep a pointer to ourself on the stack
-	# ecx: stack
-	lea     -4(%esp), %ecx
-	sysenter
-
 # information for startup
 .section .bss.startup_info
 .global _startup_info
@@ -63,8 +60,3 @@ _startup_info:
 	.long	0	# HIP
 	.long	0	# UTCB
 	.long	0	# cpu
-
-.section .bss.stack
-.align 0x1000
-	.space	0x1000
-stack:

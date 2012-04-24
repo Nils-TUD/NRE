@@ -22,6 +22,9 @@
 
 using namespace nul;
 
+// is overwritten by the root-task; all others don't need it
+WEAK void *_stack;
+
 void _setup() {
 	static Pd initpd(Hip::get().cfg_exc + 0,true);
 	static GlobalEc initec(

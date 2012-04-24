@@ -39,8 +39,10 @@ struct Client {
 	Pt *start_pt;
 	RegionList regs;
 	uintptr_t stack;
+	uintptr_t utcb;
+	uintptr_t hip;
 
-	Client() : pd(), ec(), sc(), pf_pt(), start_pt(), regs(), stack() {
+	Client() : pd(), ec(), sc(), pf_pt(), start_pt(), regs(), stack(), utcb(), hip() {
 	}
 	~Client() {
 		if(pd)
@@ -85,6 +87,12 @@ static Client *get_client(cap_t pid) {
 	return clients[((pid - portal_caps) / Hip::get().cfg_exc)];
 }
 
+static void destroy_client(cap_t pid) {
+	size_t i = (pid - portal_caps) / Hip::get().cfg_exc;
+	delete clients[i];
+	clients[i] = 0;
+}
+
 static void map_mem(uintptr_t phys,size_t size) {
 	UtcbFrame uf;
 	uintptr_t frame = phys >> ExecEnv::PAGE_SHIFT;
@@ -117,12 +125,14 @@ static void portal_startup(cap_t pid) {
 	Client *c = get_client(pid);
 	assert(c);
 	UtcbExc *utcb = Ec::current()->exc_utcb();
-	utcb->mtd = MTD_RIP_LEN | MTD_RSP;
+	utcb->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
 	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);
 	utcb->esp = c->stack + (utcb->esp & (ExecEnv::PAGE_SIZE - 1));
+	utcb->eax = c->ec->cpu();
+	utcb->ecx = c->hip;
+	utcb->edx = c->utcb;
+	utcb->ebx = 1;
 }
-
-static uintptr_t lastpf = 0;
 
 static void portal_pf(cap_t pid) {
 	Client *c = get_client(pid);
@@ -133,23 +143,25 @@ static void portal_pf(cap_t pid) {
 
 	sm->down();
 	log->print("\nPagefault for address %p @ %p\n",pfaddr,eip);
-	if(lastpf == pfaddr)
-		while(1);
-	else
-		lastpf = pfaddr;
+
+	UtcbFrameRef uf;
+	uf.reset();
 
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
-	UtcbFrameRef uf;
 	uintptr_t src;
 	uint flags = c->regs.find(pfaddr,&src);
-	uf.reset();
-	if(flags) {
+	// not found or already mapped?
+	if(!flags || (flags & RegionList::M)) {
+		log->print("Unable to resolve fault; killing client\n");
+		destroy_client(pid);
+	}
+	else {
 		uint perms = flags & RegionList::RWX;
 		delegate_mem(uf,pfaddr & ~(ExecEnv::PAGE_SIZE - 1),src,ExecEnv::PAGE_SIZE,perms);
 		c->regs.map(pfaddr);
-	}
 
-	c->regs.print(*log);
+		c->regs.print(*log);
+	}
 	log->print("\n");
 	sm->up();
 }
@@ -196,8 +208,11 @@ static void load_mod(uintptr_t addr,size_t size) {
 		// he needs a stack and utcb
 		c->stack = c->regs.find_free(ExecEnv::STACK_SIZE);
 		c->regs.add(c->stack,ExecEnv::STACK_SIZE,c->ec->stack(),RegionList::RW);
-		uintptr_t utcb = c->regs.find_free(ExecEnv::PAGE_SIZE);
-		c->regs.add(utcb,ExecEnv::PAGE_SIZE,reinterpret_cast<uintptr_t>(c->ec->utcb()),RegionList::RW);
+		c->utcb = c->regs.find_free(ExecEnv::PAGE_SIZE);
+		c->regs.add(c->utcb,ExecEnv::PAGE_SIZE,reinterpret_cast<uintptr_t>(c->ec->utcb()),RegionList::RW);
+		// TODO give the client his own Hip
+		c->hip = reinterpret_cast<uintptr_t>(&Hip::get());
+		c->regs.add(c->hip,ExecEnv::PAGE_SIZE,c->hip,RegionList::R);
 
 		sm->down();
 		c->regs.print(*log);

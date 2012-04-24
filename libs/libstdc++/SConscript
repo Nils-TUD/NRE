@@ -2,5 +2,7 @@
 
 Import('env')
 
-lib = env.StaticLibrary('libstdc++', [Glob('*.cc'), Glob('*/*.cc'), Glob('*/*/*.cc')])
+ccsrc = [Glob('*.cc'), Glob('*/*.cc'), Glob('*/*/*.cc')]
+ssrc = [Glob('*.s'), Glob('*/*.s'), Glob('*/*/*.s')]
+lib = env.StaticLibrary('libstdc++', ccsrc + ssrc)
 env.Install(env['LIBPATH'], lib)

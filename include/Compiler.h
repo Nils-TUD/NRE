@@ -23,3 +23,4 @@
 #define PACKED				__attribute__((packed))
 #define NORETURN		 	__attribute__((__noreturn__))
 #define INIT_PRIORITY(X)    __attribute__((init_priority((X))))
+#define WEAK				__attribute__((weak))

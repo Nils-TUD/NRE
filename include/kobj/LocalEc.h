@@ -22,7 +22,7 @@
 #include <kobj/Ec.h>
 #include <CPU.h>
 
-extern "C" void idc_reply_and_wait_fast(void);
+extern "C" void portal_reply_landing_spot(void);
 
 namespace nul {
 
@@ -30,11 +30,11 @@ class LocalEc : public Ec {
 public:
 	explicit LocalEc(cpu_t cpu) : Ec(cpu,CPU::get(cpu).ec->event_base()) {
 		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
+		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
 	}
 	explicit LocalEc(cpu_t cpu,cap_t event_base) : Ec(cpu,event_base) {
 		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,idc_reply_and_wait_fast));
+		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
 	}
 	virtual ~LocalEc() {
 	}

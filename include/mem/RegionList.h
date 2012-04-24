@@ -42,7 +42,7 @@ public:
 	uint find(uintptr_t addr,uintptr_t *src) const {
 		const Region *r = get(addr,1);
 		if(r) {
-			*src = r->src;
+			*src = r->src + (addr - r->begin);
 			return r->flags;
 		}
 		return 0;
