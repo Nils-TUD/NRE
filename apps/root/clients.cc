@@ -15,9 +15,9 @@
 #include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
 #include <mem/RegionList.h>
+#include <format/Log.h>
 #include <arch/Elf.h>
 #include <ScopedPtr.h>
-#include <Log.h>
 
 using namespace nul;
 
@@ -105,7 +105,7 @@ static void map_mem(uintptr_t phys,size_t size) {
 		phys += 1 << minshift;
 		size -= 1 << minshift;
 	}
-	CPU::current().map_pt->call();
+	CPU::current().map_pt->call(uf);
 }
 
 static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t size,uint perms) {
@@ -122,30 +122,27 @@ static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t si
 }
 
 static void portal_startup(cap_t pid) {
+	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
 	assert(c);
-	UtcbExc *utcb = Ec::current()->exc_utcb();
-	utcb->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
-	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);
-	utcb->esp = c->stack + (utcb->esp & (ExecEnv::PAGE_SIZE - 1));
-	utcb->eax = c->ec->cpu();
-	utcb->ecx = c->hip;
-	utcb->edx = c->utcb;
-	utcb->ebx = 1;
+	uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
+	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
+	uf->esp = c->stack + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
+	uf->eax = c->ec->cpu();
+	uf->ecx = c->hip;
+	uf->edx = c->utcb;
+	uf->ebx = 1;
 }
 
 static void portal_pf(cap_t pid) {
+	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
 	assert(c);
-	UtcbExc *utcb = Ec::current()->exc_utcb();
-	uintptr_t pfaddr = utcb->qual[1];
-	uintptr_t eip = utcb->eip;
+	uintptr_t pfaddr = uf->qual[1];
+	uintptr_t eip = uf->eip;
 
 	sm->down();
 	log->print("\nPagefault for address %p @ %p\n",pfaddr,eip);
-
-	UtcbFrameRef uf;
-	uf.reset();
 
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;

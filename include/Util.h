@@ -34,6 +34,20 @@ public:
 		return a < b ? b : a;
 	}
 
+	template<typename T>
+	static inline T roundup(T value,T align) {
+		return (value + align - 1) & ~(align - 1);
+	}
+
+	template<typename T>
+	static inline T rounddown(T value,T align) {
+		return value & ~(align - 1);
+	}
+
+	static inline size_t blockcount(size_t value,size_t blocksize) {
+		return (value + blocksize - 1) / blocksize;
+	}
+
 	static inline bool overlapped(uintptr_t b1,size_t s1,uintptr_t b2,size_t s2) {
 		uintptr_t e1 = b1 + s1;
 		uintptr_t e2 = b2 + s2;

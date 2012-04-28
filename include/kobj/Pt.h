@@ -21,6 +21,7 @@
 #include <arch/ExecEnv.h>
 #include <kobj/KObject.h>
 #include <kobj/LocalEc.h>
+#include <utcb/UtcbFrame.h>
 #include <Compiler.h>
 #include <Syscalls.h>
 
@@ -44,8 +45,14 @@ public:
 		Syscalls::create_pt(pt,ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,pd->cap());
 	}
 
+	void call(UtcbFrame &uf) {
+		Syscalls::call(cap());
+		uf._rpos = 0;
+	}
+
 	void call() {
 		Syscalls::call(cap());
+		//uf._rpos = 0;
 	}
 };
 

@@ -24,3 +24,5 @@
 #define NORETURN		 	__attribute__((__noreturn__))
 #define INIT_PRIORITY(X)    __attribute__((init_priority((X))))
 #define WEAK				__attribute__((weak))
+#define EXPECT_FALSE(X)     __builtin_expect(!!(X),0)
+#define EXPECT_TRUE(X)      __builtin_expect(!!(X),1)

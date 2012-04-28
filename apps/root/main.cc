@@ -26,12 +26,13 @@
 #include <utcb/UtcbExc.h>
 #include <utcb/Utcb.h>
 #include <mem/RegionList.h>
+#include <format/Log.h>
+#include <format/Screen.h>
 #include <Syscalls.h>
-#include <String.h>
 #include <Hip.h>
-#include <Log.h>
 #include <CPU.h>
 #include <exception>
+#include <cstring>
 #include <assert.h>
 
 using namespace nul;
@@ -46,9 +47,11 @@ extern void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 Log *log;
+Screen *scr;
 static Sm *sm;
 
 void verbose_terminate() {
+	// TODO put that in abort or something?
 	try {
 		throw;
 	}
@@ -73,7 +76,7 @@ static void map(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0) {
 		hotspot += 1 << minshift;
 		count -= 1 << minshift;
 	}
-	CPU::current().map_pt->call();
+	CPU::current().map_pt->call(uf);
 }
 
 int start() {
@@ -92,8 +95,10 @@ int start() {
 	}
 
 	map(0x3f8,6,DESC_IO_ALL);
+	map(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL);
 
 	log = new Log();
+	scr = new Screen();
 	std::set_terminate(verbose_terminate);
 
 	map(0x100,16,DESC_MEM_ALL,0x200);
@@ -102,8 +107,6 @@ int start() {
 	*(char*)(0x200000 + ExecEnv::PAGE_SIZE * 16 - 1) = 4;
 	assert(*(char*)0x200000 == 4);
 	//assert(*(char*)0x200000 == 5);
-	while(1)
-		;
 
 	log->print("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
@@ -117,7 +120,7 @@ int start() {
 			log->print("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
-	start_childs();
+	//start_childs();
 
 	/*RegionList l;
 	l.add(0x1000,0x4000,0,RegionList::RW);
@@ -136,11 +139,76 @@ int start() {
 		{
 			UtcbFrame uf;
 			uf << 4 << 344 << 0x1234;
-			//uf.print(*log);
-			pt.call();
+			uf << 1ULL;
+			uf.add_typed(DelItem(Crd(12,4,DESC_IO_ALL),0,10));
+			uf.add_typed(DelItem(Crd(1,1,DESC_MEM_ALL),0x1,2));
+
+			{
+				UtcbFrame uf;
+				uf << 1 << 2 << 3;
+				{
+					UtcbFrame uf;
+					uf << 4 << 5 << 6;
+					pt.call(uf);
+
+					unsigned x,y;
+					uf >> x >> y;
+					log->print("x=%u, y=%u\n",x,y);
+				}
+				pt.call(uf);
+
+				unsigned x,y;
+				uf >> x >> y;
+				log->print("x=%u, y=%u\n",x,y);
+			}
+
+			uf.print(*log);
+			pt.call(uf);
+			uf.print(*log);
+
+			unsigned x,y;
+			uf >> x >> y;
+			log->print("x=%u, y=%u\n",x,y);
 		}
-		ec->utcb()->reset();
-		const size_t NUM = 10000;
+		while(1);
+
+		static const unsigned tries = 10000;
+		static uint64_t results[tries];
+		uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
+		unsigned sum = 0;
+		tic = Util::tsc();
+		tac = Util::tsc();
+		rdtsc = tac - tic;
+		UtcbFrame uf;
+		for(unsigned i = 0; i < tries; i++) {
+			tic = Util::tsc();
+			uf << 1 << 2 << 3;
+			pt.call();
+			unsigned x = 0,y = 0;
+			uf >> x >> y;
+			uf.reset();
+			sum += x + y;
+			tac = Util::tsc();
+			ipc_duration = tac - tic - rdtsc;
+			min = Util::min(min,ipc_duration);
+			max = Util::max(max,ipc_duration);
+			results[i] = ipc_duration;
+		}
+		uint64_t avg = 0;
+		for(unsigned i = 0; i < tries; i++)
+			avg += results[i];
+
+		avg = avg / tries;
+		//WVPASSEQ(counter, 1000u);
+		scr->print("sum: %u\n",sum);
+		scr->print("avg: %Lu\n",avg);
+		scr->print("min: %Lu\n",min);
+		scr->print("max: %Lu\n",max);
+
+		while(1);
+
+		/*
+		const size_t NUM = 1000;
 		static uint64_t calls[NUM];
 		static uint64_t prepares[NUM];
 		for(size_t j = 0; j < 10; j++) {
@@ -149,7 +217,7 @@ int start() {
 				UtcbFrame uf;
 				uf << 4 << 344 << 0x1234;
 				uint64_t t2 = Util::tsc();
-				pt.call();
+				pt.call(uf);
 				uint64_t t3 = Util::tsc();
 				prepares[i] = t2 - t1;
 				calls[i] = t3 - t2;
@@ -162,7 +230,7 @@ int start() {
 			calls_total += calls[i];
 			prepares_total += prepares[i];
 		}
-		log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);
+		log->print("calls=%Lu : prepare=%Lu\n",calls_total / NUM,prepares_total / NUM);*/
 	}
 
 	Pd *pd = new Pd();
@@ -196,20 +264,22 @@ static void portal_map(cap_t) {
 
 static void portal_test(cap_t) {
 	UtcbFrameRef uf;
-	try {
-		unsigned a,b,c;
-		uf >> a >> b >> c;
-	}
-	catch(const Exception& e) {
-		e.print(*log);
+	if(uf.untyped() != 3) {
 		uf.reset();
+		return;
 	}
+
+	unsigned a,b,c;
+	uf >> a >> b >> c;
+	//log->print("Got a=%u, b=%u, c=%u\n",a,b,c);
+	uf.reset();
+	uf << (a + b) << (a + b + c);
 }
 
 static void portal_startup(cap_t) {
-	UtcbExc *utcb = Ec::current()->exc_utcb();
-	utcb->mtd = MTD_RIP_LEN;
-	utcb->eip = *reinterpret_cast<uint32_t*>(utcb->esp);
+	UtcbExcFrameRef uf;
+	uf->mtd = MTD_RIP_LEN;
+	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
 }
 
 static void mythread() {

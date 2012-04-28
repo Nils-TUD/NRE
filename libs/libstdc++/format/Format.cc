@@ -16,9 +16,9 @@
  * General Public License version 2 for more details.
  */
 
-#include <Format.h>
-#include <String.h>
+#include <format/Format.h>
 #include <Digits.h>
+#include <cstring>
 
 namespace nul {
 

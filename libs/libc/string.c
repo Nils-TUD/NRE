@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <String.h>
+#include <cstring>
 
 void* memcpy(void *dest,const void *src,size_t len) {
 	uchar *bdest,*bsrc;

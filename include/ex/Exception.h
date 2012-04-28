@@ -19,8 +19,8 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
+#include <format/Format.h>
 #include <Types.h>
-#include <Format.h>
 
 namespace nul {
 

@@ -73,8 +73,6 @@ class Desc {
 protected:
 	Desc(unsigned v) : _value(v) {
 	}
-	virtual ~Desc() {
-	}
 public:
 	unsigned value() const {
 		return _value;

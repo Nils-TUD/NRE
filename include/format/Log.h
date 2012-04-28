@@ -18,19 +18,29 @@
 
 #pragma once
 
-#include <Types.h>
+#include <format/Format.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace nul {
 
-void* memcpy(void *dest,const void *src,size_t len);
-void *memmove(void *dest,const void *src,size_t count);
-void *memset(void *addr,int value,size_t count);
-size_t strlen(const char *src);
-int memcmp(const void *str1,const void *str2,size_t count);
-int strcmp(const char *dst,const char *src);
+class Log : public Format {
+private:
+	enum {
+		COM1	= 0x3F8,
+		COM2	= 0x2E8,
+		COM3	= 0x2F8,
+		COM4	= 0x3E8
+	};
+	enum {
+		port = COM1
+	};
 
-#ifdef __cplusplus
+public:
+	explicit Log();
+	virtual ~Log() {
+	}
+
+protected:
+	virtual void printc(char c);
+};
+
 }
-#endif

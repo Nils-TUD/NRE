@@ -31,22 +31,48 @@ class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
 
-	uint32_t msg[(4096 - sizeof(UtcbHead)) / sizeof(uint32_t)];
+	typedef uint32_t word_t;
+
+	word_t msg[(ExecEnv::PAGE_SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 	enum {
-		MAX_WORDS = sizeof(msg) / sizeof(uint32_t)
+		WORDS		= ExecEnv::PAGE_SIZE / sizeof(word_t),
+		MAX_TOP		= (ExecEnv::PAGE_SIZE / (4 * sizeof(word_t))) - 1,
+		MAX_BOTTOM	= (ExecEnv::PAGE_SIZE / (2 * sizeof(word_t))) - 1,
 	};
 
+	Utcb *base() const {
+		return reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(ExecEnv::PAGE_SIZE - 1));
+	}
+	word_t *typed_begin() const {
+		Utcb *utcb = base();
+		uintptr_t basetop = reinterpret_cast<uintptr_t>(utcb) + ExecEnv::PAGE_SIZE;
+		return reinterpret_cast<word_t*>(basetop) - utcb->top;
+	}
+
+	size_t freewords() const {
+		Utcb *utcb = base();
+		size_t boff = utcb->bottom + sizeof(UtcbHead) / sizeof(word_t) + untyped;
+		size_t toff = utcb->top + typed * 2;
+		return WORDS - toff - boff;
+	}
+
 	Utcb *push() {
-		bottom += (sizeof(UtcbHead) / sizeof(uint32_t)) + untyped;
-		top += typed * 2;
-		Utcb *frame = reinterpret_cast<Utcb*>(reinterpret_cast<uint32_t*>(this) + bottom);
+		Utcb *utcb = base();
+		size_t off = (sizeof(UtcbHead) / sizeof(word_t)) + untyped;
+		Utcb *frame = reinterpret_cast<Utcb*>(reinterpret_cast<word_t*>(utcb) + utcb->bottom + off);
+		frame->top = utcb->top;
+		frame->bottom = utcb->bottom;
 		frame->reset();
+		utcb->bottom += off;
+		utcb->top += typed * 2;
+		assert(utcb->bottom <= MAX_BOTTOM && utcb->top <= MAX_TOP);
 		return frame;
 	}
 	void pop() {
-		Utcb *utcb = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(ExecEnv::PAGE_SIZE - 1));
+		Utcb *utcb = base();
 		utcb->bottom = this->bottom;
 		utcb->top = this->top;
+		assert(utcb->bottom <= MAX_BOTTOM && utcb->top <= MAX_TOP);
 	}
 
 public:
@@ -57,12 +83,13 @@ public:
 	}
 
 	void print(Format &fmt) const {
-		fmt.print("Typed: %u\n",typed);
-		for(size_t i = 0; i < typed * 2; i += 2)
-			fmt.print("\t%zu: %#x : %x\n",i,msg[i],msg[i + 1]);
 		fmt.print("Untyped: %u\n",untyped);
 		for(size_t i = 0; i < untyped; ++i)
-			fmt.print("\t%zu: %#x\n",i,msg[Utcb::MAX_WORDS - i - 1]);
+			fmt.print("\t%zu: %#x\n",i,msg[i]);
+		fmt.print("Typed: %u\n",typed);
+		word_t *t = typed_begin();
+		for(size_t i = 0; i < typed * 2; i += 2)
+			fmt.print("\t%zu: %#x : %#x\n",i,t[-(i + 1)],t[-(i + 2)]);
 	}
 };
 

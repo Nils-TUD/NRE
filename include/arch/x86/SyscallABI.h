@@ -42,7 +42,7 @@ public:
 			: "ecx", "edx", "memory"
 		);
 		w0 &= 0xFF;
-		if(w0 != ESUCCESS)
+		if(EXPECT_FALSE(w0 != ESUCCESS))
 			throw SyscallException(static_cast<ErrorCode>(w0));
 	}
 
@@ -64,7 +64,7 @@ public:
 			: "edx", "memory"
 		);
 		w0 &= 0xFF;
-		if(w0 != ESUCCESS)
+		if(EXPECT_FALSE(w0 != ESUCCESS))
 			throw SyscallException(static_cast<ErrorCode>(w0));
 		if(out1)
 			*out1 = w1;

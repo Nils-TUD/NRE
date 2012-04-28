@@ -64,9 +64,6 @@ public:
 	Utcb *utcb() {
 		return _utcb;
 	}
-	UtcbExc *exc_utcb() {
-		return reinterpret_cast<UtcbExc*>(_utcb);
-	}
 	cpu_t cpu() const {
 		return _cpu;
 	}

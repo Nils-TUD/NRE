@@ -20,11 +20,13 @@
 
 #include <utcb/Utcb.h>
 #include <kobj/Ec.h>
-#include <Format.h>
+#include <format/Format.h>
+#include <cstring>
 #include <assert.h>
 
 namespace nul {
 
+class Pt;
 class UtcbFrameRef;
 
 class TypedItem {
@@ -64,73 +66,141 @@ public:
 };
 
 class UtcbFrameRef {
+	friend class Pt;
+
 public:
-	UtcbFrameRef() : _utcb(*Ec::current()->utcb()), _count(_utcb.untyped) {
+	UtcbFrameRef() : _utcb(Ec::current()->utcb()), _rpos() {
+		_utcb = reinterpret_cast<Utcb*>(reinterpret_cast<Utcb::word_t*>(_utcb) + _utcb->bottom);
 	}
 	virtual ~UtcbFrameRef() {
 	}
 
-	bool has_more() const {
-		return _utcb.untyped > 0;
+	void reset() {
+		_utcb->reset();
+		_rpos = 0;
 	}
 
-	void reset() {
-		_utcb.reset();
+	size_t untyped() const {
+		return _utcb->untyped;
 	}
+	size_t typed() const {
+		return _utcb->typed;
+	}
+	bool has_more() const {
+		return _rpos < _utcb->untyped;
+	}
+
 	void set_receive_crd(Crd crd) {
-		_utcb.crd = crd.value();
+		_utcb->crd = crd.value();
 	}
 	void add_typed(const TypedItem &item) {
-		assert(_utcb.typed * 2 + _utcb.untyped + 1 <= Utcb::MAX_WORDS);
-		_utcb.msg[Utcb::MAX_WORDS - (_utcb.typed * 2 + 1)] = item._aux;
-		_utcb.msg[Utcb::MAX_WORDS - (_utcb.typed * 2 + 2)] = item._crd.value();
-		_utcb.typed++;
+		assert(_utcb->freewords() >= 2);
+		Utcb::word_t *top = _utcb->typed_begin();
+		top[-(_utcb->typed * 2 + 1)] = item._aux;
+		top[-(_utcb->typed * 2 + 2)] = item._crd.value();
+		_utcb->typed++;
 	}
 
-	UtcbFrameRef &operator <<(unsigned value) {
-		assert(_utcb.typed * 2 + _utcb.untyped + 1 <= Utcb::MAX_WORDS);
-		_utcb.msg[_utcb.untyped++] = value;
+	/*
+	UtcbFrameRef &operator <<(const char *str,size_t len) {
+		len = Util::blockcount(len,sizeof(Utcb::word_t));
+		assert(_utcb->freewords() >= len + 1);
+		_utcb->msg[_utcb->untyped++] = len;
+		memcpy(_utcb->msg + _utcb->untyped,str,len);
+		_utcb->untyped += len + 1;
 		return *this;
 	}
-	UtcbFrameRef &operator <<(const TypedItem &item) {
-		assert(_utcb.typed * 2 + _utcb.untyped + 2 <= Utcb::MAX_WORDS);
-		_utcb.msg[_utcb.untyped++] = item._crd.value();
-		_utcb.msg[_utcb.untyped++] = item._aux;
+	*/
+	template<typename T>
+	UtcbFrameRef &operator <<(T value) {
+		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
+		assert(_utcb->freewords() >= words);
+		*reinterpret_cast<T*>(_utcb->msg + _utcb->untyped) = value;
+		_utcb->untyped += words;
 		return *this;
 	}
 
-	UtcbFrameRef &operator >>(unsigned &value) {
-		assert(_utcb.untyped >= 1);
-		value = _utcb.msg[_count - _utcb.untyped--];
+	/*
+	UtcbFrameRef &operator >>(char *str,size_t max) {
+		assert(_rpos < _utcb->untyped);
+		size_t len = _utcb->msg[_rpos++];
+		memcpy(str,_utcb->msg + _rpos,Util::min(len,max));
+		value = _utcb->msg[_rpos++];
 		return *this;
 	}
-	UtcbFrameRef &operator >>(TypedItem &item) {
-		assert(_utcb.untyped >= 2);
-		item._crd = Crd(_utcb.msg[_count - _utcb.untyped--]);
-		item._aux = _utcb.msg[_count - _utcb.untyped--];
+	*/
+	template<typename T>
+	UtcbFrameRef &operator >>(T &value) {
+		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
+		assert(_rpos + words <= _utcb->untyped);
+		value = *reinterpret_cast<T*>(_utcb->msg + _rpos);
+		_rpos += words;
 		return *this;
 	}
 
 	void print(Format &fmt) const {
-		_utcb.print(fmt);
+		_utcb->print(fmt);
 	}
 
 private:
 	UtcbFrameRef(const UtcbFrameRef&);
 	UtcbFrameRef& operator=(const UtcbFrameRef&);
 
-protected:
-	Utcb &_utcb;
-	size_t _count;
+public:
+	Utcb *_utcb;
+	size_t _rpos;
 };
 
 class UtcbFrame : public UtcbFrameRef {
 public:
 	UtcbFrame() : UtcbFrameRef() {
-		_utcb = *_utcb.push();
+		_utcb = _utcb->push();
 	}
 	virtual ~UtcbFrame() {
-		_utcb.pop();
+		_utcb->pop();
+	}
+};
+
+class UtcbExcFrameRef : public UtcbFrameRef {
+	class UtcbExc : public UtcbHead {
+		struct Descriptor {
+			uint16_t sel,ar;
+			uint32_t limit,base,res;
+			void set(uint16_t _sel,uint32_t _base,uint32_t _limit,uint16_t _ar) {
+				sel = _sel;
+				base = _base;
+				limit = _limit;
+				ar = _ar;
+			}
+		};
+
+	public:
+		uint32_t mtd;
+		uint32_t inst_len,eip,efl;
+		uint32_t intr_state,actv_state,inj_info,inj_error;
+		union {
+			struct {
+				uint32_t eax,ecx,edx,ebx,esp,ebp,esi,edi;
+			};
+			uint32_t gpr[8];
+		};
+		uint64_t qual[2];
+		uint32_t ctrl[2];
+		int64_t tsc_off;
+		uint32_t cr0,cr2,cr3,cr4;
+		uint32_t dr7,sysenter_cs,sysenter_esp,sysenter_eip;
+		Descriptor es,cs,ss,ds,fs,gs;
+		Descriptor ld,tr,gd,id;
+	};
+
+public:
+	UtcbExcFrameRef() : UtcbFrameRef() {
+	}
+	~UtcbExcFrameRef() {
+	}
+
+	UtcbExc *operator->() {
+		return reinterpret_cast<UtcbExc*>(_utcb);
 	}
 };
 
