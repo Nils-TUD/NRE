@@ -15,7 +15,7 @@
 #include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
 #include <mem/RegionList.h>
-#include <format/Log.h>
+#include <stream/Log.h>
 #include <arch/Elf.h>
 #include <ScopedPtr.h>
 
@@ -60,10 +60,8 @@ struct Child {
 
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_pf(cap_t pid);
-static void map_mem(uintptr_t phys,size_t size);
 static void load_mod(uintptr_t addr,size_t size);
 
-extern Log *log;
 static size_t child = 0;
 static Child *childs[MAX_CLIENTS];
 static cap_t portal_caps;
@@ -77,7 +75,11 @@ void start_childs() {
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ == 1) {
-			map_mem(it->addr,it->size);
+			UtcbFrame uf;
+			uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
+			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size,DESC_MEM_ALL);
+			CPU::current().map_pt->call(uf);
+
 			load_mod(it->addr,it->size);
 		}
 	}
@@ -93,22 +95,7 @@ static void destroy_child(cap_t pid) {
 	childs[i] = 0;
 }
 
-static void map_mem(uintptr_t phys,size_t size) {
-	UtcbFrame uf;
-	uintptr_t frame = phys >> ExecEnv::PAGE_SHIFT;
-	uf.set_receive_crd(Crd(0, 31, DESC_MEM_ALL));
-	size = (size + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
-	while(size > 0) {
-		uint minshift = Util::minshift(phys,size);
-		uf << DelItem(Crd(frame,minshift - ExecEnv::PAGE_SHIFT,DESC_MEM_ALL),DelItem::FROM_HV,frame);
-		frame += 1 << (minshift - ExecEnv::PAGE_SHIFT);
-		phys += 1 << minshift;
-		size -= 1 << minshift;
-	}
-	CPU::current().map_pt->call(uf);
-}
-
-static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t size,uint perms) {
+/*static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t size,uint perms) {
 	const int shift = ExecEnv::PAGE_SHIFT;
 	size = (size + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 	while(size > 0) {
@@ -119,7 +106,7 @@ static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t si
 		dest += amount;
 		size -= amount;
 	}
-}
+}*/
 
 static void portal_startup(cap_t pid) {
 	UtcbExcFrameRef uf;
@@ -142,24 +129,25 @@ static void portal_pf(cap_t pid) {
 	uintptr_t eip = uf->eip;
 
 	sm->down();
-	log->print("\nPagefault for address %p @ %p\n",pfaddr,eip);
+	Serial::get().writef("\nPagefault for address %p @ %p\n",pfaddr,eip);
 
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;
-	uint flags = c->regs.find(pfaddr,&src);
+	uint flags = c->regs.find(pfaddr,src);
 	// not found or already mapped?
 	if(!flags || (flags & RegionList::M)) {
-		log->print("Unable to resolve fault; killing child\n");
+		Serial::get().writef("Unable to resolve fault; killing child\n");
 		destroy_child(pid);
 	}
 	else {
 		uint perms = flags & RegionList::RWX;
-		delegate_mem(uf,pfaddr & ~(ExecEnv::PAGE_SIZE - 1),src,ExecEnv::PAGE_SIZE,perms);
+		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,1,
+				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 		c->regs.map(pfaddr);
 
-		c->regs.print(*log);
+		c->regs.write(Serial::get());
 	}
-	log->print("\n");
+	Serial::get().writef("\n");
 	sm->up();
 }
 
@@ -192,7 +180,7 @@ static void load_mod(uintptr_t addr,size_t size) {
 			if(size < ph->p_offset + ph->p_filesz)
 				throw ElfException("Load segment invalid");
 
-			uint perms = 0;
+			uint perms;
 			if(ph->p_flags & PF_R)
 				perms |= RegionList::R;
 			if(ph->p_flags & PF_W)
@@ -212,7 +200,7 @@ static void load_mod(uintptr_t addr,size_t size) {
 		c->regs.add(c->hip,ExecEnv::PAGE_SIZE,c->hip,RegionList::R);
 
 		sm->down();
-		c->regs.print(*log);
+		c->regs.write(Serial::get());
 		sm->up();
 
 		// start child; we have to put the child into the list before that

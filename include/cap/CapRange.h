@@ -18,32 +18,35 @@
 
 #pragma once
 
-#include <arch/Startup.h>
-#include <kobj/KObject.h>
-#include <cap/CapSpace.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
+#include <Types.h>
 
 namespace nul {
 
-class Pd : public KObject {
-	friend void ::_setup();
-
-	explicit Pd(cap_t cap,bool) : KObject(cap) {
-	}
-
+class CapRange {
 public:
-	static Pd *current();
-
-	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current()) : KObject() {
-		CapHolder ch;
-		Syscalls::create_pd(ch.get(),crd,pd->cap());
-		cap(ch.release());
+	CapRange() : _start(), _count(), _attr(), _hotspot() {
+	}
+	CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0)
+		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
+	}
+	uintptr_t start() const {
+		return _start;
+	}
+	size_t count() const {
+		return _count;
+	}
+	uint attr() const {
+		return _attr;
+	}
+	uintptr_t hotspot() const {
+		return _hotspot;
 	}
 
 private:
-	Pd(const Pd&);
-	Pd& operator=(const Pd&);
+	uintptr_t _start;
+	size_t _count;
+	uint _attr;
+	uintptr_t _hotspot;
 };
 
 }

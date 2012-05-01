@@ -39,10 +39,11 @@ public:
 	typedef void (*startup_func)();
 
 	enum {
-		PAGE_SHIFT = 12,
-		PAGE_SIZE = 1 << PAGE_SHIFT,
-		STACK_SIZE = PAGE_SIZE,
-		MAX_STACKS = 8	// TODO remove
+		PAGE_SHIFT		= 12,
+		PAGE_SIZE		= 1 << PAGE_SHIFT,
+		STACK_SIZE		= PAGE_SIZE,
+		KERNEL_START	= 0xC0000000,
+		MAX_STACKS		= 8	// TODO remove
 	};
 
 	static inline Pd *get_current_pd() {

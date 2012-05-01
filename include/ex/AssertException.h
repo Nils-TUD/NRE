@@ -40,9 +40,9 @@ public:
 		return _line;
 	}
 
-	virtual void print(Format& fmt) const {
-		fmt.print("Assert '%s' failed in %s, line %d\n",code(),file(),line());
-		print_backtrace(fmt);
+	virtual void write(OStream& os) const {
+		os.writef("Assert '%s' failed in %s, line %d\n",code(),file(),line());
+		write_backtrace(os);
 	}
 
 private:

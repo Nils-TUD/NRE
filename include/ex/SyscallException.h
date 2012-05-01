@@ -35,9 +35,9 @@ public:
 	}
 	const char *error_msg() const throw();
 
-	virtual void print(Format& fmt) const {
-		fmt.print("Systemcall failed: %s (%d)\n",error_msg(),error_code());
-		print_backtrace(fmt);
+	virtual void write(OStream& os) const {
+		os.writef("Systemcall failed: %s (%d)\n",error_msg(),error_code());
+		write_backtrace(os);
 	}
 
 private:

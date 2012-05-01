@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include <format/Format.h>
+#include <stream/OStream.h>
 #include <cstring>
 
 namespace nul {
 
-class Screen : public Format {
+class Screen : public OStream {
 	enum {
 		COLS		= 80,
 		ROWS		= 25,
@@ -24,24 +24,27 @@ class Screen : public Format {
 		BLACK,BLUE,GREEN,CYAN,RED,MARGENTA,ORANGE,WHITE,GRAY,LIGHTBLUE
 	};
 
-	static char* const SCREEN;
-	static const char COLOR = BLACK << 4 | WHITE;
-
 public:
-	explicit Screen() : _col(), _row() {
-		memset(SCREEN,0,ROWS * COLS * 2);
-	}
-	virtual ~Screen() {
+	static Screen& get() {
+		return _inst;
 	}
 
-protected:
-	virtual void printc(char c);
+	virtual void write(char c);
+	void clear() {
+		memset(SCREEN,0,ROWS * COLS * 2);
+		_col = _row = 0;
+	}
 
 private:
+	Screen() : OStream() {
+	}
 	void move();
 
 	int _col;
 	int _row;
+	static Screen _inst;
+	static char* const SCREEN;
+	static const char COLOR = BLACK << 4 | WHITE;
 };
 
 }

@@ -18,32 +18,34 @@
 
 #pragma once
 
-#include <arch/Startup.h>
-#include <kobj/KObject.h>
-#include <cap/CapSpace.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
+#include <stream/OStream.h>
+#include <cstring>
 
 namespace nul {
 
-class Pd : public KObject {
-	friend void ::_setup();
-
-	explicit Pd(cap_t cap,bool) : KObject(cap) {
+class OStringStream : public OStream {
+public:
+	static void format(char *dst,size_t max,const char *fmt,...) {
+		OStringStream os(dst,max);
+		va_list ap;
+		va_start(ap,fmt);
+		os.vwritef(fmt,ap);
+		va_end(ap);
 	}
 
-public:
-	static Pd *current();
+	explicit OStringStream(char *dst,size_t max) : OStream(),
+			_dst(dst), _max(max), _pos() {
+	}
 
-	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current()) : KObject() {
-		CapHolder ch;
-		Syscalls::create_pd(ch.get(),crd,pd->cap());
-		cap(ch.release());
+	virtual void write(char c) {
+		if(_pos < _max)
+			_dst[_pos++] = c;
 	}
 
 private:
-	Pd(const Pd&);
-	Pd& operator=(const Pd&);
+	char *_dst;
+	size_t _max;
+	size_t _pos;
 };
 
 }

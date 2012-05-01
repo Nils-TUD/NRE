@@ -19,8 +19,9 @@
 #pragma once
 
 #include <utcb/Utcb.h>
+#include <cap/CapRange.h>
+#include <stream/OStream.h>
 #include <kobj/Ec.h>
-#include <format/Format.h>
 #include <cstring>
 #include <assert.h>
 
@@ -47,8 +48,7 @@ private:
 
 class XltItem : public TypedItem {
 public:
-	XltItem(Crd crd)
-		: TypedItem(crd,TYPE_XLT) {
+	XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
 	}
 };
 
@@ -60,17 +60,27 @@ public:
 		UPD_DPT	= 0x200,		// update DMA page table
 	};
 
-	DelItem(Crd crd,unsigned flags,unsigned hotspot = 0)
-		: TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
+	DelItem(Crd crd,unsigned flags,unsigned hotspot = 0) : TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
 	}
 };
 
 class UtcbFrameRef {
 	friend class Pt;
+	friend class Utcb;
 
+	static Utcb::word_t *get_top(Utcb *frame,size_t toff) {
+		size_t utcbtop = Util::rounddown<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
+		return reinterpret_cast<Utcb::word_t*>(utcbtop) - toff;
+	}
+	static Utcb *get_frame(Utcb *base,size_t off) {
+		return reinterpret_cast<Utcb*>(reinterpret_cast<Utcb::word_t*>(base) + off);
+	}
+
+	UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _rpos() {
+	}
 public:
-	UtcbFrameRef() : _utcb(Ec::current()->utcb()), _rpos() {
-		_utcb = reinterpret_cast<Utcb*>(reinterpret_cast<Utcb::word_t*>(_utcb) + _utcb->bottom);
+	UtcbFrameRef() : _utcb(Ec::current()->utcb()), _top(get_top(_utcb,_utcb->top)), _rpos() {
+		_utcb = get_frame(_utcb,_utcb->bottom);
 	}
 	virtual ~UtcbFrameRef() {
 	}
@@ -93,42 +103,39 @@ public:
 	void set_receive_crd(Crd crd) {
 		_utcb->crd = crd.value();
 	}
+
+	void delegate(const CapRange& range) {
+		uintptr_t hotspot = range.hotspot() ? range.hotspot() : range.start();
+		size_t count = range.count();
+		uintptr_t start = range.start();
+		while(count > 0) {
+			uint minshift = Util::minshift(start,count);
+			add_typed(DelItem(Crd(start,minshift,range.attr()),DelItem::FROM_HV,hotspot));
+			start += 1 << minshift;
+			hotspot += 1 << minshift;
+			count -= 1 << minshift;
+		}
+	}
 	void add_typed(const TypedItem &item) {
+		// ensure that there is enough space
 		assert(_utcb->freewords() >= 2);
-		Utcb::word_t *top = _utcb->typed_begin();
-		top[-(_utcb->typed * 2 + 1)] = item._aux;
-		top[-(_utcb->typed * 2 + 2)] = item._crd.value();
+		// ensure that we're the current frame
+		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
+		_top[-(_utcb->typed * 2 + 1)] = item._aux;
+		_top[-(_utcb->typed * 2 + 2)] = item._crd.value();
 		_utcb->typed++;
 	}
 
-	/*
-	UtcbFrameRef &operator <<(const char *str,size_t len) {
-		len = Util::blockcount(len,sizeof(Utcb::word_t));
-		assert(_utcb->freewords() >= len + 1);
-		_utcb->msg[_utcb->untyped++] = len;
-		memcpy(_utcb->msg + _utcb->untyped,str,len);
-		_utcb->untyped += len + 1;
-		return *this;
-	}
-	*/
 	template<typename T>
-	UtcbFrameRef &operator <<(T value) {
+	UtcbFrameRef &operator <<(const T& value) {
 		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
 		assert(_utcb->freewords() >= words);
+		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
 		*reinterpret_cast<T*>(_utcb->msg + _utcb->untyped) = value;
 		_utcb->untyped += words;
 		return *this;
 	}
 
-	/*
-	UtcbFrameRef &operator >>(char *str,size_t max) {
-		assert(_rpos < _utcb->untyped);
-		size_t len = _utcb->msg[_rpos++];
-		memcpy(str,_utcb->msg + _rpos,Util::min(len,max));
-		value = _utcb->msg[_rpos++];
-		return *this;
-	}
-	*/
 	template<typename T>
 	UtcbFrameRef &operator >>(T &value) {
 		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
@@ -138,23 +145,32 @@ public:
 		return *this;
 	}
 
-	void print(Format &fmt) const {
-		_utcb->print(fmt);
+	void write(OStream &os) const {
+		os.writef("UtcbFrame @ %p:\n",_utcb);
+		os.writef("\tCrd: %u\n",_utcb->crd);
+		os.writef("\tCrd translate: %u\n",_utcb->crd_translate);
+		os.writef("\tUntyped: %u\n",untyped());
+		for(size_t i = 0; i < untyped(); ++i)
+			os.writef("\t\t%zu: %#x\n",i,_utcb->msg[i]);
+		os.writef("\tTyped: %u\n",typed());
+		for(size_t i = 0; i < typed() * 2; i += 2)
+			os.writef("\t\t%zu: %#x : %#x\n",i,_top[-(i + 1)],_top[-(i + 2)]);
 	}
 
 private:
 	UtcbFrameRef(const UtcbFrameRef&);
 	UtcbFrameRef& operator=(const UtcbFrameRef&);
 
-public:
+protected:
 	Utcb *_utcb;
+	Utcb::word_t *_top;
 	size_t _rpos;
 };
 
 class UtcbFrame : public UtcbFrameRef {
 public:
 	UtcbFrame() : UtcbFrameRef() {
-		_utcb = _utcb->push();
+		_utcb = _utcb->push(_top);
 	}
 	virtual ~UtcbFrame() {
 		_utcb->pop();

@@ -18,32 +18,34 @@
 
 #pragma once
 
-#include <arch/Startup.h>
-#include <kobj/KObject.h>
-#include <cap/CapSpace.h>
-#include <cap/CapHolder.h>
-#include <Syscalls.h>
+#include <stream/OStream.h>
 
 namespace nul {
 
-class Pd : public KObject {
-	friend void ::_setup();
-
-	explicit Pd(cap_t cap,bool) : KObject(cap) {
-	}
+class Serial : public OStream {
+	enum {
+		COM1	= 0x3F8,
+		COM2	= 0x2E8,
+		COM3	= 0x2F8,
+		COM4	= 0x3E8
+	};
+	enum {
+		port = COM1
+	};
 
 public:
-	static Pd *current();
-
-	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current()) : KObject() {
-		CapHolder ch;
-		Syscalls::create_pd(ch.get(),crd,pd->cap());
-		cap(ch.release());
+	static Serial& get() {
+		return _inst;
 	}
 
+	void init();
+	virtual void write(char c);
+
 private:
-	Pd(const Pd&);
-	Pd& operator=(const Pd&);
+	explicit Serial() : OStream() {
+	}
+
+	static Serial _inst;
 };
 
 }

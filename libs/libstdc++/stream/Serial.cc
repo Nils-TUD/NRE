@@ -16,12 +16,14 @@
  * General Public License version 2 for more details.
  */
 
-#include <format/Log.h>
+#include <stream/Serial.h>
 #include <Ports.h>
 
 namespace nul {
 
-Log::Log() : Format() {
+Serial Serial::_inst;
+
+void Serial::init() {
 	Ports::out<uint8_t>(port + 1,0x00); // Disable all interrupts
 	Ports::out<uint8_t>(port + 3,0x80); // Enable DLAB (set baud rate divisor)
 	Ports::out<uint8_t>(port + 0,0x03); // Set divisor to 3 (lo byte) 38400 baud
@@ -31,7 +33,10 @@ Log::Log() : Format() {
 	Ports::out<uint8_t>(port + 4,0x0B); // IRQs enabled, RTS/DSR set
 }
 
-void Log::printc(char c) {
+void Serial::write(char c) {
+	if(c == '\0')
+		return;
+
 	while((Ports::in<uint8_t>(port + 5) & 0x20) == 0)
 		;
 	Ports::out<uint8_t>(port,c);

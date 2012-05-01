@@ -7,13 +7,17 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <format/Screen.h>
+#include <stream/Screen.h>
 
 namespace nul {
 
+Screen Screen::_inst;
 char* const Screen::SCREEN = (char* const)0xB9000;
 
-void Screen::printc(char c) {
+void Screen::write(char c) {
+	if(c == '\0')
+		return;
+
 	if(_col >= COLS) {
 		_row++;
 		_col = 0;
@@ -30,7 +34,7 @@ void Screen::printc(char c) {
 	else if(c == '\t') {
 		unsigned i = TAB_WIDTH - _col % TAB_WIDTH;
 		while(i-- > 0)
-			printc(' ');
+			write(' ');
 	}
 	else {
 		*video = c;
@@ -44,6 +48,7 @@ void Screen::printc(char c) {
 void Screen::move() {
 	if(_row >= ROWS) {
 		memmove(SCREEN,SCREEN + COLS * 2,(ROWS - 1) * COLS * 2);
+		memset(SCREEN + (ROWS - 1) * COLS * 2,0,COLS * 2);
 		_row--;
 	}
 }

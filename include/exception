@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <Compiler.h>
+
 namespace std {
 	/**
 	 * Type of terminate-handlers

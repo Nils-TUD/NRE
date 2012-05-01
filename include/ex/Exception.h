@@ -19,7 +19,7 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
-#include <format/Format.h>
+#include <stream/OStream.h>
 #include <Types.h>
 
 namespace nul {
@@ -46,19 +46,19 @@ public:
 		return _backtrace + _count;
 	}
 
-	virtual void print(Format& fmt) const {
+	virtual void write(OStream& os) const {
 		if(_msg) {
-			fmt.print(_msg);
-			fmt.print("\n");
+			os.writef(_msg);
+			os.writef("\n");
 		}
-		print_backtrace(fmt);
+		write_backtrace(os);
 	}
 
 protected:
-	void print_backtrace(Format& fmt) const {
-		fmt.print("Backtrace:\n");
+	void write_backtrace(OStream& os) const {
+		os.writef("Backtrace:\n");
 		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
-			fmt.print("\t%p\n",*it);
+			os.writef("\t%p\n",*it);
 	}
 
 private:

@@ -10,14 +10,16 @@
 #pragma once
 
 #include <ex/Exception.h>
-#include <format/Format.h>
+#include <stream/OStream.h>
 #include <Types.h>
+#include <Util.h>
+#include <assert.h>
 
 namespace nul {
 
 class RegionList {
 	enum {
-		MAX_REGIONS = 64
+		MAX_REGIONS		= 64
 	};
 
 	struct Region {
@@ -39,10 +41,23 @@ public:
 		RWX	= R | W | X,
 	};
 
-	uint find(uintptr_t addr,uintptr_t *src) const {
+	RegionList() : _regs() {
+	}
+
+	size_t regcount() const {
+		size_t count = 0;
+		for(size_t i = 0; i < MAX_REGIONS; ++i) {
+			if(_regs[i].size > 0)
+				count++;
+		}
+		return count;
+	}
+
+	uint find(uintptr_t addr,uintptr_t &src) const {
+		addr &= ~(ExecEnv::PAGE_SIZE - 1);
 		const Region *r = get(addr,1);
 		if(r) {
-			*src = r->src + (addr - r->begin);
+			src = r->src + (addr - r->begin);
 			return r->flags;
 		}
 		return 0;
@@ -54,7 +69,10 @@ public:
 			if(_regs[i].size > 0 && _regs[i].begin + _regs[i].size > end)
 				end = _regs[i].begin + _regs[i].size;
 		}
-		return (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+		end = (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+		if(end + size < end || end + size > ExecEnv::KERNEL_START)
+			throw Exception("Not enough space");
+		return end;
 	}
 
 	void map(uintptr_t addr) {
@@ -119,11 +137,11 @@ public:
 		}
 	}
 
-	void print(Format &fmt) const {
-		fmt.print("Regions:\n");
+	void write(OStream &os) const {
+		os.writef("Regions:\n");
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size > 0) {
-				fmt.print(
+				os.writef(
 					"\t%zu: %p .. %p (%zu bytes) : %c%c%c%c, src=%p\n",i,_regs[i].begin,
 						_regs[i].begin + _regs[i].size,_regs[i].size,
 						(_regs[i].flags & R) ? 'r' : '-',

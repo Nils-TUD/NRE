@@ -32,23 +32,24 @@ class Utcb : public UtcbHead {
 	friend class UtcbFrame;
 
 	typedef uint32_t word_t;
-
-	word_t msg[(ExecEnv::PAGE_SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 	enum {
-		WORDS		= ExecEnv::PAGE_SIZE / sizeof(word_t),
-		MAX_TOP		= (ExecEnv::PAGE_SIZE / (4 * sizeof(word_t))) - 1,
-		MAX_BOTTOM	= (ExecEnv::PAGE_SIZE / (2 * sizeof(word_t))) - 1,
+		SIZE		= ExecEnv::PAGE_SIZE,
+		WORDS		= SIZE / sizeof(word_t),
+		MAX_TOP		= (SIZE / (4 * sizeof(word_t))) - 1,
+		MAX_BOTTOM	= (SIZE / (2 * sizeof(word_t))) - 1,
 	};
 
-	Utcb *base() const {
-		return reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(ExecEnv::PAGE_SIZE - 1));
-	}
-	word_t *typed_begin() const {
-		Utcb *utcb = base();
-		uintptr_t basetop = reinterpret_cast<uintptr_t>(utcb) + ExecEnv::PAGE_SIZE;
-		return reinterpret_cast<word_t*>(basetop) - utcb->top;
-	}
+	word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 
+	// no construction and copying
+	Utcb();
+	~Utcb();
+	Utcb(const Utcb&);
+	Utcb& operator=(const Utcb&);
+
+	Utcb *base() const {
+		return reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(SIZE - 1));
+	}
 	size_t freewords() const {
 		Utcb *utcb = base();
 		size_t boff = utcb->bottom + sizeof(UtcbHead) / sizeof(word_t) + untyped;
@@ -56,7 +57,7 @@ class Utcb : public UtcbHead {
 		return WORDS - toff - boff;
 	}
 
-	Utcb *push() {
+	Utcb *push(word_t *&toff) {
 		Utcb *utcb = base();
 		size_t off = (sizeof(UtcbHead) / sizeof(word_t)) + untyped;
 		Utcb *frame = reinterpret_cast<Utcb*>(reinterpret_cast<word_t*>(utcb) + utcb->bottom + off);
@@ -65,6 +66,7 @@ class Utcb : public UtcbHead {
 		frame->reset();
 		utcb->bottom += off;
 		utcb->top += typed * 2;
+		toff -= typed * 2;
 		assert(utcb->bottom <= MAX_BOTTOM && utcb->top <= MAX_TOP);
 		return frame;
 	}
@@ -82,15 +84,7 @@ public:
 		crd_translate = 0;
 	}
 
-	void print(Format &fmt) const {
-		fmt.print("Untyped: %u\n",untyped);
-		for(size_t i = 0; i < untyped; ++i)
-			fmt.print("\t%zu: %#x\n",i,msg[i]);
-		fmt.print("Typed: %u\n",typed);
-		word_t *t = typed_begin();
-		for(size_t i = 0; i < typed * 2; i += 2)
-			fmt.print("\t%zu: %#x : %#x\n",i,t[-(i + 1)],t[-(i + 2)]);
-	}
+	void write(OStream &os) const;
 };
 
 }

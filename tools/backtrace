@@ -28,18 +28,23 @@ my $nm = 'nm';
 $nm = "$ENV{'SYSTEM_TARGET'}$nm" if defined $ENV{"SYSTEM_TARGET"};
 $nm = 'arm-softfloat-elf-nm' if !(system("file -L $ARGV[0] | grep -qw ARM") >> 8);
 
+my @args = @ARGV;
+
 while (@ARGV)
   {
     my $img = shift;
+
     foreach my $l (split('\n', qx{$nm $img | c++filt}))
       {
+	
 	if ($l =~ /^([0-9a-fA-F]*)\s+([$sections])\s+(.*)$/)
 	  {
 	    my ($addr, $sec, $sym) = (new Math::BigInt("0x$1"), $2, $3);
 	    if (defined $addr && ref $addr && !$addr->is_nan())
 	      {
-		$sym_tab{as_hex($addr)} = $sym;
-		$sec_tab{as_hex($addr)} = $sec;
+		my $hexaddr = as_hex($addr);
+		$sym_tab{$hexaddr} = $sym;
+		$sec_tab{$hexaddr} = $sec;
 	      }
 	  }
       }
@@ -49,6 +54,17 @@ my $min_addr = $sorted_sym_tab_keys[0];
 my $max_addr = $sorted_sym_tab_keys[@sorted_sym_tab_keys - 1];
 
 print "Scanning image done, proceed.\n";
+
+sub get_location($)
+{
+	my $addr = as_hex(shift);
+	foreach my $img (@args)
+	{
+		my $loc = `addr2line -e $img $addr`;
+		$loc =~ s/^$ENV{'PWD'}//;
+		return $loc unless $loc eq '??:0';
+	}
+}
 
 sub find_sym($)
 {
@@ -77,12 +93,13 @@ sub print_func($)
   my $hit  = find_sym($addr);
   my $offset = $addr-$hit;
   my $o = $hit->as_hex();
+  my $loc = get_location($addr);
 
   return unless $hit;
 
-  printf " %s %30s(%s) + %6s = %s\n",
+  printf " %s %30s(%s) + %6s = %s in %s\n",
 	 $addr->as_hex(), $sym_tab{as_hex($hit)}, $sec_tab{as_hex($hit)},
-	 $offset->as_hex(), $hit->as_hex();
+	 $offset->as_hex(), $hit->as_hex(), $loc;
 }
 
 

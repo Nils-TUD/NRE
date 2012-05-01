@@ -1,0 +1,7 @@
+# -*- Mode: Python -*-
+
+Import('env')
+
+myenv = env.Clone()
+myenv['LINKFLAGS'] += ' -Wl,-T,apps/unittests/linker.ld'
+myenv.NulProgram(myenv, 'unittests', [Glob('*.cc'),Glob('*/*.cc')])

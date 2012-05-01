@@ -16,19 +16,8 @@
  * General Public License version 2 for more details.
  */
 
-#include <cap/ResourceSpace.h>
-#include <Syscalls.h>
+#pragma once
 
-namespace nul {
+#include <Test.h>
 
-void ResourceSpace::allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target) {
-	/*Utcb *utcb = Ec::current()->utcb();
-	unsigned *item = utcb->msg;
-	item[1] = target << 12 | MAP_HBIT;
-	item[0] = Crd(base,size,_type | rights).value();
-	utcb->head.untyped = 2;
-	utcb->head.crd = Crd(0, 20, _type | rights).value();
-	Syscalls::call(_pt);*/
-}
-
-}
+extern const nul::test::TestCase regionlist;

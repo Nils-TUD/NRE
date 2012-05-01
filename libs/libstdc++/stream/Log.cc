@@ -16,27 +16,10 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <Types.h>
+#include <stream/Log.h>
 
 namespace nul {
 
-class ResourceSpace {
-public:
-	explicit ResourceSpace(cap_t portal,unsigned type)
-		: _pt(portal), _type(type) {
-	}
-
-	void allocate(uintptr_t base,size_t size,unsigned rights,uintptr_t target = 0);
-
-private:
-	ResourceSpace(const ResourceSpace&);
-	ResourceSpace& operator=(const ResourceSpace&);
-
-private:
-	cap_t _pt;
-	unsigned _type;
-};
+Log Log::_inst;
 
 }

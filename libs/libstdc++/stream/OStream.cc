@@ -16,23 +16,16 @@
  * General Public License version 2 for more details.
  */
 
-#include <format/Format.h>
+#include <stream/OStream.h>
 #include <Digits.h>
 #include <cstring>
 
 namespace nul {
 
-char Format::_hexchars_big[] = "0123456789ABCDEF";
-char Format::_hexchars_small[] = "0123456789abcdef";
+char OStream::_hexchars_big[] = "0123456789ABCDEF";
+char OStream::_hexchars_small[] = "0123456789abcdef";
 
-void Format::print(const char *fmt,...) {
-	va_list ap;
-	va_start(ap,fmt);
-	vprint(fmt,ap);
-	va_end(ap);
-}
-
-void Format::vprint(const char *fmt, va_list ap) {
+void OStream::vwritef(const char *fmt, va_list ap) {
 	char c,b;
 	char *s;
 	llong n;
@@ -44,10 +37,10 @@ void Format::vprint(const char *fmt, va_list ap) {
 	while(1) {
 		/* wait for a '%' */
 		while((c = *fmt++) != '%') {
+			write(c);
 			/* finished? */
 			if(c == '\0')
 				return;
-			printc(c);
 		}
 
 		/* read flags */
@@ -114,7 +107,7 @@ void Format::vprint(const char *fmt, va_list ap) {
 				break;
 		}
 
-		/* determine format */
+		/* determine OStream */
 		switch(c = *fmt++) {
 			/* signed integer */
 			case 'd':
@@ -143,7 +136,7 @@ void Format::vprint(const char *fmt, va_list ap) {
 					printupad((u >> (size * 8 - 16)) & 0xFFFF,16,4,flags);
 					size -= 2;
 					if(size > 0)
-						printc(':');
+						write(':');
 				}
 				break;
 
@@ -184,17 +177,17 @@ void Format::vprint(const char *fmt, va_list ap) {
 			/* character */
 			case 'c':
 				b = (char)va_arg(ap, uint);
-				printc(b);
+				write(b);
 				break;
 
 			default:
-				printc(c);
+				write(c);
 				break;
 		}
 	}
 }
 
-void Format::printnpad(llong n,uint pad,uint flags) {
+void OStream::printnpad(llong n,uint pad,uint flags) {
 	int count = 0;
 	/* pad left */
 	if(!(flags & PADRIGHT) && pad > 0) {
@@ -206,11 +199,11 @@ void Format::printnpad(llong n,uint pad,uint flags) {
 	/* print '+' or ' ' instead of '-' */
 	if(n > 0) {
 		if((flags & FORCESIGN)) {
-			printc('+');
+			write('+');
 			count++;
 		}
 		else if(((flags) & SPACESIGN)) {
-			printc(' ');
+			write(' ');
 			count++;
 		}
 	}
@@ -221,7 +214,7 @@ void Format::printnpad(llong n,uint pad,uint flags) {
 		printpad(pad - count,flags);
 }
 
-void Format::printupad(ullong u,uint base,uint pad,uint flags) {
+void OStream::printupad(ullong u,uint base,uint pad,uint flags) {
 	int count = 0;
 	/* pad left - spaces */
 	if(!(flags & PADRIGHT) && !(flags & PADZEROS) && pad > 0) {
@@ -231,12 +224,12 @@ void Format::printupad(ullong u,uint base,uint pad,uint flags) {
 	/* print base-prefix */
 	if((flags & PRINTBASE)) {
 		if(base == 16 || base == 8) {
-			printc('0');
+			write('0');
 			count++;
 		}
 		if(base == 16) {
 			char c = (flags & CAPHEX) ? 'X' : 'x';
-			printc(c);
+			write(c);
 			count++;
 		}
 	}
@@ -255,41 +248,41 @@ void Format::printupad(ullong u,uint base,uint pad,uint flags) {
 		printpad(pad - count,flags);
 }
 
-int Format::printpad(int count,uint flags) {
+int OStream::printpad(int count,uint flags) {
 	int res = count;
 	char c = flags & PADZEROS ? '0' : ' ';
 	while(count-- > 0)
-		printc(c);
+		write(c);
 	return res;
 }
 
-int Format::printu(ullong n,uint base,char *chars) {
+int OStream::printu(ullong n,uint base,char *chars) {
 	int res = 0;
 	if(n >= base)
 		res += printu(n / base,base,chars);
-	printc(chars[(n % base)]);
+	write(chars[(n % base)]);
 	return res + 1;
 }
 
-int Format::printn(llong n) {
+int OStream::printn(llong n) {
 	int res = 0;
 	if(n < 0) {
-		printc('-');
+		write('-');
 		n = -n;
 		res++;
 	}
 
 	if(n >= 10)
 		res += printn(n / 10);
-	printc('0' + n % 10);
+	write('0' + n % 10);
 	return res + 1;
 }
 
-int Format::puts(const char *str) {
+int OStream::puts(const char *str) {
 	const char *begin = str;
 	char c;
 	while((c = *str)) {
-		printc(c);
+		write(c);
 		str++;
 	}
 	return str - begin;

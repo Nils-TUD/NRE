@@ -16,31 +16,26 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <format/Format.h>
+#include <utcb/Utcb.h>
+#include <utcb/UtcbFrame.h>
 
 namespace nul {
 
-class Log : public Format {
-private:
-	enum {
-		COM1	= 0x3F8,
-		COM2	= 0x2E8,
-		COM3	= 0x2F8,
-		COM4	= 0x3E8
-	};
-	enum {
-		port = COM1
-	};
-
-public:
-	explicit Log();
-	virtual ~Log() {
+void Utcb::write(OStream &os) const {
+	os.writef("Utcb @ %p:\n",this);
+	os.writef("top: %u\n",top);
+	os.writef("bottom: %u\n",bottom);
+	uint16_t boff = bottom;
+	uint16_t toff = top;
+	while(1) {
+		Utcb *utcb = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) + boff * sizeof(word_t));
+		UtcbFrameRef frame(utcb,toff);
+		frame.write(os);
+		if(boff == 0)
+			break;
+		boff = frame._utcb->bottom;
+		toff = frame._utcb->top;
 	}
-
-protected:
-	virtual void printc(char c);
-};
+}
 
 }

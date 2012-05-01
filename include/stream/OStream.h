@@ -23,8 +23,7 @@
 
 namespace nul {
 
-class Format {
-private:
+class OStream {
 	enum {
 		PADRIGHT	= 1 << 0,
 		FORCESIGN	= 1 << 1,
@@ -39,16 +38,20 @@ private:
 	};
 
 public:
-	explicit Format() {
+	OStream() {
 	}
-	virtual ~Format() {
+	virtual ~OStream() {
 	}
 
-	void print(const char *fmt,...);
-	void vprint(const char *fmt, va_list ap);
+	void writef(const char *fmt,...) {
+		va_list ap;
+		va_start(ap,fmt);
+		vwritef(fmt,ap);
+		va_end(ap);
+	}
+	void vwritef(const char *fmt,va_list ap);
 
-protected:
-	virtual void printc(char c) = 0;
+	virtual void write(char c) = 0;
 
 private:
 	void printnpad(llong n, uint pad, uint flags);
@@ -58,7 +61,6 @@ private:
 	int printn(llong n);
 	int puts(const char *str);
 
-private:
 	static char _hexchars_big[];
 	static char _hexchars_small[];
 };

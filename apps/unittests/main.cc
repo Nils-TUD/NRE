@@ -20,12 +20,8 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/LocalEc.h>
 #include <kobj/Sc.h>
-#include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <utcb/UtcbExc.h>
-#include <utcb/Utcb.h>
-#include <mem/RegionList.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
 #include <Syscalls.h>
@@ -35,18 +31,25 @@
 #include <cstring>
 #include <assert.h>
 
+#include "tests/Pingpong.h"
+#include "tests/UtcbTest.h"
+#include "tests/RegionListTest.h"
+
 using namespace nul;
+using namespace nul::test;
 
 extern "C" void abort();
 extern "C" int start();
 static void map(const CapRange& range);
-PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_map(cap_t pid);
-static void mythread();
-extern void start_childs();
+PORTAL static void portal_startup(cap_t);
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
-static Sm *sm;
+static const TestCase testcases[] = {
+	pingpong,
+	utcbtest,
+	regionlist
+};
 
 void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -83,52 +86,16 @@ int start() {
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
-	map(CapRange(0x100,16,DESC_MEM_ALL,0x200));
-
-	*(char*)0x200000 = 4;
-	*(char*)(0x200000 + ExecEnv::PAGE_SIZE * 16 - 1) = 4;
-	assert(*(char*)0x200000 == 4);
-	//assert(*(char*)0x200000 == 5);
-
-	Log::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
-			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
-	Log::get().writef("Memory:\n");
-	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it)
-		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
-
-	Log::get().writef("CPUs:\n");
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled())
-			Log::get().writef("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
+	for(size_t i = 0; i < sizeof(testcases) / sizeof(testcases[0]); ++i) {
+		Log::get().writef("Testing %s...\n",testcases[i].name);
+		try {
+			testcases[i].func();
+		}
+		catch(const Exception& e) {
+			e.write(Log::get());
+		}
+		Log::get().writef("Done\n");
 	}
-
-	start_childs();
-	while(1);
-
-	/*RegionList l;
-	l.add(0x1000,0x4000,0,RegionList::RW);
-	l.add(0x8000,0x2000,0,RegionList::R);
-	l.add(0x10000,0x8000,0,RegionList::RX);
-	l.print(*log);
-	l.add(0x2000,0x1000,0,RegionList::R);
-	l.print(*log);
-	l.remove(0x1000,0x8000);
-	l.print(*log);
-	l.remove(0x10000,0x4000);
-	l.print(*log);*/
-
-	try {
-		sm = new Sm(1);
-
-		new Sc(new GlobalEc(mythread,0),Qpd());
-		new Sc(new GlobalEc(mythread,1),Qpd(1,100));
-		new Sc(new GlobalEc(mythread,1),Qpd(1,1000));
-	}
-	catch(const SyscallException& e) {
-		e.write(Log::get());
-	}
-
-	mythread();
 	return 0;
 }
 
@@ -151,13 +118,4 @@ static void portal_startup(cap_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
-}
-
-static void mythread() {
-	Ec *ec = Ec::current();
-	while(1) {
-		sm->down();
-		Log::get().writef("I am Ec %u, running on CPU %u\n",ec->cap(),ec->cpu());
-		sm->up();
-	}
 }
