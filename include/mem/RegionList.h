@@ -64,12 +64,15 @@ public:
 	}
 
 	uintptr_t find_free(size_t size) const {
+		// find the end of the "highest" region
 		uintptr_t end = 0;
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size > 0 && _regs[i].begin + _regs[i].size > end)
 				end = _regs[i].begin + _regs[i].size;
 		}
+		// round up to next page
 		end = (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+		// check if the size fits below the kernel
 		if(end + size < end || end + size > ExecEnv::KERNEL_START)
 			throw Exception("Not enough space");
 		return end;
@@ -90,11 +93,13 @@ public:
 	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
 		Region *r = get(addr,size);
 		if(r) {
+			// if its the simple case that it matches the complete region, just exchange the attributes
 			if(addr == r->begin && size == r->size) {
 				r->src = src;
 				r->flags = flags;
 				return;
 			}
+			// otherwise remove this range and add it again with updated flags
 			remove(addr,size);
 		}
 

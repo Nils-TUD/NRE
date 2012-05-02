@@ -29,6 +29,7 @@ public:
 	CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0)
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
 	}
+
 	uintptr_t start() const {
 		return _start;
 	}

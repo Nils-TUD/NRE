@@ -95,19 +95,6 @@ static void destroy_child(cap_t pid) {
 	childs[i] = 0;
 }
 
-/*static void delegate_mem(UtcbFrameRef &uf,uintptr_t dest,uintptr_t src,size_t size,uint perms) {
-	const int shift = ExecEnv::PAGE_SHIFT;
-	size = (size + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
-	while(size > 0) {
-		uint minshift = Util::minshift(src | dest,size);
-		uf.add_typed(DelItem(Crd(src >> shift,minshift - shift,DESC_TYPE_MEM | (perms << 2)),0,dest >> shift));
-		size_t amount = 1 << minshift;
-		src += amount;
-		dest += amount;
-		size -= amount;
-	}
-}*/
-
 static void portal_startup(cap_t pid) {
 	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
