@@ -47,8 +47,8 @@ PORTAL static void portal_startup(cap_t);
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
 	pingpong,
-	utcbtest,
-	regionlist
+	//utcbtest,
+	//regionlist
 };
 
 void verbose_terminate() {
@@ -73,7 +73,7 @@ int start() {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			cpu.id = it->id();
-			cpu.ec = new LocalEc(cpu.id,hip.event_caps() * (cpu.id + 1));
+			cpu.ec = new LocalEc(cpu.id,hip.service_caps() * (cpu.id + 1));
 			cpu.map_pt = new Pt(cpu.ec,portal_map);
 			new Pt(cpu.ec,cpu.ec->event_base() + 0x1E,portal_startup,MTD_RSP);
 		}

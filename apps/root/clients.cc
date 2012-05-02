@@ -71,10 +71,11 @@ void start_childs() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	sm = new Sm(1);
-	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * hip.cfg_exc,hip.cfg_exc);
+	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * Hip::get().service_caps(),Hip::get().service_caps());
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ == 1) {
+			// map the memory of the module
 			UtcbFrame uf;
 			uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
 			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size,DESC_MEM_ALL);
@@ -86,11 +87,11 @@ void start_childs() {
 }
 
 static Child *get_child(cap_t pid) {
-	return childs[((pid - portal_caps) / Hip::get().cfg_exc)];
+	return childs[((pid - portal_caps) / Hip::get().service_caps())];
 }
 
 static void destroy_child(cap_t pid) {
-	size_t i = (pid - portal_caps) / Hip::get().cfg_exc;
+	size_t i = (pid - portal_caps) / Hip::get().service_caps();
 	delete childs[i];
 	childs[i] = 0;
 }
@@ -151,12 +152,13 @@ static void load_mod(uintptr_t addr,size_t size) {
 	Child *c = new Child();
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		cap_t portals = portal_caps + child * Hip::get().cfg_exc;
-		// TODO constants for exceptions
-		c->pf_pt = new Pt(CPU::current().ec,portals + 0xe,portal_pf,MTD_QUAL | MTD_RIP_LEN);
-		c->start_pt = new Pt(CPU::current().ec,portals + 0x1e,portal_startup,MTD_RSP);
-		// now create Pd and pass exception-portals
-		c->pd = new Pd(Crd(portals,5,DESC_CAP_ALL));
+		cap_t portals = portal_caps + child * Hip::get().service_caps();
+		c->pf_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_PAGEFAULT,portal_pf,MTD_QUAL | MTD_RIP_LEN);
+		c->start_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+		// now create Pd and pass event- and service-portals
+		uint order = Util::bsr(Hip::get().service_caps());
+		Log::get().writef("%u\n",order);
+		c->pd = new Pd(Crd(portals,Util::bsr(Hip::get().service_caps()),DESC_CAP_ALL));
 		c->ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->pd);
 
 		// check load segments and add them to regions

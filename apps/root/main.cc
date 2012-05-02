@@ -29,6 +29,7 @@
 #include <stream/Log.h>
 #include <stream/Screen.h>
 #include <Syscalls.h>
+#include <String.h>
 #include <Hip.h>
 #include <CPU.h>
 #include <exception>
@@ -40,6 +41,7 @@ using namespace nul;
 extern "C" void abort();
 extern "C" int start();
 static void map(const CapRange& range);
+PORTAL static void portal_test(cap_t);
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_map(cap_t pid);
 static void mythread();
@@ -70,9 +72,9 @@ int start() {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			cpu.id = it->id();
-			cpu.ec = new LocalEc(cpu.id,hip.event_caps() * (cpu.id + 1));
+			cpu.ec = new LocalEc(cpu.id,hip.service_caps() * (cpu.id + 1));
 			cpu.map_pt = new Pt(cpu.ec,portal_map);
-			new Pt(cpu.ec,cpu.ec->event_base() + 0x1E,portal_startup,MTD_RSP);
+			new Pt(cpu.ec,cpu.ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
 	}
 
@@ -80,7 +82,7 @@ int start() {
 	map(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL));
 
 	Serial::get().init();
-	Screen::get().clear();
+	//Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
 	map(CapRange(0x100,16,DESC_MEM_ALL,0x200));
@@ -99,10 +101,19 @@ int start() {
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
-			Log::get().writef("\tpackage=%u, core=%u thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
+			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
 	start_childs();
+
+	Pt pt(CPU::current().ec,portal_test);
+	UtcbFrame uf;
+	uf << String("my test string!");
+	pt.call(uf);
+	String s;
+	uf >> s;
+	Log::get().writef("Result: '%s'\n",s.str());
+
 	while(1);
 
 	/*RegionList l;
@@ -137,6 +148,15 @@ static void map(const CapRange& range) {
 	uf.set_receive_crd(Crd(0,31,range.attr()));
 	uf << range;
 	CPU::current().map_pt->call(uf);
+}
+
+static void portal_test(cap_t) {
+	UtcbFrameRef uf;
+	String s;
+	uf >> s;
+	Log::get().writef("Got '%s'\n",s.str());
+	uf.reset();
+	uf << String("result");
 }
 
 static void portal_map(cap_t) {

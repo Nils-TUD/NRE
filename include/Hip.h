@@ -59,16 +59,16 @@ public:
 	uint32_t freq_bus;		// BUS freq in khz
 
 	/**
-	 * @return the number of capabilities used by the HV for exceptions and VM intercepts
+	 * @return the number of capabilities used by the HV for exceptions and for service-portals
 	 */
-	cap_t event_caps() const {
-		return Util::max(cfg_exc,cfg_vm);
+	cap_t service_caps() const {
+		return cfg_exc * 2;
 	}
 	/**
 	 * @return the first capability used for object capabilities
 	 */
 	cap_t object_caps() const {
-		return event_caps() * MAX_CPUS;
+		return service_caps() * MAX_CPUS;
 	}
 
 	bool has_vmx() const {

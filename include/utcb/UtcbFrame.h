@@ -22,6 +22,7 @@
 #include <cap/CapRange.h>
 #include <stream/OStream.h>
 #include <kobj/Ec.h>
+#include <String.h>
 #include <cstring>
 #include <assert.h>
 
@@ -135,12 +136,30 @@ public:
 		_utcb->untyped += words;
 		return *this;
 	}
+	UtcbFrameRef &operator <<(const String& value) {
+		const size_t words = Util::blockcount(value.length(),sizeof(Utcb::word_t)) + 1;
+		assert(_utcb->freewords() >= words);
+		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
+		*reinterpret_cast<size_t*>(_utcb->msg + _utcb->untyped) = value.length();
+		memcpy(_utcb->msg + _utcb->untyped + 1,value.str(),value.length());
+		_utcb->untyped += words;
+		return *this;
+	}
 
 	template<typename T>
 	UtcbFrameRef &operator >>(T &value) {
 		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
 		assert(_rpos + words <= _utcb->untyped);
 		value = *reinterpret_cast<T*>(_utcb->msg + _rpos);
+		_rpos += words;
+		return *this;
+	}
+	UtcbFrameRef &operator >>(String &value) {
+		assert(_rpos + 1 <= _utcb->untyped);
+		size_t len = *reinterpret_cast<size_t*>(_utcb->msg + _rpos);
+		const size_t words = Util::blockcount(len,sizeof(Utcb::word_t)) + 1;
+		assert(_rpos + words <= _utcb->untyped);
+		value.reset(reinterpret_cast<const char*>(_utcb->msg + _rpos + 1),len);
 		_rpos += words;
 		return *this;
 	}
@@ -175,6 +194,8 @@ public:
 	virtual ~UtcbFrame() {
 		_utcb->pop();
 	}
+
+	// TODO cloning?
 };
 
 class UtcbExcFrameRef : public UtcbFrameRef {
