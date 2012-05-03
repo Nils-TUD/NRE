@@ -58,7 +58,7 @@ static void test_pingpong() {
 	for(unsigned i = 0; i < tries; i++) {
 		tic = Util::tsc();
 		uf << 1 << 2 << 3;
-		pt.call();
+		pt.call(uf);
 		unsigned x = 0,y = 0;
 		uf >> x >> y;
 		uf.reset();

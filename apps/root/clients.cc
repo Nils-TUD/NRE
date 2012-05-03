@@ -22,7 +22,49 @@
 using namespace nul;
 
 enum {
-	MAX_CLIENTS = 32
+	MAX_CLIENTS		= 32,
+	MAX_SERVICES	= 32,
+};
+
+class Service {
+public:
+	Service(const char *name,cap_t pt) : _name(name), _pt(pt) {
+	}
+
+	const char *name() const {
+		return _name;
+	}
+	cap_t pt() const {
+		return _pt;
+	}
+
+private:
+	const char *_name;
+	cap_t _pt;
+};
+
+class ServiceRegistry {
+public:
+	ServiceRegistry() : _srvs() {
+	}
+
+	void reg(const Service& s) {
+		for(size_t i = 0; i < MAX_SERVICES; ++i) {
+			if(_srvs[i] == 0)
+				_srvs[i] = new Service(s);
+		}
+		throw Exception("All service slots in use");
+	}
+	const Service& find(const char *name) const {
+		for(size_t i = 0; i < MAX_SERVICES; ++i) {
+			if(strcmp(_srvs[i]->name(),name) == 0)
+				return *_srvs[i];
+		}
+		throw Exception("Unknown service");
+	}
+
+private:
+	Service *_srvs[MAX_SERVICES];
 };
 
 class ElfException : public Exception {
@@ -37,12 +79,13 @@ struct Child {
 	Sc *sc;
 	Pt *pf_pt;
 	Pt *start_pt;
+	Pt *reg_pt;
 	RegionList regs;
 	uintptr_t stack;
 	uintptr_t utcb;
 	uintptr_t hip;
 
-	Child() : pd(), ec(), sc(), pf_pt(), start_pt(), regs(), stack(), utcb(), hip() {
+	Child() : pd(), ec(), sc(), pf_pt(), start_pt(), reg_pt(), regs(), stack(), utcb(), hip() {
 	}
 	~Child() {
 		if(pd)
@@ -55,6 +98,8 @@ struct Child {
 			delete pf_pt;
 		if(start_pt)
 			delete start_pt;
+		if(reg_pt)
+			delete reg_pt;
 	}
 };
 
@@ -65,7 +110,9 @@ static void load_mod(uintptr_t addr,size_t size);
 static size_t child = 0;
 static Child *childs[MAX_CLIENTS];
 static cap_t portal_caps;
+static ServiceRegistry registry;
 static Sm *sm;
+static LocalEc *regec;
 
 void start_childs() {
 	int i = 0;
@@ -94,6 +141,25 @@ static void destroy_child(cap_t pid) {
 	size_t i = (pid - portal_caps) / Hip::get().service_caps();
 	delete childs[i];
 	childs[i] = 0;
+}
+
+static void portal_register(cap_t pid) {
+	UtcbFrameRef uf;
+	Child *c = get_child(pid);
+	assert(c);
+	try {
+		String name;
+		uf >> name;
+		Crd cap = uf.get_receive_crd();
+		registry.reg(Service(name.str(),cap.base()));
+		uf.clear();
+		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		uf << 1;
+	}
+	catch(Exception& e) {
+		uf.clear();
+		uf << 0;
+	}
 }
 
 static void portal_startup(cap_t pid) {
@@ -155,6 +221,7 @@ static void load_mod(uintptr_t addr,size_t size) {
 		cap_t portals = portal_caps + child * Hip::get().service_caps();
 		c->pf_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_PAGEFAULT,portal_pf,MTD_QUAL | MTD_RIP_LEN);
 		c->start_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+		c->reg_pt = new Pt(CPU::current().ec,portals + CapSpace::SRV_REGISTER,portal_register,0);
 		// now create Pd and pass event- and service-portals
 		uint order = Util::bsr(Hip::get().service_caps());
 		Log::get().writef("%u\n",order);

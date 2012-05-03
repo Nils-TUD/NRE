@@ -82,7 +82,7 @@ int start() {
 	map(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL));
 
 	Serial::get().init();
-	//Screen::get().clear();
+	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
 	map(CapRange(0x100,16,DESC_MEM_ALL,0x200));

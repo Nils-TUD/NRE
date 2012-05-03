@@ -86,6 +86,9 @@ public:
 	virtual ~UtcbFrameRef() {
 	}
 
+	void clear() {
+		_utcb->mtr = 0;
+	}
 	void reset() {
 		_utcb->reset();
 		_rpos = 0;
@@ -101,6 +104,9 @@ public:
 		return _rpos < _utcb->untyped;
 	}
 
+	Crd get_receive_crd() const {
+		return Crd(_utcb->crd);
+	}
 	void set_receive_crd(Crd crd) {
 		_utcb->crd = crd.value();
 	}
