@@ -49,6 +49,7 @@ public:
 
 		SRV_REGISTER	= 0x20,		// register service
 		SRV_GET			= 0x21,		// get service
+		SRV_MAP			= 0x22,		// map portal
 	};
 
 	static CapSpace& get() {

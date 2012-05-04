@@ -31,7 +31,7 @@ public:
 
 	virtual void write(char c);
 	void clear() {
-		memset(SCREEN,0,ROWS * COLS * 2);
+		//memset(SCREEN,0,ROWS * COLS * 2);
 		_col = _row = 0;
 	}
 

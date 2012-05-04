@@ -64,6 +64,7 @@ public:
 
 	static void *setup_stack(Pd *pd,Ec *ec,startup_func start);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
+	static size_t collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max);
 
 private:
 	ExecEnv();

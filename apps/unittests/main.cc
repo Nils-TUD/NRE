@@ -34,6 +34,7 @@
 #include "tests/Pingpong.h"
 #include "tests/UtcbTest.h"
 #include "tests/RegionListTest.h"
+#include "tests/DelegatePerf.h"
 
 using namespace nul;
 using namespace nul::test;
@@ -46,7 +47,8 @@ PORTAL static void portal_startup(cap_t);
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
-	pingpong,
+	//pingpong,
+	delegateperf,
 	//utcbtest,
 	//regionlist
 };
@@ -111,7 +113,7 @@ static void portal_map(cap_t) {
 	CapRange range;
 	uf >> range;
 	uf.reset();
-	uf.delegate(range);
+	uf.delegate(range,DelItem::FROM_HV);
 }
 
 static void portal_startup(cap_t) {

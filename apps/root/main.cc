@@ -164,7 +164,7 @@ static void portal_map(cap_t) {
 	CapRange range;
 	uf >> range;
 	uf.reset();
-	uf.delegate(range);
+	uf.delegate(range,DelItem::FROM_HV);
 }
 
 static void portal_startup(cap_t) {

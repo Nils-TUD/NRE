@@ -49,7 +49,7 @@ public:
 
 	void call(UtcbFrame &uf) {
 		Syscalls::call(cap());
-		uf._rpos = 0;
+		uf._upos = 0;
 	}
 };
 

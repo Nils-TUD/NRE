@@ -19,6 +19,12 @@
 #include <arch/Elf.h>
 #include <ScopedPtr.h>
 
+// TODO there is a case when a service is not notified that a client died (non-existent portal or something)
+// TODO perhaps we can build a very small boot-task, which establishes an equal environment for all childs
+// that is, it abstracts away the differences between the root-task and others, so that we can have a
+// common library for all except the tiny boot-task which has its own little lib
+// TODO we can't do synchronous IPC with untrusted tasks
+
 using namespace nul;
 
 enum {
@@ -103,6 +109,7 @@ struct Child {
 	}
 };
 
+PORTAL static void portal_register(cap_t pid);
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_pf(cap_t pid);
 static void load_mod(uintptr_t addr,size_t size);
@@ -119,6 +126,12 @@ void start_childs() {
 	const Hip &hip = Hip::get();
 	sm = new Sm(1);
 	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * Hip::get().service_caps(),Hip::get().service_caps());
+	// we need a dedicated Ec for the register-portal which does always accept one capability from
+	// the caller
+	regec = new LocalEc(0);
+	UtcbFrameRef reguf(regec->utcb());
+	reguf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ == 1) {
@@ -146,12 +159,22 @@ static void destroy_child(cap_t pid) {
 static void portal_register(cap_t pid) {
 	UtcbFrameRef uf;
 	Child *c = get_child(pid);
-	assert(c);
+	if(!c)
+		return;
+
 	try {
+		TypedItem cap;
+		uf.get_typed(cap);
 		String name;
 		uf >> name;
-		Crd cap = uf.get_receive_crd();
-		registry.reg(Service(name.str(),cap.base()));
+		registry.reg(Service(name.str(),cap.crd().base()));
+
+		{
+			UtcbFrame nuf;
+			Pt pt(registry.find(name.str()).pt());
+			pt.call(nuf);
+		}
+
 		uf.clear();
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		uf << 1;
@@ -165,7 +188,9 @@ static void portal_register(cap_t pid) {
 static void portal_startup(cap_t pid) {
 	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
-	assert(c);
+	if(!c)
+		return;
+
 	uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
 	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
 	uf->esp = c->stack + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
@@ -178,7 +203,9 @@ static void portal_startup(cap_t pid) {
 static void portal_pf(cap_t pid) {
 	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
-	assert(c);
+	if(!c)
+		return;
+
 	uintptr_t pfaddr = uf->qual[1];
 	uintptr_t eip = uf->eip;
 
@@ -190,7 +217,15 @@ static void portal_pf(cap_t pid) {
 	uint flags = c->regs.find(pfaddr,src);
 	// not found or already mapped?
 	if(!flags || (flags & RegionList::M)) {
+		uintptr_t *addr,addrs[32];
 		Serial::get().writef("Unable to resolve fault; killing child\n");
+		ExecEnv::collect_backtrace(c->ec->stack(),uf->ebp,addrs,sizeof(addrs));
+		Serial::get().writef("Backtrace:\n");
+		addr = addrs;
+		while(*addr != 0) {
+			Serial::get().writef("\t%p\n",*addr);
+			addr++;
+		}
 		destroy_child(pid);
 	}
 	else {
@@ -219,9 +254,9 @@ static void load_mod(uintptr_t addr,size_t size) {
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
 		cap_t portals = portal_caps + child * Hip::get().service_caps();
-		c->pf_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_PAGEFAULT,portal_pf,MTD_QUAL | MTD_RIP_LEN);
+		c->pf_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_PAGEFAULT,portal_pf,MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
 		c->start_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
-		c->reg_pt = new Pt(CPU::current().ec,portals + CapSpace::SRV_REGISTER,portal_register,0);
+		c->reg_pt = new Pt(regec,portals + CapSpace::SRV_REGISTER,portal_register,0);
 		// now create Pd and pass event- and service-portals
 		uint order = Util::bsr(Hip::get().service_caps());
 		Log::get().writef("%u\n",order);
@@ -243,6 +278,9 @@ static void load_mod(uintptr_t addr,size_t size) {
 				perms |= RegionList::W;
 			if(ph->p_flags & PF_X)
 				perms |= RegionList::X;
+			// TODO actually it would be better to do that later
+			if(ph->p_filesz < ph->p_memsz)
+				memset(reinterpret_cast<void*>(addr + ph->p_offset + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
 			c->regs.add(ph->p_vaddr,ph->p_memsz,addr + ph->p_offset,perms);
 		}
 
