@@ -43,7 +43,9 @@ _start:
 	# call function in .init-section
 	call	_init
 	# create initial Pd and Ec
+	push	%ebx					# 0 for root, 1 otherwise
 	call	_setup
+	add		$4, %esp
 	# finally, call start
 	call	start
 	add		$12, %esp

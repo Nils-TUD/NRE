@@ -29,7 +29,7 @@ namespace nul {
 class Utcb;
 
 class GlobalEc : public Ec {
-	friend void ::_setup();
+	friend void ::_setup(bool);
 
 	explicit GlobalEc(Utcb *utcb,cap_t cap,cpu_t cpu,Pd *pd) : Ec(cpu,0,cap,utcb) {
 		ExecEnv::set_current_ec(this);
@@ -39,12 +39,12 @@ class GlobalEc : public Ec {
 public:
 	typedef ExecEnv::startup_func startup_func;
 
-	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current())
-			: Ec(cpu,CPU::get(cpu).ec->event_base()) {
+	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current(),uintptr_t utcb = 0)
+			: Ec(cpu,CPU::get(cpu).ec->event_base(),INVALID,reinterpret_cast<Utcb*>(utcb)) {
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start));
 	}
-	explicit GlobalEc(startup_func start,cpu_t cpu,cap_t event_base,Pd *pd = Pd::current())
-			: Ec(cpu,event_base) {
+	explicit GlobalEc(startup_func start,cpu_t cpu,cap_t event_base,Pd *pd = Pd::current(),uintptr_t utcb = 0)
+			: Ec(cpu,event_base,INVALID,reinterpret_cast<Utcb*>(utcb)) {
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start));
 	}
 };

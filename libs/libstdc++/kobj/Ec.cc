@@ -21,6 +21,8 @@
 
 namespace nul {
 
-uintptr_t Ec::_utcb_addr = 0x1000000;
+// TODO arch-dependent; note that this assumes that these addresses are not already occupied by e.g.
+// the utcb selected by the parent at startup
+uintptr_t Ec::_utcb_addr = 0x7FFFE000;
 
 }

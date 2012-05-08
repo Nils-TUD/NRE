@@ -31,7 +31,7 @@ class Pt : public KObject {
 public:
 	typedef ExecEnv::portal_func portal_func;
 
-	Pt(cap_t pt) : KObject() {
+	Pt(cap_t pt) : KObject(pt) {
 	}
 	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject() {
 		// TODO use a specific cap-range for portals, so that we can provide per-portal-data with

@@ -47,9 +47,14 @@ public:
 		EV_STARTUP		= 0x1E,
 		EV_RECALL		= 0x1F,
 
-		SRV_REGISTER	= 0x20,		// register service
-		SRV_GET			= 0x21,		// get service
-		SRV_MAP			= 0x22,		// map portal
+		INIT_PD			= 0x20,
+		INIT_EC			= 0x21,
+		INIT_SC			= 0x22,
+
+		SRV_INIT		= 0x23,		// get initial caps
+		SRV_REGISTER	= 0x24,		// register service
+		SRV_GET			= 0x25,		// get service
+		SRV_MAP			= 0x26,		// map portal
 	};
 
 	static CapSpace& get() {

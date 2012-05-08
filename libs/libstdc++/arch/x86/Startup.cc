@@ -17,17 +17,25 @@
  */
 
 #include <arch/Startup.h>
-#include <kobj/Pd.h>
 #include <kobj/GlobalEc.h>
+#include <kobj/Pd.h>
+#include <kobj/Pt.h>
+#include <utcb/UtcbFrame.h>
 
 using namespace nul;
 
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
 
-void _setup() {
-	static Pd initpd(Hip::get().cfg_exc + 0,true);
-	static GlobalEc initec(
-		_startup_info.utcb,Hip::get().cfg_exc + 1,_startup_info.cpu,&initpd
-	);
+void _setup(bool child) {
+	static Pd initpd(CapSpace::INIT_PD,true);
+	static GlobalEc initec(_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&initpd);
+
+	if(child) {
+		// grab our initial caps (pd, ec, sc) from parent
+		UtcbFrame uf;
+		uf.set_receive_crd(Crd(CapSpace::INIT_PD,2,DESC_CAP_ALL));
+		Pt initpt(CapSpace::SRV_INIT);
+		initpt.call(uf);
+	}
 }

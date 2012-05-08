@@ -85,18 +85,16 @@ int start() {
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
-	map(CapRange(0x100,16,DESC_MEM_ALL,0x200));
-
-	*(char*)0x200000 = 4;
-	*(char*)(0x200000 + ExecEnv::PAGE_SIZE * 16 - 1) = 4;
-	assert(*(char*)0x200000 == 4);
-	//assert(*(char*)0x200000 == 5);
-
 	Log::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
 	Log::get().writef("Memory:\n");
-	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it)
+	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
+		if(it->type == Hip_mem::AVAILABLE) {
+			map(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
+					Util::blockcount(it->size,ExecEnv::PAGE_SIZE),DESC_MEM_ALL,it->addr >> ExecEnv::PAGE_SHIFT));
+		}
+	}
 
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {

@@ -38,5 +38,5 @@ struct StartupInfo {
 
 }
 
-extern "C" void _setup();
+extern "C" void _setup(bool child);
 extern nul::StartupInfo _startup_info;
