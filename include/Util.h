@@ -72,11 +72,28 @@ public:
 	}
 
 	/**
+	 * Finds the next power of two. That is, if it is already a power of 2 it returns the input. If
+	 * not it rounds up to the next power of two.
+	 */
+	template<typename T>
+	static inline T nextpow2(T value) {
+		return 1 << nextpow2shift(value);
+	}
+	template<typename T>
+	static inline T nextpow2shift(T value) {
+		if(!value)
+			return 0;
+		if(value & (value - 1))
+			return bsr(value) + 1;
+		return bsr(value);
+	}
+
+	/**
 	 * Calculates the order (log2 of the size) of the largest naturally
 	 * aligned block that starts at start and is no larger than size.
 	 *
-	 * @param minshift The largest value returned by this function.
-	 *
+	 * @param start the start of the block
+	 * @param size the size of the block
 	 * @return The calculated order or the minshift parameter is it is
 	 * smaller then the order.
 	 */
@@ -84,6 +101,11 @@ public:
 		uint basealign = static_cast<uint>(bsf(start | (1ul << (8 * sizeof(uintptr_t) - 1))));
 		uint shiftalign = static_cast<uint>(bsr(size | 1));
 		return min(basealign,shiftalign);
+	}
+
+	template<typename T,typename Y>
+	static T atomic_xadd(T volatile *ptr,Y value) {
+		return __sync_fetch_and_add(ptr,value);
 	}
 
 	static inline uint64_t tsc() {

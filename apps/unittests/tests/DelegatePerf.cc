@@ -10,6 +10,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <Util.h>
+#include <CPU.h>
 #include "DelegatePerf.h"
 
 using namespace nul;
@@ -38,7 +39,8 @@ static void test_delegate() {
 		CPU::current().map_pt->call(uf);
 	}
 
-	Pt pt(CPU::current().ec,portal_test);
+	LocalEc ec(CPU::current().id);
+	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	tic = Util::tsc();
 	tac = Util::tsc();

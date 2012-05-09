@@ -19,6 +19,7 @@
 #include <kobj/KObject.h>
 #include <kobj/Pd.h>
 #include <ex/SyscallException.h>
+#include <cap/CapSpace.h>
 #include <Syscalls.h>
 
 namespace nul {
@@ -32,7 +33,8 @@ KObject::~KObject() {
 		catch(const SyscallException&) {
 			// ignore it
 		}
-		CapSpace::get().free(_cap);
+		if(!(_cap & KEEP_BIT))
+			CapSpace::get().free(_cap);
 	}
 }
 

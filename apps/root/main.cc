@@ -41,7 +41,6 @@ using namespace nul;
 extern "C" void abort();
 extern "C" int start();
 static void map(const CapRange& range);
-PORTAL static void portal_test(cap_t);
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_map(cap_t pid);
 static void mythread();
@@ -71,10 +70,10 @@ int start() {
 	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
-			cpu.id = it->id();
-			cpu.ec = new LocalEc(cpu.id,hip.service_caps() * (cpu.id + 1));
-			cpu.map_pt = new Pt(cpu.ec,portal_map);
-			new Pt(cpu.ec,cpu.ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			// TODO ?
+			LocalEc *cpuec = new LocalEc(cpu.id);
+			cpu.map_pt = new Pt(cpuec,portal_map);
+			new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
 	}
 
@@ -103,14 +102,6 @@ int start() {
 	}
 
 	start_childs();
-
-	Pt pt(CPU::current().ec,portal_test);
-	UtcbFrame uf;
-	uf << String("my test string!");
-	pt.call(uf);
-	String s;
-	uf >> s;
-	Log::get().writef("Result: '%s'\n",s.str());
 
 	while(1);
 
@@ -146,15 +137,6 @@ static void map(const CapRange& range) {
 	uf.set_receive_crd(Crd(0,31,range.attr()));
 	uf << range;
 	CPU::current().map_pt->call(uf);
-}
-
-static void portal_test(cap_t) {
-	UtcbFrameRef uf;
-	String s;
-	uf >> s;
-	Log::get().writef("Got '%s'\n",s.str());
-	uf.reset();
-	uf << String("result");
 }
 
 static void portal_map(cap_t) {

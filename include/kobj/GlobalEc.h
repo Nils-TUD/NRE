@@ -22,7 +22,6 @@
 #include <arch/Startup.h>
 #include <kobj/Ec.h>
 #include <kobj/LocalEc.h>
-#include <CPU.h>
 
 namespace nul {
 
@@ -40,7 +39,7 @@ public:
 	typedef ExecEnv::startup_func startup_func;
 
 	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current(),uintptr_t utcb = 0)
-			: Ec(cpu,CPU::get(cpu).ec->event_base(),INVALID,reinterpret_cast<Utcb*>(utcb)) {
+			: Ec(cpu,Hip::get().service_caps() * cpu,INVALID,reinterpret_cast<Utcb*>(utcb)) {
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start));
 	}
 	explicit GlobalEc(startup_func start,cpu_t cpu,cap_t event_base,Pd *pd = Pd::current(),uintptr_t utcb = 0)

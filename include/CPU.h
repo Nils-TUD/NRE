@@ -19,12 +19,12 @@
 #pragma once
 
 #include <kobj/Ec.h>
+#include <cap/CapSpace.h>
 #include <Hip.h>
 #include <assert.h>
 
 namespace nul {
 
-class LocalEc;
 class Pt;
 
 class CPU {
@@ -37,12 +37,13 @@ public:
 		return cpus[id];
 	}
 
-	CPU() : id(), map_pt(), ec() {
+	CPU() : id(), map_pt(), reg_pt(), get_pt() {
 	}
 
 	cpu_t id;
 	Pt *map_pt;
-	LocalEc * ec;
+	Pt *reg_pt;
+	Pt *get_pt;
 
 private:
 	static CPU cpus[Hip::MAX_CPUS];

@@ -19,11 +19,18 @@
 #include <arch/ExecEnv.h>
 #include <kobj/Pd.h>
 #include <kobj/Ec.h>
+#include <cap/CapHolder.h>
 
 namespace nul {
 
 Pd *Pd::current() {
 	return ExecEnv::get_current_pd();
+}
+
+Pd::Pd(Crd crd,Pd *pd) : KObject() {
+	CapHolder ch;
+	Syscalls::create_pd(ch.get(),crd,pd->cap());
+	cap(ch.release());
 }
 
 }

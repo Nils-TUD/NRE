@@ -19,14 +19,18 @@
 #pragma once
 
 #include <ex/Exception.h>
+#include <arch/SpinLock.h>
+#include <ScopedLock.h>
 #include <Types.h>
 #include <Hip.h>
 
 namespace nul {
 
 class CapSpace {
+	friend void ::_setup(bool child);
+
 public:
-	enum {
+	enum Caps {
 		EV_DIVIDE		= 0x0,
 		EV_DEBUG		= 0x1,
 		EV_BREAKPOINT	= 0x3,
@@ -62,11 +66,12 @@ public:
 	}
 
 private:
-	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _off(off) {
+	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _lck(), _off(off) {
 	}
 
 public:
 	cap_t allocate(unsigned count = 1,unsigned align = 1) {
+		ScopedLock<SpinLock> lock(&_lck);
 		cap_t res = (_off + align - 1) & ~(align - 1);
 		if(res + count < res || res + count > Hip::get().cfg_cap)
 			throw Exception("Out of caps");
@@ -82,6 +87,7 @@ private:
 	CapSpace& operator=(const CapSpace&);
 
 	static CapSpace _inst;
+	SpinLock _lck;
 	cap_t _off;
 };
 

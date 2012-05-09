@@ -20,8 +20,6 @@
 
 #include <arch/Startup.h>
 #include <kobj/KObject.h>
-#include <cap/CapSpace.h>
-#include <cap/CapHolder.h>
 #include <Syscalls.h>
 
 namespace nul {
@@ -34,12 +32,7 @@ class Pd : public KObject {
 
 public:
 	static Pd *current();
-
-	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current()) : KObject() {
-		CapHolder ch;
-		Syscalls::create_pd(ch.get(),crd,pd->cap());
-		cap(ch.release());
-	}
+	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current());
 
 private:
 	Pd(const Pd&);

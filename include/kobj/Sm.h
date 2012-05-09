@@ -19,16 +19,14 @@
 #pragma once
 
 #include <kobj/KObject.h>
+#include <kobj/Pd.h>
+#include <arch/SyscallABI.h>
 
 namespace nul {
 
 class Sm : public KObject {
 public:
-	Sm(unsigned initial = 0,Pd *pd = Pd::current()) : KObject() {
-		CapHolder ch;
-		Syscalls::create_sm(ch.get(),initial,pd->cap());
-		cap(ch.release());
-	}
+	Sm(unsigned initial = 0,Pd *pd = Pd::current());
 
 	void down() {
 		Syscalls::sm_ctrl(cap(),Syscalls::SM_DOWN);

@@ -21,8 +21,7 @@
 /**
  * GCC calls the __cxa_guard_-stuff when initializing local static objects to do it in a
  * thread-safe way. We use a simple cmp-and-swap based implementation to ensure that only one
- * thread initializes an object (GCC won't call acquire again if its already initialized, i.e.
- * the lock has been released). This way we don't depend on anything and can use it therefore
+ * thread initializes an object. This way we don't depend on anything and can use it therefore
  * for early initialization.
  */
 
@@ -47,8 +46,8 @@ static inline int trylock(guard_t *l) {
 	);
 	return res;
 }
-static inline void unlock(guard_t *l) {
-	*l = 0;
+static inline void unlock(guard_t *) {
+	// keep it locked
 }
 
 extern "C" int __cxa_guard_acquire(guard_t *);

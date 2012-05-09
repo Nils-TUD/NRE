@@ -21,6 +21,7 @@
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
+#include <CPU.h>
 
 using namespace nul;
 
@@ -37,5 +38,17 @@ void _setup(bool child) {
 		uf.set_receive_crd(Crd(CapSpace::INIT_PD,2,DESC_CAP_ALL));
 		Pt initpt(CapSpace::SRV_INIT);
 		initpt.call(uf);
+	}
+
+	const Hip& hip = Hip::get();
+	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+		CPU &cpu = CPU::get(it->id());
+		cpu.id = it->id();
+		if(child && it->enabled()) {
+			cap_t off = cpu.id * Hip::get().service_caps();
+			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
+			cpu.reg_pt = new Pt(off + CapSpace::SRV_REGISTER);
+			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
+		}
 	}
 }

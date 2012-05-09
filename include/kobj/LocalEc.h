@@ -20,7 +20,6 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/Ec.h>
-#include <CPU.h>
 
 extern "C" void portal_reply_landing_spot(void);
 
@@ -28,7 +27,7 @@ namespace nul {
 
 class LocalEc : public Ec {
 public:
-	explicit LocalEc(cpu_t cpu) : Ec(cpu,CPU::get(cpu).ec->event_base()) {
+	explicit LocalEc(cpu_t cpu) : Ec(cpu,Hip::get().service_caps() * cpu) {
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
 	}

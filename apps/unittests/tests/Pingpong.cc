@@ -19,6 +19,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <Util.h>
+#include <CPU.h>
 #include "Pingpong.h"
 
 using namespace nul;
@@ -48,7 +49,8 @@ static void portal_test(cap_t) {
 }
 
 static void test_pingpong() {
-	Pt pt(CPU::current().ec,portal_test);
+	LocalEc ec(CPU::current().id);
+	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	unsigned sum = 0;
 	tic = Util::tsc();

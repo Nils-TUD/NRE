@@ -85,6 +85,7 @@ public:
 	size_t cpu_count() const {
 		return (mem_offs - cpu_offs) / cpu_size;
 	}
+	size_t cpu_online_count() const;
 
 	mem_const_iterator mem_begin() const {
 		return reinterpret_cast<mem_const_iterator>(reinterpret_cast<const char*>(this) + mem_offs);

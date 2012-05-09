@@ -18,6 +18,7 @@
 #include <stream/Log.h>
 #include <arch/Elf.h>
 #include <ScopedPtr.h>
+#include <CPU.h>
 
 // TODO there is a case when a service is not notified that a client died (non-existent portal or something)
 // TODO perhaps we can build a very small boot-task, which establishes an equal environment for all childs
@@ -34,11 +35,14 @@ enum {
 
 class Service {
 public:
-	Service(const char *name,cap_t pt) : _name(name), _pt(pt) {
+	Service(const char *name,cpu_t cpu,cap_t pt) : _name(name), _cpu(cpu), _pt(pt) {
 	}
 
 	const char *name() const {
 		return _name;
+	}
+	cpu_t cpu() const {
+		return _cpu;
 	}
 	cap_t pt() const {
 		return _pt;
@@ -46,6 +50,7 @@ public:
 
 private:
 	const char *_name;
+	cpu_t _cpu;
 	cap_t _pt;
 };
 
@@ -63,9 +68,9 @@ public:
 		}
 		throw Exception("All service slots in use");
 	}
-	const Service& find(const char *name) const {
+	const Service& find(const char *name,cpu_t cpu) const {
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
-			if(strcmp(_srvs[i]->name(),name) == 0)
+			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name(),name) == 0)
 				return *_srvs[i];
 		}
 		throw Exception("Unknown service");
@@ -83,21 +88,20 @@ public:
 
 struct Child {
 	const char *cmdline;
+	bool started;
 	Pd *pd;
 	GlobalEc *ec;
 	Sc *sc;
-	Pt *pf_pt;
-	Pt *start_pt;
-	Pt *init_pt;
-	Pt *reg_pt;
-	Pt *get_pt;
+	Pt **pts;
+	size_t pt_count;
 	RegionList regs;
+	uintptr_t entry;
 	uintptr_t stack;
 	uintptr_t utcb;
 	uintptr_t hip;
 
-	Child(const char *cmdline) : cmdline(cmdline), pd(), ec(), sc(), pf_pt(), start_pt(), init_pt(),
-			reg_pt(), get_pt(), regs(), stack(), utcb(), hip() {
+	Child(const char *cmdline) : cmdline(cmdline), started(), pd(), ec(), sc(), pts(), pt_count(),
+			regs(), entry(), stack(), utcb(), hip() {
 	}
 	~Child() {
 		if(pd)
@@ -106,43 +110,52 @@ struct Child {
 			delete ec;
 		if(sc)
 			delete sc;
-		if(pf_pt)
-			delete pf_pt;
-		if(start_pt)
-			delete start_pt;
-		if(init_pt)
-			delete init_pt;
-		if(reg_pt)
-			delete reg_pt;
-		if(get_pt)
-			delete get_pt;
+		for(size_t i = 0; i < pt_count; ++i)
+			delete pts[i];
+		delete[] pts;
 	}
 };
+
+static size_t child = 0;
+static Child *childs[MAX_CLIENTS];
+static size_t cpu_count;
+static cap_t portal_caps;
+static ServiceRegistry registry;
+static Sm *sm;
+static LocalEc *ecs[Hip::MAX_CPUS];
+static LocalEc *regecs[Hip::MAX_CPUS];
 
 PORTAL static void portal_initcaps(cap_t pid);
 PORTAL static void portal_register(cap_t pid);
 PORTAL static void portal_getservice(cap_t pid);
+PORTAL static void portal_map(cap_t pid);
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_pf(cap_t pid);
 static void load_mod(uintptr_t addr,size_t size,const char *cmdline);
-
-static size_t child = 0;
-static Child *childs[MAX_CLIENTS];
-static cap_t portal_caps;
-static ServiceRegistry registry;
-static Sm *sm;
-static LocalEc *regec;
+static inline size_t portal_count() {
+	return 6;
+}
+static inline size_t per_client_caps() {
+	return Hip::get().service_caps() * cpu_count;
+}
 
 void start_childs() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	sm = new Sm(1);
-	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * Hip::get().service_caps(),Hip::get().service_caps());
-	// we need a dedicated Ec for the register-portal which does always accept one capability from
-	// the caller
-	regec = new LocalEc(0);
-	UtcbFrameRef reguf(regec->utcb());
-	reguf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+	cpu_count = hip.cpu_online_count();
+	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * per_client_caps(),per_client_caps());
+
+	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+		if(it->enabled()) {
+			ecs[it->id()] = new LocalEc(it->id());
+			// we need a dedicated Ec for the register-portal which does always accept one capability from
+			// the caller
+			regecs[it->id()] = new LocalEc(it->id());
+			UtcbFrameRef reguf(regecs[it->id()]->utcb());
+			reguf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		}
+	}
 
 	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
@@ -166,12 +179,17 @@ void start_childs() {
 	}
 }
 
+static cpu_t get_cpu(cap_t pid) {
+	size_t off = (pid - portal_caps) % per_client_caps();
+	return off / Hip::get().service_caps();
+}
+
 static Child *get_child(cap_t pid) {
-	return childs[((pid - portal_caps) / Hip::get().service_caps())];
+	return childs[((pid - portal_caps) / per_client_caps())];
 }
 
 static void destroy_child(cap_t pid) {
-	size_t i = (pid - portal_caps) / Hip::get().service_caps();
+	size_t i = (pid - portal_caps) / per_client_caps();
 	delete childs[i];
 	childs[i] = 0;
 }
@@ -197,8 +215,10 @@ static void portal_register(cap_t pid) {
 		TypedItem cap;
 		uf.get_typed(cap);
 		String name;
+		cpu_t cpu;
 		uf >> name;
-		registry.reg(Service(name.str(),cap.crd().cap()));
+		uf >> cpu;
+		registry.reg(Service(name.str(),cpu,cap.crd().cap()));
 
 		uf.clear();
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -213,19 +233,36 @@ static void portal_register(cap_t pid) {
 static void portal_getservice(cap_t pid) {
 	UtcbFrameRef uf;
 	Child *c = get_child(pid);
+	cpu_t cpu = get_cpu(pid);
 	if(!c)
 		return;
 
 	try {
 		String name;
 		uf >> name;
-		const Service& s = registry.find(name.str());
+		Log::get().writef("Searching for '%s' on cpu %u\n",name.str(),cpu);
+		const Service& s = registry.find(name.str(),cpu);
 
 		uf.clear();
 		uf.delegate(s.pt());
 		uf << 1;
 	}
 	catch(Exception& e) {
+		uf.clear();
+		uf << 0;
+	}
+}
+
+static void portal_map(cap_t pid) {
+	UtcbFrameRef uf;
+	try {
+		CapRange caps;
+		uf >> caps;
+		uf.clear();
+		uf.delegate(caps,0);
+		uf << 0;
+	}
+	catch(const Exception& e) {
 		uf.clear();
 		uf << 0;
 	}
@@ -238,12 +275,23 @@ static void portal_startup(cap_t pid) {
 		return;
 
 	uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
-	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
-	uf->esp = c->stack + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
-	uf->eax = c->ec->cpu();
-	uf->ecx = c->hip;
-	uf->edx = c->utcb;
-	uf->ebx = 1;
+	if(c->started) {
+		uintptr_t src;
+		if(!c->regs.find(uf->esp,src))
+			return;
+		uf->eip = *reinterpret_cast<uint32_t*>(src + (uf->esp & (ExecEnv::PAGE_SIZE - 1)));
+		uf->mtd = MTD_RIP_LEN;
+	}
+	else {
+		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
+		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
+		uf->esp = c->stack + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
+		uf->eax = c->ec->cpu();
+		uf->ecx = c->hip;
+		uf->edx = c->utcb;
+		uf->ebx = 1;
+	}
+	c->started = true;
 }
 
 static void portal_pf(cap_t pid) {
@@ -296,17 +344,27 @@ static void load_mod(uintptr_t addr,size_t size,const char *cmdline) {
 	Child *c = new Child(cmdline);
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		cap_t portals = portal_caps + child * Hip::get().service_caps();
-		c->pf_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_PAGEFAULT,portal_pf,MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
-		c->start_pt = new Pt(CPU::current().ec,portals + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
-		c->init_pt = new Pt(CPU::current().ec,portals + CapSpace::SRV_INIT,portal_initcaps,0);
-		c->reg_pt = new Pt(regec,portals + CapSpace::SRV_REGISTER,portal_register,0);
-		c->get_pt = new Pt(CPU::current().ec,portals + CapSpace::SRV_GET,portal_getservice,0);
+		const size_t ptcount = portal_count();
+		cap_t portals = portal_caps + child * per_client_caps();
+		c->pt_count = cpu_count * ptcount;
+		c->pts = new Pt*[c->pt_count];
+		for(cpu_t cpu = 0; cpu < cpu_count; ++cpu) {
+			size_t idx = cpu * ptcount;
+			size_t off = cpu * Hip::get().service_caps();
+			c->pts[idx + 0] = new Pt(ecs[cpu],portals + off + CapSpace::EV_PAGEFAULT,portal_pf,
+					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
+			c->pts[idx + 1] = new Pt(ecs[cpu],portals + off + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			c->pts[idx + 2] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_INIT,portal_initcaps,0);
+			c->pts[idx + 3] = new Pt(regecs[cpu],portals + off + CapSpace::SRV_REGISTER,portal_register,0);
+			c->pts[idx + 4] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_GET,portal_getservice,0);
+			c->pts[idx + 5] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_MAP,portal_map,0);
+		}
 		// now create Pd and pass portals
-		c->pd = new Pd(Crd(portals,Util::bsr(Hip::get().service_caps()),DESC_CAP_ALL));
+		c->pd = new Pd(Crd(portals,Util::nextpow2shift(per_client_caps()),DESC_CAP_ALL));
 		// TODO wrong place
 		c->utcb = 0x7FFFF000;
 		c->ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->pd,c->utcb);
+		c->entry = elf->e_entry;
 
 		// check load segments and add them to regions
 		for(size_t i = 0; i < elf->e_phnum; i++) {
@@ -316,7 +374,7 @@ static void load_mod(uintptr_t addr,size_t size,const char *cmdline) {
 			if(size < ph->p_offset + ph->p_filesz)
 				throw ElfException("Load segment invalid");
 
-			uint perms;
+			uint perms = 0;
 			if(ph->p_flags & PF_R)
 				perms |= RegionList::R;
 			if(ph->p_flags & PF_W)
@@ -329,7 +387,7 @@ static void load_mod(uintptr_t addr,size_t size,const char *cmdline) {
 			c->regs.add(ph->p_vaddr,ph->p_memsz,addr + ph->p_offset,perms);
 		}
 
-		// he needs a stack and utcb
+		// he needs a stack
 		c->stack = c->regs.find_free(ExecEnv::STACK_SIZE);
 		c->regs.add(c->stack,ExecEnv::STACK_SIZE,c->ec->stack(),RegionList::RW);
 		// TODO give the child his own Hip

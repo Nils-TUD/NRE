@@ -47,7 +47,8 @@ static void portal_test(cap_t) {
 static void test_nesting() {
 	int a,b,c;
 	ullong d;
-	Pt pt(CPU::current().ec,portal_test);
+	LocalEc ec(CPU::current().id);
+	Pt pt(&ec,portal_test);
 
 	UtcbFrame uf;
 	uf << 4 << 0x1000000000000001ULL;

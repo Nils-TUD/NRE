@@ -18,28 +18,37 @@
 
 #include <kobj/LocalEc.h>
 #include <kobj/Pt.h>
+#include <kobj/GlobalEc.h>
+#include <kobj/Sc.h>
+#include <kobj/Sm.h>
 #include <CPU.h>
 
 using namespace nul;
 
+static void write();
 extern "C" int start();
 
 int start() {
-	// TODO this should be somewhere else
-	cpu_t no = Ec::current()->cpu();
-	CPU &cpu = CPU::get(no);
-	cpu.id = no;
-	cpu.ec = new LocalEc(cpu.id,Hip::get().service_caps() * (cpu.id + 1));
+	const Hip& hip = Hip::get();
+	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+		if(it->enabled())
+			new Sc(new GlobalEc(write,it->id()),Qpd());
+	}
 
+	Sm sm(0);
+	sm.down();
+	return 0;
+}
+
+static void write() {
 	Pt *screen = 0;
 	UtcbFrame uf;
 	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-	Pt getpt(CapSpace::SRV_GET);
 	do {
 		try {
 			uf.clear();
 			uf << String("screen");
-			getpt.call(uf);
+			CPU::current().get_pt->call(uf);
 
 			TypedItem it;
 			uf.get_typed(it);
@@ -52,8 +61,6 @@ int start() {
 	while(screen == 0);
 
 	uf.reset();
-	screen->call(uf);
 	while(1)
-		;
-	return 0;
+		screen->call(uf);
 }

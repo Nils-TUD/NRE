@@ -23,22 +23,28 @@
 namespace nul {
 
 class KObject {
+private:
+	enum {
+		KEEP_BIT	= 1 << (sizeof(cap_t) * 8 - 1)
+	};
 protected:
 	enum {
-		INVALID = (cap_t)-1
+		INVALID 	= (cap_t)-1
 	};
 
-	KObject(cap_t cap = INVALID) : _cap(cap) {
+	KObject(cap_t cap = INVALID) : _cap(cap | KEEP_BIT) {
 	}
 public:
 	virtual ~KObject();
 
 	cap_t cap() const {
-		return _cap;
+		return _cap & ~KEEP_BIT;
 	}
 protected:
-	void cap(cap_t cap) {
+	void cap(cap_t cap,bool keep = false) {
 		_cap = cap;
+		if(keep)
+			_cap |= KEEP_BIT;
 	}
 
 private:
