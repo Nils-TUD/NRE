@@ -13,11 +13,13 @@
 #include <kobj/Sc.h>
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
+#include <kobj/UserSm.h>
 #include <utcb/UtcbFrame.h>
 #include <mem/RegionList.h>
 #include <stream/Log.h>
 #include <arch/Elf.h>
 #include <ScopedPtr.h>
+#include <ScopedLock.h>
 #include <CPU.h>
 
 // TODO there is a case when a service is not notified that a client died (non-existent portal or something)
@@ -33,59 +35,6 @@ enum {
 	MAX_SERVICES	= 32,
 };
 
-class Service {
-public:
-	Service(const char *name,cpu_t cpu,cap_t pt) : _name(name), _cpu(cpu), _pt(pt) {
-	}
-
-	const char *name() const {
-		return _name;
-	}
-	cpu_t cpu() const {
-		return _cpu;
-	}
-	cap_t pt() const {
-		return _pt;
-	}
-
-private:
-	const char *_name;
-	cpu_t _cpu;
-	cap_t _pt;
-};
-
-class ServiceRegistry {
-public:
-	ServiceRegistry() : _srvs() {
-	}
-
-	void reg(const Service& s) {
-		for(size_t i = 0; i < MAX_SERVICES; ++i) {
-			if(_srvs[i] == 0) {
-				_srvs[i] = new Service(s);
-				return;
-			}
-		}
-		throw Exception("All service slots in use");
-	}
-	const Service& find(const char *name,cpu_t cpu) const {
-		for(size_t i = 0; i < MAX_SERVICES; ++i) {
-			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name(),name) == 0)
-				return *_srvs[i];
-		}
-		throw Exception("Unknown service");
-	}
-
-private:
-	Service *_srvs[MAX_SERVICES];
-};
-
-class ElfException : public Exception {
-public:
-	ElfException(const char *msg) : Exception(msg) {
-	}
-};
-
 struct Child {
 	const char *cmdline;
 	bool started;
@@ -99,9 +48,10 @@ struct Child {
 	uintptr_t stack;
 	uintptr_t utcb;
 	uintptr_t hip;
+	UserSm sm;
 
 	Child(const char *cmdline) : cmdline(cmdline), started(), pd(), ec(), sc(), pts(), pt_count(),
-			regs(), entry(), stack(), utcb(), hip() {
+			regs(), entry(), stack(), utcb(), hip(), sm() {
 	}
 	~Child() {
 		if(pd)
@@ -116,6 +66,96 @@ struct Child {
 	}
 };
 
+class Service {
+public:
+	Service(Child *child,const char *name,cpu_t cpu,cap_t pt)
+		: _child(child), _name(name), _cpu(cpu), _pt(pt) {
+	}
+	~Service() {
+		CapSpace::get().free(_pt);
+	}
+
+	Child *child() const {
+		return _child;
+	}
+	const char *name() const {
+		return _name;
+	}
+	cpu_t cpu() const {
+		return _cpu;
+	}
+	cap_t pt() const {
+		return _pt;
+	}
+
+private:
+	Child *_child;
+	const char *_name;
+	cpu_t _cpu;
+	cap_t _pt;
+};
+
+class ServiceRegistry {
+public:
+	ServiceRegistry() : _srvs() {
+	}
+
+	void reg(const Service& s) {
+		if(search(s.name(),s.cpu()))
+			throw Exception("Service does already exist");
+		for(size_t i = 0; i < MAX_SERVICES; ++i) {
+			if(_srvs[i] == 0) {
+				_srvs[i] = new Service(s);
+				return;
+			}
+		}
+		throw Exception("All service slots in use");
+	}
+	void unreg(Child *child,const char *name,cpu_t cpu) {
+		size_t i;
+		Service *s = search(name,cpu,&i);
+		if(s && s->child() == child) {
+			delete _srvs[i];
+			_srvs[i] = 0;
+		}
+	}
+	const Service& find(const char *name,cpu_t cpu) const {
+		Service *s = search(name,cpu);
+		if(!s)
+			throw Exception("Unknown service");
+		return *s;
+	}
+	void remove(Child *child) {
+		for(size_t i = 0; i < MAX_SERVICES; ++i) {
+			if(_srvs[i] && _srvs[i]->child() == child) {
+				delete _srvs[i];
+				_srvs[i] = 0;
+			}
+		}
+	}
+
+private:
+	Service *search(const char *name,cpu_t cpu,size_t *idx = 0) const {
+		for(size_t i = 0; i < MAX_SERVICES; ++i) {
+			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name(),name) == 0) {
+				if(idx)
+					*idx = i;
+				return _srvs[i];
+			}
+		}
+		return 0;
+	}
+
+private:
+	Service *_srvs[MAX_SERVICES];
+};
+
+class ElfException : public Exception {
+public:
+	ElfException(const char *msg) : Exception(msg) {
+	}
+};
+
 static size_t child = 0;
 static Child *childs[MAX_CLIENTS];
 static size_t cpu_count;
@@ -127,13 +167,14 @@ static LocalEc *regecs[Hip::MAX_CPUS];
 
 PORTAL static void portal_initcaps(cap_t pid);
 PORTAL static void portal_register(cap_t pid);
+PORTAL static void portal_unregister(cap_t pid);
 PORTAL static void portal_getservice(cap_t pid);
 PORTAL static void portal_map(cap_t pid);
 PORTAL static void portal_startup(cap_t pid);
 PORTAL static void portal_pf(cap_t pid);
 static void load_mod(uintptr_t addr,size_t size,const char *cmdline);
 static inline size_t portal_count() {
-	return 6;
+	return 7;
 }
 static inline size_t per_client_caps() {
 	return Hip::get().service_caps() * cpu_count;
@@ -190,8 +231,11 @@ static Child *get_child(cap_t pid) {
 
 static void destroy_child(cap_t pid) {
 	size_t i = (pid - portal_caps) / per_client_caps();
-	delete childs[i];
+	// TODO what if somebody is still using it?
+	Child *c = childs[i];
 	childs[i] = 0;
+	registry.remove(c);
+	delete c;
 }
 
 static void portal_initcaps(cap_t pid) {
@@ -218,10 +262,33 @@ static void portal_register(cap_t pid) {
 		cpu_t cpu;
 		uf >> name;
 		uf >> cpu;
-		registry.reg(Service(name.str(),cpu,cap.crd().cap()));
+		registry.reg(Service(c,name.str(),cpu,cap.crd().cap()));
 
 		uf.clear();
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		// TODO error/success codes?
+		uf << 1;
+	}
+	catch(Exception& e) {
+		uf.clear();
+		uf << 0;
+	}
+}
+
+static void portal_unregister(cap_t pid) {
+	UtcbFrameRef uf;
+	Child *c = get_child(pid);
+	if(!c)
+		return;
+
+	try {
+		String name;
+		cpu_t cpu;
+		uf >> name;
+		uf >> cpu;
+		registry.unreg(c,name.str(),cpu);
+
+		uf.clear();
 		uf << 1;
 	}
 	catch(Exception& e) {
@@ -240,7 +307,6 @@ static void portal_getservice(cap_t pid) {
 	try {
 		String name;
 		uf >> name;
-		Log::get().writef("Searching for '%s' on cpu %u\n",name.str(),cpu);
 		const Service& s = registry.find(name.str(),cpu);
 
 		uf.clear();
@@ -253,7 +319,7 @@ static void portal_getservice(cap_t pid) {
 	}
 }
 
-static void portal_map(cap_t pid) {
+static void portal_map(cap_t) {
 	UtcbFrameRef uf;
 	try {
 		CapRange caps;
@@ -300,10 +366,10 @@ static void portal_pf(cap_t pid) {
 	if(!c)
 		return;
 
+	ScopedLock<UserSm> guard(&c->sm);
 	uintptr_t pfaddr = uf->qual[1];
 	uintptr_t eip = uf->eip;
 
-	sm->down();
 	Serial::get().writef("Child '%s': Pagefault for %p @ %p, error=%#x\n",c->cmdline,pfaddr,eip,uf->qual[0]);
 
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
@@ -328,7 +394,6 @@ static void portal_pf(cap_t pid) {
 				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 		c->regs.map(pfaddr);
 	}
-	sm->up();
 }
 
 static void load_mod(uintptr_t addr,size_t size,const char *cmdline) {
@@ -355,9 +420,10 @@ static void load_mod(uintptr_t addr,size_t size,const char *cmdline) {
 					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
 			c->pts[idx + 1] = new Pt(ecs[cpu],portals + off + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 			c->pts[idx + 2] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_INIT,portal_initcaps,0);
-			c->pts[idx + 3] = new Pt(regecs[cpu],portals + off + CapSpace::SRV_REGISTER,portal_register,0);
-			c->pts[idx + 4] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_GET,portal_getservice,0);
-			c->pts[idx + 5] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_MAP,portal_map,0);
+			c->pts[idx + 3] = new Pt(regecs[cpu],portals + off + CapSpace::SRV_REG,portal_register,0);
+			c->pts[idx + 4] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_UNREG,portal_unregister,0);
+			c->pts[idx + 5] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_GET,portal_getservice,0);
+			c->pts[idx + 6] = new Pt(ecs[cpu],portals + off + CapSpace::SRV_MAP,portal_map,0);
 		}
 		// now create Pd and pass portals
 		c->pd = new Pd(Crd(portals,Util::nextpow2shift(per_client_caps()),DESC_CAP_ALL));

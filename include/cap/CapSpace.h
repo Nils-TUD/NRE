@@ -56,9 +56,10 @@ public:
 		INIT_SC			= 0x22,
 
 		SRV_INIT		= 0x23,		// get initial caps
-		SRV_REGISTER	= 0x24,		// register service
-		SRV_GET			= 0x25,		// get service
-		SRV_MAP			= 0x26,		// map portal
+		SRV_REG			= 0x24,		// register service
+		SRV_UNREG		= 0x25,		// unregister service
+		SRV_GET			= 0x26,		// get service
+		SRV_MAP			= 0x27,		// map portal
 	};
 
 	static CapSpace& get() {

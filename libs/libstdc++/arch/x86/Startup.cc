@@ -47,7 +47,7 @@ void _setup(bool child) {
 		if(child && it->enabled()) {
 			cap_t off = cpu.id * Hip::get().service_caps();
 			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
-			cpu.reg_pt = new Pt(off + CapSpace::SRV_REGISTER);
+			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
 		}
 	}
