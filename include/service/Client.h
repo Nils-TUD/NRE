@@ -31,6 +31,7 @@ public:
 		// TODO busy-waiting is bad
 		do {
 			try {
+				// TODO cap leak
 				cap_t cap = connect(service);
 				cap_t pt = get_portal(cap);
 				_pt = new Pt(pt);
@@ -49,7 +50,7 @@ public:
 	}
 
 private:
-	cap_t connect(const char *service) {
+	cap_t connect(const char *service) const {
 		// TODO we need a function to receive a cap, right?
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -62,7 +63,7 @@ private:
 		return ti.crd().cap();
 	}
 
-	cap_t get_portal(cap_t cap) {
+	cap_t get_portal(cap_t cap) const {
 		Pt init(cap);
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -72,6 +73,9 @@ private:
 		uf.get_typed(ti);
 		return ti.crd().cap();
 	}
+
+	Client(const Client&);
+	Client& operator=(const Client&);
 
 	Pt *_pt;
 };

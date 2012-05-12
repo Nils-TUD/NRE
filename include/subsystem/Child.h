@@ -32,21 +32,6 @@ class ChildManager;
 class Child {
 	friend class ChildManager;
 
-	Child(const char *cmdline) : _cmdline(cmdline), _started(), _pd(), _ec(), _sc(), _pts(),
-			_ptcount(), _regs(), _entry(), _stack(), _utcb(), _hip(), _sm() {
-	}
-	~Child() {
-		if(_pd)
-			delete _pd;
-		if(_ec)
-			delete _ec;
-		if(_sc)
-			delete _sc;
-		for(size_t i = 0; i < _ptcount; ++i)
-			delete _pts[i];
-		delete[] _pts;
-	}
-
 public:
 	const char *cmdline() const {
 		return _cmdline;
@@ -71,6 +56,24 @@ public:
 	}
 
 private:
+	Child(const char *cmdline) : _cmdline(cmdline), _started(), _pd(), _ec(), _sc(), _pts(),
+			_ptcount(), _regs(), _entry(), _stack(), _utcb(), _hip(), _sm() {
+	}
+	~Child() {
+		if(_pd)
+			delete _pd;
+		if(_ec)
+			delete _ec;
+		if(_sc)
+			delete _sc;
+		for(size_t i = 0; i < _ptcount; ++i)
+			delete _pts[i];
+		delete[] _pts;
+	}
+
+	Child(const Child&);
+	Child& operator=(const Child&);
+
 	const char *_cmdline;
 	bool _started;
 	Pd *_pd;

@@ -74,6 +74,7 @@ private:
 				return _clients[i];
 			}
 		}
+		// TODO different exception
 		throw Exception("No free slots");
 	}
 

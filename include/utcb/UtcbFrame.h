@@ -85,6 +85,7 @@ class UtcbFrameRef {
 	}
 
 	void check_write(size_t words) {
+		// TODO use a different exception
 		if(_utcb->freewords() < words)
 			throw Exception("Utcb has not enough capacity");
 	}
@@ -158,6 +159,8 @@ public:
 		_utcb->typed++;
 	}
 	void get_typed(TypedItem& item) {
+		// TODO perhaps we should provide a "type-safe" method for that? that is, a method which receives
+		// a e.g. memory item and makes sure that we received one?
 		check_typed_read(1);
 		item._aux = _top[-(_tpos * 2 + 1)];
 		item._crd = Crd(_top[-(_tpos * 2 + 2)]);
@@ -232,8 +235,6 @@ public:
 	virtual ~UtcbFrame() {
 		_utcb->pop();
 	}
-
-	// TODO cloning?
 };
 
 class UtcbExcFrameRef : public UtcbFrameRef {

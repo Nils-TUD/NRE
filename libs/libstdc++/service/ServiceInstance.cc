@@ -24,27 +24,20 @@
 
 namespace nul {
 
+ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
+		: _s(s), _ec(s,cpu), _pt(&_ec,portal_newclient), _sm() {
+	UtcbFrame uf;
+	uf.delegate(_pt.cap());
+	uf << String(s->name()) << cpu;
+	CPU::current().reg_pt->call(uf);
+}
+
 void ServiceInstance::portal_newclient(cap_t,void *tls) {
 	// TODO not everyone wants client-specific portals
 	Service *s = reinterpret_cast<Service*>(tls);
 	Pt *pt = s->new_client();
 	UtcbFrameRef uf;
 	uf.delegate(pt->cap());
-}
-
-ServiceInstance::ServiceInstance(Service* s,cpu_t cpu) : _s(s), _ec(), _pt(), _sm() {
-	// multiple things might throw here
-	ScopedPtr<LocalEc> ec(new LocalEc(s,cpu));
-	ScopedPtr<Pt> pt(new Pt(ec.get(),portal_newclient));
-
-	// register
-	UtcbFrame uf;
-	uf.delegate(pt->cap());
-	uf << String(s->name()) << cpu;
-	CPU::current().reg_pt->call(uf);
-
-	_ec = ec.release();
-	_pt = pt.release();
 }
 
 }

@@ -23,7 +23,6 @@
 #include <kobj/KObject.h>
 #include <kobj/Pd.h>
 #include <utcb/Utcb.h>
-#include <utcb/UtcbExc.h>
 #include <Syscalls.h>
 
 namespace nul {
@@ -78,13 +77,12 @@ public:
 		return _tls_idx++;
 	}
 	void *get_tls(size_t idx) const {
-		if(idx >= TLS_SIZE)
-			return 0;
+		assert(idx < TLS_SIZE);
 		return const_cast<void*>(_tls[idx]);
 	}
 	void set_tls(size_t idx,const void *val) {
-		if(idx < TLS_SIZE)
-			_tls[idx] = val;
+		assert(idx < TLS_SIZE);
+		_tls[idx] = val;
 	}
 
 private:

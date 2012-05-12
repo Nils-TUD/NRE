@@ -49,13 +49,16 @@ class ChildManager {
 		MAX_CHILDS		= 32
 	};
 
-	static inline size_t portal_count() {
-		return 7;
-	}
-	static inline size_t per_child_caps() {
-		return Hip::get().service_caps() * _cpu_count;
+public:
+	ChildManager();
+	~ChildManager();
+
+	void load(uintptr_t addr,size_t size,const char *cmdline);
+	ServiceRegistry &registry() {
+		return _registry;
 	}
 
+private:
 	cpu_t get_cpu(cap_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
@@ -72,16 +75,16 @@ class ChildManager {
 		delete c;
 	}
 
-public:
-	ChildManager();
-	~ChildManager();
-
-	void load(uintptr_t addr,size_t size,const char *cmdline);
-	ServiceRegistry &registry() {
-		return _registry;
+	static inline size_t portal_count() {
+		return 7;
+	}
+	static inline size_t per_child_caps() {
+		return Hip::get().service_caps() * _cpu_count;
 	}
 
-private:
+	ChildManager(const ChildManager&);
+	ChildManager& operator=(const ChildManager&);
+
 	size_t _child;
 	Child *_childs[MAX_CHILDS];
 	cap_t _portal_caps;

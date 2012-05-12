@@ -27,6 +27,8 @@ namespace nul {
 class Sm : public KObject {
 public:
 	Sm(unsigned initial = 0,Pd *pd = Pd::current());
+	virtual ~Sm() {
+	}
 
 	void down() {
 		Syscalls::sm_ctrl(cap(),Syscalls::SM_DOWN);

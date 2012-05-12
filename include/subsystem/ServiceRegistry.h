@@ -108,7 +108,6 @@ private:
 		return 0;
 	}
 
-private:
 	Service *_srvs[MAX_SERVICES];
 };
 

@@ -37,15 +37,17 @@ public:
 		return cpus[id];
 	}
 
-	CPU() : id(), map_pt(), reg_pt(), get_pt() {
-	}
-
 	cpu_t id;
 	Pt *map_pt;
 	Pt *reg_pt;
 	Pt *get_pt;
 
 private:
+	CPU() : id(), map_pt(), reg_pt(), get_pt() {
+	}
+	CPU(const CPU&);
+	CPU& operator=(const CPU&);
+
 	static CPU cpus[Hip::MAX_CPUS];
 };
 

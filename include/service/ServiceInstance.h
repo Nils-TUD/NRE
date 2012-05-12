@@ -30,13 +30,9 @@ class Service;
 class ServiceInstance {
 public:
 	ServiceInstance(Service* s,cpu_t cpu);
-	~ServiceInstance() {
-		delete _ec;
-		delete _pt;
-	}
 
 	cpu_t cpu() const {
-		return _ec->cpu();
+		return _ec.cpu();
 	}
 
 private:
@@ -46,8 +42,8 @@ private:
 	ServiceInstance& operator=(const ServiceInstance&);
 
 	Service *_s;
-	LocalEc *_ec;
-	Pt *_pt;
+	LocalEc _ec;
+	Pt _pt;
 	UserSm _sm;
 };
 

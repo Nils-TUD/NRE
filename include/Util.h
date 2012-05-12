@@ -22,6 +22,8 @@
 
 namespace nul {
 
+// TODO this class contains various stuff that has nothing to do with each other.
+// find a better organization!
 class Util {
 public:
 	template<typename T>

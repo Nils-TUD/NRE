@@ -23,7 +23,6 @@
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <utcb/UtcbExc.h>
 #include <utcb/Utcb.h>
 #include <mem/RegionList.h>
 #include <stream/Log.h>

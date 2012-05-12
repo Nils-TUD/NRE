@@ -21,8 +21,6 @@ namespace nul {
  * semaphore and the shared counter might then be out-of-sync.
  */
 class UserSm {
-	Sm _sem;
-	long _value;
 public:
 	UserSm() : _sem(0), _value(1) {
 	}
@@ -35,6 +33,10 @@ public:
 		if(Util::atomic_xadd(&_value,+1) < 0)
 			_sem.up();
 	}
+
+private:
+	Sm _sem;
+	long _value;
 };
 
 }

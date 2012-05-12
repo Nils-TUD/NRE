@@ -41,6 +41,8 @@ public:
 	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(pt) {
 		Syscalls::create_pt(pt,ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->cap());
 	}
+	virtual ~Pt() {
+	}
 
 	void call(UtcbFrame &uf) {
 		Syscalls::call(cap());
