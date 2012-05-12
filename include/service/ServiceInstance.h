@@ -16,27 +16,39 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/SpinLock.h>
-#include <cstdlib>
+#pragma once
 
-static char buffer[0x8000];
-static size_t pos = 0;
-static uint lck = 0;
+#include <kobj/LocalEc.h>
+#include <kobj/Pt.h>
+#include <kobj/UserSm.h>
+#include <CPU.h>
 
-void* malloc(size_t size) {
-	lock(&lck);
-	void* res;
-	if(pos + size >= sizeof(buffer)) {
-		unlock(&lck);
-		return 0;
+namespace nul {
+
+class Service;
+
+class ServiceInstance {
+public:
+	ServiceInstance(Service* s,cpu_t cpu);
+	~ServiceInstance() {
+		delete _ec;
+		delete _pt;
 	}
-	
-	res = buffer + pos;
-	pos += size;
-	unlock(&lck);
-	return res;
-}
 
-void free(void* p) {
-	// do nothing for now
+	cpu_t cpu() const {
+		return _ec->cpu();
+	}
+
+private:
+	PORTAL static void portal_newclient(cap_t pid,void *tls);
+
+	ServiceInstance(const ServiceInstance&);
+	ServiceInstance& operator=(const ServiceInstance&);
+
+	Service *_s;
+	LocalEc *_ec;
+	Pt *_pt;
+	UserSm _sm;
+};
+
 }

@@ -17,22 +17,21 @@
  */
 
 #include <kobj/LocalEc.h>
-#include <kobj/Pt.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
-#include <CPU.h>
+#include <service/Client.h>
 
 using namespace nul;
 
-static void write();
+static void write(void *);
 extern "C" int start();
 
 int start() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
-			new Sc(new GlobalEc(write,it->id()),Qpd());
+			new Sc(new GlobalEc(write,0,it->id()),Qpd());
 	}
 
 	Sm sm(0);
@@ -40,35 +39,9 @@ int start() {
 	return 0;
 }
 
-static void write() {
-	Pt *screen = 0;
+static void write(void *) {
+	Client scr("screen");
 	UtcbFrame uf;
-	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-	do {
-		try {
-			uf.clear();
-			uf << String("screen");
-			CPU::current().get_pt->call(uf);
-
-			TypedItem initti;
-			uf.get_typed(initti);
-			{
-				Pt init(initti.crd().cap());
-				UtcbFrame uf;
-				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-				init.call(uf);
-
-				TypedItem ti;
-				uf.get_typed(ti);
-				screen = new Pt(ti.crd().cap());
-			}
-		}
-		catch(const Exception& e) {
-		}
-	}
-	while(screen == 0);
-
-	uf.reset();
 	while(1)
-		screen->call(uf);
+		scr.pt()->call(uf);
 }

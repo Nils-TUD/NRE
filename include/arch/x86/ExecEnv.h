@@ -35,15 +35,15 @@ class ExecEnv {
 	};
 
 public:
-	typedef PORTAL void (*portal_func)(cap_t);
-	typedef void (*startup_func)();
+	typedef PORTAL void (*portal_func)(cap_t,void *);
+	typedef void (*startup_func)(void *);
 
 	enum {
 		PAGE_SHIFT		= 12,
 		PAGE_SIZE		= 1 << PAGE_SHIFT,
 		STACK_SIZE		= PAGE_SIZE,
 		KERNEL_START	= 0xC0000000,
-		MAX_STACKS		= 64	// TODO remove
+		MAX_STACKS		= 80	// TODO remove
 	};
 
 	static inline Pd *get_current_pd() {
@@ -62,7 +62,7 @@ public:
 		set_current(1,ec);
 	}
 
-	static void *setup_stack(Pd *pd,Ec *ec,startup_func start);
+	static void *setup_stack(Pd *pd,Ec *ec,void *tls,startup_func start);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 	static size_t collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max);
 

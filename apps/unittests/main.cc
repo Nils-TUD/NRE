@@ -42,8 +42,8 @@ using namespace nul::test;
 extern "C" void abort();
 extern "C" int start();
 static void map(const CapRange& range);
-PORTAL static void portal_map(cap_t pid);
-PORTAL static void portal_startup(cap_t);
+PORTAL static void portal_map(cap_t pid,void *);
+PORTAL static void portal_startup(cap_t,void *);
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
@@ -75,7 +75,7 @@ int start() {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			// TODO ?
-			LocalEc *cpuec = new LocalEc(cpu.id);
+			LocalEc *cpuec = new LocalEc(0,cpu.id);
 			cpu.map_pt = new Pt(cpuec,portal_map);
 			new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
@@ -108,7 +108,7 @@ static void map(const CapRange& range) {
 	CPU::current().map_pt->call(uf);
 }
 
-static void portal_map(cap_t) {
+static void portal_map(cap_t,void *) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;
@@ -116,7 +116,7 @@ static void portal_map(cap_t) {
 	uf.delegate(range,DelItem::FROM_HV);
 }
 
-static void portal_startup(cap_t) {
+static void portal_startup(cap_t,void *) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);

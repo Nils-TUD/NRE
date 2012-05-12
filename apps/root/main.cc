@@ -28,6 +28,7 @@
 #include <mem/RegionList.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
+#include <subsystem/ChildManager.h>
 #include <Syscalls.h>
 #include <String.h>
 #include <Hip.h>
@@ -41,10 +42,10 @@ using namespace nul;
 extern "C" void abort();
 extern "C" int start();
 static void map(const CapRange& range);
-PORTAL static void portal_startup(cap_t pid);
-PORTAL static void portal_map(cap_t pid);
-static void mythread();
-extern void start_childs();
+PORTAL static void portal_startup(cap_t pid,void *tls);
+PORTAL static void portal_map(cap_t pid,void *tls);
+static void mythread(void *tls);
+static void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static Sm *sm;
@@ -64,14 +65,13 @@ void verbose_terminate() {
 }
 
 int start() {
-	Ec *ec = Ec::current();
 	const Hip &hip = Hip::get();
 
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			// TODO ?
-			LocalEc *cpuec = new LocalEc(cpu.id);
+			LocalEc *cpuec = new LocalEc(0,cpu.id);
 			cpu.map_pt = new Pt(cpuec,portal_map);
 			new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
@@ -97,8 +97,10 @@ int start() {
 
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled())
-			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
+		if(it->enabled()) {
+			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
+					it->package,it->core,it->thread,it->flags);
+		}
 	}
 
 	start_childs();
@@ -111,16 +113,42 @@ int start() {
 	try {
 		sm = new Sm(1);
 
-		new Sc(new GlobalEc(mythread,0),Qpd());
-		new Sc(new GlobalEc(mythread,1),Qpd(1,100));
-		new Sc(new GlobalEc(mythread,1),Qpd(1,1000));
+		new Sc(new GlobalEc(mythread,0,0),Qpd());
+		new Sc(new GlobalEc(mythread,0,1),Qpd(1,100));
+		new Sc(new GlobalEc(mythread,0,1),Qpd(1,1000));
 	}
 	catch(const SyscallException& e) {
 		e.write(Log::get());
 	}
 
-	mythread();
+	mythread(0);
 	return 0;
+}
+
+static void start_childs() {
+	ChildManager *mng = new ChildManager();
+	int i = 0;
+	const Hip &hip = Hip::get();
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+		// we are the first one :)
+		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
+			// map the memory of the module
+			UtcbFrame uf;
+			uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
+			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size,DESC_MEM_ALL);
+			// we assume that the cmdline does not cross pages
+			if(it->aux)
+				uf << CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,DESC_MEM_ALL);
+			CPU::current().map_pt->call(uf);
+			if(it->aux) {
+				// ensure that its terminated at the end of the page
+				char *end = reinterpret_cast<char*>(Util::roundup<uintptr_t>(it->aux,ExecEnv::PAGE_SIZE) - 1);
+				*end = '\0';
+			}
+
+			mng->load(it->addr,it->size,reinterpret_cast<char*>(it->aux));
+		}
+	}
 }
 
 static void map(const CapRange& range) {
@@ -130,7 +158,7 @@ static void map(const CapRange& range) {
 	CPU::current().map_pt->call(uf);
 }
 
-static void portal_map(cap_t) {
+static void portal_map(cap_t,void *) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;
@@ -138,13 +166,13 @@ static void portal_map(cap_t) {
 	uf.delegate(range,DelItem::FROM_HV);
 }
 
-static void portal_startup(cap_t) {
+static void portal_startup(cap_t,void *) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
 }
 
-static void mythread() {
+static void mythread(void *) {
 	Ec *ec = Ec::current();
 	while(1) {
 		sm->down();

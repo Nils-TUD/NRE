@@ -13,22 +13,16 @@
 #include <cap/CapSpace.h>
 #include <stream/Screen.h>
 #include <stream/Serial.h>
+#include <stream/Log.h>
+#include <service/Service.h>
+#include <service/ServiceInstance.h>
 #include <ScopedLock.h>
 #include <CPU.h>
 
 using namespace nul;
 
-enum {
-	MAX_CLIENTS	= 64
-};
-
 extern "C" int start();
-PORTAL static void portal_newclient(cap_t);
-PORTAL static void portal_write(cap_t);
-
-static cap_t capstart = CapSpace::get().allocate(MAX_CLIENTS);
-static cap_t off = 0;
-static UserSm *logsm;
+PORTAL static void portal_write(cap_t,void *);
 
 int start() {
 	{
@@ -45,35 +39,20 @@ int start() {
 	}
 
 	Screen::get().clear();
-	Screen::get().writef("I am the screen service!!\n");
 	Serial::get().init();
-	Serial::get().writef("I am the screen service!!\n");
-	logsm = new UserSm();
+	Log::get().writef("I am the screen service!!\n");
 
+	Service s("screen",portal_write);
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
-			LocalEc *ec = new LocalEc(it->id());
-			Pt *pt = new Pt(ec,portal_newclient);
-			UtcbFrame uf;
-			uf.delegate(pt->cap());
-			uf << String("screen") << it->id();
-			CPU::current().reg_pt->call(uf);
-		}
+		if(it->enabled())
+			s.reg(it->id());
 	}
-
-	Sm sm(0);
-	sm.down();
+	s.wait();
 	return 0;
 }
 
-static void portal_newclient(cap_t) {
-	UtcbFrameRef uf;
-	Pt *pt = new Pt(static_cast<LocalEc*>(Ec::current()),capstart + off++,portal_write);
-	uf.delegate(pt->cap());
-}
-
-static void portal_write(cap_t pid) {
+static void portal_write(cap_t pid,void *) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
 	Serial::get().writef("Got a write-request on cpu %u from client %u\n",Ec::current()->cpu(),pid);
