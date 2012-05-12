@@ -29,6 +29,10 @@
 namespace nul {
 
 class Ec : public KObject {
+	enum {
+		TLS_SIZE = 4
+	};
+
 public:
 	static Ec *current() {
 		return ExecEnv::get_current_ec();
@@ -36,7 +40,8 @@ public:
 
 protected:
 	explicit Ec(cpu_t cpu,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
-			: KObject(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu) {
+			: KObject(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu),
+			  _tls_idx(0), _tls() {
 		if(!_utcb) {
 			// TODO
 			_utcb = reinterpret_cast<Utcb*>(_utcb_addr);
@@ -68,6 +73,20 @@ public:
 		return _cpu;
 	}
 
+	size_t create_tls() {
+		assert(_tls_idx + 1 < TLS_SIZE);
+		return _tls_idx++;
+	}
+	void *get_tls(size_t idx) const {
+		if(idx >= TLS_SIZE)
+			return 0;
+		return const_cast<void*>(_tls[idx]);
+	}
+	void set_tls(size_t idx,const void *val) {
+		if(idx < TLS_SIZE)
+			_tls[idx] = val;
+	}
+
 private:
 	Ec(const Ec&);
 	Ec& operator=(const Ec&);
@@ -76,6 +95,8 @@ private:
 	uintptr_t _stack;
 	cap_t _event_base;
 	cpu_t _cpu;
+	size_t _tls_idx;
+	const void *_tls[TLS_SIZE];
 
 	// TODO
 protected:

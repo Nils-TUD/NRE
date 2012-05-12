@@ -23,6 +23,7 @@
 .extern start
 .extern exit
 .extern _setup
+.extern _presetup
 .extern _init
 
 _start:
@@ -40,9 +41,11 @@ _start:
 	mov		%eax, _startup_info + 8	# store cpu
 	sub		$8,%esp					# leave space for Ec and Pd
 
+	# call early setup (current ec and pd)
+	call	_presetup
 	# call function in .init-section
 	call	_init
-	# create initial Pd and Ec
+	# other init stuff
 	push	%ebx					# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp

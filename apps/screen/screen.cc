@@ -9,16 +9,26 @@
 
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
+#include <kobj/UserSm.h>
 #include <cap/CapSpace.h>
 #include <stream/Screen.h>
 #include <stream/Serial.h>
+#include <ScopedLock.h>
 #include <CPU.h>
 
 using namespace nul;
 
-extern "C" int start();
+enum {
+	MAX_CLIENTS	= 64
+};
 
+extern "C" int start();
+PORTAL static void portal_newclient(cap_t);
 PORTAL static void portal_write(cap_t);
+
+static cap_t capstart = CapSpace::get().allocate(MAX_CLIENTS);
+static cap_t off = 0;
+static UserSm *logsm;
 
 int start() {
 	{
@@ -38,12 +48,13 @@ int start() {
 	Screen::get().writef("I am the screen service!!\n");
 	Serial::get().init();
 	Serial::get().writef("I am the screen service!!\n");
+	logsm = new UserSm();
 
 	const Hip& hip = Hip::get();
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			LocalEc *ec = new LocalEc(it->id());
-			Pt *pt = new Pt(ec,portal_write);
+			Pt *pt = new Pt(ec,portal_newclient);
 			UtcbFrame uf;
 			uf.delegate(pt->cap());
 			uf << String("screen") << it->id();
@@ -56,6 +67,14 @@ int start() {
 	return 0;
 }
 
-static void portal_write(cap_t) {
-	Serial::get().writef("Got a write-request on cpu %u\n",Ec::current()->cpu());
+static void portal_newclient(cap_t) {
+	UtcbFrameRef uf;
+	Pt *pt = new Pt(static_cast<LocalEc*>(Ec::current()),capstart + off++,portal_write);
+	uf.delegate(pt->cap());
+}
+
+static void portal_write(cap_t pid) {
+	static UserSm sm;
+	ScopedLock<UserSm> guard(&sm);
+	Serial::get().writef("Got a write-request on cpu %u from client %u\n",Ec::current()->cpu(),pid);
 }

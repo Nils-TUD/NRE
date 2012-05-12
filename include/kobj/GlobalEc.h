@@ -28,7 +28,7 @@ namespace nul {
 class Utcb;
 
 class GlobalEc : public Ec {
-	friend void ::_setup(bool);
+	friend void ::_presetup();
 
 	explicit GlobalEc(Utcb *utcb,cap_t cap,cpu_t cpu,Pd *pd) : Ec(cpu,0,cap,utcb) {
 		ExecEnv::set_current_ec(this);

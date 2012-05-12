@@ -13,7 +13,7 @@ namespace nul {
 
 size_t Hip::cpu_online_count() const {
 	size_t c = 0;
-	for(cpu_const_iterator it = cpu_begin(); it != cpu_end(); ++it) {
+	for(cpu_iterator it = cpu_begin(); it != cpu_end(); ++it) {
 		if(it->enabled())
 			c++;
 	}

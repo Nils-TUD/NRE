@@ -30,7 +30,7 @@ extern "C" int start();
 
 int start() {
 	const Hip& hip = Hip::get();
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
 			new Sc(new GlobalEc(write,it->id()),Qpd());
 	}
@@ -50,12 +50,20 @@ static void write() {
 			uf << String("screen");
 			CPU::current().get_pt->call(uf);
 
-			TypedItem it;
-			uf.get_typed(it);
-			screen = new Pt(it.crd().cap());
+			TypedItem initti;
+			uf.get_typed(initti);
+			{
+				Pt init(initti.crd().cap());
+				UtcbFrame uf;
+				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+				init.call(uf);
+
+				TypedItem ti;
+				uf.get_typed(ti);
+				screen = new Pt(ti.crd().cap());
+			}
 		}
 		catch(const Exception& e) {
-
 		}
 	}
 	while(screen == 0);

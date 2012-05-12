@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <cstdlib>
+
 void abort() {
 	*(char*)0 = 4;
 }

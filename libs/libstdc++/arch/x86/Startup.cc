@@ -22,16 +22,23 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <CPU.h>
+#include <pthread.h>
 
 using namespace nul;
 
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
 
-void _setup(bool child) {
+// TODO the setup-stuff is not really nice. I think we need init-priorities or something
+
+void _presetup() {
 	static Pd initpd(CapSpace::INIT_PD,true);
 	static GlobalEc initec(_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&initpd);
+	// force the linker to include the pthread object-file. FIXME why is this necessary??
+	pthread_cancel(0);
+}
 
+void _setup(bool child) {
 	if(child) {
 		// grab our initial caps (pd, ec, sc) from parent
 		UtcbFrame uf;
@@ -41,7 +48,7 @@ void _setup(bool child) {
 	}
 
 	const Hip& hip = Hip::get();
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		CPU &cpu = CPU::get(it->id());
 		cpu.id = it->id();
 		if(child && it->enabled()) {

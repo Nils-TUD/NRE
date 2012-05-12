@@ -43,7 +43,7 @@ public:
 		PAGE_SIZE		= 1 << PAGE_SHIFT,
 		STACK_SIZE		= PAGE_SIZE,
 		KERNEL_START	= 0xC0000000,
-		MAX_STACKS		= 8	// TODO remove
+		MAX_STACKS		= 64	// TODO remove
 	};
 
 	static inline Pd *get_current_pd() {

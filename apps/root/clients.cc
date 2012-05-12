@@ -187,7 +187,7 @@ void start_childs() {
 	cpu_count = hip.cpu_online_count();
 	portal_caps = CapSpace::get().allocate(MAX_CLIENTS * per_client_caps(),per_client_caps());
 
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			ecs[it->id()] = new LocalEc(it->id());
 			// we need a dedicated Ec for the register-portal which does always accept one capability from
@@ -198,7 +198,7 @@ void start_childs() {
 		}
 	}
 
-	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
@@ -361,22 +361,33 @@ static void portal_startup(cap_t pid) {
 }
 
 static void portal_pf(cap_t pid) {
+	static UserSm sm;
 	UtcbExcFrameRef uf;
 	Child *c = get_child(pid);
+	cpu_t cpu = get_cpu(pid);
 	if(!c)
 		return;
 
-	ScopedLock<UserSm> guard(&c->sm);
+	ScopedLock<UserSm> guard(&sm);
 	uintptr_t pfaddr = uf->qual[1];
+	unsigned error = uf->qual[0];
 	uintptr_t eip = uf->eip;
 
-	Serial::get().writef("Child '%s': Pagefault for %p @ %p, error=%#x\n",c->cmdline,pfaddr,eip,uf->qual[0]);
+	Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+			c->cmdline,pfaddr,eip,cpu,error);
 
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;
 	uint flags = c->regs.find(pfaddr,src);
-	// not found or already mapped?
-	if(!flags || (flags & RegionList::M)) {
+	bool kill = !flags;
+	// check if the access rights are violated
+	if(flags & RegionList::M) {
+		if((error & 0x2) && !(flags & RegionList::W))
+			kill = true;
+		if((error & 0x4) && !(flags & RegionList::R))
+			kill = true;
+	}
+	if(kill) {
 		uintptr_t *addr,addrs[32];
 		Serial::get().writef("Unable to resolve fault; killing child\n");
 		ExecEnv::collect_backtrace(c->ec->stack(),uf->ebp,addrs,sizeof(addrs));

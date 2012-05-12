@@ -33,15 +33,15 @@ const TestCase utcbtest = {
 
 static void portal_test(cap_t) {
 	UtcbFrameRef uf;
-	if(uf.untyped() != 3) {
-		uf.reset();
-		return;
+	try {
+		int a,b,c;
+		uf >> a >> b >> c;
+		uf.clear();
+		uf << c << b << a;
 	}
-
-	int a,b,c;
-	uf >> a >> b >> c;
-	uf.reset();
-	uf << c << b << a;
+	catch(const Exception&) {
+		uf.clear();
+	}
 }
 
 static void test_nesting() {

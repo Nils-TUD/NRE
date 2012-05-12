@@ -31,8 +31,8 @@ public:
 	enum {
 		MAX_CPUS	= 32
 	};
-	typedef const Hip_mem* mem_const_iterator;
-	typedef const Hip_cpu* cpu_const_iterator;
+	typedef const Hip_mem* mem_iterator;
+	typedef const Hip_cpu* cpu_iterator;
 
 	static const Hip &get() {
 		return *_startup_info.hip;
@@ -87,18 +87,18 @@ public:
 	}
 	size_t cpu_online_count() const;
 
-	mem_const_iterator mem_begin() const {
-		return reinterpret_cast<mem_const_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
+	mem_iterator mem_begin() const {
+		return reinterpret_cast<mem_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
-	mem_const_iterator mem_end() const {
-		return reinterpret_cast<mem_const_iterator>(reinterpret_cast<const char*>(this) + length);
+	mem_iterator mem_end() const {
+		return reinterpret_cast<mem_iterator>(reinterpret_cast<const char*>(this) + length);
 	}
 
-	cpu_const_iterator cpu_begin() const {
-		return reinterpret_cast<cpu_const_iterator>(reinterpret_cast<const char*>(this) + cpu_offs);
+	cpu_iterator cpu_begin() const {
+		return reinterpret_cast<cpu_iterator>(reinterpret_cast<const char*>(this) + cpu_offs);
 	}
-	cpu_const_iterator cpu_end() const {
-		return reinterpret_cast<cpu_const_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
+	cpu_iterator cpu_end() const {
+		return reinterpret_cast<cpu_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
 };
 

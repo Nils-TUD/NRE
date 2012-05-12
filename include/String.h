@@ -54,8 +54,8 @@ private:
 		_str[_len] = '\0';
 	}
 
-	size_t _len;
 	char *_str;
+	size_t _len;
 };
 
 }

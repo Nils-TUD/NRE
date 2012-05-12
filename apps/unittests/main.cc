@@ -71,7 +71,7 @@ int start() {
 	Ec *ec = Ec::current();
 	const Hip &hip = Hip::get();
 
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			// TODO ?

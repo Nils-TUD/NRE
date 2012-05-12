@@ -37,15 +37,15 @@ static uint64_t results[tries];
 
 static void portal_test(cap_t) {
 	UtcbFrameRef uf;
-	if(uf.untyped() != 3) {
-		uf.reset();
-		return;
+	try {
+		unsigned a,b,c;
+		uf >> a >> b >> c;
+		uf.clear();
+		uf << (a + b) << (a + b + c);
 	}
-
-	unsigned a,b,c;
-	uf >> a >> b >> c;
-	uf.reset();
-	uf << (a + b) << (a + b + c);
+	catch(const Exception&) {
+		uf.clear();
+	}
 }
 
 static void test_pingpong() {
@@ -63,7 +63,7 @@ static void test_pingpong() {
 		pt.call(uf);
 		unsigned x = 0,y = 0;
 		uf >> x >> y;
-		uf.reset();
+		uf.clear();
 		sum += x + y;
 		tac = Util::tsc();
 		ipc_duration = tac - tic - rdtsc;

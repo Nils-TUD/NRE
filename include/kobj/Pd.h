@@ -25,7 +25,7 @@
 namespace nul {
 
 class Pd : public KObject {
-	friend void ::_setup(bool);
+	friend void ::_presetup();
 
 	explicit Pd(cap_t cap,bool) : KObject(cap) {
 	}

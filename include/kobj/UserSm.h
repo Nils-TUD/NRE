@@ -24,7 +24,7 @@ class UserSm {
 	Sm _sem;
 	long _value;
 public:
-	UserSm() : _sem(1), _value(1) {
+	UserSm() : _sem(0), _value(1) {
 	}
 
 	void down() {

@@ -11,7 +11,7 @@ hostenv = Environment(
 )
 env = Environment(
 	CXXFLAGS = '-Wall -Wextra -ansi',
-	LINKFLAGS = '-static -Wl,-static -static-libgcc',
+	LINKFLAGS = '-Wl,--no-undefined -static -Wl,-static -static-libgcc',
 	ENV = {'PATH' : crossdir + "/bin:" + os.environ['PATH']},
 	CPPPATH = '#include',
 	CXX = cross + '-g++',

@@ -19,7 +19,7 @@
 #include <arch/SpinLock.h>
 #include <cstdlib>
 
-static char buffer[8192];
+static char buffer[0x4000];
 static size_t pos = 0;
 static uint lck = 0;
 

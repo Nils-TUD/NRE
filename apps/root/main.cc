@@ -67,7 +67,7 @@ int start() {
 	Ec *ec = Ec::current();
 	const Hip &hip = Hip::get();
 
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
 			// TODO ?
@@ -77,7 +77,7 @@ int start() {
 		}
 	}
 
-	map(CapRange(0x3f8,6,DESC_IO_ALL));
+	map(CapRange(0x3F8,6,DESC_IO_ALL));
 	map(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL));
 
 	Serial::get().init();
@@ -87,7 +87,7 @@ int start() {
 	Log::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
 	Log::get().writef("Memory:\n");
-	for(Hip::mem_const_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
 		if(it->type == Hip_mem::AVAILABLE) {
 			map(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
@@ -96,26 +96,17 @@ int start() {
 	}
 
 	Log::get().writef("CPUs:\n");
-	for(Hip::cpu_const_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
 			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",it->package,it->core,it->thread,it->flags);
 	}
 
 	start_childs();
 
-	while(1);
-
-	/*RegionList l;
-	l.add(0x1000,0x4000,0,RegionList::RW);
-	l.add(0x8000,0x2000,0,RegionList::R);
-	l.add(0x10000,0x8000,0,RegionList::RX);
-	l.print(*log);
-	l.add(0x2000,0x1000,0,RegionList::R);
-	l.print(*log);
-	l.remove(0x1000,0x8000);
-	l.print(*log);
-	l.remove(0x10000,0x4000);
-	l.print(*log);*/
+	{
+		Sm sm(0);
+		sm.down();
+	}
 
 	try {
 		sm = new Sm(1);

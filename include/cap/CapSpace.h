@@ -27,8 +27,6 @@
 namespace nul {
 
 class CapSpace {
-	friend void ::_setup(bool child);
-
 public:
 	enum Caps {
 		EV_DIVIDE		= 0x0,
