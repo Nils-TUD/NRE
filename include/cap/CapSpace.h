@@ -58,6 +58,8 @@ public:
 		SRV_UNREG		= 0x25,		// unregister service
 		SRV_GET			= 0x26,		// get service
 		SRV_MAP			= 0x27,		// map portal
+
+		SM_SERVICE		= 0x28,		// semaphore for service registration
 	};
 
 	static CapSpace& get() {

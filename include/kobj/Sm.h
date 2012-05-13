@@ -26,7 +26,13 @@ namespace nul {
 
 class Sm : public KObject {
 public:
-	Sm(unsigned initial = 0,Pd *pd = Pd::current());
+	// TODO get rid of the bool
+	Sm(cap_t cap,bool) : KObject(cap) {
+	}
+	Sm(cap_t cap,unsigned initial,Pd *pd = Pd::current()) : KObject(cap) {
+		Syscalls::create_sm(cap,initial,pd->cap());
+	}
+	Sm(unsigned initial,Pd *pd = Pd::current());
 	virtual ~Sm() {
 	}
 

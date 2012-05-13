@@ -36,6 +36,10 @@ class ChildManager {
 
 	class Portals {
 	public:
+		enum {
+			COUNT	= 7
+		};
+
 		PORTAL static void initcaps(cap_t pid,void *tls);
 		PORTAL static void reg(cap_t pid,void *tls);
 		PORTAL static void unreg(cap_t pid,void *tls);
@@ -45,6 +49,7 @@ class ChildManager {
 		PORTAL static void pf(cap_t pid,void *tls);
 	};
 
+	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
 	enum {
 		MAX_CHILDS		= 32
 	};
@@ -59,6 +64,15 @@ public:
 	}
 
 private:
+	void notify_childs(cpu_t cpu) {
+		for(size_t i = 0; i < MAX_CHILDS; ++i) {
+			if(_childs[i]) {
+				for(uint x = 0; x < _childs[i]->_waits[cpu]; ++x)
+					_childs[i]->_sms[cpu]->up();
+				_childs[i]->_waits[cpu] = 0;
+			}
+		}
+	}
 	cpu_t get_cpu(cap_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
@@ -75,11 +89,8 @@ private:
 		delete c;
 	}
 
-	static inline size_t portal_count() {
-		return 7;
-	}
 	static inline size_t per_child_caps() {
-		return Hip::get().service_caps() * _cpu_count;
+		return Util::nextpow2(Hip::get().service_caps() * _cpu_count);
 	}
 
 	ChildManager(const ChildManager&);
@@ -89,7 +100,7 @@ private:
 	Child *_childs[MAX_CHILDS];
 	cap_t _portal_caps;
 	ServiceRegistry _registry;
-	Sm _sm;
+	UserSm _sm;
 	LocalEc *_ecs[Hip::MAX_CPUS];
 	LocalEc *_regecs[Hip::MAX_CPUS];
 	static size_t _cpu_count;

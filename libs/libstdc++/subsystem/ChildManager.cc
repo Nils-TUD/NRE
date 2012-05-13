@@ -26,7 +26,7 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
 ChildManager::ChildManager() : _child(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_registry(), _sm(1), _ecs(), _regecs() {
+		_registry(), _sm(), _ecs(), _regecs() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
@@ -64,12 +64,15 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	Child *c = new Child(cmdline);
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		const size_t ptcount = portal_count();
 		cap_t pts = _portal_caps + _child * per_child_caps();
-		c->_ptcount = _cpu_count * ptcount;
+		c->_ptcount = _cpu_count * Portals::COUNT;
 		c->_pts = new Pt*[c->_ptcount];
+		c->_smcount = _cpu_count;
+		c->_sms = new Sm*[_cpu_count];
+		c->_waitcount = _cpu_count;
+		c->_waits = new uint[_cpu_count];
 		for(cpu_t cpu = 0; cpu < _cpu_count; ++cpu) {
-			size_t idx = cpu * ptcount;
+			size_t idx = cpu * Portals::COUNT;
 			size_t off = cpu * Hip::get().service_caps();
 			c->_pts[idx + 0] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
 					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
@@ -79,6 +82,8 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
 			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::getservice,0);
 			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_sms[cpu] = new Sm(pts + off + CapSpace::SM_SERVICE,0U);
+			c->_waits[cpu] = 0;
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Util::nextpow2shift(per_child_caps()),DESC_CAP_ALL));
@@ -118,11 +123,9 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		c->_hip = reinterpret_cast<uintptr_t>(&Hip::get());
 		c->reglist().add(c->hip(),ExecEnv::PAGE_SIZE,c->hip(),RegionList::R);
 
-		_sm.down();
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
 		c->reglist().write(Serial::get());
 		Serial::get().writef("\n");
-		_sm.up();
 
 		// start child; we have to put the child into the list before that
 		_childs[_child++] = c;
@@ -160,7 +163,12 @@ void ChildManager::Portals::reg(cap_t pid,void *tls) {
 		cpu_t cpu;
 		uf >> name;
 		uf >> cpu;
-		cm->registry().reg(ServiceRegistry::Service(c,name.str(),cpu,cap.crd().cap()));
+		{
+			ScopedLock<UserSm> guard(&cm->_sm);
+			Serial::get().writef("[%u] registering service\n",cpu);
+			cm->registry().reg(ServiceRegistry::Service(c,name.str(),cpu,cap.crd().cap()));
+			cm->notify_childs(cpu);
+		}
 
 		uf.clear();
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -185,7 +193,10 @@ void ChildManager::Portals::unreg(cap_t pid,void *tls) {
 		cpu_t cpu;
 		uf >> name;
 		uf >> cpu;
-		cm->registry().unreg(c,name.str(),cpu);
+		{
+			ScopedLock<UserSm> guard(&cm->_sm);
+			cm->registry().unreg(c,name.str(),cpu);
+		}
 
 		uf.clear();
 		uf << 1;
@@ -207,11 +218,16 @@ void ChildManager::Portals::getservice(cap_t pid,void *tls) {
 	try {
 		String name;
 		uf >> name;
-		const ServiceRegistry::Service& s = cm->registry().find(name.str(),cpu);
+		{
+			ScopedLock<UserSm> guard(&cm->_sm);
+			c->_waits[cpu]++;
+			const ServiceRegistry::Service& s = cm->registry().find(name.str(),cpu);
+			c->_waits[cpu]--;
 
-		uf.clear();
-		uf.delegate(s.pt());
-		uf << 1;
+			uf.clear();
+			uf.delegate(s.pt());
+			uf << 1;
+		}
 	}
 	catch(Exception& e) {
 		uf.clear();
@@ -221,11 +237,12 @@ void ChildManager::Portals::getservice(cap_t pid,void *tls) {
 
 void ChildManager::Portals::map(cap_t,void *) {
 	UtcbFrameRef uf;
+	// TODO we have to manage the resources!
 	try {
 		CapRange caps;
 		uf >> caps;
 		uf.clear();
-		uf.delegate(caps,0);
+		uf.delegate(caps);
 		uf << 0;
 	}
 	catch(const Exception& e) {
@@ -241,7 +258,6 @@ void ChildManager::Portals::startup(cap_t pid,void *tls) {
 	if(!c)
 		return;
 
-	uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
 	if(c->_started) {
 		uintptr_t src;
 		if(!c->reglist().find(uf->esp,src))
@@ -251,14 +267,15 @@ void ChildManager::Portals::startup(cap_t pid,void *tls) {
 	}
 	else {
 		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
-		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
 		uf->esp = c->stack() + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
 		uf->eax = c->_ec->cpu();
 		uf->ecx = c->hip();
 		uf->edx = c->utcb();
+		// indicates that it's not the root-task
 		uf->ebx = 1;
+		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
+		c->_started = true;
 	}
-	c->_started = true;
 }
 
 void ChildManager::Portals::pf(cap_t pid,void *tls) {
@@ -275,9 +292,6 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 	unsigned error = uf->qual[0];
 	uintptr_t eip = uf->eip;
 
-	Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-			c->cmdline(),pfaddr,eip,cpu,error);
-
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;
 	uint flags = c->reglist().find(pfaddr,src);
@@ -291,6 +305,8 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 	}
 	if(kill) {
 		uintptr_t *addr,addrs[32];
+		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+				c->cmdline(),pfaddr,eip,cpu,error);
 		Serial::get().writef("Unable to resolve fault; killing child\n");
 		ExecEnv::collect_backtrace(c->_ec->stack(),uf->ebp,addrs,sizeof(addrs));
 		Serial::get().writef("Backtrace:\n");
@@ -301,7 +317,7 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 		}
 		cm->destroy_child(pid);
 	}
-	else {
+	else if(!(flags & RegionList::M)) {
 		uint perms = flags & RegionList::RWX;
 		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,1,
 				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));

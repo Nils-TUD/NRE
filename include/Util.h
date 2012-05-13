@@ -19,6 +19,8 @@
 #pragma once
 
 #include <Types.h>
+#include <stream/OStream.h>
+#include <arch/ExecEnv.h>
 
 namespace nul {
 
@@ -26,6 +28,17 @@ namespace nul {
 // find a better organization!
 class Util {
 public:
+	static void write_backtrace(OStream& os) {
+		uintptr_t *addr,addrs[32];
+		ExecEnv::collect_backtrace(addrs,sizeof(addrs));
+		os.writef("Backtrace:\n");
+		addr = addrs;
+		while(*addr != 0) {
+			os.writef("\t%p\n",*addr);
+			addr++;
+		}
+	}
+
 	template<typename T>
 	static inline T min(T a,T b) {
 		return a < b ? a : b;

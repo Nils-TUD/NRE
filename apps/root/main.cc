@@ -47,7 +47,6 @@ static void mythread(void *tls);
 static void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
-static Sm *sm;
 
 void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -110,8 +109,6 @@ int start() {
 	}
 
 	try {
-		sm = new Sm(1);
-
 		new Sc(new GlobalEc(mythread,0,0),Qpd());
 		new Sc(new GlobalEc(mythread,0,1),Qpd(1,100));
 		new Sc(new GlobalEc(mythread,0,1),Qpd(1,1000));
@@ -134,7 +131,7 @@ static void start_childs() {
 			// map the memory of the module
 			UtcbFrame uf;
 			uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
-			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size,DESC_MEM_ALL);
+			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,DESC_MEM_ALL);
 			// we assume that the cmdline does not cross pages
 			if(it->aux)
 				uf << CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,DESC_MEM_ALL);
@@ -172,10 +169,10 @@ static void portal_startup(cap_t,void *) {
 }
 
 static void mythread(void *) {
+	static UserSm sm;
 	Ec *ec = Ec::current();
 	while(1) {
-		sm->down();
+		ScopedLock<UserSm> guard(&sm);
 		Log::get().writef("I am Ec %u, running on CPU %u\n",ec->cap(),ec->cpu());
-		sm->up();
 	}
 }

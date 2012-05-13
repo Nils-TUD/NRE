@@ -21,6 +21,7 @@
 #include <utcb/UtcbFrame.h>
 #include <cap/CapSpace.h>
 #include <kobj/Pt.h>
+#include <stream/Serial.h>
 #include <CPU.h>
 
 namespace nul {
@@ -28,18 +29,30 @@ namespace nul {
 class Client {
 public:
 	Client(const char *service) : _pt() {
-		// TODO busy-waiting is bad
+		// the idea is the following: the parent creates a semaphore for each client and cpu and
+		// delegates them to the clients. whenever a client fails to connect to a service, the
+		// parent stores that (for the cpu it used). when a service is registered on a specific cpu,
+		// the parent goes through all clients and does an up on each semaphore for that cpu X times,
+		// where X is the number of times a client tried to connect on that cpu.
+		// note that we track the number of tries because a client might start multiple Ecs on one
+		// cpu that try to connect to services, so that the parent can't simply notify the client
+		// once for that cpu.
+		cap_t cap = KObject::INVALID;
 		do {
 			try {
-				// TODO cap leak
-				cap_t cap = connect(service);
-				cap_t pt = get_portal(cap);
-				_pt = new Pt(pt);
+				cap = connect(service);
 			}
 			catch(const Exception& e) {
+				// if it failed, wait until the parent notifies us. down() instead of zero() is
+				// correct here, because the parent tracks the number of tries and thus, he will
+				// not do more ups than necessary. and it might happen that the connect failed,
+				// but immediatly afterwards the service is registered and up() is called. when
+				// calling zero() we would ignore this signal and might block for ever.
+				CPU::current().srv_sm->down();
 			}
 		}
-		while(_pt == 0);
+		while(cap == KObject::INVALID);
+		_pt = new Pt(get_portal(cap));
 	}
 	~Client() {
 		delete _pt;

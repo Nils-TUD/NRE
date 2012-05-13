@@ -27,20 +27,21 @@ private:
 	enum {
 		KEEP_BIT	= 1 << (sizeof(cap_t) * 8 - 1)
 	};
-protected:
+
+public:
 	enum {
 		INVALID 	= (cap_t)-1
 	};
 
-	KObject(cap_t cap = INVALID) : _cap(cap | KEEP_BIT) {
-	}
-public:
 	virtual ~KObject();
 
 	cap_t cap() const {
 		return _cap & ~KEEP_BIT;
 	}
+
 protected:
+	KObject(cap_t cap = INVALID) : _cap(cap | KEEP_BIT) {
+	}
 	void cap(cap_t cap,bool keep = false) {
 		_cap = cap;
 		if(keep)

@@ -150,7 +150,7 @@ public:
 	enum SmOp {
 		SM_UP	= 0,
 		SM_DOWN = FLAG0,
-		SM_ZERO	= FLAG1
+		SM_ZERO	= FLAG0 | FLAG1
 	};
 
 	static inline void call(cap_t pt) {

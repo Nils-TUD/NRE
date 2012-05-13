@@ -20,6 +20,7 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
+#include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
 #include <CPU.h>
 #include <pthread.h>
@@ -56,6 +57,7 @@ void _setup(bool child) {
 			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
 			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
+			cpu.srv_sm = new Sm(off + CapSpace::SM_SERVICE,true);
 		}
 	}
 }

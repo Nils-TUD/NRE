@@ -56,8 +56,9 @@ public:
 	}
 
 private:
-	Child(const char *cmdline) : _cmdline(cmdline), _started(), _pd(), _ec(), _sc(), _pts(),
-			_ptcount(), _regs(), _entry(), _stack(), _utcb(), _hip(), _sm() {
+	Child(const char *cmdline) : _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
+			_pts(), _ptcount(), _sms(), _smcount(), _waits(), _waitcount(), _regs(), _entry(),
+			_stack(), _utcb(), _hip(), _sm() {
 	}
 	~Child() {
 		if(_pd)
@@ -68,6 +69,9 @@ private:
 			delete _sc;
 		for(size_t i = 0; i < _ptcount; ++i)
 			delete _pts[i];
+		for(size_t i = 0; i < _smcount; ++i)
+			delete _sms[i];
+		delete[] _waits;
 		delete[] _pts;
 	}
 
@@ -81,6 +85,10 @@ private:
 	Sc *_sc;
 	Pt **_pts;
 	size_t _ptcount;
+	Sm **_sms;
+	size_t _smcount;
+	uint *_waits;
+	size_t _waitcount;
 	RegionList _regs;
 	uintptr_t _entry;
 	uintptr_t _stack;
