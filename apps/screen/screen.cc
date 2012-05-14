@@ -21,10 +21,9 @@
 
 using namespace nul;
 
-extern "C" int start();
 PORTAL static void portal_write(cap_t,void *);
 
-int start() {
+int main() {
 	{
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
@@ -55,5 +54,8 @@ int start() {
 static void portal_write(cap_t pid,void *) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
-	Serial::get().writef("Got a write-request on cpu %u from client %u\n",Ec::current()->cpu(),pid);
+	UtcbFrameRef uf;
+	String text;
+	uf >> text;
+	Serial::get().writef("Request on cpu %u from %u: '%s'\n",Ec::current()->cpu(),pid,text.str());
 }

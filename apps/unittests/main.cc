@@ -40,7 +40,6 @@ using namespace nul;
 using namespace nul::test;
 
 extern "C" void abort();
-extern "C" int start();
 static void map(const CapRange& range);
 PORTAL static void portal_map(cap_t pid,void *);
 PORTAL static void portal_startup(cap_t,void *);
@@ -67,8 +66,7 @@ void verbose_terminate() {
 	abort();
 }
 
-int start() {
-	Ec *ec = Ec::current();
+int main() {
 	const Hip &hip = Hip::get();
 
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {

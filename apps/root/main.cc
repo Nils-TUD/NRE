@@ -39,7 +39,6 @@
 using namespace nul;
 
 extern "C" void abort();
-extern "C" int start();
 static void map(const CapRange& range);
 PORTAL static void portal_startup(cap_t pid,void *tls);
 PORTAL static void portal_map(cap_t pid,void *tls);
@@ -62,7 +61,7 @@ void verbose_terminate() {
 	abort();
 }
 
-int start() {
+int main() {
 	const Hip &hip = Hip::get();
 
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {

@@ -165,7 +165,6 @@ void ChildManager::Portals::reg(cap_t pid,void *tls) {
 		uf >> cpu;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			Serial::get().writef("[%u] registering service\n",cpu);
 			cm->registry().reg(ServiceRegistry::Service(c,name.str(),cpu,cap.crd().cap()));
 			cm->notify_childs(cpu);
 		}

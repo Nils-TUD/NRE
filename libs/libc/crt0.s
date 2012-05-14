@@ -20,7 +20,7 @@
 
 .global _stack
 .global _start
-.extern start
+.extern main
 .extern exit
 .extern _setup
 .extern _presetup
@@ -49,8 +49,8 @@ _start:
 	push	%ebx					# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp
-	# finally, call start
-	call	start
+	# finally, call main
+	call	main
 	add		$12, %esp
 
 	push	%eax

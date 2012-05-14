@@ -11,7 +11,9 @@
 
 #include <Types.h>
 
-static inline void lock(uint *val) {
+typedef uint spinlock_t;
+
+static inline void lock(spinlock_t *val) {
 	asm volatile (
 		"mov	$1,%%ecx;"
 		"1:"
@@ -30,7 +32,7 @@ static inline void lock(uint *val) {
 		: "eax", "ecx", "cc", "memory"
 	);
 }
-static inline void unlock(uint *val) {
+static inline void unlock(spinlock_t *val) {
 	*val = 0;
 }
 
@@ -53,7 +55,7 @@ private:
 	SpinLock(const SpinLock&);
 	SpinLock& operator=(const SpinLock&);
 
-    uint _val;
+	spinlock_t _val;
 };
 
 }

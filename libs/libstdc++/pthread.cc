@@ -23,17 +23,17 @@
 
 using namespace nul;
 
-int pthread_key_create(pthread_key_t* key,void (*f)(void*)) {
+int pthread_key_create(pthread_key_t* key,void (*)(void*)) {
 	*key = Ec::current()->create_tls();
 	return 0;
 }
 
-int pthread_key_delete(pthread_key_t key) {
+int pthread_key_delete(pthread_key_t) {
 	// TODO
 	return 0;
 }
 
-int pthread_cancel(pthread_t thread) {
+int pthread_cancel(pthread_t) {
 	// TODO
 	return 0;
 }
@@ -53,7 +53,7 @@ int pthread_setspecific(pthread_key_t key,const void* data) {
 	return 0;
 }
 
-int pthread_mutex_init(pthread_mutex_t* mutex,const pthread_mutexattr_t* attr) {
+int pthread_mutex_init(pthread_mutex_t* mutex,const pthread_mutexattr_t*) {
 	*mutex = 0;
 	return 0;
 }

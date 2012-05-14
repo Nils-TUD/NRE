@@ -21,7 +21,7 @@
 
 static char buffer[0x8000];
 static size_t pos = 0;
-static uint lck = 0;
+static spinlock_t lck = 0;
 
 void* malloc(size_t size) {
 	lock(&lck);

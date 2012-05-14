@@ -21,13 +21,22 @@
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
 #include <service/Client.h>
+#include <stream/OStringStream.h>
 
 using namespace nul;
 
-static void write(void *);
-extern "C" int start();
+static void write(void *) {
+	char buf[128];
+	Client scr("screen");
+	for(uint i = 0; ; ++i) {
+		UtcbFrame uf;
+		OStringStream::format(buf,sizeof(buf),"Example text %u",i);
+		uf << String(buf);
+		scr.pt()->call(uf);
+	}
+}
 
-int start() {
+int main() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
@@ -37,11 +46,4 @@ int start() {
 	Sm sm(0);
 	sm.down();
 	return 0;
-}
-
-static void write(void *) {
-	Client scr("screen");
-	UtcbFrame uf;
-	while(1)
-		scr.pt()->call(uf);
 }
