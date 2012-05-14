@@ -137,6 +137,33 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	}
 }
 
+void ChildManager::Portals::startup(cap_t pid,void *tls) {
+	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+	UtcbExcFrameRef uf;
+	Child *c = cm->get_child(pid);
+	if(!c)
+		return;
+
+	if(c->_started) {
+		uintptr_t src;
+		if(!c->reglist().find(uf->esp,src))
+			return;
+		uf->eip = *reinterpret_cast<uint32_t*>(src + (uf->esp & (ExecEnv::PAGE_SIZE - 1)));
+		uf->mtd = MTD_RIP_LEN;
+	}
+	else {
+		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
+		uf->esp = c->stack() + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
+		uf->eax = c->_ec->cpu();
+		uf->ecx = c->hip();
+		uf->edx = c->utcb();
+		// indicates that it's not the root-task
+		uf->ebx = 1;
+		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
+		c->_started = true;
+	}
+}
+
 void ChildManager::Portals::initcaps(cap_t pid,void *tls) {
 	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
 	UtcbFrameRef uf;
@@ -144,6 +171,8 @@ void ChildManager::Portals::initcaps(cap_t pid,void *tls) {
 	if(!c)
 		return;
 
+	// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
+	// grabs them afterwards with this portal
 	uf.delegate(c->_pd->cap(),0);
 	uf.delegate(c->_ec->cap(),1);
 	uf.delegate(c->_sc->cap(),2);
@@ -247,33 +276,6 @@ void ChildManager::Portals::map(cap_t,void *) {
 	catch(const Exception& e) {
 		uf.clear();
 		uf << 0;
-	}
-}
-
-void ChildManager::Portals::startup(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
-	UtcbExcFrameRef uf;
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
-	if(c->_started) {
-		uintptr_t src;
-		if(!c->reglist().find(uf->esp,src))
-			return;
-		uf->eip = *reinterpret_cast<uint32_t*>(src + (uf->esp & (ExecEnv::PAGE_SIZE - 1)));
-		uf->mtd = MTD_RIP_LEN;
-	}
-	else {
-		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
-		uf->esp = c->stack() + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
-		uf->eax = c->_ec->cpu();
-		uf->ecx = c->hip();
-		uf->edx = c->utcb();
-		// indicates that it's not the root-task
-		uf->ebx = 1;
-		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
-		c->_started = true;
 	}
 }
 

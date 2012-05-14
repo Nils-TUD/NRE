@@ -40,12 +40,12 @@ class ChildManager {
 			COUNT	= 7
 		};
 
+		PORTAL static void startup(cap_t pid,void *tls);
 		PORTAL static void initcaps(cap_t pid,void *tls);
 		PORTAL static void reg(cap_t pid,void *tls);
 		PORTAL static void unreg(cap_t pid,void *tls);
 		PORTAL static void getservice(cap_t pid,void *tls);
 		PORTAL static void map(cap_t pid,void *tls);
-		PORTAL static void startup(cap_t pid,void *tls);
 		PORTAL static void pf(cap_t pid,void *tls);
 	};
 
