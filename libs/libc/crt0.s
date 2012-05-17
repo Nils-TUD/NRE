@@ -28,6 +28,8 @@
 
 _start:
 	# 0 in %ebx means we're the root-task
+	mov		%eax,%ebx
+	and		$0x80000000,%ebx		# the bit says that we're not the root-task
 	test	%ebx,%ebx
 	jnz		1f
 	mov		%esp, _startup_info		# store pointer to HIP
@@ -46,6 +48,7 @@ _start:
 	# call function in .init-section
 	call	_init
 	# other init stuff
+	shr		$31,%ebx
 	push	%ebx					# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp

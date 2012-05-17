@@ -27,6 +27,7 @@ namespace nul {
 class UtcbFrameRef;
 class UtcbFrame;
 
+// TODO can we provide a compiler-flag-controlled copying-version instead of top/bottom offsets?
 class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;

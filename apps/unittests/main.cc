@@ -24,6 +24,7 @@
 #include <utcb/UtcbFrame.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
+#include <cap/Caps.h>
 #include <Syscalls.h>
 #include <Hip.h>
 #include <CPU.h>
@@ -40,7 +41,6 @@ using namespace nul;
 using namespace nul::test;
 
 extern "C" void abort();
-static void map(const CapRange& range);
 PORTAL static void portal_map(cap_t pid,void *);
 PORTAL static void portal_startup(cap_t,void *);
 
@@ -79,8 +79,9 @@ int main() {
 		}
 	}
 
-	map(CapRange(0x3f8,6,DESC_IO_ALL));
-	map(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL));
+	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0xB8,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+			Caps::TYPE_MEM | Caps::MEM_RW));
 
 	Serial::get().init();
 	Screen::get().clear();
@@ -97,13 +98,6 @@ int main() {
 		Log::get().writef("Done\n");
 	}
 	return 0;
-}
-
-static void map(const CapRange& range) {
-	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,range.attr()));
-	uf << range;
-	CPU::current().map_pt->call(uf);
 }
 
 static void portal_map(cap_t,void *) {

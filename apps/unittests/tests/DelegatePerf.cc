@@ -9,6 +9,7 @@
 
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
+#include <cap/Caps.h>
 #include <Util.h>
 #include <CPU.h>
 #include "DelegatePerf.h"
@@ -32,12 +33,7 @@ static void portal_test(cap_t,void *) {
 }
 
 static void test_delegate() {
-	{
-		UtcbFrame uf;
-		uf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
-		uf << CapRange(0x100,1 << 2,DESC_IO_ALL);
-		CPU::current().map_pt->call(uf);
-	}
+	Caps::allocate(CapRange(0x100,1 << 2,Caps::TYPE_IO | Caps::IO_A));
 
 	LocalEc ec(0,CPU::current().id);
 	Pt pt(&ec,portal_test);

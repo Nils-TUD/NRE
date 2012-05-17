@@ -26,12 +26,10 @@
 using namespace nul;
 
 static void write(void *) {
-	char buf[128];
 	Client scr("screen");
 	for(uint i = 0; ; ++i) {
 		UtcbFrame uf;
-		OStringStream::format(buf,sizeof(buf),"Example text %u",i);
-		uf << String(buf);
+		uf << i;
 		scr.pt()->call(uf);
 	}
 }

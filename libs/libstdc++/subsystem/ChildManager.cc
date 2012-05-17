@@ -154,11 +154,10 @@ void ChildManager::Portals::startup(cap_t pid,void *tls) {
 	else {
 		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
 		uf->esp = c->stack() + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
-		uf->eax = c->_ec->cpu();
+		// the bit indicates that its not the root-task
+		uf->eax = (1 << 31) | c->_ec->cpu();
 		uf->ecx = c->hip();
 		uf->edx = c->utcb();
-		// indicates that it's not the root-task
-		uf->ebx = 1;
 		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
 		c->_started = true;
 	}
@@ -293,6 +292,7 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 	unsigned error = uf->qual[0];
 	uintptr_t eip = uf->eip;
 
+	// TODO different handlers (cow, ...)
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;
 	uint flags = c->reglist().find(pfaddr,src);

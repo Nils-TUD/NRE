@@ -11,6 +11,7 @@
 #include <kobj/Sm.h>
 #include <kobj/UserSm.h>
 #include <cap/CapSpace.h>
+#include <cap/Caps.h>
 #include <stream/Screen.h>
 #include <stream/Serial.h>
 #include <stream/Log.h>
@@ -24,18 +25,10 @@ using namespace nul;
 PORTAL static void portal_write(cap_t,void *);
 
 int main() {
-	{
-		UtcbFrame uf;
-		uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
-		uf << CapRange(0xB9,1,DESC_MEM_ALL);
-		CPU::current().map_pt->call(uf);
-	}
-	{
-		UtcbFrame uf;
-		uf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
-		uf << CapRange(0x3F8,6,DESC_IO_ALL);
-		CPU::current().map_pt->call(uf);
-	}
+	// TODO might be something else than 0x3f8
+	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0xB8,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+			Caps::TYPE_MEM | Caps::MEM_RW));
 
 	Screen::get().clear();
 	Serial::get().init();
@@ -55,7 +48,7 @@ static void portal_write(cap_t pid,void *) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
 	UtcbFrameRef uf;
-	String text;
-	uf >> text;
-	Serial::get().writef("Request on cpu %u from %u: '%s'\n",Ec::current()->cpu(),pid,text.str());
+	uint i;
+	uf >> i;
+	Serial::get().writef("Request on cpu %u from %u: %u\n",Ec::current()->cpu(),pid,i);
 }

@@ -28,6 +28,7 @@
 #include <stream/Log.h>
 #include <stream/Screen.h>
 #include <subsystem/ChildManager.h>
+#include <cap/Caps.h>
 #include <Syscalls.h>
 #include <String.h>
 #include <Hip.h>
@@ -39,13 +40,21 @@
 using namespace nul;
 
 extern "C" void abort();
-static void map(const CapRange& range);
 PORTAL static void portal_startup(cap_t pid,void *tls);
 PORTAL static void portal_map(cap_t pid,void *tls);
 static void mythread(void *tls);
 static void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
+
+// TODO clang!
+// TODO use dataspaces to pass around memory in an easy fashion? (and reference-counting)
+// TODO perhaps we don't want to have a separate Pd for the logging service
+// TODO but we want to have one for the console-stuff
+// TODO perhaps we need a general concept for identifying clients
+// TODO with the service system we have the problem that one client that uses a service on multiple
+// CPUs is treaten as a different client
+// TODO KObjects reference-counted? copying, ...
 
 void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -74,8 +83,9 @@ int main() {
 		}
 	}
 
-	map(CapRange(0x3F8,6,DESC_IO_ALL));
-	map(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),DESC_MEM_ALL));
+	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0xB8,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+			Caps::TYPE_MEM | Caps::MEM_RW));
 
 	Serial::get().init();
 	Screen::get().clear();
@@ -87,8 +97,9 @@ int main() {
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
 		if(it->type == Hip_mem::AVAILABLE) {
-			map(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
-					Util::blockcount(it->size,ExecEnv::PAGE_SIZE),DESC_MEM_ALL,it->addr >> ExecEnv::PAGE_SHIFT));
+			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
+					Util::blockcount(it->size,ExecEnv::PAGE_SIZE),Caps::TYPE_MEM | Caps::MEM_RWX,
+					it->addr >> ExecEnv::PAGE_SHIFT));
 		}
 	}
 
@@ -128,13 +139,11 @@ static void start_childs() {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
-			UtcbFrame uf;
-			uf.set_receive_crd(Crd(0,31,DESC_MEM_ALL));
-			uf << CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,DESC_MEM_ALL);
+			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
+					Caps::TYPE_MEM | Caps::MEM_RWX));
 			// we assume that the cmdline does not cross pages
 			if(it->aux)
-				uf << CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,DESC_MEM_ALL);
-			CPU::current().map_pt->call(uf);
+				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW));
 			if(it->aux) {
 				// ensure that its terminated at the end of the page
 				char *end = reinterpret_cast<char*>(Util::roundup<uintptr_t>(it->aux,ExecEnv::PAGE_SIZE) - 1);
@@ -144,13 +153,6 @@ static void start_childs() {
 			mng->load(it->addr,it->size,reinterpret_cast<char*>(it->aux));
 		}
 	}
-}
-
-static void map(const CapRange& range) {
-	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,range.attr()));
-	uf << range;
-	CPU::current().map_pt->call(uf);
 }
 
 static void portal_map(cap_t,void *) {
