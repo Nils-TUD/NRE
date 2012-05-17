@@ -22,13 +22,13 @@
 
 using namespace nul;
 
-PORTAL static void portal_write(cap_t,void *);
+PORTAL static void portal_write(cap_t);
 
 int main() {
 	// TODO might be something else than 0x3f8
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
-	Caps::allocate(CapRange(0xB8,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Caps::TYPE_MEM | Caps::MEM_RW));
+	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Screen::get().clear();
 	Serial::get().init();
@@ -44,7 +44,7 @@ int main() {
 	return 0;
 }
 
-static void portal_write(cap_t pid,void *) {
+static void portal_write(cap_t pid) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
 	UtcbFrameRef uf;

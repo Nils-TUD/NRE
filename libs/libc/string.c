@@ -20,10 +20,10 @@
 
 void* memcpy(void *dest,const void *src,size_t len) {
 	uchar *bdest,*bsrc;
-	/* copy dwords first with loop-unrolling */
-	uint *ddest = (uint*)dest;
-	uint *dsrc = (uint*)src;
-	while(len >= sizeof(uint) * 8) {
+	/* copy words first with loop-unrolling */
+	word_t *ddest = (word_t*)dest;
+	word_t *dsrc = (word_t*)src;
+	while(len >= sizeof(word_t) * 8) {
 		*ddest = *dsrc;
 		*(ddest + 1) = *(dsrc + 1);
 		*(ddest + 2) = *(dsrc + 2);
@@ -34,12 +34,12 @@ void* memcpy(void *dest,const void *src,size_t len) {
 		*(ddest + 7) = *(dsrc + 7);
 		ddest += 8;
 		dsrc += 8;
-		len -= sizeof(uint) * 8;
+		len -= sizeof(word_t) * 8;
 	}
-	/* copy remaining dwords */
-	while(len >= sizeof(uint)) {
+	/* copy remaining words */
+	while(len >= sizeof(word_t)) {
 		*ddest++ = *dsrc++;
-		len -= sizeof(uint);
+		len -= sizeof(word_t);
 	}
 
 	/* copy remaining bytes */
@@ -58,14 +58,14 @@ void *memmove(void *dest,const void *src,size_t count) {
 
 	/* moving forward */
 	if((uintptr_t)dest > (uintptr_t)src) {
-		uint *dsrc = (uint*)((uintptr_t)src + count - sizeof(uint));
-		uint *ddest = (uint*)((uintptr_t)dest + count - sizeof(uint));
-		while(count >= sizeof(uint)) {
+		word_t *dsrc = (word_t*)((uintptr_t)src + count - sizeof(word_t));
+		word_t *ddest = (word_t*)((uintptr_t)dest + count - sizeof(word_t));
+		while(count >= sizeof(word_t)) {
 			*ddest-- = *dsrc--;
-			count -= sizeof(uint);
+			count -= sizeof(word_t);
 		}
-		s = (uchar*)dsrc + (sizeof(uint) - 1);
-		d = (uchar*)ddest + (sizeof(uint) - 1);
+		s = (uchar*)dsrc + (sizeof(word_t) - 1);
+		d = (uchar*)ddest + (sizeof(word_t) - 1);
 		while(count-- > 0)
 			*d-- = *s--;
 	}

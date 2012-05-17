@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <Types.h>
+#include <arch/Types.h>
 
 #define MAX_EXIT_FUNCS		32
 

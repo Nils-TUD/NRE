@@ -8,11 +8,12 @@
  */
 
 #include <stream/Screen.h>
+#include <arch/ExecEnv.h>
 
 namespace nul {
 
 Screen Screen::_inst;
-char* const Screen::SCREEN = (char* const)0xB9000;
+char* const Screen::SCREEN = (char* const)ExecEnv::PHYS_START + 0xB9000;
 
 void Screen::write(char c) {
 	if(c == '\0')

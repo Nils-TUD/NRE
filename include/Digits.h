@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Types.h>
 
 namespace nul {
 

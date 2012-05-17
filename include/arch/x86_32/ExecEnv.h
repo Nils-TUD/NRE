@@ -19,7 +19,7 @@
 #pragma once
 
 #include <Compiler.h>
-#include <Types.h>
+#include <arch/Types.h>
 
 #define PORTAL	REGPARMS(1)
 
@@ -35,7 +35,7 @@ class ExecEnv {
 	};
 
 public:
-	typedef PORTAL void (*portal_func)(cap_t,void *);
+	typedef PORTAL void (*portal_func)(cap_t);
 	typedef void (*startup_func)(void *);
 
 	enum {
@@ -43,6 +43,9 @@ public:
 		PAGE_SIZE		= 1 << PAGE_SHIFT,
 		STACK_SIZE		= PAGE_SIZE,
 		KERNEL_START	= 0xC0000000,
+		// TODO actually, its not good to put that here, because its just valid for the root-task
+		PHYS_START		= 0x10000000,
+		PHYS_START_PAGE	= PHYS_START >> PAGE_SHIFT,
 		MAX_STACKS		= 80	// TODO remove
 	};
 
@@ -62,7 +65,7 @@ public:
 		set_current(1,ec);
 	}
 
-	static void *setup_stack(Pd *pd,Ec *ec,void *tls,startup_func start);
+	static void *setup_stack(Pd *pd,Ec *ec,startup_func start);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 	static size_t collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max);
 
@@ -73,13 +76,13 @@ private:
 	ExecEnv& operator=(const ExecEnv&);
 
 	static inline void *get_current(size_t no) {
-		uint32_t esp;
+		uintptr_t esp;
 	    asm volatile ("mov %%esp, %0" : "=g"(esp));
 	    return *reinterpret_cast<void**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - no * sizeof(void*)));
 	}
 
 	static inline void set_current(size_t  no,void *obj) {
-		uint32_t esp;
+		uintptr_t esp;
 	    asm volatile ("mov %%esp, %0" : "=g"(esp));
 	    *reinterpret_cast<void**>(((esp & ~(STACK_SIZE - 1)) + STACK_SIZE - no * sizeof(void*))) = obj;
 	}

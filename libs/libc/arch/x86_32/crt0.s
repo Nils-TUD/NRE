@@ -27,10 +27,10 @@
 .extern _init
 
 _start:
-	# 0 in %ebx means we're the root-task
-	mov		%eax,%ebx
-	and		$0x80000000,%ebx		# the bit says that we're not the root-task
-	test	%ebx,%ebx
+	mov		%eax, %ebx
+	and		$0x7FFFFFFF, %eax		# remove bit
+	and		$0x80000000, %ebx		# the bit says that we're not the root-task
+	test	%ebx, %ebx
 	jnz		1f
 	mov		%esp, _startup_info		# store pointer to HIP
 	lea		-0x1000(%esp), %edx		# UTCB is below HIP
@@ -41,20 +41,19 @@ _start:
 2:
 	mov		%edx, _startup_info + 4 # store pointer to UTCB
 	mov		%eax, _startup_info + 8	# store cpu
-	sub		$8,%esp					# leave space for Ec and Pd
+	sub		$8, %esp				# leave space for Ec and Pd
 
 	# call early setup (current ec and pd)
 	call	_presetup
 	# call function in .init-section
 	call	_init
 	# other init stuff
-	shr		$31,%ebx
+	shr		$31, %ebx
 	push	%ebx					# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp
 	# finally, call main
 	call	main
-	add		$12, %esp
 
 	push	%eax
 	call	exit

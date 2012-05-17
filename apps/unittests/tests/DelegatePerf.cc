@@ -17,7 +17,7 @@
 using namespace nul;
 using namespace nul::test;
 
-PORTAL static void portal_test(cap_t,void *);
+PORTAL static void portal_test(cap_t);
 static void test_delegate();
 
 const TestCase delegateperf = {
@@ -27,7 +27,7 @@ const TestCase delegateperf = {
 static const unsigned tries = 10000;
 static uint64_t results[tries];
 
-static void portal_test(cap_t,void *) {
+static void portal_test(cap_t) {
 	UtcbFrameRef uf;
 	uf.add_typed(DelItem(Crd(0x100,2,DESC_IO_ALL),0,0));
 }
@@ -35,7 +35,7 @@ static void portal_test(cap_t,void *) {
 static void test_delegate() {
 	Caps::allocate(CapRange(0x100,1 << 2,Caps::TYPE_IO | Caps::IO_A));
 
-	LocalEc ec(0,CPU::current().id);
+	LocalEc ec(CPU::current().id);
 	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	tic = Util::tsc();

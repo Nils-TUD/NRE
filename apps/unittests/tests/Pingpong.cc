@@ -25,7 +25,7 @@
 using namespace nul;
 using namespace nul::test;
 
-PORTAL static void portal_test(cap_t,void *);
+PORTAL static void portal_test(cap_t);
 static void test_pingpong();
 
 const TestCase pingpong = {
@@ -35,7 +35,7 @@ const TestCase pingpong = {
 static const unsigned tries = 10000;
 static uint64_t results[tries];
 
-static void portal_test(cap_t,void *) {
+static void portal_test(cap_t) {
 	UtcbFrameRef uf;
 	try {
 		unsigned a,b,c;
@@ -49,7 +49,7 @@ static void portal_test(cap_t,void *) {
 }
 
 static void test_pingpong() {
-	LocalEc ec(0,CPU::current().id);
+	LocalEc ec(CPU::current().id);
 	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	unsigned sum = 0;

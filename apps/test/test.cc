@@ -38,7 +38,7 @@ int main() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
-			new Sc(new GlobalEc(write,0,it->id()),Qpd());
+			new Sc(new GlobalEc(write,it->id()),Qpd());
 	}
 
 	Sm sm(0);

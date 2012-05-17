@@ -19,7 +19,9 @@
 #pragma once
 
 #ifdef __i386__
-#include <arch/x86/SyscallABI.h>
+#include <arch/x86_32/SyscallABI.h>
+#elif defined __x86_64__
+#include <arch/x86_64/SyscallABI.h>
 #else
 #error "Unsupported architecture"
 #endif

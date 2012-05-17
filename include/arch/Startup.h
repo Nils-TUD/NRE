@@ -19,7 +19,9 @@
 #pragma once
 
 #ifdef __i386__
-#include <arch/x86/Startup.h>
+#include <arch/x86_32/Startup.h>
+#elif defined __x86_64__
+#include <arch/x86_64/Startup.h>
 #else
 #error "Unsupported architecture"
 #endif

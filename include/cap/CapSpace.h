@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <ex/Exception.h>
 #include <arch/SpinLock.h>
+#include <arch/Types.h>
+#include <ex/Exception.h>
 #include <ScopedLock.h>
-#include <Types.h>
 #include <Hip.h>
 
 namespace nul {

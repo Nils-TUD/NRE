@@ -18,8 +18,8 @@
 
 #pragma once
 
+#include <arch/Types.h>
 #include <stdarg.h>
-#include <Types.h>
 
 namespace nul {
 

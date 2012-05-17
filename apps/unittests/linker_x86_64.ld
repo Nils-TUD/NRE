@@ -1,13 +1,13 @@
 /* Default linker script, for normal executables */
 /* this file has been changed to put the bss-stuff into the data-section */
-OUTPUT_FORMAT("elf32-i386", "elf32-i386",
-	      "elf32-i386")
-OUTPUT_ARCH(i386)
+OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64",
+	      "elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
-  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x80000000)); . = SEGMENT_START("text-segment", 0x80000000) + SIZEOF_HEADERS;
+  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x1000)); . = SEGMENT_START("text-segment", 0x1000) + SIZEOF_HEADERS;
   .interp         : { *(.interp) }
   .note.gnu.build-id : { *(.note.gnu.build-id) }
   .hash           : { *(.hash) }
@@ -162,8 +162,8 @@ SECTIONS
   }
   .data1          : { *(.data1) }
   _edata = .; PROVIDE (edata = .);
-  . = ALIGN(32 / 8);
-  . = ALIGN(32 / 8);
+  . = ALIGN(64 / 8);
+  . = ALIGN(64 / 8);
   _end = .; PROVIDE (end = .);
   /* Stabs debugging sections.  */
   .stab          0 : { *(.stab) }

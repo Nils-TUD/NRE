@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Types.h>
 
 #ifdef __cplusplus
 extern "C" {

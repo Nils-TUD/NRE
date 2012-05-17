@@ -2,10 +2,10 @@
 
 Import('env')
 
-crt0 = env.Object('crt0.o', 'crt0.s')
-crt1 = env.Object('crt1.o', 'crt1.s')
-crtn = env.Object('crtn.o', 'crtn.s')
+crt0 = env.Object('crt0.o', 'arch/' + env['ARCH'] + '/crt0.s')
+crt1 = env.Object('crt1.o', 'arch/' + env['ARCH'] + '/crt1.s')
+crtn = env.Object('crtn.o', 'arch/' + env['ARCH'] + '/crtn.s')
 env.Install(env['SYSGCCLIBPATH'], [crt0, crt1, crtn])
 
-lib = env.StaticLibrary('libc', [Glob('*.s'), Glob('*.c')])
+lib = env.StaticLibrary('libc', [Glob('*.c')])
 env.Install(env['LIBPATH'], lib)

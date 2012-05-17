@@ -18,6 +18,8 @@
 
 #include <subsystem/ChildManager.h>
 #include <stream/Serial.h>
+#include <mem/Memory.h>
+#include <cap/Caps.h>
 #include <arch/Elf.h>
 
 namespace nul {
@@ -30,10 +32,20 @@ ChildManager::ChildManager() : _child(), _childs(),
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
-			_ecs[it->id()] = new LocalEc(this,it->id());
-			// we need a dedicated Ec for the register-portal which does always accept one
-			// capability from the caller
-			_regecs[it->id()] = new LocalEc(this,it->id());
+			{
+				_ecs[it->id()] = new LocalEc(it->id());
+				size_t tls = _ecs[it->id()]->create_tls();
+				assert(tls == 0);
+				_ecs[it->id()]->set_tls(tls,this);
+			}
+			{
+				// we need a dedicated Ec for the register-portal which does always accept one
+				// capability from the caller
+				_regecs[it->id()] = new LocalEc(it->id());
+				size_t tls = _regecs[it->id()]->create_tls();
+				assert(tls == 0);
+				_regecs[it->id()]->set_tls(tls,this);
+			}
 			UtcbFrameRef reguf(_regecs[it->id()]->utcb());
 			reguf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		}
@@ -90,12 +102,14 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		// TODO wrong place
 		c->_utcb = 0x7FFFF000;
 		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),
-				0,0,0,c->_pd,c->_utcb);
+				0,0,c->_pd,c->_utcb);
 		c->_entry = elf->e_entry;
 
 		// check load segments and add them to regions
 		for(size_t i = 0; i < elf->e_phnum; i++) {
 			ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
+			if(reinterpret_cast<uintptr_t>(ph) + sizeof(ElfPh) > addr + size)
+				throw ElfException("Load segment pointer invalid");
 			if(ph->p_type != 1)
 				continue;
 			if(size < ph->p_offset + ph->p_filesz)
@@ -108,20 +122,22 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 				perms |= RegionList::W;
 			if(ph->p_flags & PF_X)
 				perms |= RegionList::X;
+			uintptr_t segaddr = Memory::get().alloc(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE));
 			// TODO actually it would be better to do that later
-			if(ph->p_filesz < ph->p_memsz) {
-				memset(reinterpret_cast<void*>(addr + ph->p_offset + ph->p_filesz),0,
-						ph->p_memsz - ph->p_filesz);
-			}
-			c->reglist().add(ph->p_vaddr,ph->p_memsz,addr + ph->p_offset,perms);
+			memcpy(reinterpret_cast<void*>(segaddr),
+					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
+			memset(reinterpret_cast<void*>(segaddr + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
+			c->reglist().add(ph->p_vaddr,ph->p_memsz,segaddr,perms);
 		}
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
 		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),RegionList::RW);
-		// TODO give the child his own Hip
-		c->_hip = reinterpret_cast<uintptr_t>(&Hip::get());
-		c->reglist().add(c->hip(),ExecEnv::PAGE_SIZE,c->hip(),RegionList::R);
+		uintptr_t hipaddr = Memory::get().alloc(ExecEnv::PAGE_SIZE);
+		c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
+		memcpy(reinterpret_cast<void*>(hipaddr),&Hip::get(),ExecEnv::PAGE_SIZE);
+		// TODO we need to adjust the hip
+		c->reglist().add(c->hip(),ExecEnv::PAGE_SIZE,hipaddr,RegionList::R);
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
 		c->reglist().write(Serial::get());
@@ -134,11 +150,12 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	catch(...) {
 		delete c;
 		_childs[--_child] = 0;
+		throw;
 	}
 }
 
-void ChildManager::Portals::startup(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::startup(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
 	if(!c)
@@ -146,25 +163,30 @@ void ChildManager::Portals::startup(cap_t pid,void *tls) {
 
 	if(c->_started) {
 		uintptr_t src;
-		if(!c->reglist().find(uf->esp,src))
+		if(!c->reglist().find(uf->rsp,src))
 			return;
-		uf->eip = *reinterpret_cast<uint32_t*>(src + (uf->esp & (ExecEnv::PAGE_SIZE - 1)));
+		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)));
 		uf->mtd = MTD_RIP_LEN;
 	}
 	else {
-		uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
-		uf->esp = c->stack() + (uf->esp & (ExecEnv::PAGE_SIZE - 1));
+		uf->rip = *reinterpret_cast<word_t*>(uf->rsp);
+		uf->rsp = c->stack() + (uf->rsp & (ExecEnv::PAGE_SIZE - 1));
 		// the bit indicates that its not the root-task
-		uf->eax = (1 << 31) | c->_ec->cpu();
-		uf->ecx = c->hip();
-		uf->edx = c->utcb();
-		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB;
+		// TODO not nice
+#ifdef __i386__
+		uf->rax = (1 << 31) | c->_ec->cpu();
+#else
+		uf->rdi = (1 << 31) | c->_ec->cpu();
+#endif
+		uf->rcx = c->hip();
+		uf->rdx = c->utcb();
+		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB | MTD_GPR_BSD;
 		c->_started = true;
 	}
 }
 
-void ChildManager::Portals::initcaps(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::initcaps(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
 	if(!c)
@@ -177,8 +199,8 @@ void ChildManager::Portals::initcaps(cap_t pid,void *tls) {
 	uf.delegate(c->_sc->cap(),2);
 }
 
-void ChildManager::Portals::reg(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::reg(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
 	if(!c)
@@ -208,8 +230,8 @@ void ChildManager::Portals::reg(cap_t pid,void *tls) {
 	}
 }
 
-void ChildManager::Portals::unreg(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::unreg(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
 	if(!c)
@@ -234,8 +256,8 @@ void ChildManager::Portals::unreg(cap_t pid,void *tls) {
 	}
 }
 
-void ChildManager::Portals::getservice(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::getservice(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);
@@ -262,14 +284,19 @@ void ChildManager::Portals::getservice(cap_t pid,void *tls) {
 	}
 }
 
-void ChildManager::Portals::map(cap_t,void *) {
+void ChildManager::Portals::map(cap_t) {
 	UtcbFrameRef uf;
 	// TODO we have to manage the resources!
 	try {
 		CapRange caps;
 		uf >> caps;
 		uf.clear();
-		uf.delegate(caps);
+		if(caps.attr() & Caps::TYPE_MEM) {
+			uf.delegate(CapRange(caps.start() + ExecEnv::PHYS_START_PAGE,
+					caps.count(),caps.attr(),caps.hotspot()));
+		}
+		else
+			uf.delegate(caps);
 		uf << 0;
 	}
 	catch(const Exception& e) {
@@ -278,8 +305,8 @@ void ChildManager::Portals::map(cap_t,void *) {
 	}
 }
 
-void ChildManager::Portals::pf(cap_t pid,void *tls) {
-	ChildManager *cm = reinterpret_cast<ChildManager*>(tls);
+void ChildManager::Portals::pf(cap_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	static UserSm sm;
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -290,7 +317,10 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 	ScopedLock<UserSm> guard(&c->_sm);
 	uintptr_t pfaddr = uf->qual[1];
 	unsigned error = uf->qual[0];
-	uintptr_t eip = uf->eip;
+	uintptr_t eip = uf->rip;
+
+	Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+			c->cmdline(),pfaddr,eip,cpu,error);
 
 	// TODO different handlers (cow, ...)
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
@@ -309,7 +339,7 @@ void ChildManager::Portals::pf(cap_t pid,void *tls) {
 		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 				c->cmdline(),pfaddr,eip,cpu,error);
 		Serial::get().writef("Unable to resolve fault; killing child\n");
-		ExecEnv::collect_backtrace(c->_ec->stack(),uf->ebp,addrs,sizeof(addrs));
+		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,sizeof(addrs));
 		Serial::get().writef("Backtrace:\n");
 		addr = addrs;
 		while(*addr != 0) {

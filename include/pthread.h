@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Types.h>
 #include <arch/SpinLock.h>
 
 typedef size_t pthread_key_t;

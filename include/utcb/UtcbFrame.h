@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <arch/UtcbExcLayout.h>
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
 #include <stream/OStream.h>
@@ -39,19 +40,19 @@ public:
 		TYPE_DEL		= 1,
 	};
 
-	TypedItem(Crd crd = Crd(0),unsigned aux = 0) : _crd(crd), _aux(aux) {
+	TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
 	}
 
 	Crd crd() const {
 		return _crd;
 	}
-	unsigned aux() const {
+	word_t aux() const {
 		return _aux;
 	}
 
 private:
 	Crd _crd;
-	unsigned _aux;
+	word_t _aux;
 };
 
 class XltItem : public TypedItem {
@@ -68,7 +69,7 @@ public:
 		UPD_DPT	= 0x200,		// update DMA page table
 	};
 
-	DelItem(Crd crd,unsigned flags,unsigned hotspot = 0) : TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
+	DelItem(Crd crd,unsigned flags,word_t hotspot = 0) : TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
 	}
 };
 
@@ -76,12 +77,12 @@ class UtcbFrameRef {
 	friend class Pt;
 	friend class Utcb;
 
-	static Utcb::word_t *get_top(Utcb *frame,size_t toff) {
+	static word_t *get_top(Utcb *frame,size_t toff) {
 		size_t utcbtop = Util::rounddown<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
-		return reinterpret_cast<Utcb::word_t*>(utcbtop) - toff;
+		return reinterpret_cast<word_t*>(utcbtop) - toff;
 	}
 	static Utcb *get_frame(Utcb *base,size_t off) {
-		return reinterpret_cast<Utcb*>(reinterpret_cast<Utcb::word_t*>(base) + off);
+		return reinterpret_cast<Utcb*>(reinterpret_cast<word_t*>(base) + off);
 	}
 
 	void check_write(size_t words) {
@@ -169,7 +170,7 @@ public:
 
 	template<typename T>
 	UtcbFrameRef &operator <<(const T& value) {
-		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
+		const size_t words = (sizeof(T) + sizeof(word_t) - 1) / sizeof(word_t);
 		check_write(words);
 		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
 		*reinterpret_cast<T*>(_utcb->msg + untyped()) = value;
@@ -177,7 +178,7 @@ public:
 		return *this;
 	}
 	UtcbFrameRef &operator <<(const String& value) {
-		const size_t words = Util::blockcount(value.length(),sizeof(Utcb::word_t)) + 1;
+		const size_t words = Util::blockcount(value.length(),sizeof(word_t)) + 1;
 		check_write(words);
 		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
 		*reinterpret_cast<size_t*>(_utcb->msg + untyped()) = value.length();
@@ -188,7 +189,7 @@ public:
 
 	template<typename T>
 	UtcbFrameRef &operator >>(T &value) {
-		const size_t words = (sizeof(T) + sizeof(Utcb::word_t) - 1) / sizeof(Utcb::word_t);
+		const size_t words = (sizeof(T) + sizeof(word_t) - 1) / sizeof(word_t);
 		check_untyped_read(words);
 		value = *reinterpret_cast<T*>(_utcb->msg + _upos);
 		_upos += words;
@@ -197,7 +198,7 @@ public:
 	UtcbFrameRef &operator >>(String &value) {
 		check_untyped_read(1);
 		size_t len = *reinterpret_cast<size_t*>(_utcb->msg + _upos);
-		const size_t words = Util::blockcount(len,sizeof(Utcb::word_t)) + 1;
+		const size_t words = Util::blockcount(len,sizeof(word_t)) + 1;
 		check_untyped_read(words);
 		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1),len);
 		_upos += words;
@@ -222,7 +223,7 @@ private:
 
 protected:
 	Utcb *_utcb;
-	Utcb::word_t *_top;
+	word_t *_top;
 	size_t _upos;
 	size_t _tpos;
 };
@@ -238,37 +239,6 @@ public:
 };
 
 class UtcbExcFrameRef : public UtcbFrameRef {
-	class UtcbExc : public UtcbHead {
-		struct Descriptor {
-			uint16_t sel,ar;
-			uint32_t limit,base,res;
-			void set(uint16_t _sel,uint32_t _base,uint32_t _limit,uint16_t _ar) {
-				sel = _sel;
-				base = _base;
-				limit = _limit;
-				ar = _ar;
-			}
-		};
-
-	public:
-		uint32_t mtd;
-		uint32_t inst_len,eip,efl;
-		uint32_t intr_state,actv_state,inj_info,inj_error;
-		union {
-			struct {
-				uint32_t eax,ecx,edx,ebx,esp,ebp,esi,edi;
-			};
-			uint32_t gpr[8];
-		};
-		uint64_t qual[2];
-		uint32_t ctrl[2];
-		int64_t tsc_off;
-		uint32_t cr0,cr2,cr3,cr4;
-		uint32_t dr7,sysenter_cs,sysenter_esp,sysenter_eip;
-		Descriptor es,cs,ss,ds,fs,gs;
-		Descriptor ld,tr,gd,id;
-	};
-
 public:
 	UtcbExcFrameRef() : UtcbFrameRef() {
 	}

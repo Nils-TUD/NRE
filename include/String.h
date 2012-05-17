@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Types.h>
 #include <cstring>
 
 namespace nul {

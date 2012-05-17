@@ -25,6 +25,7 @@
 #include <utcb/UtcbFrame.h>
 #include <utcb/Utcb.h>
 #include <mem/RegionList.h>
+#include <mem/Memory.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
 #include <subsystem/ChildManager.h>
@@ -40,8 +41,8 @@
 using namespace nul;
 
 extern "C" void abort();
-PORTAL static void portal_startup(cap_t pid,void *tls);
-PORTAL static void portal_map(cap_t pid,void *tls);
+PORTAL static void portal_startup(cap_t pid);
+PORTAL static void portal_hvmap(cap_t);
 static void mythread(void *tls);
 static void start_childs();
 
@@ -73,24 +74,28 @@ void verbose_terminate() {
 int main() {
 	const Hip &hip = Hip::get();
 
+	// create temporary map-portals to map stuff from HV
+	LocalEc *ecs[Hip::MAX_CPUS];
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			CPU &cpu = CPU::get(it->id());
-			// TODO ?
-			LocalEc *cpuec = new LocalEc(0,cpu.id);
-			cpu.map_pt = new Pt(cpuec,portal_map);
-			new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			LocalEc *ec = new LocalEc(cpu.id);
+			ecs[it->id()] = ec;
+			cpu.map_pt = new Pt(ec,portal_hvmap);
+			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
 	}
 
+	// allocate serial ports and VGA memory
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
-	Caps::allocate(CapRange(0xB8,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Caps::TYPE_MEM | Caps::MEM_RW));
+	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init();
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
+	// map all available memory
 	Log::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
 	Log::get().writef("Memory:\n");
@@ -99,10 +104,11 @@ int main() {
 		if(it->type == Hip_mem::AVAILABLE) {
 			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
 					Util::blockcount(it->size,ExecEnv::PAGE_SIZE),Caps::TYPE_MEM | Caps::MEM_RWX,
-					it->addr >> ExecEnv::PAGE_SHIFT));
+					ExecEnv::PHYS_START_PAGE + (it->addr >> ExecEnv::PAGE_SHIFT)));
+			Memory::get().free(ExecEnv::PHYS_START + it->addr,it->size);
 		}
 	}
-
+	Memory::get().write(Serial::get());
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
@@ -119,9 +125,9 @@ int main() {
 	}
 
 	try {
-		new Sc(new GlobalEc(mythread,0,0),Qpd());
-		new Sc(new GlobalEc(mythread,0,1),Qpd(1,100));
-		new Sc(new GlobalEc(mythread,0,1),Qpd(1,1000));
+		new Sc(new GlobalEc(mythread,0),Qpd());
+		new Sc(new GlobalEc(mythread,1),Qpd(1,100));
+		new Sc(new GlobalEc(mythread,1),Qpd(1,1000));
 	}
 	catch(const SyscallException& e) {
 		e.write(Log::get());
@@ -140,33 +146,36 @@ static void start_childs() {
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
 			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
-					Caps::TYPE_MEM | Caps::MEM_RWX));
+					Caps::TYPE_MEM | Caps::MEM_RWX,
+					ExecEnv::PHYS_START_PAGE + (it->addr >> ExecEnv::PAGE_SHIFT)));
 			// we assume that the cmdline does not cross pages
 			if(it->aux)
-				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW));
+				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,
+						ExecEnv::PHYS_START_PAGE + (it->aux >> ExecEnv::PAGE_SHIFT)));
+			uintptr_t aux = it->aux + ExecEnv::PHYS_START;
 			if(it->aux) {
 				// ensure that its terminated at the end of the page
-				char *end = reinterpret_cast<char*>(Util::roundup<uintptr_t>(it->aux,ExecEnv::PAGE_SIZE) - 1);
+				char *end = reinterpret_cast<char*>(Util::roundup<uintptr_t>(aux,ExecEnv::PAGE_SIZE) - 1);
 				*end = '\0';
 			}
 
-			mng->load(it->addr,it->size,reinterpret_cast<char*>(it->aux));
+			mng->load(ExecEnv::PHYS_START + it->addr,it->size,reinterpret_cast<char*>(aux));
 		}
 	}
 }
 
-static void portal_map(cap_t,void *) {
+static void portal_hvmap(cap_t) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;
-	uf.reset();
+	uf.clear();
 	uf.delegate(range,DelItem::FROM_HV);
 }
 
-static void portal_startup(cap_t,void *) {
+static void portal_startup(cap_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
-	uf->eip = *reinterpret_cast<uint32_t*>(uf->esp);
+	uf->rip = *reinterpret_cast<uint32_t*>(uf->rsp);
 }
 
 static void mythread(void *) {

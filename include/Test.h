@@ -206,7 +206,7 @@ public:
 	static const char *repo_rel_path(const char *filename) {
 		const char wvtest_h[] = __FILE__;
 		const char name_in_repo[] = "michal/include/wvtest.h";
-		unsigned rel_idx = sizeof(wvtest_h) - sizeof(name_in_repo);
+		size_t rel_idx = sizeof(wvtest_h) - sizeof(name_in_repo);
 
 		const char *p1 = wvtest_h + rel_idx;
 		const char *p2 = name_in_repo;

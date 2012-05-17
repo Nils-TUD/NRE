@@ -76,9 +76,10 @@ public:
 		assert(_tls_idx + 1 < TLS_SIZE);
 		return _tls_idx++;
 	}
-	void *get_tls(size_t idx) const {
+	template<typename T>
+	T *get_tls(size_t idx) const {
 		assert(idx < TLS_SIZE);
-		return const_cast<void*>(_tls[idx]);
+		return const_cast<T*>(reinterpret_cast<const T*>(_tls[idx]));
 	}
 	void set_tls(size_t idx,const void *val) {
 		assert(idx < TLS_SIZE);

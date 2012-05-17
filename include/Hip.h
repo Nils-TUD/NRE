@@ -29,7 +29,7 @@ class Hip_mem;
 class Hip {
 public:
 	enum {
-		MAX_CPUS	= 32
+		MAX_CPUS	= 64
 	};
 	typedef const Hip_mem* mem_iterator;
 	typedef const Hip_cpu* cpu_iterator;

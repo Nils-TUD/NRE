@@ -32,7 +32,6 @@ class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
 
-	typedef uint32_t word_t;
 	enum {
 		SIZE		= ExecEnv::PAGE_SIZE,
 		WORDS		= SIZE / sizeof(word_t),

@@ -18,29 +18,26 @@
 
 #pragma once
 
-typedef char int8_t;
-typedef short int16_t;
-typedef long int32_t;
-typedef long long int64_t;
+#include <Compiler.h>
+#include <arch/Types.h>
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned long uint32_t;
-typedef unsigned long long uint64_t;
+#define INIT_PRIO(X)		INIT_PRIORITY(101 + (X))
+#define INIT_PRIO_PD		INIT_PRIO(0)
+#define INIT_PRIO_GLOBALEC	INIT_PRIO(1)
 
-typedef long ssize_t;
-typedef long intptr_t;
-typedef long ptrdiff_t;
+namespace nul {
 
-typedef unsigned long size_t;
-typedef unsigned long uintptr_t;
+class Utcb;
+class Hip;
 
-typedef long long llong;
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ullong;
+struct StartupInfo {
+	Hip *hip;
+	Utcb *utcb;
+	uint cpu;
+};
 
-typedef uint cap_t;
-typedef uchar cpu_t;
+}
+
+extern "C" void _presetup();
+extern "C" void _setup(bool child);
+extern nul::StartupInfo _startup_info;

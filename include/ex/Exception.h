@@ -19,8 +19,8 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
+#include <arch/Types.h>
 #include <stream/OStream.h>
-#include <Types.h>
 
 namespace nul {
 

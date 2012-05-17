@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <arch/Types.h>
 
 namespace nul {
 
@@ -37,11 +37,11 @@ protected:
 			uint16_t untyped;
 			uint16_t typed;
 		};
-		uint32_t mtr;
+		word_t mtr;
 	};
-	uint32_t crd_translate;
-	uint32_t crd;
-	uint32_t nul_cpunr;
+	word_t crd_translate;
+	word_t crd;
+	word_t nul_cpunr;
 };
 
 }

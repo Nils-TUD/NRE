@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <Types.h>
+#include <arch/Types.h>
 
 /**
  * GCC calls the __cxa_guard_-stuff when initializing local static objects to do it in a
@@ -34,15 +34,15 @@ static inline int trylock(guard_t *l) {
 	int res = 0;
 	asm volatile (
 		// try to exchange lock with 1
-		"mov	$1,%%ecx;"
-		"xor	%%eax,%%eax;"
-		"lock	cmpxchg %%ecx,(%0);"
+		"mov	$1,%%rcx;"
+		"xor	%%rax,%%rax;"
+		"lock	cmpxchg %%rcx,(%0);"
 		// if it succeeded, the zero-flag is set
 		"jnz	1f;"
 		// in this case we report success
 		"mov	$1,%1;"
 		"1:;"
-		: "=D"(res) : "D" (l) : "eax", "ecx", "cc", "memory"
+		: "=D"(res) : "D" (l) : "rax", "rcx", "cc", "memory"
 	);
 	return res;
 }

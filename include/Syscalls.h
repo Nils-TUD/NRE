@@ -69,12 +69,12 @@ enum {
 };
 
 class Desc {
-	unsigned _value;
+	word_t _value;
 protected:
-	Desc(unsigned v) : _value(v) {
+	Desc(word_t v) : _value(v) {
 	}
 public:
-	unsigned value() const {
+	word_t value() const {
 		return _value;
 	}
 };
@@ -87,22 +87,22 @@ public:
 	unsigned order() const {
 		return ((value() >> 7) & 0x1f);
 	}
-	unsigned size() const {
+	word_t size() const {
 		return 1 << (order() + 12);
 	}
-	unsigned base() const {
+	word_t base() const {
 		return value() & ~0xfff;
 	}
 	unsigned attr() const {
 		return value() & 0x1f;
 	}
-	unsigned cap() const {
+	word_t cap() const {
 		return value() >> 12;
 	}
-	explicit Crd(unsigned offset,unsigned order,unsigned attr) :
+	explicit Crd(word_t offset,unsigned order,unsigned attr) :
 			Desc((offset << 12) | (order << 7) | attr) {
 	}
-	explicit Crd(unsigned v) :
+	explicit Crd(word_t v) :
 			Desc(v) {
 	}
 };
@@ -166,7 +166,7 @@ public:
 	}
 
 	static inline void create_sc(cap_t sc,cap_t ec,Qpd qpd,cap_t dstpd) {
-		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value(),0);
+		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value());
 	}
 
 	static inline void create_pt(cap_t pt,cap_t ec,uintptr_t eip,unsigned mtd,cap_t dstpd) {
@@ -174,11 +174,11 @@ public:
 	}
 
 	static inline void create_pd(cap_t pd,Crd pt_crd,unsigned dstpd) {
-		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value(),0,0);
+		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value());
 	}
 
 	static inline void create_sm(cap_t sm,unsigned initial,cap_t dstpd) {
-		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial,0,0);
+		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial);
 	}
 
 	static inline void sm_ctrl(cap_t sm,SmOp op) {
@@ -186,7 +186,7 @@ public:
 	}
 
 	static inline void revoke(Crd crd,bool myself) {
-		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value(),0,0,0);
+		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value());
 	}
 
 private:

@@ -25,16 +25,17 @@
 namespace nul {
 
 ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
-		: _s(s), _ec(s,cpu), _pt(&_ec,portal_newclient), _sm() {
+		: _s(s), _ec(cpu), _pt(&_ec,portal_newclient), _sm() {
+	_ec.set_tls(_ec.create_tls(),s);
 	UtcbFrame uf;
 	uf.delegate(_pt.cap());
 	uf << String(s->name()) << cpu;
 	CPU::current().reg_pt->call(uf);
 }
 
-void ServiceInstance::portal_newclient(cap_t,void *tls) {
+void ServiceInstance::portal_newclient(cap_t) {
 	// TODO not everyone wants client-specific portals
-	Service *s = reinterpret_cast<Service*>(tls);
+	Service *s = Ec::current()->get_tls<Service>(0);
 	Pt *pt = s->new_client();
 	UtcbFrameRef uf;
 	uf.delegate(pt->cap());

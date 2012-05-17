@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/x86/ExecEnv.h>
+#include <arch/ExecEnv.h>
 #include <Compiler.h>
 #include <Util.h>
 
@@ -25,11 +25,11 @@ namespace nul {
 void *ExecEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecEnv::PAGE_SIZE);
 size_t ExecEnv::_stack;
 
-void *ExecEnv::setup_stack(Pd *pd,Ec *ec,void *tls,startup_func start) {
+void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
 	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
 	_stacks[_stack][--stack_top] = ec;
 	_stacks[_stack][--stack_top] = pd;
-	_stacks[_stack][--stack_top] = tls;
+	_stacks[_stack][--stack_top] = 0;
 	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(start);
 	return _stacks[_stack++] + stack_top;
 }
@@ -51,7 +51,7 @@ size_t ExecEnv::collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frame
 		if(ebp < start || ebp >= end)
 			break;
 		ebp = stack + (ebp & (ExecEnv::STACK_SIZE - 1));
-		*frame = *(reinterpret_cast<uint32_t*>(ebp) + 1) - CALL_INSTR_SIZE;
+		*frame = *(reinterpret_cast<uintptr_t*>(ebp) + 1) - CALL_INSTR_SIZE;
 		frame++;
 		count++;
 		ebp = *reinterpret_cast<uintptr_t*>(ebp);

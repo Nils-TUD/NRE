@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <arch/Types.h>
 #include <ex/Exception.h>
 #include <stream/OStream.h>
-#include <Types.h>
 #include <Util.h>
 #include <assert.h>
 

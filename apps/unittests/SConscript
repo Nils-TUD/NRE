@@ -3,5 +3,5 @@
 Import('env')
 
 myenv = env.Clone()
-myenv['LINKFLAGS'] += ' -Wl,-T,apps/unittests/linker.ld'
+myenv['LINKFLAGS'] += ' -Wl,-T,apps/unittests/linker_' + env['ARCH'] + '.ld'
 myenv.NulProgram(myenv, 'unittests', [Glob('*.cc'),Glob('*/*.cc')])
