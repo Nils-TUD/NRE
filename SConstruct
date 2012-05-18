@@ -14,6 +14,7 @@ crossver = '4.6.1'
 crossdir = os.path.abspath('../cross/' + target + '/dist')
 
 hostenv = Environment(
+	ENV = os.environ,
 	CXXFLAGS = '-Wall -Wextra -ansi',
 )
 env = Environment(
@@ -80,15 +81,3 @@ env.NulProgram = NulProgram
 hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')
 env.SConscript('libs/SConscript', 'env', variant_dir = builddir + '/libs')
 env.SConscript('apps/SConscript', 'env', variant_dir = builddir + '/apps')
-
-def PhonyTarget(target, action):
-	phony = Environment(ENV = os.environ, BUILDERS = { 'phony' : Builder(action = action) })
-	AlwaysBuild(phony.phony(target = target, source = 'SConstruct'))
-
-if ARGUMENTS.get('dis') != None:
-	PhonyTarget('dis', crossdir + '/bin/' + cross + '-objdump -SC ' +
-		builddir + '/bin/apps/' + ARGUMENTS.get('dis') + ' | less')
-
-if ARGUMENTS.get('elf') != None:
-	PhonyTarget('elf', crossdir + '/bin/' + cross + '-readelf -a ' +
-		builddir + '/bin/apps/' + ARGUMENTS.get('elf') + ' | less')
