@@ -9,7 +9,7 @@ elif [ "$TARGET" = "x86_64" ]; then
 	export QEMU="qemu-system-x86_64"
 	export QEMU_FLAGS="-m 256 -smp 4"
 else
-	echo 'Please define $TARGET first!' >&2
+	echo 'Please define $TARGET to x86_32 or x86_64 first!' >&2
 	exit 1
 fi
 
