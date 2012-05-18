@@ -18,26 +18,5 @@
 
 #pragma once
 
-#include <Compiler.h>
-#include <arch/Types.h>
-
-#define INIT_PRIO(X)		INIT_PRIORITY(101 + (X))
-#define INIT_PRIO_PD		INIT_PRIO(0)
-#define INIT_PRIO_GLOBALEC	INIT_PRIO(1)
-
-namespace nul {
-
-class Utcb;
-class Hip;
-
-struct StartupInfo {
-	Hip *hip;
-	Utcb *utcb;
-	word_t cpu;
-};
-
-}
-
-extern "C" void _presetup();
-extern "C" void _setup(bool child);
-extern nul::StartupInfo _startup_info;
+#define REG(X)				r##X
+#define KERNEL_START_ADDR	0x0000800000000000

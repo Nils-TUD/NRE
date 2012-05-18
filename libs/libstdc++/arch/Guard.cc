@@ -17,6 +17,7 @@
  */
 
 #include <arch/Types.h>
+#include <arch/Defines.h>
 
 /**
  * GCC calls the __cxa_guard_-stuff when initializing local static objects to do it in a
@@ -34,15 +35,15 @@ static inline int trylock(guard_t *l) {
 	int res = 0;
 	asm volatile (
 		// try to exchange lock with 1
-		"mov	$1,%%rcx;"
-		"xor	%%rax,%%rax;"
-		"lock	cmpxchg %%rcx,(%0);"
+		"mov	$1,%%" EXPAND(REG(cx)) ";"
+		"xor	%%" EXPAND(REG(ax)) ",%%" EXPAND(REG(ax)) ";"
+		"lock	cmpxchg %%" EXPAND(REG(cx)) ",(%0);"
 		// if it succeeded, the zero-flag is set
 		"jnz	1f;"
 		// in this case we report success
 		"mov	$1,%1;"
 		"1:;"
-		: "=D"(res) : "D" (l) : "rax", "rcx", "cc", "memory"
+		: "=D"(res) : "D" (l) : EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
 	);
 	return res;
 }

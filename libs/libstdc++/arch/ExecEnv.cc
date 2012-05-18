@@ -35,9 +35,9 @@ void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t *frames,size_t max) {
-	uintptr_t ebp;
-	asm volatile ("mov %%ebp,%0" : "=a" (ebp));
-	return collect_backtrace(Util::rounddown<uintptr_t>(ebp,ExecEnv::STACK_SIZE),ebp,frames,max);
+	uintptr_t bp;
+	asm volatile ("mov %%" EXPAND(REG(bp)) ",%0" : "=a" (bp));
+	return collect_backtrace(Util::rounddown<uintptr_t>(bp,ExecEnv::STACK_SIZE),bp,frames,max);
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max) {
