@@ -41,8 +41,8 @@ using namespace nul;
 using namespace nul::test;
 
 extern "C" void abort();
-PORTAL static void portal_map(cap_t pid);
-PORTAL static void portal_startup(cap_t);
+PORTAL static void portal_map(capsel_t pid);
+PORTAL static void portal_startup(capsel_t);
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
@@ -100,7 +100,7 @@ int main() {
 	return 0;
 }
 
-static void portal_map(cap_t) {
+static void portal_map(capsel_t) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;
@@ -108,7 +108,7 @@ static void portal_map(cap_t) {
 	uf.delegate(range,DelItem::FROM_HV);
 }
 
-static void portal_startup(cap_t) {
+static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->rip = *reinterpret_cast<uint32_t*>(uf->rsp);

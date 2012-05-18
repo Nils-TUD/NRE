@@ -25,7 +25,7 @@
 using namespace nul;
 using namespace nul::test;
 
-PORTAL static void portal_test(cap_t);
+PORTAL static void portal_test(capsel_t);
 static void test_pingpong();
 
 const TestCase pingpong = {
@@ -35,7 +35,7 @@ const TestCase pingpong = {
 static const unsigned tries = 10000;
 static uint64_t results[tries];
 
-static void portal_test(cap_t) {
+static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		unsigned a,b,c;

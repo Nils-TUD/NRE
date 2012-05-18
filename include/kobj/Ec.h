@@ -20,14 +20,14 @@
 
 #include <arch/ExecEnv.h>
 #include <cap/CapHolder.h>
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <utcb/Utcb.h>
 #include <Syscalls.h>
 
 namespace nul {
 
-class Ec : public KObject {
+class Ec : public ObjCap {
 	enum {
 		TLS_SIZE = 4
 	};
@@ -38,8 +38,8 @@ public:
 	}
 
 protected:
-	explicit Ec(cpu_t cpu,cap_t event_base,cap_t cap = INVALID,Utcb *utcb = 0)
-			: KObject(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu),
+	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0)
+			: ObjCap(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu),
 			  _tls_idx(0), _tls() {
 		if(!_utcb) {
 			// TODO
@@ -49,8 +49,8 @@ protected:
 	}
 	void create(Pd *pd,Syscalls::ECType type,void *sp) {
 		CapHolder ch;
-		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->cap());
-		cap(ch.release());
+		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->sel());
+		sel(ch.release());
 		_stack = reinterpret_cast<uintptr_t>(sp) & ~(ExecEnv::PAGE_SIZE - 1);
 	}
 
@@ -62,7 +62,7 @@ public:
 	uintptr_t stack() const {
 		return _stack;
 	}
-	cap_t event_base() const {
+	capsel_t event_base() const {
 		return _event_base;
 	}
 	Utcb *utcb() {
@@ -92,7 +92,7 @@ private:
 
 	Utcb *_utcb;
 	uintptr_t _stack;
-	cap_t _event_base;
+	capsel_t _event_base;
 	cpu_t _cpu;
 	size_t _tls_idx;
 	const void *_tls[TLS_SIZE];

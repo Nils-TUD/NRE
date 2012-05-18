@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <ex/SyscallException.h>
 #include <cap/CapSpace.h>
@@ -24,17 +24,17 @@
 
 namespace nul {
 
-KObject::~KObject() {
-	if(_cap != INVALID) {
+ObjCap::~ObjCap() {
+	if(_sel != INVALID) {
 		// the destructor shouldn't throw
 		try {
-			Syscalls::revoke(Crd(_cap,0,DESC_CAP_ALL),true);
+			Syscalls::revoke(Crd(_sel,0,DESC_CAP_ALL),true);
 		}
 		catch(const SyscallException&) {
 			// ignore it
 		}
-		if(!(_cap & KEEP_BIT))
-			CapSpace::get().free(_cap);
+		if(!(_sel & KEEP_BIT))
+			CapSpace::get().free(_sel);
 	}
 }
 

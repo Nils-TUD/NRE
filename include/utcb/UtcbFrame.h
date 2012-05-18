@@ -136,7 +136,7 @@ public:
 		_utcb->crd = crd.value();
 	}
 
-	void delegate(cap_t cap,uint hotspot = 0,uint flags = 0) {
+	void delegate(capsel_t cap,uint hotspot = 0,uint flags = 0) {
 		add_typed(DelItem(Crd(cap,0,DESC_CAP_ALL),flags,hotspot));
 	}
 	void delegate(const CapRange& range,uint flags = 0) {

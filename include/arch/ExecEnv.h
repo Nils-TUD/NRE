@@ -36,7 +36,7 @@ class ExecEnv {
 	};
 
 public:
-	typedef PORTAL void (*portal_func)(cap_t);
+	typedef PORTAL void (*portal_func)(capsel_t);
 	typedef void (*startup_func)(void *);
 
 	enum {

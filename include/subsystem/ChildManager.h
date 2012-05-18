@@ -40,13 +40,13 @@ class ChildManager {
 			COUNT	= 7
 		};
 
-		PORTAL static void startup(cap_t pid);
-		PORTAL static void initcaps(cap_t pid);
-		PORTAL static void reg(cap_t pid);
-		PORTAL static void unreg(cap_t pid);
-		PORTAL static void getservice(cap_t pid);
-		PORTAL static void map(cap_t pid);
-		PORTAL static void pf(cap_t pid);
+		PORTAL static void startup(capsel_t pid);
+		PORTAL static void initcaps(capsel_t pid);
+		PORTAL static void reg(capsel_t pid);
+		PORTAL static void unreg(capsel_t pid);
+		PORTAL static void getservice(capsel_t pid);
+		PORTAL static void map(capsel_t pid);
+		PORTAL static void pf(capsel_t pid);
 	};
 
 	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
@@ -73,14 +73,14 @@ private:
 			}
 		}
 	}
-	cpu_t get_cpu(cap_t pid) const {
+	cpu_t get_cpu(capsel_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
 	}
-	Child *get_child(cap_t pid) const {
+	Child *get_child(capsel_t pid) const {
 		return _childs[((pid - _portal_caps) / per_child_caps())];
 	}
-	void destroy_child(cap_t pid) {
+	void destroy_child(capsel_t pid) {
 		size_t i = (pid - _portal_caps) / per_child_caps();
 		// TODO what if somebody is still using it?
 		Child *c = _childs[i];
@@ -98,7 +98,7 @@ private:
 
 	size_t _child;
 	Child *_childs[MAX_CHILDS];
-	cap_t _portal_caps;
+	capsel_t _portal_caps;
 	ServiceRegistry _registry;
 	UserSm _sm;
 	LocalEc *_ecs[Hip::MAX_CPUS];

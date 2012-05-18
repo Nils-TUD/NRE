@@ -153,35 +153,35 @@ public:
 		SM_ZERO	= FLAG0 | FLAG1
 	};
 
-	static inline void call(cap_t pt) {
+	static inline void call(capsel_t pt) {
 		SyscallABI::syscall(pt << 8 | IPC_CALL);
 	}
 
-	static inline void create_ec(cap_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
-			ECType type,cap_t dstpd) {
+	static inline void create_ec(capsel_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
+			ECType type,capsel_t dstpd) {
 		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
 		        reinterpret_cast<SyscallABI::arg_t>(utcb) | cpunr,
 		        reinterpret_cast<SyscallABI::arg_t>(esp),
 		        excpt_base);
 	}
 
-	static inline void create_sc(cap_t sc,cap_t ec,Qpd qpd,cap_t dstpd) {
+	static inline void create_sc(capsel_t sc,capsel_t ec,Qpd qpd,capsel_t dstpd) {
 		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value());
 	}
 
-	static inline void create_pt(cap_t pt,cap_t ec,uintptr_t eip,unsigned mtd,cap_t dstpd) {
+	static inline void create_pt(capsel_t pt,capsel_t ec,uintptr_t eip,unsigned mtd,capsel_t dstpd) {
 		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd,eip);
 	}
 
-	static inline void create_pd(cap_t pd,Crd pt_crd,unsigned dstpd) {
+	static inline void create_pd(capsel_t pd,Crd pt_crd,unsigned dstpd) {
 		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value());
 	}
 
-	static inline void create_sm(cap_t sm,unsigned initial,cap_t dstpd) {
+	static inline void create_sm(capsel_t sm,unsigned initial,capsel_t dstpd) {
 		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial);
 	}
 
-	static inline void sm_ctrl(cap_t sm,SmOp op) {
+	static inline void sm_ctrl(capsel_t sm,SmOp op) {
 		SyscallABI::syscall(sm << 8 | SM_CTL | op);
 	}
 

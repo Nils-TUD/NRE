@@ -41,8 +41,8 @@
 using namespace nul;
 
 extern "C" void abort();
-PORTAL static void portal_startup(cap_t pid);
-PORTAL static void portal_hvmap(cap_t);
+PORTAL static void portal_startup(capsel_t pid);
+PORTAL static void portal_hvmap(capsel_t);
 static void mythread(void *tls);
 static void start_childs();
 
@@ -164,7 +164,7 @@ static void start_childs() {
 	}
 }
 
-static void portal_hvmap(cap_t) {
+static void portal_hvmap(capsel_t) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;
@@ -172,7 +172,7 @@ static void portal_hvmap(cap_t) {
 	uf.delegate(range,DelItem::FROM_HV);
 }
 
-static void portal_startup(cap_t) {
+static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->rip = *reinterpret_cast<uint32_t*>(uf->rsp);
@@ -183,6 +183,6 @@ static void mythread(void *) {
 	Ec *ec = Ec::current();
 	while(1) {
 		ScopedLock<UserSm> guard(&sm);
-		Log::get().writef("I am Ec %u, running on CPU %u\n",ec->cap(),ec->cpu());
+		Log::get().writef("I am Ec %u, running on CPU %u\n",ec->sel(),ec->cpu());
 	}
 }

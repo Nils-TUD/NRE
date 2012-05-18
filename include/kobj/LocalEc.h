@@ -31,7 +31,7 @@ public:
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
 	}
-	explicit LocalEc(cpu_t cpu,cap_t event_base) : Ec(cpu,event_base) {
+	explicit LocalEc(cpu_t cpu,capsel_t event_base) : Ec(cpu,event_base) {
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
 	}

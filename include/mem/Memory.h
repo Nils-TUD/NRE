@@ -35,9 +35,6 @@ class Memory {
 		size_t size;
 	};
 
-	Memory() : _regs() {
-	}
-
 public:
 	static Memory &get() {
 		return _inst;
@@ -95,6 +92,11 @@ public:
 	}
 
 private:
+	Memory() : _regs() {
+	}
+	Memory(const Memory&);
+	Memory& operator=(const Memory&);
+
 	Region *get(size_t size) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size >= size)

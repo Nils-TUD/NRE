@@ -67,19 +67,19 @@ public:
 	}
 
 private:
-	explicit CapSpace(cap_t off = Hip::get().object_caps()) : _lck(), _off(off) {
+	explicit CapSpace(capsel_t off = Hip::get().object_caps()) : _lck(), _off(off) {
 	}
 
 public:
-	cap_t allocate(unsigned count = 1,unsigned align = 1) {
+	capsel_t allocate(unsigned count = 1,unsigned align = 1) {
 		ScopedLock<SpinLock> lock(&_lck);
-		cap_t res = (_off + align - 1) & ~(align - 1);
+		capsel_t res = (_off + align - 1) & ~(align - 1);
 		if(res + count < res || res + count > Hip::get().cfg_cap)
 			throw Exception("Out of caps");
 		_off = res + count;
 		return res;
 	}
-	void free(cap_t,unsigned = 1) {
+	void free(capsel_t,unsigned = 1) {
 		// TODO implement me
 	}
 
@@ -89,7 +89,7 @@ private:
 
 	static CapSpace _inst;
 	SpinLock _lck;
-	cap_t _off;
+	capsel_t _off;
 };
 
 }

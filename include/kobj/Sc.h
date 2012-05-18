@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Pd.h>
 #include <cap/CapHolder.h>
@@ -26,12 +26,12 @@
 
 namespace nul {
 
-class Sc : public KObject {
+class Sc : public ObjCap {
 public:
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : KObject() {
+	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : ObjCap() {
 		CapHolder ch;
-		Syscalls::create_sc(ch.get(),ec->cap(),qpd,pd->cap());
-		cap(ch.release());
+		Syscalls::create_sc(ch.get(),ec->sel(),qpd,pd->sel());
+		sel(ch.release());
 	}
 	virtual ~Sc() {
 	}

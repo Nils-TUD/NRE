@@ -33,5 +33,5 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 typedef unsigned long long ullong;
 
-typedef uint cap_t;
+typedef uint capsel_t;
 typedef uchar cpu_t;

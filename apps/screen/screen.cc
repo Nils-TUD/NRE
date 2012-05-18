@@ -22,7 +22,7 @@
 
 using namespace nul;
 
-PORTAL static void portal_write(cap_t);
+PORTAL static void portal_write(capsel_t);
 
 int main() {
 	// TODO might be something else than 0x3f8
@@ -44,7 +44,7 @@ int main() {
 	return 0;
 }
 
-static void portal_write(cap_t pid) {
+static void portal_write(capsel_t pid) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
 	UtcbFrameRef uf;

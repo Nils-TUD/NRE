@@ -27,10 +27,10 @@ Pd *Pd::current() {
 	return ExecEnv::get_current_pd();
 }
 
-Pd::Pd(Crd crd,Pd *pd) : KObject() {
+Pd::Pd(Crd crd,Pd *pd) : ObjCap() {
 	CapHolder ch;
-	Syscalls::create_pd(ch.get(),crd,pd->cap());
-	cap(ch.release());
+	Syscalls::create_pd(ch.get(),crd,pd->sel());
+	sel(ch.release());
 }
 
 }

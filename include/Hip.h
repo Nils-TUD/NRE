@@ -61,13 +61,13 @@ public:
 	/**
 	 * @return the number of capabilities used by the HV for exceptions and for service-portals
 	 */
-	cap_t service_caps() const {
+	capsel_t service_caps() const {
 		return cfg_exc * 2;
 	}
 	/**
 	 * @return the first capability used for object capabilities
 	 */
-	cap_t object_caps() const {
+	capsel_t object_caps() const {
 		return service_caps() * MAX_CPUS;
 	}
 

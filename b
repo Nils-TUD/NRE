@@ -23,6 +23,10 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
 fi
 
 scons $scons_args
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+
 case "$1" in
 	run)
 		./test --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build"

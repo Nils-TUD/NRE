@@ -24,14 +24,14 @@
 using namespace nul;
 using namespace nul::test;
 
-PORTAL static void portal_test(cap_t);
+PORTAL static void portal_test(capsel_t);
 static void test_nesting();
 
 const TestCase utcbtest = {
 	"Utcb nesting",test_nesting
 };
 
-static void portal_test(cap_t) {
+static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		int a,b,c;

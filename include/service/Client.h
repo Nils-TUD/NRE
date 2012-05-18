@@ -37,7 +37,7 @@ public:
 		// note that we track the number of tries because a client might start multiple Ecs on one
 		// cpu that try to connect to services, so that the parent can't simply notify the client
 		// once for that cpu.
-		cap_t cap = KObject::INVALID;
+		capsel_t cap = ObjCap::INVALID;
 		do {
 			try {
 				cap = connect(service);
@@ -51,7 +51,7 @@ public:
 				CPU::current().srv_sm->down();
 			}
 		}
-		while(cap == KObject::INVALID);
+		while(cap == ObjCap::INVALID);
 		_pt = new Pt(get_portal(cap));
 	}
 	~Client() {
@@ -63,7 +63,7 @@ public:
 	}
 
 private:
-	cap_t connect(const char *service) const {
+	capsel_t connect(const char *service) const {
 		// TODO we need a function to receive a cap, right?
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -76,7 +76,7 @@ private:
 		return ti.crd().cap();
 	}
 
-	cap_t get_portal(cap_t cap) const {
+	capsel_t get_portal(capsel_t cap) const {
 		Pt init(cap);
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));

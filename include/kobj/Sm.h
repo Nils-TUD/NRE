@@ -18,32 +18,32 @@
 
 #pragma once
 
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <arch/SyscallABI.h>
 
 namespace nul {
 
-class Sm : public KObject {
+class Sm : public ObjCap {
 public:
 	// TODO get rid of the bool
-	Sm(cap_t cap,bool) : KObject(cap) {
+	Sm(capsel_t cap,bool) : ObjCap(cap) {
 	}
-	Sm(cap_t cap,unsigned initial,Pd *pd = Pd::current()) : KObject(cap) {
-		Syscalls::create_sm(cap,initial,pd->cap());
+	Sm(capsel_t cap,unsigned initial,Pd *pd = Pd::current()) : ObjCap(cap) {
+		Syscalls::create_sm(cap,initial,pd->sel());
 	}
 	Sm(unsigned initial,Pd *pd = Pd::current());
 	virtual ~Sm() {
 	}
 
 	void down() {
-		Syscalls::sm_ctrl(cap(),Syscalls::SM_DOWN);
+		Syscalls::sm_ctrl(sel(),Syscalls::SM_DOWN);
 	}
 	void zero() {
-		Syscalls::sm_ctrl(cap(),Syscalls::SM_ZERO);
+		Syscalls::sm_ctrl(sel(),Syscalls::SM_ZERO);
 	}
 	void up() {
-		Syscalls::sm_ctrl(cap(),Syscalls::SM_UP);
+		Syscalls::sm_ctrl(sel(),Syscalls::SM_UP);
 	}
 };
 

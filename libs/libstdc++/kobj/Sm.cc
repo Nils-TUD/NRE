@@ -12,10 +12,10 @@
 
 namespace nul {
 
-Sm::Sm(unsigned initial,Pd *pd) : KObject() {
+Sm::Sm(unsigned initial,Pd *pd) : ObjCap() {
 	CapHolder ch;
-	Syscalls::create_sm(ch.get(),initial,pd->cap());
-	cap(ch.release());
+	Syscalls::create_sm(ch.get(),initial,pd->sel());
+	sel(ch.release());
 }
 
 }

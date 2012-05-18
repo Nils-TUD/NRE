@@ -31,10 +31,10 @@ public:
 		if(_owned)
 			CapSpace::get().free(_cap,_count);
 	}
-	cap_t get() const {
+	capsel_t get() const {
 		return _cap;
 	}
-	cap_t release() {
+	capsel_t release() {
 		_owned = false;
 		return _cap;
 	}
@@ -44,7 +44,7 @@ private:
 	CapHolder& operator=(const CapHolder&);
 
 private:
-	cap_t _cap;
+	capsel_t _cap;
 	unsigned _count;
 	bool _owned;
 };

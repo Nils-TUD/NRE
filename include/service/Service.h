@@ -81,7 +81,7 @@ private:
 	Service(const Service&);
 	Service& operator=(const Service&);
 
-	cap_t _caps;
+	capsel_t _caps;
 	UserSm _sm;
 	const char *_name;
 	Pt::portal_func _func;

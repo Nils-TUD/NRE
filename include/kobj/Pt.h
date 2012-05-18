@@ -19,7 +19,7 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <kobj/LocalEc.h>
 #include <utcb/UtcbFrame.h>
 #include <Compiler.h>
@@ -27,25 +27,25 @@
 
 namespace nul {
 
-class Pt : public KObject {
+class Pt : public ObjCap {
 public:
 	typedef ExecEnv::portal_func portal_func;
 
-	Pt(cap_t pt) : KObject(pt) {
+	Pt(capsel_t pt) : ObjCap(pt) {
 	}
-	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : KObject() {
+	Pt(LocalEc *ec,portal_func func,unsigned mtd = 0) : ObjCap() {
 		CapHolder pt;
-		Syscalls::create_pt(pt.get(),ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->cap());
-		cap(pt.release());
+		Syscalls::create_pt(pt.get(),ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
+		sel(pt.release());
 	}
-	Pt(LocalEc *ec,cap_t pt,portal_func func,unsigned mtd = 0) : KObject(pt) {
-		Syscalls::create_pt(pt,ec->cap(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->cap());
+	Pt(LocalEc *ec,capsel_t pt,portal_func func,unsigned mtd = 0) : ObjCap(pt) {
+		Syscalls::create_pt(pt,ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 	}
 	virtual ~Pt() {
 	}
 
 	void call(UtcbFrame &uf) {
-		Syscalls::call(cap());
+		Syscalls::call(sel());
 		uf._upos = 0;
 	}
 };

@@ -30,7 +30,7 @@ class ServiceRegistry {
 public:
 	class Service {
 	public:
-		Service(Child *child,const char *name,cpu_t cpu,cap_t pt)
+		Service(Child *child,const char *name,cpu_t cpu,capsel_t pt)
 			: _child(child), _name(name), _cpu(cpu), _pt(pt) {
 		}
 		~Service() {
@@ -47,7 +47,7 @@ public:
 		cpu_t cpu() const {
 			return _cpu;
 		}
-		cap_t pt() const {
+		capsel_t pt() const {
 			return _pt;
 		}
 
@@ -55,7 +55,7 @@ public:
 		Child *_child;
 		const char *_name;
 		cpu_t _cpu;
-		cap_t _pt;
+		capsel_t _pt;
 	};
 
 	ServiceRegistry() : _srvs() {

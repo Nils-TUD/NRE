@@ -19,15 +19,15 @@
 #pragma once
 
 #include <arch/Startup.h>
-#include <kobj/KObject.h>
+#include <kobj/ObjCap.h>
 #include <Syscalls.h>
 
 namespace nul {
 
-class Pd : public KObject {
+class Pd : public ObjCap {
 	friend void ::_presetup();
 
-	explicit Pd(cap_t cap,bool) : KObject(cap) {
+	explicit Pd(capsel_t cap,bool) : ObjCap(cap) {
 	}
 
 public:

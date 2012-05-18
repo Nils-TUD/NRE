@@ -53,7 +53,7 @@ void _setup(bool child) {
 		CPU &cpu = CPU::get(it->id());
 		cpu.id = it->id();
 		if(child && it->enabled()) {
-			cap_t off = cpu.id * Hip::get().service_caps();
+			capsel_t off = cpu.id * Hip::get().service_caps();
 			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
 			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);

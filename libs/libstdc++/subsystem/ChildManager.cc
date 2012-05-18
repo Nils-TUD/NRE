@@ -76,7 +76,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	Child *c = new Child(cmdline);
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		cap_t pts = _portal_caps + _child * per_child_caps();
+		capsel_t pts = _portal_caps + _child * per_child_caps();
 		c->_ptcount = _cpu_count * Portals::COUNT;
 		c->_pts = new Pt*[c->_ptcount];
 		c->_smcount = _cpu_count;
@@ -154,7 +154,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	}
 }
 
-void ChildManager::Portals::startup(cap_t pid) {
+void ChildManager::Portals::startup(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -185,7 +185,7 @@ void ChildManager::Portals::startup(cap_t pid) {
 	}
 }
 
-void ChildManager::Portals::initcaps(cap_t pid) {
+void ChildManager::Portals::initcaps(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -194,12 +194,12 @@ void ChildManager::Portals::initcaps(cap_t pid) {
 
 	// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
 	// grabs them afterwards with this portal
-	uf.delegate(c->_pd->cap(),0);
-	uf.delegate(c->_ec->cap(),1);
-	uf.delegate(c->_sc->cap(),2);
+	uf.delegate(c->_pd->sel(),0);
+	uf.delegate(c->_ec->sel(),1);
+	uf.delegate(c->_sc->sel(),2);
 }
 
-void ChildManager::Portals::reg(cap_t pid) {
+void ChildManager::Portals::reg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -230,7 +230,7 @@ void ChildManager::Portals::reg(cap_t pid) {
 	}
 }
 
-void ChildManager::Portals::unreg(cap_t pid) {
+void ChildManager::Portals::unreg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -256,7 +256,7 @@ void ChildManager::Portals::unreg(cap_t pid) {
 	}
 }
 
-void ChildManager::Portals::getservice(cap_t pid) {
+void ChildManager::Portals::getservice(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	Child *c = cm->get_child(pid);
@@ -284,7 +284,7 @@ void ChildManager::Portals::getservice(cap_t pid) {
 	}
 }
 
-void ChildManager::Portals::map(cap_t) {
+void ChildManager::Portals::map(capsel_t) {
 	UtcbFrameRef uf;
 	// TODO we have to manage the resources!
 	try {
@@ -305,7 +305,7 @@ void ChildManager::Portals::map(cap_t) {
 	}
 }
 
-void ChildManager::Portals::pf(cap_t pid) {
+void ChildManager::Portals::pf(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	static UserSm sm;
 	UtcbExcFrameRef uf;
