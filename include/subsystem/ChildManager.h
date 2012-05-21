@@ -82,6 +82,9 @@ private:
 	}
 	void destroy_child(capsel_t pid) {
 		size_t i = (pid - _portal_caps) / per_child_caps();
+		// TODO how to really kill childs? as it seems, revoking the Pd cap and so on, doesn't kill
+		// it. I.e. if there are multiple Ecs and one of them faults, the others can continue to run
+		// So, how do we know whether a child is really dead?
 		// TODO what if somebody is still using it?
 		Child *c = _childs[i];
 		_childs[i] = 0;

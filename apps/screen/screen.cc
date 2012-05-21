@@ -30,6 +30,10 @@ int main() {
 	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
+	UtcbFrame uf;
+	uf.add_typed(XltItem(Crd(CPU::current().map_pt->sel(),0,Caps::TYPE_CAP | Caps::ALL)));
+	CPU::current().reg_pt->call(uf);
+
 	Screen::get().clear();
 	Serial::get().init();
 	Log::get().writef("I am the screen service!!\n");

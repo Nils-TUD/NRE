@@ -136,7 +136,21 @@ public:
 		_utcb->crd = crd.value();
 	}
 
+	void translate(capsel_t cap) {
+		add_typed(XltItem(Crd(cap,0,DESC_CAP_ALL)));
+	}
+	void translate(const CapRange& range) {
+		size_t count = range.count();
+		uintptr_t start = range.start();
+		while(count > 0) {
+			uint minshift = Util::minshift(start,count);
+			add_typed(XltItem(Crd(start,minshift,range.attr())));
+			start += 1 << minshift;
+			count -= 1 << minshift;
+		}
+	}
 	void delegate(capsel_t cap,uint hotspot = 0,uint flags = 0) {
+		// TODO access rights
 		add_typed(DelItem(Crd(cap,0,DESC_CAP_ALL),flags,hotspot));
 	}
 	void delegate(const CapRange& range,uint flags = 0) {

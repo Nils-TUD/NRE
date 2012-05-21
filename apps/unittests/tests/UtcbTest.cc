@@ -79,7 +79,7 @@ static void test_nesting() {
 		WVPASSEQ(c,1);
 	}
 	WVPASSEQ(uf.typed(),2UL);
-	WVPASSEQ(uf.untyped(),3UL);
+	WVPASSEQ(uf.untyped(),Util::blockcount(sizeof(1) + sizeof(1ULL),sizeof(word_t)));
 
 	pt.call(uf);
 
