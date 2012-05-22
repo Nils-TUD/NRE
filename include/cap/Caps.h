@@ -60,8 +60,32 @@ public:
 	static void allocate(const CapRange& caps) {
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(0,31,caps.attr()));
-		uf << caps;
-		CPU::current().map_pt->call(uf);
+		CapRange cr = caps;
+		size_t count = cr.count();
+		while(count > 0) {
+			uf.clear();
+			if(cr.hotspot()) {
+				// if start and hotspot are different, we have to check whether it fits in the utcb
+				uintptr_t diff = cr.hotspot() ^ cr.start();
+				if(diff) {
+					// the lowest bit that's different defines how many we can map with one Crd.
+					// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
+					unsigned at_once = Util::bsf(diff);
+					if((1 << at_once) < count)
+						cr.count(Util::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
+				}
+			}
+
+			uf << cr;
+			CPU::current().map_pt->call(uf);
+
+			// adjust start and hotspot for the next round
+			cr.start(cr.start() + cr.count());
+			if(cr.hotspot())
+				cr.hotspot(cr.hotspot() + cr.count());
+			count -= cr.count();
+			cr.count(count);
+		}
 	}
 
 	static void free(const CapRange&) {

@@ -24,7 +24,7 @@ const TestCase delegateperf = {
 	"Delegate-performance",test_delegate
 };
 
-static const unsigned tries = 10000;
+static const size_t tries = 10000;
 static uint64_t results[tries];
 
 static void portal_test(capsel_t) {
@@ -42,7 +42,7 @@ static void test_delegate() {
 	tac = Util::tsc();
 	rdtsc = tac - tic;
 	UtcbFrame uf;
-	for(unsigned i = 0; i < tries; i++) {
+	for(size_t i = 0; i < tries; i++) {
 		tic = Util::tsc();
 		uf.reset();
 		uf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
@@ -51,10 +51,11 @@ static void test_delegate() {
 		ipc_duration = tac - tic - rdtsc;
 		min = Util::min(min,ipc_duration);
 		max = Util::max(max,ipc_duration);
+		Log::get().writef("i=%zu\n",i);
 		results[i] = ipc_duration;
 	}
 	uint64_t avg = 0;
-	for(unsigned i = 0; i < tries; i++)
+	for(size_t i = 0; i < tries; i++)
 		avg += results[i];
 
 	avg = avg / tries;

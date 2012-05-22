@@ -29,7 +29,7 @@ const TestCase regionlist = {
 };
 
 static void test_reglist() {
-	uintptr_t src;
+	uintptr_t src = 0;
 
 	{
 		RegionList l;

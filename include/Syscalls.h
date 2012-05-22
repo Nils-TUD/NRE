@@ -160,8 +160,8 @@ public:
 	static inline void create_ec(capsel_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
 			ECType type,capsel_t dstpd) {
 		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
-		        reinterpret_cast<SyscallABI::arg_t>(utcb) | cpunr,
-		        reinterpret_cast<SyscallABI::arg_t>(esp),
+		        reinterpret_cast<word_t>(utcb) | cpunr,
+		        reinterpret_cast<word_t>(esp),
 		        excpt_base);
 	}
 

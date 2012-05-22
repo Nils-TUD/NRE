@@ -26,9 +26,7 @@ namespace nul {
 
 class SyscallABI {
 public:
-	typedef uint64_t arg_t;
-
-	static inline void syscall(arg_t w0) {
+	static inline void syscall(word_t w0) {
 		asm volatile (
 			"syscall"
 			: "+D" (w0)
@@ -38,7 +36,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1) {
+	static inline void syscall(word_t w0,word_t w1) {
 		asm volatile (
 			"syscall"
 			: "+D" (w0)
@@ -48,7 +46,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2) {
+	static inline void syscall(word_t w0,word_t w1,word_t w2) {
 		asm volatile (
 			"syscall"
 			: "+D" (w0)
@@ -58,7 +56,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2,arg_t w3) {
+	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3) {
 		asm volatile (
 			"syscall"
 			: "+D" (w0)
@@ -68,8 +66,8 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2,arg_t w3,arg_t w4) {
-	    register arg_t r8 asm ("r8") = w4;
+	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3,word_t w4) {
+	    register word_t r8 asm ("r8") = w4;
 		asm volatile (
 			"syscall"
 			: "+D" (w0)

@@ -36,7 +36,7 @@ public:
 	}
 
 private:
-	Screen() : OStream() {
+	Screen() : OStream(), _col(), _row() {
 	}
 	void move();
 

@@ -19,4 +19,5 @@
 #pragma once
 
 #define REG(X)				e##X
-#define KERNEL_START_ADDR	0x80000000
+#define KERNEL_START_ADDR	0xC0000000
+#define MOD_START_ADDR		0xB0000000

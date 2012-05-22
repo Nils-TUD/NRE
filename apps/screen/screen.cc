@@ -30,9 +30,9 @@ int main() {
 	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
-	UtcbFrame uf;
+	/*UtcbFrame uf;
 	uf.add_typed(XltItem(Crd(CPU::current().map_pt->sel(),0,Caps::TYPE_CAP | Caps::ALL)));
-	CPU::current().reg_pt->call(uf);
+	CPU::current().reg_pt->call(uf);*/
 
 	Screen::get().clear();
 	Serial::get().init();
@@ -54,5 +54,5 @@ static void portal_write(capsel_t pid) {
 	UtcbFrameRef uf;
 	uint i;
 	uf >> i;
-	Serial::get().writef("Request on cpu %u from %u: %u\n",Ec::current()->cpu(),pid,i);
+	Screen::get().writef("Request on cpu %u from %u: %u\n",Ec::current()->cpu(),pid,i);
 }

@@ -21,7 +21,6 @@
 #include <utcb/UtcbFrame.h>
 #include <cap/CapSpace.h>
 #include <kobj/Pt.h>
-#include <stream/Serial.h>
 #include <CPU.h>
 
 namespace nul {

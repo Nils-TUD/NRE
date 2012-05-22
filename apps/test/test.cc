@@ -22,8 +22,27 @@
 #include <kobj/Sm.h>
 #include <service/Client.h>
 #include <stream/OStringStream.h>
+#include <stream/Serial.h>
+#include <cap/Caps.h>
+#include <exception>
 
 using namespace nul;
+
+extern "C" void abort();
+
+static void verbose_terminate() {
+	// TODO put that in abort or something?
+	try {
+		throw;
+	}
+	catch(const Exception& e) {
+		e.write(Serial::get());
+	}
+	catch(...) {
+		Serial::get().writef("Uncatched, unknown exception\n");
+	}
+	abort();
+}
 
 static void write(void *) {
 	Client scr("screen");
@@ -35,6 +54,11 @@ static void write(void *) {
 }
 
 int main() {
+	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Serial::get().init();
+
+	std::set_terminate(verbose_terminate);
+
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())

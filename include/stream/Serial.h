@@ -42,9 +42,10 @@ public:
 	virtual void write(char c);
 
 private:
-	explicit Serial() : OStream() {
+	explicit Serial() : OStream(), _inited(false) {
 	}
 
+	bool _inited;
 	static Serial _inst;
 };
 

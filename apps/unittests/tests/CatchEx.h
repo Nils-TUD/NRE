@@ -18,6 +18,6 @@
 
 #pragma once
 
-#define REG(X)				r##X
-#define KERNEL_START_ADDR	0x0000800000000000
-#define MOD_START_ADDR		0x0000001000000000
+#include <Test.h>
+
+extern const nul::test::TestCase catchex;

@@ -47,6 +47,7 @@ public:
 	void call(UtcbFrame &uf) {
 		Syscalls::call(sel());
 		uf._upos = 0;
+		uf._tpos = 0;
 	}
 };
 

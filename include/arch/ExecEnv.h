@@ -47,6 +47,8 @@ public:
 		// TODO actually, its not good to put that here, because its just valid for the root-task
 		PHYS_START		= 0x10000000,
 		PHYS_START_PAGE	= PHYS_START >> PAGE_SHIFT,
+		MOD_START		= MOD_START_ADDR,
+		MOD_START_PAGE	= MOD_START >> PAGE_SHIFT,
 		MAX_STACKS		= 80	// TODO remove
 	};
 

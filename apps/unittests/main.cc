@@ -36,6 +36,7 @@
 #include "tests/UtcbTest.h"
 #include "tests/RegionListTest.h"
 #include "tests/DelegatePerf.h"
+#include "tests/CatchEx.h"
 
 using namespace nul;
 using namespace nul::test;
@@ -47,9 +48,10 @@ PORTAL static void portal_startup(capsel_t);
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
 	pingpong,
+	catchex,
 	//delegateperf,
-	utcbtest,
-	regionlist
+	//utcbtest,
+	//regionlist
 };
 
 void verbose_terminate() {

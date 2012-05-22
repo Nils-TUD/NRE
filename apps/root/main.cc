@@ -56,6 +56,7 @@ uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 // TODO with the service system we have the problem that one client that uses a service on multiple
 // CPUs is treaten as a different client
 // TODO KObjects reference-counted? copying, ...
+// TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
 
 void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -100,15 +101,21 @@ int main() {
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
 	Log::get().writef("Memory:\n");
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d\n",it->addr,it->size,it->type);
+		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
 		if(it->type == Hip_mem::AVAILABLE) {
-			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,
-					Util::blockcount(it->size,ExecEnv::PAGE_SIZE),Caps::TYPE_MEM | Caps::MEM_RWX,
-					ExecEnv::PHYS_START_PAGE + (it->addr >> ExecEnv::PAGE_SHIFT)));
-			Memory::get().free(ExecEnv::PHYS_START + it->addr,it->size);
+			uintptr_t start = it->addr >> ExecEnv::PAGE_SHIFT;
+			uintptr_t addr = start + ExecEnv::PHYS_START_PAGE;
+			uintptr_t end = ExecEnv::MOD_START >> ExecEnv::PAGE_SHIFT;
+			size_t pages = Util::blockcount(it->size,ExecEnv::PAGE_SIZE);
+			if(addr >= end)
+				continue;
+			if(addr + pages > end)
+				pages = end - addr;
+			Caps::allocate(CapRange(start,pages,Caps::TYPE_MEM | Caps::MEM_RWX,addr));
+			Memory::get().free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
 		}
 	}
-	Memory::get().write(Serial::get());
+	Memory::get().write(Log::get());
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
@@ -141,25 +148,33 @@ static void start_childs() {
 	ChildManager *mng = new ChildManager();
 	int i = 0;
 	const Hip &hip = Hip::get();
+	uintptr_t start = ExecEnv::MOD_START_PAGE;
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
+			if((start << ExecEnv::PAGE_SHIFT) + it->size > ExecEnv::KERNEL_START)
+				throw Exception("Out of memory for modules");
 			// map the memory of the module
 			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
-					Caps::TYPE_MEM | Caps::MEM_RWX,
-					ExecEnv::PHYS_START_PAGE + (it->addr >> ExecEnv::PAGE_SHIFT)));
+					Caps::TYPE_MEM | Caps::MEM_RWX,start));
+			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
+			start += it->size >> ExecEnv::PAGE_SHIFT;
 			// we assume that the cmdline does not cross pages
-			if(it->aux)
-				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,
-						ExecEnv::PHYS_START_PAGE + (it->aux >> ExecEnv::PAGE_SHIFT)));
-			uintptr_t aux = it->aux + ExecEnv::PHYS_START;
+			char *aux = 0;
 			if(it->aux) {
+				if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
+					throw Exception("Out of memory for modules");
+				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
+				aux = reinterpret_cast<char*>((start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
+				start++;
 				// ensure that its terminated at the end of the page
-				char *end = reinterpret_cast<char*>(Util::roundup<uintptr_t>(aux,ExecEnv::PAGE_SIZE) - 1);
+				uintptr_t endaddr = Util::roundup<uintptr_t>(reinterpret_cast<uintptr_t>(aux),ExecEnv::PAGE_SIZE) - 1;
+				char *end = reinterpret_cast<char*>(endaddr);
 				*end = '\0';
 			}
 
-			mng->load(ExecEnv::PHYS_START + it->addr,it->size,reinterpret_cast<char*>(aux));
+			Log::get().writef("Loading module @ %p .. %p\n",addr,addr + it->size);
+			mng->load(addr,it->size,aux);
 		}
 	}
 }
@@ -175,7 +190,7 @@ static void portal_hvmap(capsel_t) {
 static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
-	uf->rip = *reinterpret_cast<uint32_t*>(uf->rsp);
+	uf->rip = *reinterpret_cast<word_t*>(uf->rsp);
 }
 
 static void mythread(void *) {

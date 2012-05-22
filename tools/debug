@@ -1,0 +1,77 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]; then
+	echo "Usage: $0 <bootscript> [<symbol-file> ...] [-h <hypervisor>]" 1>&2
+	exit 1
+fi
+
+build="build/$NOVA_TARGET-$NOVA_BUILD"
+breakvmrun=0
+bootscript="$1"
+first=""
+syms=""
+hv=""
+while [ $# -gt 1 ]; do
+	case "$2" in
+		-b)
+			breakvmrun=1
+			;;
+		-h)
+			hv="$3"
+			shift
+			;;
+		*)
+			if [ "$first" = "" ]; then
+				first="$2"
+			else
+				syms="$syms $2"
+			fi
+			;;
+	esac
+	shift
+done
+
+tmp=$(tempfile)
+cat <<EOF > $tmp
+target remote localhost:1234
+display/i \$pc
+EOF
+
+# find out the offset to pass to gdb by searching for the offset of the text load segment
+if [ "$hv" != "" ]; then
+	allsyms="$first$syms"
+else
+	allsyms="$syms"
+fi
+
+if [ "$allsyms" != "" ]; then
+	for i in $allsyms; do
+		if [[ "$i" =~ ^(.*?)=(0x[a-fA-F0-9]+)$ ]]; then
+			addr=${BASH_REMATCH[2]}
+			i=${BASH_REMATCH[1]}
+		else
+			addr=`readelf -S $i | grep -m 1 '\.text' | gawk -- '{ print "0x"$5 }'`
+		fi
+		echo "add-symbol-file $i $addr" >> $tmp
+	done
+fi
+
+if [ "$hv" != "" ] && [ $breakvmrun -eq 1 ]; then
+	# find the vmrun instruction and use it as a breakpoint (disabled by default)
+	baddr=`objdump -d $hv | grep '0f 01 d8' | gawk 'match($0,/^([a-f0-9]+):/,res) { print res[1] }'`
+	echo "b *0x$baddr" >> $tmp
+	echo "disable 1" >> $tmp
+fi
+
+# the problem is that qemu terminates if it receives SIGINT. so, if we want to interrupt the
+# execution and examine the state in gdb by pressing ^C, qemu terminates. to prevent that
+# we use a small program (ignoreint) no block SIGINT, which replaces itself with the given program afterwards
+$build/tools/ignoreint/ignoreint $bootscript --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$BUILD_DIR" \
+	--qemu-append='-S -s' > log.txt &
+if [ "$hv" != "" ]; then
+	gdbtui $hv --command=$tmp
+else
+	gdbtui $first --command=$tmp 
+fi
+rm -f $tmp
+

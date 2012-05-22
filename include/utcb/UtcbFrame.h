@@ -22,6 +22,7 @@
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
 #include <stream/OStream.h>
+#include <stream/Serial.h>
 #include <kobj/Ec.h>
 #include <String.h>
 #include <cstring>
@@ -116,6 +117,9 @@ public:
 		_upos = _tpos = 0;
 	}
 
+	size_t freewords() const {
+		return _utcb->freewords();
+	}
 	size_t untyped() const {
 		return _utcb->untyped;
 	}
@@ -158,7 +162,7 @@ public:
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {
-			uint minshift = Util::minshift(start,count);
+			uint minshift = Util::minshift(start | hotspot,count);
 			add_typed(DelItem(Crd(start,minshift,range.attr()),flags,hotspot));
 			start += 1 << minshift;
 			hotspot += 1 << minshift;

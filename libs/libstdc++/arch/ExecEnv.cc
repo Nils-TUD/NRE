@@ -17,6 +17,8 @@
  */
 
 #include <arch/ExecEnv.h>
+#include <kobj/UserSm.h>
+#include <ScopedLock.h>
 #include <Compiler.h>
 #include <Util.h>
 
@@ -26,6 +28,8 @@ void *ExecEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecEnv::
 size_t ExecEnv::_stack;
 
 void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
+	static UserSm sm;
+	ScopedLock<UserSm> guard(&sm);
 	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
 	_stacks[_stack][--stack_top] = ec;
 	_stacks[_stack][--stack_top] = pd;

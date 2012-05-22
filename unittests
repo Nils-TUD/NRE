@@ -1,5 +1,5 @@
 #!/usr/bin/env novaboot
 # -*-sh-*-
-QEMU_FLAGS=-cpu phenom -m 256 -smp 2
-HYPERVISOR_PARAMS=spinner
+KERNEL=bin/apps/chainloader
+bin/apps/hypervisor spinner serial
 bin/apps/unittests

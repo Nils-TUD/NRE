@@ -33,14 +33,26 @@ public:
 	uintptr_t start() const {
 		return _start;
 	}
+	void start(uintptr_t start) {
+		_start = start;
+	}
 	size_t count() const {
 		return _count;
+	}
+	void count(size_t count) {
+		_count = count;
 	}
 	uint attr() const {
 		return _attr;
 	}
+	void attr(uint attr) {
+		_attr = attr;
+	}
 	uintptr_t hotspot() const {
 		return _hotspot;
+	}
+	void hotspot(uintptr_t hotspot) {
+		_hotspot = hotspot;
 	}
 
 private:

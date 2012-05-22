@@ -19,6 +19,7 @@
 #include <service/ServiceInstance.h>
 #include <service/Service.h>
 #include <utcb/UtcbFrame.h>
+#include <stream/Serial.h>
 #include <ScopedLock.h>
 #include <ScopedPtr.h>
 

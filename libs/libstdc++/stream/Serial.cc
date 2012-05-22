@@ -31,10 +31,11 @@ void Serial::init() {
 	Ports::out<uint8_t>(port + 3,0x03); // 8 bits, no parity, one stop bit
 	Ports::out<uint8_t>(port + 2,0xC7); // Enable FIFO, clear them, with 14-byte threshold
 	Ports::out<uint8_t>(port + 4,0x0B); // IRQs enabled, RTS/DSR set
+	_inited = true;
 }
 
 void Serial::write(char c) {
-	if(c == '\0')
+	if(c == '\0' || !_inited)
 		return;
 
 	while((Ports::in<uint8_t>(port + 5) & 0x20) == 0)

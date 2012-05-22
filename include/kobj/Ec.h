@@ -22,7 +22,9 @@
 #include <cap/CapHolder.h>
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
+#include <kobj/UserSm.h>
 #include <utcb/Utcb.h>
+#include <ScopedLock.h>
 #include <Syscalls.h>
 
 namespace nul {
@@ -43,6 +45,8 @@ protected:
 			  _tls_idx(0), _tls() {
 		if(!_utcb) {
 			// TODO
+			static UserSm sm;
+			ScopedLock<UserSm> guard(&sm);
 			_utcb = reinterpret_cast<Utcb*>(_utcb_addr);
 			_utcb_addr -= 0x1000;
 		}

@@ -26,9 +26,7 @@ namespace nul {
 
 class SyscallABI {
 public:
-	typedef uint32_t arg_t;
-
-	static inline void syscall(arg_t w0) {
+	static inline void syscall(word_t w0) {
 		asm volatile (
 			"mov %%esp, %%ecx;"
 			"mov $1f, %%edx;"
@@ -36,13 +34,13 @@ public:
 			"1: ;"
 			: "+a" (w0)
 			:
-			: "memory"
+			: "ecx", "edx", "memory"
 		);
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1) {
-		arg_t dummy;
+	static inline void syscall(word_t w0,word_t w1) {
+		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
 			"mov $1f, %%edx;"
@@ -55,8 +53,8 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2) {
-		arg_t dummy;
+	static inline void syscall(word_t w0,word_t w1,word_t w2) {
+		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
 			"mov $1f, %%edx;"
@@ -69,8 +67,8 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2,arg_t w3) {
-		arg_t dummy;
+	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3) {
+		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
 			"mov $1f, %%edx;"
@@ -83,8 +81,8 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(arg_t w0,arg_t w1,arg_t w2,arg_t w3,arg_t w4) {
-		arg_t dummy;
+	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3,word_t w4) {
+		word_t dummy;
 		asm volatile (
 			"push %%ebp;"
 			"mov %6, %%ebp;"

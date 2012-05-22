@@ -2,13 +2,13 @@
 
 import sys, os
 
-target = os.environ.get('TARGET')
+target = os.environ.get('NOVA_TARGET')
 if target == 'x86_32':
 	cross = 'i686-pc-nulnova'
 elif target == 'x86_64':
 	cross = 'x86_64-pc-nulnova'
 else:
-	print "Please define TARGET to x86_32 or x86_64 first!"
+	print "Please define NOVA_TARGET to x86_32 or x86_64 first!"
 	Exit(1)
 crossver = '4.6.1'
 crossdir = os.path.abspath('../cross/' + target + '/dist')
@@ -30,6 +30,16 @@ env = Environment(
 	RANLIB = cross + '-ranlib',
 )
 
+btype = os.environ.get('NOVA_BUILD')
+if btype == 'debug':
+	env.Append(CXXFLAGS = ' -O0 -g')
+	env.Append(CFLAGS = ' -O0 -g')
+else:
+	env.Append(CXXFLAGS = ' -O3 -g -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CFLAGS = ' -O3 -g -DNDEBUG -fno-omit-frame-pointer')
+	btype = 'release'
+builddir = 'build/' + target + '-' + btype
+
 verbose = ARGUMENTS.get('VERBOSE',0);
 if int(verbose) == 0:
 	hostenv['ASCOMSTR'] = env['ASCOMSTR'] = "AS $TARGET"
@@ -38,20 +48,6 @@ if int(verbose) == 0:
 	hostenv['LINKCOMSTR'] = env['LINKCOMSTR'] = "LD $TARGET"
 	hostenv['ARCOMSTR'] = env['ARCOMSTR'] = "AR $TARGET"
 	hostenv['RANLIBCOMSTR'] = env['RANLIBCOMSTR'] = "RANLIB $TARGET"
-
-builddir = 'build/' + target
-debug = ARGUMENTS.get('debug', 0)
-env.Append(CXXFLAGS = ' -O0 -g')
-env.Append(CFLAGS = ' -O0 -g')
-#env.Append(CXXFLAGS = ' -g -O3 -DNDEBUG')
-#env.Append(CFLAGS = ' -g -O3 -DNDEBUG')
-
-#if int(debug):
-	#builddir = 'build/debug'
-	#env.Append(CXXFLAGS = ' -O0')
-#else:
-	#builddir = 'build/release'
-	#env.Append(CXXFLAGS = ' -O2')
 
 env.Append(
 	ARCH = target,
