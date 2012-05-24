@@ -26,6 +26,7 @@
 #include <utcb/Utcb.h>
 #include <mem/RegionList.h>
 #include <mem/Memory.h>
+#include <mem/DataSpace.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
 #include <subsystem/ChildManager.h>
@@ -103,6 +104,7 @@ int main() {
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
 		if(it->type == Hip_mem::AVAILABLE) {
+			// map it to our physical memory area, but take care that it fits in there
 			uintptr_t start = it->addr >> ExecEnv::PAGE_SHIFT;
 			uintptr_t addr = start + ExecEnv::PHYS_START_PAGE;
 			uintptr_t end = ExecEnv::MOD_START >> ExecEnv::PAGE_SHIFT;
@@ -122,6 +124,12 @@ int main() {
 			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
 					it->package,it->core,it->thread,it->flags);
 		}
+	}
+
+	{
+		UtcbFrame uf;
+		DataSpace ds;
+		uf >> ds;
 	}
 
 	start_childs();

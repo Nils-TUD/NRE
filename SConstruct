@@ -35,8 +35,8 @@ if btype == 'debug':
 	env.Append(CXXFLAGS = ' -O0 -g')
 	env.Append(CFLAGS = ' -O0 -g')
 else:
-	env.Append(CXXFLAGS = ' -O3 -g -DNDEBUG -fno-omit-frame-pointer')
-	env.Append(CFLAGS = ' -O3 -g -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CXXFLAGS = ' -O3 -DNDEBUG')
+	env.Append(CFLAGS = ' -O3 -DNDEBUG')
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 

@@ -18,9 +18,16 @@
 
 #pragma once
 
+#include <kobj/Sm.h>
+#include <utcb/UtcbFrame.h>
+#include <CPU.h>
+
 namespace nul {
 
 class DataSpace {
+	friend class DataSpaceManager;
+	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
+
 public:
 	enum Type {
 		ANONYMOUS,
@@ -36,14 +43,23 @@ public:
 		RWX	= R | W | X,
 	};
 
-	DataSpace(size_t size,Type type,Perm perm,uintptr_t addr = 0)
-		: _addr(addr), _size(size), _perm(perm), _type(type) {
+	DataSpace() : _virt(), _origin(), _size(), _perm(), _type(), _own(false), _sel(ObjCap::INVALID) {
 	}
-	virtual ~DataSpace() {
+	DataSpace(size_t size,Type type,Perm perm,uintptr_t origin = 0)
+		: _virt(), _origin(origin), _size(size), _perm(perm), _type(type), _own(true), _sel() {
+		CapHolder cap;
+		Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
+		_sel = cap.release();
 	}
 
-	uintptr_t addr() const {
-		return _addr;
+	capsel_t sel() const {
+		return _sel;
+	}
+	uintptr_t virt() const {
+		return _virt;
+	}
+	uintptr_t origin() const {
+		return _origin;
 	}
 	size_t size() const {
 		return _size;
@@ -51,25 +67,51 @@ public:
 	Perm perm() const {
 		return _perm;
 	}
-
-	virtual void map() {
-		UtcbFrame uf;
-		uf << _addr << _size << _perm << _type;
-		CPU::current().map_pt->call(uf);
-		uf >> _addr;
+	Type type() const {
+		return _type;
 	}
-	virtual void unmap() {
+
+	void map() {
+		_virt = domap();
+	}
+	void unmap() {
 		// TODO
 	}
 
 private:
-	DataSpace(const DataSpace&);
-	DataSpace& operator=(const DataSpace&);
+	uintptr_t domap() {
+		UtcbFrame uf;
+		if(_own)
+			uf.delegate(_sel);
+		else
+			uf.translate(_sel);
+		uf << _virt << _origin << _size << _perm << _type;
+		CPU::current().map_pt->call(uf);
+		// TODO error-handling
+		uintptr_t res;
+		uf >> res;
+		return res;
+	}
+	void dounmap() {
+		// TODO
+	}
 
-	uintptr_t _addr;
+	uintptr_t _virt;
+	uintptr_t _origin;
 	size_t _size;
 	Perm _perm;
 	Type _type;
+	bool _own;
+	capsel_t _sel;
 };
+
+UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
+	uf >> ds._virt >> ds._origin >> ds._size >> ds._type >> ds._perm;
+	TypedItem ti;
+	uf.get_typed(ti);
+	ds._sel = ti.crd().cap();
+	ds._own = false;
+	return uf;
+}
 
 }
