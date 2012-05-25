@@ -36,8 +36,7 @@ class Memory {
 	};
 
 public:
-	static Memory &get() {
-		return _inst;
+	Memory() : _regs() {
 	}
 
 	uintptr_t alloc(size_t size) {
@@ -92,8 +91,6 @@ public:
 	}
 
 private:
-	Memory() : _regs() {
-	}
 	Memory(const Memory&);
 	Memory& operator=(const Memory&);
 
@@ -113,7 +110,6 @@ private:
 	}
 
 	Region _regs[MAX_REGIONS];
-	static Memory _inst;
 };
 
 }

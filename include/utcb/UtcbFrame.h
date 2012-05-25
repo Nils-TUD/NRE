@@ -139,6 +139,12 @@ public:
 	void set_receive_crd(Crd crd) {
 		_utcb->crd = crd.value();
 	}
+	Crd get_translate_crd() const {
+		return Crd(_utcb->crd_translate);
+	}
+	void set_translate_crd(Crd crd) {
+		_utcb->crd_translate = crd.value();
+	}
 
 	void translate(capsel_t cap) {
 		add_typed(XltItem(Crd(cap,0,DESC_CAP_ALL)));

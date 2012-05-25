@@ -22,13 +22,11 @@
 using namespace nul;
 using namespace nul::test;
 
-static void test_reglist();
-
 const TestCase regionlist = {
 	"Regionlist",test_reglist
 };
 
-static void test_reglist() {
+void test_reglist() {
 	uintptr_t src = 0;
 
 	{

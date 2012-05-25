@@ -20,6 +20,7 @@
 
 #include <kobj/Pt.h>
 #include <subsystem/ServiceRegistry.h>
+#include <mem/DataSpaceManager.h>
 
 namespace nul {
 
@@ -37,7 +38,7 @@ class ChildManager {
 	class Portals {
 	public:
 		enum {
-			COUNT	= 7
+			COUNT	= 9
 		};
 
 		PORTAL static void startup(capsel_t pid);
@@ -45,7 +46,9 @@ class ChildManager {
 		PORTAL static void reg(capsel_t pid);
 		PORTAL static void unreg(capsel_t pid);
 		PORTAL static void getservice(capsel_t pid);
+		PORTAL static void allocio(capsel_t);
 		PORTAL static void map(capsel_t pid);
+		PORTAL static void unmap(capsel_t pid);
 		PORTAL static void pf(capsel_t pid);
 	};
 
@@ -82,14 +85,15 @@ private:
 	}
 	void destroy_child(capsel_t pid) {
 		size_t i = (pid - _portal_caps) / per_child_caps();
-		// TODO how to really kill childs? as it seems, revoking the Pd cap and so on, doesn't kill
-		// it. I.e. if there are multiple Ecs and one of them faults, the others can continue to run
-		// So, how do we know whether a child is really dead?
-		// TODO what if somebody is still using it?
 		Child *c = _childs[i];
-		_childs[i] = 0;
-		_registry.remove(c);
-		delete c;
+		if(--c->_refs == 0) {
+			// note that we're safe here because we only get here if there is only one Ec left and
+			// this one has just caused a fault. thus, there can't be somebody else using this
+			// client instance
+			_childs[i] = 0;
+			_registry.remove(c);
+			delete c;
+		}
 	}
 
 	static inline size_t per_child_caps() {
@@ -102,10 +106,11 @@ private:
 	size_t _child;
 	Child *_childs[MAX_CHILDS];
 	capsel_t _portal_caps;
+	DataSpaceManager _dsm;
 	ServiceRegistry _registry;
 	UserSm _sm;
 	LocalEc *_ecs[Hip::MAX_CPUS];
-	LocalEc *_regecs[Hip::MAX_CPUS];
+	LocalEc *_capecs[Hip::MAX_CPUS];
 	static size_t _cpu_count;
 };
 

@@ -12,16 +12,26 @@
 #include <arch/Types.h>
 #include <ex/Exception.h>
 #include <stream/OStream.h>
+#include <mem/DataSpace.h>
 #include <Util.h>
 #include <assert.h>
+
+extern void test_reglist();
 
 namespace nul {
 
 class RegionList {
+	friend void ::test_reglist();
+
 	enum {
-		MAX_REGIONS		= 64
+		MAX_REGIONS		= 64,
+		MAX_DS			= 32
 	};
 
+	struct DSInst {
+		uintptr_t addr;
+		capsel_t unmapsel;
+	};
 	struct Region {
 		uintptr_t src;
 		uintptr_t begin;
@@ -31,17 +41,16 @@ class RegionList {
 
 public:
 	enum Perm {
-		// note that this equals the values in a Crd
-		R	= 1 << 0,
-		W	= 1 << 1,
-		X	= 1 << 2,
+		R	= DataSpace::R,
+		W	= DataSpace::W,
+		X	= DataSpace::X,
 		M	= 1 << 3,	// mapped
 		RW	= R | W,
 		RX	= R | X,
 		RWX	= R | W | X,
 	};
 
-	RegionList() : _regs() {
+	RegionList() : _regs(), _ds() {
 	}
 
 	size_t regcount() const {
@@ -88,6 +97,29 @@ public:
 		const Region *r = get(addr,1);
 		assert(r);
 		add(addr,ExecEnv::PAGE_SIZE,r->src + addr - r->begin,r->flags & ~M);
+	}
+
+	void add(const DataSpace& ds,uintptr_t addr) {
+		for(size_t i = 0; i < MAX_DS; ++i) {
+			if(_ds[i].unmapsel == 0) {
+				_ds[i].unmapsel = ds.unmapsel();
+				_ds[i].addr = addr;
+				add(addr,ds.size(),ds.virt(),ds.perm());
+				return;
+			}
+		}
+		throw Exception("No free dataspace slot");
+	}
+
+	void remove(const DataSpace& ds) {
+		for(size_t i = 0; i < MAX_DS; ++i) {
+			if(_ds[i].unmapsel == ds.unmapsel()) {
+				_ds[i].unmapsel = 0;
+				remove(_ds[i].addr,ds.size());
+				return;
+			}
+		}
+		throw Exception("Dataspace not found");
 	}
 
 	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
@@ -179,6 +211,7 @@ private:
 	}
 
 	Region _regs[MAX_REGIONS];
+	DSInst _ds[MAX_DS];
 };
 
 }

@@ -17,6 +17,7 @@
 #include <stream/Log.h>
 #include <service/Service.h>
 #include <service/ServiceInstance.h>
+#include <mem/DataSpace.h>
 #include <ScopedLock.h>
 #include <CPU.h>
 
@@ -25,6 +26,14 @@ using namespace nul;
 PORTAL static void portal_write(capsel_t);
 
 int main() {
+	DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
+	ds.map();
+	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
+	ds.unmap();
+	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
+
+	while(1);
+
 	// TODO might be something else than 0x3f8
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
 	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),

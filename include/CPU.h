@@ -40,12 +40,14 @@ public:
 
 	cpu_t id;
 	Pt *map_pt;
+	Pt *unmap_pt;
+	Pt *allocio_pt;
 	Pt *reg_pt;
 	Pt *get_pt;
 	Sm *srv_sm;
 
 private:
-	CPU() : id(), map_pt(), reg_pt(), get_pt(), srv_sm() {
+	CPU() : id(), map_pt(), unmap_pt(), allocio_pt(), reg_pt(), get_pt(), srv_sm() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);

@@ -28,7 +28,7 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
 ChildManager::ChildManager() : _child(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_registry(), _sm(), _ecs(), _regecs() {
+		_dsm(), _registry(), _sm(), _ecs(), _capecs() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
@@ -38,16 +38,19 @@ ChildManager::ChildManager() : _child(), _childs(),
 				assert(tls == 0);
 				_ecs[it->id()]->set_tls(tls,this);
 			}
+			UtcbFrameRef defuf(_ecs[it->id()]->utcb());
+			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
 			{
 				// we need a dedicated Ec for the register-portal which does always accept one
 				// capability from the caller
-				_regecs[it->id()] = new LocalEc(it->id());
-				size_t tls = _regecs[it->id()]->create_tls();
+				_capecs[it->id()] = new LocalEc(it->id());
+				size_t tls = _capecs[it->id()]->create_tls();
 				assert(tls == 0);
-				_regecs[it->id()]->set_tls(tls,this);
+				_capecs[it->id()]->set_tls(tls,this);
 			}
-			UtcbFrameRef reguf(_regecs[it->id()]->utcb());
-			reguf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+			UtcbFrameRef capuf(_capecs[it->id()]->utcb());
+			capuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+			capuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
 		}
 	}
 }
@@ -57,7 +60,7 @@ ChildManager::~ChildManager() {
 		delete _childs[i];
 	for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
 		delete _ecs[i];
-		delete _regecs[i];
+		delete _capecs[i];
 	}
 }
 
@@ -90,10 +93,12 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
 			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,MTD_RSP);
 			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::initcaps,0);
-			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
+			c->_pts[idx + 3] = new Pt(_capecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
 			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
 			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::getservice,0);
-			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_ALLOCIO,Portals::allocio,0);
+			c->_pts[idx + 7] = new Pt(_capecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
 			c->_sms[cpu] = new Sm(pts + off + CapSpace::SM_SERVICE,0U);
 			c->_waits[cpu] = 0;
 		}
@@ -122,22 +127,29 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 				perms |= RegionList::W;
 			if(ph->p_flags & PF_X)
 				perms |= RegionList::X;
-			uintptr_t segaddr = Memory::get().alloc(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE));
+
+			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,perms);
+			// TODO leak, if reglist().add throws
+			_dsm.create(ds);
 			// TODO actually it would be better to do that later
-			memcpy(reinterpret_cast<void*>(segaddr),
+			memcpy(reinterpret_cast<void*>(ds.virt()),
 					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
-			memset(reinterpret_cast<void*>(segaddr + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
-			c->reglist().add(ph->p_vaddr,ph->p_memsz,segaddr,perms);
+			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
+			c->reglist().add(ds,ph->p_vaddr);
 		}
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
 		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),RegionList::RW);
-		uintptr_t hipaddr = Memory::get().alloc(ExecEnv::PAGE_SIZE);
-		c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
-		memcpy(reinterpret_cast<void*>(hipaddr),&Hip::get(),ExecEnv::PAGE_SIZE);
-		// TODO we need to adjust the hip
-		c->reglist().add(c->hip(),ExecEnv::PAGE_SIZE,hipaddr,RegionList::R);
+		// and a HIP
+		{
+			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::R);
+			_dsm.create(ds);
+			c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
+			memcpy(reinterpret_cast<void*>(ds.virt()),&Hip::get(),ExecEnv::PAGE_SIZE);
+			// TODO we need to adjust the hip
+			c->reglist().add(ds,c->hip());
+		}
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
 		c->reglist().write(Serial::get());
@@ -284,19 +296,88 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 	}
 }
 
-void ChildManager::Portals::map(capsel_t) {
+void ChildManager::Portals::allocio(capsel_t) {
 	UtcbFrameRef uf;
-	// TODO we have to manage the resources!
+	// TODO
 	try {
 		CapRange caps;
 		uf >> caps;
 		uf.clear();
-		if(caps.attr() & Caps::TYPE_MEM) {
-			uf.delegate(CapRange(caps.start() + ExecEnv::PHYS_START_PAGE,
-					caps.count(),caps.attr(),caps.hotspot()));
+		uf.delegate(caps);
+		uf << 0;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << 0;
+	}
+}
+
+void ChildManager::Portals::map(capsel_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	Child *c = cm->get_child(pid);
+	if(!c)
+		return;
+
+	// TODO locks
+	bool created = false;
+	UtcbFrameRef uf;
+	DataSpace ds;
+	try {
+		uf >> ds;
+		// create and add can throw; ensure that the state doesn't change if something throws
+		cm->_dsm.create(ds);
+		created = true;
+		uintptr_t addr = c->reglist().find_free(ds.size());
+		c->reglist().add(ds,addr);
+
+		uf.clear();
+		uf.delegate(ds.unmapsel());
+		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		uf << addr;
+	}
+	catch(const Exception& e) {
+		// TODO revoke ds-cap?
+		if(created)
+			cm->_dsm.destroy(ds.unmapsel());
+		uf.clear();
+		uf << 0;
+	}
+}
+
+static void revoke_mem(uintptr_t addr,size_t size) {
+	size_t count = size >> ExecEnv::PAGE_SHIFT;
+	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
+	while(count > 0) {
+		uint minshift = Util::minshift(start,count);
+		Syscalls::revoke(Crd(start,minshift,DESC_MEM_ALL),false);
+		start += 1 << minshift;
+		count -= 1 << minshift;
+	}
+}
+
+void ChildManager::Portals::unmap(capsel_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	Child *c = cm->get_child(pid);
+	if(!c)
+		return;
+
+	// TODO locks
+	UtcbFrameRef uf;
+	try {
+		// we can't trust the dataspace properties, except unmapsel
+		DataSpace uds;
+		uf >> uds;
+		// destroy (decrease refs) the ds
+		DataSpace *ds = cm->_dsm.destroy(uds.unmapsel());
+		// we can only revoke the memory if there are no references anymore, because we revoke it
+		// from all Pds we have delegated it to. thus, it does make no sense to remove it from the
+		// list before revoking the mem, because that would be really unpredictable.
+		if(ds) {
+			c->reglist().remove(*ds);
+			revoke_mem(ds->virt(),ds->size());
+			ds->unmap();
 		}
-		else
-			uf.delegate(caps);
+		uf.clear();
 		uf << 0;
 	}
 	catch(const Exception& e) {
@@ -307,7 +388,6 @@ void ChildManager::Portals::map(capsel_t) {
 
 void ChildManager::Portals::pf(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
-	static UserSm sm;
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);
@@ -338,6 +418,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		uintptr_t *addr,addrs[32];
 		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 				c->cmdline(),pfaddr,eip,cpu,error);
+		c->reglist().write(Serial::get());
 		Serial::get().writef("Unable to resolve fault; killing child\n");
 		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,sizeof(addrs));
 		Serial::get().writef("Backtrace:\n");

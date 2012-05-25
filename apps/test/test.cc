@@ -54,6 +54,9 @@ static void write(void *) {
 }
 
 int main() {
+	while(1);
+
+
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
 	Serial::get().init();
 

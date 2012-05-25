@@ -43,11 +43,15 @@ using namespace nul;
 
 extern "C" void abort();
 PORTAL static void portal_startup(capsel_t pid);
+PORTAL static void portal_map(capsel_t);
+PORTAL static void portal_unmap(capsel_t);
 PORTAL static void portal_hvmap(capsel_t);
 static void mythread(void *tls);
 static void start_childs();
 
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
+static Pt *hv_pt = 0;
+static Memory mem;
 
 // TODO clang!
 // TODO use dataspaces to pass around memory in an easy fashion? (and reference-counting)
@@ -73,6 +77,37 @@ void verbose_terminate() {
 	abort();
 }
 
+static void allocate(const CapRange& caps) {
+	UtcbFrame uf;
+	uf.set_receive_crd(Crd(0,31,caps.attr()));
+	CapRange cr = caps;
+	size_t count = cr.count();
+	while(count > 0) {
+		uf.clear();
+		if(cr.hotspot()) {
+			// if start and hotspot are different, we have to check whether it fits in the utcb
+			uintptr_t diff = cr.hotspot() ^ cr.start();
+			if(diff) {
+				// the lowest bit that's different defines how many we can map with one Crd.
+				// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
+				unsigned at_once = Util::bsf(diff);
+				if((1 << at_once) < count)
+					cr.count(Util::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
+			}
+		}
+
+		uf << cr;
+		hv_pt->call(uf);
+
+		// adjust start and hotspot for the next round
+		cr.start(cr.start() + cr.count());
+		if(cr.hotspot())
+			cr.hotspot(cr.hotspot() + cr.count());
+		count -= cr.count();
+		cr.count(count);
+	}
+}
+
 int main() {
 	const Hip &hip = Hip::get();
 
@@ -83,14 +118,21 @@ int main() {
 			CPU &cpu = CPU::get(it->id());
 			LocalEc *ec = new LocalEc(cpu.id);
 			ecs[it->id()] = ec;
-			cpu.map_pt = new Pt(ec,portal_hvmap);
+			cpu.map_pt = new Pt(ec,portal_map);
+			cpu.unmap_pt = new Pt(ec,portal_unmap);
+			// accept translated caps
+			UtcbFrameRef defuf(ec->utcb());
+			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+			// create the portal for allocating resources from HV for the current cpu
+			if(it->id() == CPU::current().id)
+				hv_pt = new Pt(ec,portal_hvmap);
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
 	}
 
 	// allocate serial ports and VGA memory
-	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
-	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init();
@@ -113,23 +155,17 @@ int main() {
 				continue;
 			if(addr + pages > end)
 				pages = end - addr;
-			Caps::allocate(CapRange(start,pages,Caps::TYPE_MEM | Caps::MEM_RWX,addr));
-			Memory::get().free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
+			allocate(CapRange(start,pages,Caps::TYPE_MEM | Caps::MEM_RWX,addr));
+			mem.free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
 		}
 	}
-	Memory::get().write(Log::get());
+	mem.write(Log::get());
 	Log::get().writef("CPUs:\n");
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
 			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
 					it->package,it->core,it->thread,it->flags);
 		}
-	}
-
-	{
-		UtcbFrame uf;
-		DataSpace ds;
-		uf >> ds;
 	}
 
 	start_childs();
@@ -163,7 +199,7 @@ static void start_childs() {
 			if((start << ExecEnv::PAGE_SHIFT) + it->size > ExecEnv::KERNEL_START)
 				throw Exception("Out of memory for modules");
 			// map the memory of the module
-			Caps::allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
+			allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
 					Caps::TYPE_MEM | Caps::MEM_RWX,start));
 			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
 			start += it->size >> ExecEnv::PAGE_SHIFT;
@@ -172,7 +208,7 @@ static void start_childs() {
 			if(it->aux) {
 				if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
 					throw Exception("Out of memory for modules");
-				Caps::allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
+				allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
 				aux = reinterpret_cast<char*>((start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
 				start++;
 				// ensure that its terminated at the end of the page
@@ -185,6 +221,30 @@ static void start_childs() {
 			mng->load(addr,it->size,aux);
 		}
 	}
+}
+
+static void portal_map(capsel_t) {
+	UtcbFrameRef uf;
+	// alloc mem
+	DataSpace ds;
+	uf >> ds;
+	uintptr_t addr = mem.alloc(ds.size());
+	// create an unmap-cap and delegate it to the caller
+	CapHolder cap;
+	Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
+	uf.clear();
+	uf.delegate(cap.release());
+	uf << addr;
+}
+
+static void portal_unmap(capsel_t) {
+	UtcbFrameRef uf;
+	// free mem (we can trust the dataspace properties, because its sent from ourself)
+	DataSpace ds;
+	uf >> ds;
+	mem.free(ds.virt(),ds.size());
+	// revoke unmap-cap
+	Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
 }
 
 static void portal_hvmap(capsel_t) {

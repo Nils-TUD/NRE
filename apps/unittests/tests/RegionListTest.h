@@ -21,3 +21,5 @@
 #include <Test.h>
 
 extern const nul::test::TestCase regionlist;
+
+void test_reglist();

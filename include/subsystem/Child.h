@@ -36,6 +36,9 @@ public:
 	const char *cmdline() const {
 		return _cmdline;
 	}
+	unsigned refs() const {
+		return _refs;
+	}
 	RegionList &reglist() {
 		return _regs;
 	}
@@ -56,7 +59,7 @@ public:
 	}
 
 private:
-	Child(const char *cmdline) : _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
+	Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
 			_pts(), _ptcount(), _sms(), _smcount(), _waits(), _waitcount(), _regs(), _entry(),
 			_stack(), _utcb(), _hip(), _sm() {
 	}
@@ -79,6 +82,7 @@ private:
 	Child& operator=(const Child&);
 
 	const char *_cmdline;
+	unsigned _refs;
 	bool _started;
 	Pd *_pd;
 	GlobalEc *_ec;

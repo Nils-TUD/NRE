@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <mem/DataSpace.h>
+#include <ex/Exception.h>
+
 namespace nul {
 
 class DataSpaceManager {
@@ -27,7 +30,8 @@ public:
 
 	void create(DataSpace& ds) {
 		Slot *slot = find_free();
-		ds._origin = ds.domap();
+		// TODO phys
+		ds.map();
 		slot->ds = ds;
 		slot->refs = 1;
 	}
@@ -35,27 +39,24 @@ public:
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs && _slots[i].ds.sel() == sel) {
 				_slots[i].refs++;
-				return _slots[i].ds.origin();
+				return _slots[i].ds.phys();
 			}
 		}
 		return 0;
 	}
-	bool destroy(capsel_t sel) {
-		bool res = false;
+	DataSpace *destroy(capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds.sel() == sel) {
-				if(--_slots[i].refs == 0) {
-					_slots[i].ds.dounmap();
-					res = true;
-				}
-				break;
+			if(_slots[i].refs && _slots[i].ds.unmapsel() == sel) {
+				if(--_slots[i].refs == 0)
+					return &_slots[i].ds;
+				return 0;
 			}
 		}
-		return res;
+		throw Exception("Dataspace not found");
 	}
 
 private:
-	Slot *find_free() const {
+	Slot *find_free() {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs == 0)
 				return _slots + i;
