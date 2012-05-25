@@ -31,7 +31,7 @@ void DataSpace::map() {
 		uf << 0 << _virt << _phys << _size << _perm << _type;
 		CPU::current().map_pt->call(uf);
 		// TODO error-handling
-		uf >> _virt;
+		uf >> _virt >> _size >> _perm >> _type;
 		_unmapsel = umcap.release();
 		if(_sel == ObjCap::INVALID)
 			_sel = mcap.get();

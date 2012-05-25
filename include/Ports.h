@@ -34,10 +34,6 @@ public:
 		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (port));
 	}
 
-    static void request(unsigned start,unsigned count) {
-    	UtcbFrame uf;
-    }
-
 private:
     Ports();
     ~Ports();

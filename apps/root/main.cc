@@ -234,7 +234,7 @@ static void portal_map(capsel_t) {
 	Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
 	uf.clear();
 	uf.delegate(cap.release());
-	uf << addr;
+	uf << addr << ds.size() << ds.perm() << ds.type();
 }
 
 static void portal_unmap(capsel_t) {

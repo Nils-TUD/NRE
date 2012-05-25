@@ -20,6 +20,7 @@
 
 #include <utcb/UtcbFrame.h>
 #include <cap/CapSpace.h>
+#include <mem/DataSpace.h>
 #include <kobj/Pt.h>
 #include <CPU.h>
 
@@ -27,7 +28,7 @@ namespace nul {
 
 class Client {
 public:
-	Client(const char *service) : _pt() {
+	Client(const char *service) : _pt(), _shpt() {
 		// the idea is the following: the parent creates a semaphore for each client and cpu and
 		// delegates them to the clients. whenever a client fails to connect to a service, the
 		// parent stores that (for the cpu it used). when a service is registered on a specific cpu,
@@ -51,14 +52,24 @@ public:
 			}
 		}
 		while(cap == ObjCap::INVALID);
-		_pt = new Pt(get_portal(cap));
+		capsel_t start = get_portals(cap);
+		_pt = new Pt(start);
+		_shpt = new Pt(start + 1);
 	}
 	~Client() {
 		delete _pt;
+		delete _shpt;
 	}
 
 	Pt *pt() {
 		return _pt;
+	}
+
+	void share(const DataSpace &ds) {
+		UtcbFrame uf;
+		uf << 0 << ds.virt() << ds.phys() << ds.size() << ds.perm() << ds.type();
+		uf.delegate(ds.sel());
+		_shpt->call(uf);
 	}
 
 private:
@@ -75,10 +86,10 @@ private:
 		return ti.crd().cap();
 	}
 
-	capsel_t get_portal(capsel_t cap) const {
+	capsel_t get_portals(capsel_t cap) const {
 		Pt init(cap);
 		UtcbFrame uf;
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		uf.set_receive_crd(Crd(CapSpace::get().allocate(2),0,DESC_CAP_ALL));
 		init.call(uf);
 
 		TypedItem ti;
@@ -90,6 +101,7 @@ private:
 	Client& operator=(const Client&);
 
 	Pt *_pt;
+	Pt *_shpt;
 };
 
 }

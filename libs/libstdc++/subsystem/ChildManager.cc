@@ -333,7 +333,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uf.clear();
 		uf.delegate(ds.unmapsel());
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		uf << addr;
+		uf << addr << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
 		// TODO revoke ds-cap?
