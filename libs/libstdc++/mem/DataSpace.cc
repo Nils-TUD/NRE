@@ -16,6 +16,7 @@
 namespace nul {
 
 void DataSpace::map() {
+	assert(_unmapsel == ObjCap::INVALID);
 	UtcbFrame uf;
 	CapHolder umcap,mcap;
 	try {
@@ -46,11 +47,15 @@ void DataSpace::map() {
 }
 
 void DataSpace::unmap() {
+	assert(_sel != ObjCap::INVALID && _unmapsel != ObjCap::INVALID);
 	UtcbFrame uf;
 	uf.translate(_unmapsel);
 	uf << 1 << _virt << _phys << _size << _perm << _type;
 	CPU::current().unmap_pt->call(uf);
 	// TODO error-handling
+	Syscalls::revoke(Crd(_sel,0,DESC_CAP_ALL),true);
+	CapSpace::get().free(_unmapsel);
+	CapSpace::get().free(_sel);
 	_unmapsel = ObjCap::INVALID;
 	_sel = ObjCap::INVALID;
 }

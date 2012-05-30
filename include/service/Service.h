@@ -29,6 +29,19 @@
 
 namespace nul {
 
+class ClientData {
+public:
+	ClientData(Pt *pt) : _pt(pt) {
+	}
+
+	Pt *pt() {
+		return _pt;
+	}
+
+private:
+	Pt *_pt;
+};
+
 class Service {
 	friend class ServiceInstance;
 
@@ -46,7 +59,7 @@ public:
 			delete _clients[i];
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
 			delete _insts[i];
-		CapSpace::get().free(_caps,Hip::MAX_CPUS);
+		CapSpace::get().free(_caps,MAX_CLIENTS);
 	}
 
 	const char *name() const {
