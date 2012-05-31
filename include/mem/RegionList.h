@@ -62,11 +62,12 @@ public:
 		return count;
 	}
 
-	uint find(uintptr_t addr,uintptr_t &src) const {
+	uint find(uintptr_t addr,uintptr_t &src,size_t &size) const {
 		addr &= ~(ExecEnv::PAGE_SIZE - 1);
 		const Region *r = get(addr,1);
 		if(r) {
 			src = r->src + (addr - r->begin);
+			size = r->size - (addr - r->begin);
 			return r->flags;
 		}
 		return 0;
@@ -87,24 +88,24 @@ public:
 		return end;
 	}
 
-	void map(uintptr_t addr) {
+	void map(uintptr_t addr,size_t size = ExecEnv::PAGE_SIZE) {
 		const Region *r = get(addr,1);
 		assert(r);
-		add(addr,ExecEnv::PAGE_SIZE,r->src + addr - r->begin,r->flags | M);
+		add(addr,size,r->src + addr - r->begin,r->flags | M);
 	}
 
-	void unmap(uintptr_t addr) {
+	void unmap(uintptr_t addr,size_t size = ExecEnv::PAGE_SIZE) {
 		const Region *r = get(addr,1);
 		assert(r);
-		add(addr,ExecEnv::PAGE_SIZE,r->src + addr - r->begin,r->flags & ~M);
+		add(addr,size,r->src + addr - r->begin,r->flags & ~M);
 	}
 
-	void add(const DataSpace& ds,uintptr_t addr) {
+	void add(const DataSpace& ds,uintptr_t addr,uint perm) {
 		for(size_t i = 0; i < MAX_DS; ++i) {
 			if(_ds[i].unmapsel == 0) {
 				_ds[i].unmapsel = ds.unmapsel();
 				_ds[i].addr = addr;
-				add(addr,ds.size(),ds.virt(),ds.perm());
+				add(addr,ds.size(),ds.virt(),perm);
 				return;
 			}
 		}

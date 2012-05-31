@@ -28,6 +28,7 @@ const TestCase regionlist = {
 
 void test_reglist() {
 	uintptr_t src = 0;
+	size_t size;
 
 	{
 		RegionList l;
@@ -35,13 +36,13 @@ void test_reglist() {
 		l.add(0x8000,0x2000,0x10000,RegionList::R);
 		l.add(0x10000,0x8000,0x20000,RegionList::RX);
 		WVPASSEQ(l.regcount(),3UL);
-		WVPASSEQ(l.find(0x1000,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x2123,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x2000UL);
-		WVPASSEQ(l.find(0x9100,src),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x9100,src,size),static_cast<uint>(RegionList::R));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x10100,src),static_cast<uint>(RegionList::RX));
+		WVPASSEQ(l.find(0x10100,src,size),static_cast<uint>(RegionList::RX));
 		WVPASSEQ(src,0x20000UL);
 	}
 
@@ -53,10 +54,10 @@ void test_reglist() {
 		WVPASSEQ(l.regcount(),3UL);
 		l.remove(0x2000,0x1000);
 		WVPASSEQ(l.regcount(),4UL);
-		WVPASSEQ(l.find(0x2000,src),0U);
-		WVPASSEQ(l.find(0x1000,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x2000,src,size),0U);
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x3000,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x3000UL);
 	}
 
@@ -81,37 +82,37 @@ void test_reglist() {
 		l.add(0xA000,0x8000,0x20000,RegionList::RX);
 
 		l.map(0x1000);
-		WVPASSEQ(l.find(0x1000,src),static_cast<uint>(RegionList::RW | RegionList::M));
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW | RegionList::M));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x2123,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x2000UL);
-		WVPASSEQ(l.find(0x3000,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x3000UL);
-		WVPASSEQ(l.find(0x4000,src),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(RegionList::RW));
 		WVPASSEQ(src,0x4000UL);
 
 		l.map(0x9000);
-		WVPASSEQ(l.find(0x9000,src),static_cast<uint>(RegionList::R | RegionList::M));
+		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(RegionList::R | RegionList::M));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x8000,src),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(RegionList::R));
 		WVPASSEQ(src,0x10000UL);
 
 		l.unmap(0x9000);
-		WVPASSEQ(l.find(0x9000,src),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(RegionList::R));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x8000,src),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(RegionList::R));
 		WVPASSEQ(src,0x10000UL);
 
 		l.map(0x4000);
-		WVPASSEQ(l.find(0x4000,src),static_cast<uint>(RegionList::RW | RegionList::M));
+		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(RegionList::RW | RegionList::M));
 		WVPASSEQ(src,0x4000UL);
 
 		uintptr_t addr = l.find_free(0x1000);
-		WVPASSEQ(l.find(addr,src),0U);
+		WVPASSEQ(l.find(addr,src,size),0U);
 		l.add(addr,0x1000,0,RegionList::RWX);
-		WVPASSEQ(l.find(addr,src),static_cast<uint>(RegionList::RWX));
+		WVPASSEQ(l.find(addr,src,size),static_cast<uint>(RegionList::RWX));
 		addr = l.find_free(0x1000);
-		WVPASSEQ(l.find(addr,src),0U);
+		WVPASSEQ(l.find(addr,src,size),0U);
 
 		l.remove(0x1000,0x20000);
 		WVPASSEQ(l.regcount(),0UL);

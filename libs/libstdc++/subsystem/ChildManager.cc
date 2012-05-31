@@ -128,14 +128,14 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			if(ph->p_flags & PF_X)
 				perms |= RegionList::X;
 
-			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,perms);
+			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,RegionList::RWX);
 			// TODO leak, if reglist().add throws
 			_dsm.create(ds);
 			// TODO actually it would be better to do that later
 			memcpy(reinterpret_cast<void*>(ds.virt()),
 					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
 			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
-			c->reglist().add(ds,ph->p_vaddr);
+			c->reglist().add(ds,ph->p_vaddr,perms);
 		}
 
 		// he needs a stack
@@ -143,12 +143,12 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),RegionList::RW);
 		// and a HIP
 		{
-			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::R);
+			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
 			_dsm.create(ds);
 			c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
 			memcpy(reinterpret_cast<void*>(ds.virt()),&Hip::get(),ExecEnv::PAGE_SIZE);
 			// TODO we need to adjust the hip
-			c->reglist().add(ds,c->hip());
+			c->reglist().add(ds,c->hip(),DataSpace::R);
 		}
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
@@ -175,7 +175,8 @@ void ChildManager::Portals::startup(capsel_t pid) {
 
 	if(c->_started) {
 		uintptr_t src;
-		if(!c->reglist().find(uf->rsp,src))
+		size_t size;
+		if(!c->reglist().find(uf->rsp,src,size))
 			return;
 		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)));
 		uf->mtd = MTD_RIP_LEN;
@@ -328,7 +329,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 		cm->_dsm.create(ds);
 		created = true;
 		uintptr_t addr = c->reglist().find_free(ds.size());
-		c->reglist().add(ds,addr);
+		c->reglist().add(ds,addr,ds.perm());
 
 		uf.clear();
 		uf.delegate(ds.unmapsel());
@@ -405,7 +406,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	// TODO different handlers (cow, ...)
 	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 	uintptr_t src;
-	uint flags = c->reglist().find(pfaddr,src);
+	size_t size;
+	uint flags = c->reglist().find(pfaddr,src,size);
 	bool kill = !flags;
 	// check if the access rights are violated
 	if(flags & RegionList::M) {
@@ -431,9 +433,11 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	}
 	else if(!(flags & RegionList::M)) {
 		uint perms = flags & RegionList::RWX;
-		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,1,
+		// try to map the next 32 pages
+		size_t msize = Util::min<size_t>(Util::roundup<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
+		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
 				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
-		c->reglist().map(pfaddr);
+		c->reglist().map(pfaddr,msize);
 	}
 }
 
