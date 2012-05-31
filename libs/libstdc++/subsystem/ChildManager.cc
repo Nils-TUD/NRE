@@ -318,7 +318,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 	if(!c)
 		return;
 
-	// TODO locks
+	ScopedLock<UserSm> guard(&cm->_sm);
 	bool created = false;
 	UtcbFrameRef uf;
 	DataSpace ds;
@@ -361,7 +361,7 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 	if(!c)
 		return;
 
-	// TODO locks
+	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
 		// we can't trust the dataspace properties, except unmapsel

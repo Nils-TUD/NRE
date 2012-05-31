@@ -23,6 +23,7 @@
 #include <kobj/Sm.h>
 #include <kobj/UserSm.h>
 #include <service/ServiceInstance.h>
+#include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
 #include <ScopedPtr.h>
 #include <CPU.h>
@@ -31,17 +32,27 @@ namespace nul {
 
 class ClientData {
 public:
-	ClientData(capsel_t pt,Pt::portal_func func) : _pt(static_cast<LocalEc*>(Ec::current()),pt,func) {
+	ClientData(capsel_t srvpt,capsel_t dspt,Pt::portal_func func)
+		: _srvpt(static_cast<LocalEc*>(Ec::current()),srvpt,func),
+		  _dspt(static_cast<LocalEc*>(Ec::current()),dspt,portal_ds), _ds() {
 	}
 	virtual ~ClientData() {
+		delete _ds;
 	}
 
 	Pt &pt() {
-		return _pt;
+		return _srvpt;
+	}
+	const DataSpace *ds() const {
+		return _ds;
 	}
 
 private:
-	Pt _pt;
+	PORTAL static void portal_ds(capsel_t pid);
+
+	Pt _srvpt;
+	Pt _dspt;
+	DataSpace *_ds;
 };
 
 class Service {
@@ -53,7 +64,8 @@ public:
 	};
 
 	Service(const char *name,Pt::portal_func portal)
-		: _caps(CapSpace::get().allocate(MAX_CLIENTS)), _sm(), _name(name), _func(portal),
+		// aligned by 2 because we give out two portals at once
+		: _caps(CapSpace::get().allocate(MAX_CLIENTS * 2,2)), _sm(), _name(name), _func(portal),
 		  _insts(), _clients() {
 	}
 	virtual ~Service() {
@@ -73,7 +85,7 @@ public:
 
 	template<class T>
 	T *get_client(capsel_t pid) {
-		return static_cast<T*>(_clients[pid - _caps]);
+		return static_cast<T*>(_clients[(pid - _caps) / 2]);
 	}
 
 	void reg(cpu_t cpu) {
@@ -86,15 +98,15 @@ public:
 	}
 
 private:
-	virtual ClientData *create_client(capsel_t pt,Pt::portal_func func) {
-		return new ClientData(pt,func);
+	virtual ClientData *create_client(capsel_t srvpt,capsel_t dspt,Pt::portal_func func) {
+		return new ClientData(srvpt,dspt,func);
 	}
 
 	ClientData *new_client() {
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_CLIENTS; ++i) {
 			if(_clients[i] == 0) {
-				_clients[i] = create_client(_caps + i,_func);
+				_clients[i] = create_client(_caps + i * 2,_caps + i * 2 + 1,_func);
 				return _clients[i];
 			}
 		}

@@ -27,7 +27,8 @@ PORTAL static void portal_write(capsel_t);
 
 class ScreenClientData : public ClientData {
 public:
-	ScreenClientData(capsel_t pt,Pt::portal_func func) : ClientData(pt,func), _id(++_next_id) {
+	ScreenClientData(capsel_t srvpt,capsel_t dspt,Pt::portal_func func)
+		: ClientData(srvpt,dspt,func), _id(++_next_id) {
 	}
 
 	int id() const {
@@ -45,8 +46,8 @@ public:
 	}
 
 private:
-	virtual ClientData *create_client(capsel_t pt,Pt::portal_func func) {
-		return new ScreenClientData(pt,func);
+	virtual ClientData *create_client(capsel_t srvpt,capsel_t dspt,Pt::portal_func func) {
+		return new ScreenClientData(srvpt,dspt,func);
 	}
 };
 
@@ -86,7 +87,9 @@ static void portal_write(capsel_t pid) {
 	ScopedLock<UserSm> guard(&sm);
 	ScreenClientData *c = srv->get_client<ScreenClientData>(pid);
 	UtcbFrameRef uf;
-	uint i;
-	uf >> i;
+	int i;
+	int *data = reinterpret_cast<int*>(c->ds()->virt());
+	i = *data;
+	//uf >> i;
 	Screen::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
 }

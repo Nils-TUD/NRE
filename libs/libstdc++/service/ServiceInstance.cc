@@ -20,6 +20,7 @@
 #include <service/Service.h>
 #include <utcb/UtcbFrame.h>
 #include <stream/Serial.h>
+#include <cap/Caps.h>
 #include <ScopedLock.h>
 #include <ScopedPtr.h>
 
@@ -39,7 +40,7 @@ void ServiceInstance::portal_newclient(capsel_t) {
 	Service *s = Ec::current()->get_tls<Service>(0);
 	ClientData *c = s->new_client();
 	UtcbFrameRef uf;
-	uf.delegate(c->pt().sel());
+	uf.delegate(CapRange(c->pt().sel(),2,Caps::TYPE_CAP | Caps::ALL));
 }
 
 }

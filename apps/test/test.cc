@@ -46,9 +46,14 @@ static void verbose_terminate() {
 
 static void write(void *) {
 	Client scr("screen");
+	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
+	ds.map();
+	int *data = reinterpret_cast<int*>(ds.virt());
+	scr.share(ds);
 	for(uint i = 0; ; ++i) {
 		UtcbFrame uf;
-		uf << i;
+		*data = i;
+		//uf << i;
 		scr.pt()->call(uf);
 	}
 }

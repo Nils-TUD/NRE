@@ -65,6 +65,7 @@ public:
 		return _pt;
 	}
 
+	// TODO move to DataSpace?
 	void share(const DataSpace &ds) {
 		UtcbFrame uf;
 		uf << 0 << ds.virt() << ds.phys() << ds.size() << ds.perm() << ds.type();
@@ -89,7 +90,8 @@ private:
 	capsel_t get_portals(capsel_t cap) const {
 		Pt init(cap);
 		UtcbFrame uf;
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(2),0,DESC_CAP_ALL));
+		// receive the two portals (take care of alignment)
+		uf.set_receive_crd(Crd(CapSpace::get().allocate(2,2),1,DESC_CAP_ALL));
 		init.call(uf);
 
 		TypedItem ti;
