@@ -24,7 +24,7 @@ class RegionList {
 	friend void ::test_reglist();
 
 	enum {
-		MAX_REGIONS		= 64,
+		MAX_REGIONS		= 128,
 		MAX_DS			= 32
 	};
 

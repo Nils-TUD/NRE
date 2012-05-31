@@ -37,9 +37,9 @@ ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
 void ServiceInstance::portal_newclient(capsel_t) {
 	// TODO not everyone wants client-specific portals
 	Service *s = Ec::current()->get_tls<Service>(0);
-	Pt *pt = s->new_client();
+	ClientData *c = s->new_client();
 	UtcbFrameRef uf;
-	uf.delegate(pt->sel());
+	uf.delegate(c->pt().sel());
 }
 
 }

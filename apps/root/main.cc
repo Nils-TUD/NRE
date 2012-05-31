@@ -63,6 +63,7 @@ static Memory mem;
 // CPUs is treaten as a different client
 // TODO KObjects reference-counted? copying, ...
 // TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
+// TODO access to the first page doesn't cause a kill
 
 void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -112,23 +113,17 @@ static void allocate(const CapRange& caps) {
 int main() {
 	const Hip &hip = Hip::get();
 
-	// create temporary map-portals to map stuff from HV
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
-		if(it->id() == CPU::current().id) {
-			CPU &cpu = CPU::get(it->id());
-			LocalEc *ec = new LocalEc(cpu.id);
-			cpu.map_pt = new Pt(ec,portal_map);
-			cpu.unmap_pt = new Pt(ec,portal_unmap);
-			// accept translated caps
-			UtcbFrameRef defuf(ec->utcb());
-			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-			// create the portal for allocating resources from HV for the current cpu
-			hv_pt = new Pt(ec,portal_hvmap);
-			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
-			break;
-		}
-	}
+	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
+	CPU &cpu = CPU::current();
+	LocalEc *ec = new LocalEc(cpu.id);
+	cpu.map_pt = new Pt(ec,portal_map);
+	cpu.unmap_pt = new Pt(ec,portal_unmap);
+	// accept translated caps
+	UtcbFrameRef defuf(ec->utcb());
+	defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+	// create the portal for allocating resources from HV for the current cpu
+	hv_pt = new Pt(ec,portal_hvmap);
+	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 
 	// allocate serial ports and VGA memory
 	allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
@@ -168,7 +163,7 @@ int main() {
 		}
 	}
 
-	// now we can use dlmalloc
+	// now we can use dlmalloc (map-pt created and available memory added to pool)
 	dlmalloc_init();
 
 	// now init the stuff for all other CPUs (using dlmalloc)

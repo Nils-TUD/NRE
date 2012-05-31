@@ -31,15 +31,17 @@ namespace nul {
 
 class ClientData {
 public:
-	ClientData(Pt *pt) : _pt(pt) {
+	ClientData(capsel_t pt,Pt::portal_func func) : _pt(static_cast<LocalEc*>(Ec::current()),pt,func) {
+	}
+	virtual ~ClientData() {
 	}
 
-	Pt *pt() {
+	Pt &pt() {
 		return _pt;
 	}
 
 private:
-	Pt *_pt;
+	Pt _pt;
 };
 
 class Service {
@@ -54,7 +56,7 @@ public:
 		: _caps(CapSpace::get().allocate(MAX_CLIENTS)), _sm(), _name(name), _func(portal),
 		  _insts(), _clients() {
 	}
-	~Service() {
+	virtual ~Service() {
 		for(size_t i = 0; i < MAX_CLIENTS; ++i)
 			delete _clients[i];
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
@@ -69,6 +71,11 @@ public:
 		return _func;
 	}
 
+	template<class T>
+	T *get_client(capsel_t pid) {
+		return static_cast<T*>(_clients[pid - _caps]);
+	}
+
 	void reg(cpu_t cpu) {
 		assert(_insts[cpu] == 0);
 		_insts[cpu] = new ServiceInstance(this,cpu);
@@ -79,11 +86,15 @@ public:
 	}
 
 private:
-	Pt *new_client() {
+	virtual ClientData *create_client(capsel_t pt,Pt::portal_func func) {
+		return new ClientData(pt,func);
+	}
+
+	ClientData *new_client() {
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_CLIENTS; ++i) {
 			if(_clients[i] == 0) {
-				_clients[i] = new Pt(static_cast<LocalEc*>(Ec::current()),_caps + i,_func);
+				_clients[i] = create_client(_caps + i,_func);
 				return _clients[i];
 			}
 		}
@@ -99,7 +110,7 @@ private:
 	const char *_name;
 	Pt::portal_func _func;
 	ServiceInstance *_insts[Hip::MAX_CPUS];
-	Pt *_clients[MAX_CLIENTS];
+	ClientData *_clients[MAX_CLIENTS];
 };
 
 }

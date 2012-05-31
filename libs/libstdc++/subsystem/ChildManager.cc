@@ -303,7 +303,7 @@ void ChildManager::Portals::allocio(capsel_t) {
 		CapRange caps;
 		uf >> caps;
 		uf.clear();
-		uf.delegate(caps);
+		uf.delegate(caps,DelItem::FROM_HV);
 		uf << 0;
 	}
 	catch(const Exception& e) {
