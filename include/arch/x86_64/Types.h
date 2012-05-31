@@ -34,5 +34,6 @@ typedef long ptrdiff_t;
 
 typedef unsigned long size_t;
 typedef unsigned long uintptr_t;
+typedef long off_t;
 
 typedef unsigned long word_t;

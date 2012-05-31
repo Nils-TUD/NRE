@@ -26,3 +26,10 @@
 #define WEAK				__attribute__((weak))
 #define EXPECT_FALSE(X)     __builtin_expect(!!(X),0)
 #define EXPECT_TRUE(X)      __builtin_expect(!!(X),1)
+#define UNUSED				__attribute__((unused))
+
+#ifdef __cplusplus
+#define EXTERN_C			extern "C"
+#else
+#define EXTERN_C
+#endif

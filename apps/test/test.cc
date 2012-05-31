@@ -28,7 +28,7 @@
 
 using namespace nul;
 
-extern "C" void abort();
+EXTERN_C void abort();
 
 static void verbose_terminate() {
 	// TODO put that in abort or something?

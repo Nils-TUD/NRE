@@ -5,6 +5,12 @@ if [ $# -lt 1 ]; then
 	exit 1
 fi
 
+if [ "$NOVA_TARGET" = "x86_32" ]; then
+	gdb=gdbtui
+else
+	gdb=x86_64-linux-gnu-gdbtui
+fi
+
 build="build/$NOVA_TARGET-$NOVA_BUILD"
 breakvmrun=0
 bootscript="$1"
@@ -32,10 +38,13 @@ while [ $# -gt 1 ]; do
 done
 
 tmp=$(tempfile)
-cat <<EOF > $tmp
-target remote localhost:1234
-display/i \$pc
-EOF
+#if [ "$NOVA_TARGET" = "x86_32" ]; then
+#	echo "set architecture i386" > $tmp
+#else
+#	echo "set architecture i386:x86-64" > $tmp
+#fi
+echo "target remote localhost:1234" >> $tmp
+echo "display/i \$pc" >> $tmp
 
 # find out the offset to pass to gdb by searching for the offset of the text load segment
 if [ "$hv" != "" ]; then
@@ -69,9 +78,9 @@ fi
 $build/tools/ignoreint/ignoreint $bootscript --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$BUILD_DIR" \
 	--qemu-append='-S -s' > log.txt &
 if [ "$hv" != "" ]; then
-	gdbtui $hv --command=$tmp
+	$gdb $hv --command=$tmp
 else
-	gdbtui $first --command=$tmp 
+	$gdb $first --command=$tmp 
 fi
 rm -f $tmp
 

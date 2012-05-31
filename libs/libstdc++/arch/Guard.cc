@@ -18,6 +18,7 @@
 
 #include <arch/Types.h>
 #include <arch/Defines.h>
+#include <Compiler.h>
 
 /**
  * GCC calls the __cxa_guard_-stuff when initializing local static objects to do it in a
@@ -51,19 +52,19 @@ static inline void unlock(guard_t *) {
 	// keep it locked
 }
 
-extern "C" int __cxa_guard_acquire(guard_t *);
-extern "C" void __cxa_guard_release(guard_t *);
-extern "C" void __cxa_guard_abort(guard_t *);
+EXTERN_C int __cxa_guard_acquire(guard_t *);
+EXTERN_C void __cxa_guard_release(guard_t *);
+EXTERN_C void __cxa_guard_abort(guard_t *);
 
-extern "C" int __cxa_guard_acquire(guard_t *g) {
+int __cxa_guard_acquire(guard_t *g) {
 	return trylock(g);
 }
 
-extern "C" void __cxa_guard_release(guard_t *g) {
+void __cxa_guard_release(guard_t *g) {
 	unlock(g);
 }
 
-extern "C" void __cxa_guard_abort(guard_t *) {
+void __cxa_guard_abort(guard_t *) {
 }
 
 }

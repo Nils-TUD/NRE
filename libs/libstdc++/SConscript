@@ -2,7 +2,13 @@
 
 Import('env')
 
+crt0 = env.Object('crt0.o', 'arch/' + env['ARCH'] + '/crt0.s')
+crt1 = env.Object('crt1.o', 'arch/' + env['ARCH'] + '/crt1.s')
+crtn = env.Object('crtn.o', 'arch/' + env['ARCH'] + '/crtn.s')
+env.Install(env['SYSGCCLIBPATH'], [crt0, crt1, crtn])
+
 ccsrc = [Glob('*.cc'), Glob('*/*.cc'), Glob('*/' + env['ARCH'] + '/*.cc')]
+csrc = [Glob('*.c'), Glob('*/*.c'), Glob('*/' + env['ARCH'] + '/*.c')]
 ssrc = [Glob('*/' + env['ARCH'] + '/*.s')]
-lib = env.StaticLibrary('libstdc++', ccsrc + ssrc)
+lib = env.StaticLibrary('libstdc++', ccsrc + csrc + ssrc)
 env.Install(env['LIBPATH'], lib)

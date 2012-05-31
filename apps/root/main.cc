@@ -41,7 +41,8 @@
 
 using namespace nul;
 
-extern "C" void abort();
+EXTERN_C void abort();
+EXTERN_C void dlmalloc_init();
 PORTAL static void portal_startup(capsel_t pid);
 PORTAL static void portal_map(capsel_t);
 PORTAL static void portal_unmap(capsel_t);
@@ -112,21 +113,20 @@ int main() {
 	const Hip &hip = Hip::get();
 
 	// create temporary map-portals to map stuff from HV
-	LocalEc *ecs[Hip::MAX_CPUS];
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
+		// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
+		if(it->id() == CPU::current().id) {
 			CPU &cpu = CPU::get(it->id());
 			LocalEc *ec = new LocalEc(cpu.id);
-			ecs[it->id()] = ec;
 			cpu.map_pt = new Pt(ec,portal_map);
 			cpu.unmap_pt = new Pt(ec,portal_unmap);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
 			// create the portal for allocating resources from HV for the current cpu
-			if(it->id() == CPU::current().id)
-				hv_pt = new Pt(ec,portal_hvmap);
+			hv_pt = new Pt(ec,portal_hvmap);
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			break;
 		}
 	}
 
@@ -165,6 +165,26 @@ int main() {
 		if(it->enabled()) {
 			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
 					it->package,it->core,it->thread,it->flags);
+		}
+	}
+
+	// now we can use dlmalloc
+	dlmalloc_init();
+
+	// now init the stuff for all other CPUs (using dlmalloc)
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
+		if(it->enabled() && it->id() != CPU::current().id) {
+			CPU &cpu = CPU::get(it->id());
+			LocalEc *ec = new LocalEc(cpu.id);
+			cpu.map_pt = new Pt(ec,portal_map);
+			cpu.unmap_pt = new Pt(ec,portal_unmap);
+			// accept translated caps
+			UtcbFrameRef defuf(ec->utcb());
+			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+			// create the portal for allocating resources from HV for the current cpu
+			if(it->id() == CPU::current().id)
+				hv_pt = new Pt(ec,portal_hvmap);
+			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 		}
 	}
 

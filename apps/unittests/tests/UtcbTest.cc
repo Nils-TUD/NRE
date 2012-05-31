@@ -46,12 +46,11 @@ static void portal_test(capsel_t) {
 
 static void test_nesting() {
 	int a,b,c;
-	ullong d;
 	LocalEc ec(CPU::current().id);
 	Pt pt(&ec,portal_test);
 
 	UtcbFrame uf;
-	uf << 4 << 0x1000000000000001ULL;
+	uf << 4 << 1 << 2;
 	uf.add_typed(DelItem(Crd(12,4,DESC_IO_ALL),0,10));
 	uf.add_typed(DelItem(Crd(1,1,DESC_MEM_ALL),0x1,2));
 
@@ -79,11 +78,12 @@ static void test_nesting() {
 		WVPASSEQ(c,1);
 	}
 	WVPASSEQ(uf.typed(),2UL);
-	WVPASSEQ(uf.untyped(),Util::blockcount(sizeof(1) + sizeof(1ULL),sizeof(word_t)));
+	WVPASSEQ(uf.untyped(),3UL);
 
 	pt.call(uf);
 
-	uf >> d >> a;
-	WVPASSEQ(d,0x0000000110000000ULL);
-	WVPASSEQ(a,4);
+	uf >> a >> b >> c;
+	WVPASSEQ(a,2);
+	WVPASSEQ(b,1);
+	WVPASSEQ(c,4);
 }

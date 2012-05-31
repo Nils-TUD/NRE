@@ -24,7 +24,7 @@ const TestCase delegateperf = {
 	"Delegate-performance",test_delegate
 };
 
-static const size_t tries = 10000;
+static const size_t tries = 1000;
 static uint64_t results[tries];
 
 static void portal_test(capsel_t) {

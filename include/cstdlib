@@ -10,16 +10,9 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <Compiler.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void abort();
-void exit(int x);
-void* malloc(size_t size);
-void free(void* p);
-
-#ifdef __cplusplus
-}
-#endif
+EXTERN_C void abort();
+EXTERN_C void exit(int x);
+EXTERN_C void* malloc(size_t size);
+EXTERN_C void free(void* p);

@@ -41,7 +41,7 @@
 using namespace nul;
 using namespace nul::test;
 
-extern "C" void abort();
+EXTERN_C void abort();
 PORTAL static void portal_map(capsel_t pid);
 PORTAL static void portal_startup(capsel_t);
 
@@ -49,9 +49,9 @@ uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static const TestCase testcases[] = {
 	pingpong,
 	catchex,
-	//delegateperf,
-	//utcbtest,
-	//regionlist
+	delegateperf,
+	utcbtest,
+	regionlist
 };
 
 void verbose_terminate() {
@@ -69,17 +69,10 @@ void verbose_terminate() {
 }
 
 int main() {
-	const Hip &hip = Hip::get();
-
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
-			CPU &cpu = CPU::get(it->id());
-			// TODO ?
-			LocalEc *cpuec = new LocalEc(cpu.id);
-			cpu.map_pt = new Pt(cpuec,portal_map);
-			new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
-		}
-	}
+	CPU &cpu = CPU::current();
+	LocalEc *cpuec = new LocalEc(cpu.id);
+	cpu.map_pt = new Pt(cpuec,portal_map);
+	new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 
 	// allocate serial ports and VGA memory
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));

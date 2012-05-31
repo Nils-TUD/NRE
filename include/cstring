@@ -10,18 +10,11 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <Compiler.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void* memcpy(void *dest,const void *src,size_t len);
-void *memmove(void *dest,const void *src,size_t count);
-void *memset(void *addr,int value,size_t count);
-size_t strlen(const char *src);
-int memcmp(const void *str1,const void *str2,size_t count);
-int strcmp(const char *dst,const char *src);
-
-#ifdef __cplusplus
-}
-#endif
+EXTERN_C void* memcpy(void *dest,const void *src,size_t len);
+EXTERN_C void *memmove(void *dest,const void *src,size_t count);
+EXTERN_C void *memset(void *addr,int value,size_t count);
+EXTERN_C size_t strlen(const char *src);
+EXTERN_C int memcmp(const void *str1,const void *str2,size_t count);
+EXTERN_C int strcmp(const char *dst,const char *src);

@@ -31,7 +31,7 @@ const TestCase catchex = {
 	"Catch exception",test_catchex
 };
 
-static const unsigned tries = 10000;
+static const unsigned tries = 1000;
 static uint64_t results[tries];
 
 static void test_catchex() {

@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <Compiler.h>
 #include <arch/Types.h>
+#include <Compiler.h>
 
 #define INIT_PRIO(X)		INIT_PRIORITY(101 + (X))
 #define INIT_PRIO_PD		INIT_PRIO(0)
@@ -38,6 +38,6 @@ struct StartupInfo {
 
 }
 
-extern "C" void _presetup();
-extern "C" void _setup(bool child);
+EXTERN_C void _presetup();
+EXTERN_C void _setup(bool child);
 extern nul::StartupInfo _startup_info;

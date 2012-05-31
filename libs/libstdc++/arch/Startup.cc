@@ -30,6 +30,8 @@ using namespace nul;
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
 
+EXTERN_C void dlmalloc_init();
+
 // TODO the setup-stuff is not really nice. I think we need init-priorities or something
 
 void _presetup() {
@@ -60,6 +62,10 @@ void _setup(bool child) {
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
 			cpu.srv_sm = new Sm(off + CapSpace::SM_SERVICE,true);
 			cpu.allocio_pt = new Pt(off + CapSpace::SRV_ALLOCIO);
+			if(cpu.id == CPU::current().id) {
+				// switch to dlmalloc, since we have created its dependencies now
+				dlmalloc_init();
+			}
 		}
 	}
 }

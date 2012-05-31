@@ -20,8 +20,9 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/Ec.h>
+#include <Compiler.h>
 
-extern "C" void portal_reply_landing_spot(void*);
+EXTERN_C void portal_reply_landing_spot(void*);
 
 namespace nul {
 
