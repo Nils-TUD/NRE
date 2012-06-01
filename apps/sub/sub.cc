@@ -51,8 +51,9 @@ int main() {
 	Serial::get().init();
 	std::set_terminate(verbose_terminate);
 
-	ChildManager cm;
-	cm.load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test");
+	// don't put it on the stack :)
+	ChildManager *cm = new ChildManager();
+	cm->load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test");
 
 	Sm sm(0);
 	sm.down();

@@ -61,6 +61,7 @@ void semaphore_up(DlMallocSm *lk) {
 
 void *mmap(void *,size_t size,int prot,int,int,off_t) {
 	DataSpace ds(size,DataSpace::ANONYMOUS,prot);
+	// TODO does not work from a subsystem
 	ds.map();
 	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
 	return reinterpret_cast<void*>(ds.virt());

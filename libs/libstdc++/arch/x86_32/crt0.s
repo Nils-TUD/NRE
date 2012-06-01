@@ -33,7 +33,7 @@ _start:
 	test	%ebx, %ebx
 	jnz		1f
 	mov		%esp, _startup_info		# store pointer to HIP
-	lea		-0x1000(%esp), %edx		# UTCB is below HIP
+	lea		-0x1000(%esp), %edx	# UTCB is below HIP
 	mov		$_stack, %esp			# switch to our stack
 	jmp		2f
 1:

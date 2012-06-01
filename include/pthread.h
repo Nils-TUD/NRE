@@ -21,7 +21,7 @@
 #include <arch/Types.h>
 #include <arch/SpinLock.h>
 
-typedef size_t pthread_key_t;
+typedef uint32_t pthread_key_t;
 typedef spinlock_t pthread_mutex_t;
 typedef int pthread_t;
 typedef int pthread_once_t;

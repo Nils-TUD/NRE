@@ -61,14 +61,14 @@ public:
 	ServiceRegistry() : _srvs() {
 	}
 
-	void reg(const Service& s) {
+	const Service* reg(const Service& s) {
 		// TODO use different exception
 		if(search(s.name(),s.cpu()))
 			throw Exception("Service does already exist");
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
 			if(_srvs[i] == 0) {
 				_srvs[i] = new Service(s);
-				return;
+				return _srvs[i];
 			}
 		}
 		throw Exception("All service slots in use");
@@ -81,11 +81,8 @@ public:
 			_srvs[i] = 0;
 		}
 	}
-	const Service& find(const char *name,cpu_t cpu) const {
-		Service *s = search(name,cpu);
-		if(!s)
-			throw Exception("Unknown service");
-		return *s;
+	const Service* find(const char *name,cpu_t cpu) const {
+		return search(name,cpu);
 	}
 	void remove(Child *child) {
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {

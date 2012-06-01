@@ -64,6 +64,9 @@ static Memory mem;
 // TODO KObjects reference-counted? copying, ...
 // TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
 // TODO access to the first page doesn't cause a kill
+// TODO how can we explicitly terminate childs?
+// TODO what about resource-release when terminating entire subsystems?
+// TODO it would be a good idea to protect us from stack over- or underflow
 
 void verbose_terminate() {
 	// TODO put that in abort or something?

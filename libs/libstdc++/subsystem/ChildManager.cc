@@ -269,6 +269,19 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 	}
 }
 
+// TODO code-duplication; we already have that in the Client class
+static capsel_t get_parent_service(const char *name) {
+	UtcbFrame uf;
+	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+	uf.clear();
+	uf << String(name);
+	CPU::current().get_pt->call(uf);
+
+	TypedItem ti;
+	uf.get_typed(ti);
+	return ti.crd().cap();
+}
+
 void ChildManager::Portals::getservice(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
@@ -283,11 +296,15 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
 			c->_waits[cpu]++;
-			const ServiceRegistry::Service& s = cm->registry().find(name.str(),cpu);
+			const ServiceRegistry::Service* s = cm->registry().find(name.str(),cpu);
+			if(!s) {
+				capsel_t sel = get_parent_service(name.str());
+				s = cm->registry().reg(ServiceRegistry::Service(0,name.str(),cpu,sel));
+			}
 			c->_waits[cpu]--;
 
 			uf.clear();
-			uf.delegate(s.pt());
+			uf.delegate(s->pt());
 			uf << 1;
 		}
 	}
@@ -438,6 +455,9 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
 				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 		c->reglist().map(pfaddr,msize);
+		// ensure that we have the memory (if we're a subsystem this might not be true)
+		// TODO this is not sufficient, in general
+		volatile int x = *reinterpret_cast<int*>(src);
 	}
 }
 
