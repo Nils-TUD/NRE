@@ -30,7 +30,7 @@ class Utcb;
 class GlobalEc : public Ec {
 	friend void ::_presetup();
 
-	explicit GlobalEc(Utcb *utcb,capsel_t cap,cpu_t cpu,Pd *pd) : Ec(cpu,0,cap,utcb) {
+	explicit GlobalEc(Utcb *utcb,capsel_t cap,cpu_t cpu,Pd *pd,uintptr_t stack) : Ec(cpu,0,cap,utcb,stack) {
 		ExecEnv::set_current_ec(this);
 		ExecEnv::set_current_pd(pd);
 	}
@@ -40,11 +40,11 @@ public:
 
 	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current(),uintptr_t utcb = 0)
 			: Ec(cpu,Hip::get().service_caps() * cpu,INVALID,reinterpret_cast<Utcb*>(utcb)) {
-		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start));
+		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,stack().virt()));
 	}
 	explicit GlobalEc(startup_func start,cpu_t cpu,capsel_t event_base,Pd *pd = Pd::current(),
 			uintptr_t utcb = 0) : Ec(cpu,event_base,INVALID,reinterpret_cast<Utcb*>(utcb)) {
-		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start));
+		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,stack().virt()));
 	}
 };
 

@@ -10,6 +10,8 @@
 #include <mem/DataSpace.h>
 #include <cap/CapHolder.h>
 #include <kobj/Pd.h>
+#include <kobj/Pt.h>
+#include <utcb/UtcbFrame.h>
 #include <Syscalls.h>
 #include <CPU.h>
 
@@ -58,6 +60,19 @@ void DataSpace::unmap() {
 	CapSpace::get().free(_sel);
 	_unmapsel = ObjCap::INVALID;
 	_sel = ObjCap::INVALID;
+}
+
+UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
+	int type;
+	// TODO check for errors
+	uf >> type >> ds._virt >> ds._phys >> ds._size >> ds._perm >> ds._type;
+	TypedItem ti;
+	uf.get_typed(ti);
+	if(type == 0)
+		ds._sel = ti.crd().cap();
+	else
+		ds._unmapsel = ti.crd().cap();
+	return uf;
 }
 
 }

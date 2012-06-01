@@ -24,18 +24,14 @@
 
 namespace nul {
 
-void *ExecEnv::_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)] ALIGNED(ExecEnv::PAGE_SIZE);
-size_t ExecEnv::_stack;
-
-void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start) {
-	static UserSm sm;
-	ScopedLock<UserSm> guard(&sm);
-	unsigned stack_top = sizeof(_stacks[_stack]) / sizeof(void*);
-	_stacks[_stack][--stack_top] = ec;
-	_stacks[_stack][--stack_top] = pd;
-	_stacks[_stack][--stack_top] = 0;
-	_stacks[_stack][--stack_top] = reinterpret_cast<void*>(start);
-	return _stacks[_stack++] + stack_top;
+void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t stack) {
+	void **sp = reinterpret_cast<void**>(stack);
+	unsigned stack_top = STACK_SIZE / sizeof(void*);
+	sp[--stack_top] = ec;
+	sp[--stack_top] = pd;
+	sp[--stack_top] = 0;
+	sp[--stack_top] = reinterpret_cast<void*>(start);
+	return sp + stack_top;
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t *frames,size_t max) {

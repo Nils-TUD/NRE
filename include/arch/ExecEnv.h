@@ -48,8 +48,7 @@ public:
 		PHYS_START		= 0x10000000,
 		PHYS_START_PAGE	= PHYS_START >> PAGE_SHIFT,
 		MOD_START		= MOD_START_ADDR,
-		MOD_START_PAGE	= MOD_START >> PAGE_SHIFT,
-		MAX_STACKS		= 80	// TODO remove
+		MOD_START_PAGE	= MOD_START >> PAGE_SHIFT
 	};
 
 	static inline Pd *get_current_pd() {
@@ -68,7 +67,7 @@ public:
 		set_current(1,ec);
 	}
 
-	static void *setup_stack(Pd *pd,Ec *ec,startup_func start);
+	static void *setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t stack);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 	static size_t collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max);
 
@@ -89,9 +88,6 @@ private:
 	    asm volatile ("mov %%" EXPAND(REG(sp)) ", %0" : "=g"(sp));
 	    *reinterpret_cast<void**>(((sp & ~(STACK_SIZE - 1)) + STACK_SIZE - no * sizeof(void*))) = obj;
 	}
-
-	static void *_stacks[MAX_STACKS][STACK_SIZE / sizeof(void*)];
-	static size_t _stack;
 };
 
 }

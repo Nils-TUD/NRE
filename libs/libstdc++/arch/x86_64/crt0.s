@@ -41,7 +41,10 @@ _start:
 	mov		%rcx, _startup_info			# store pointer to HIP
 2:
 	mov		%rdx, _startup_info + 8 	# store pointer to UTCB
-	mov		%rdi, _startup_info + 16	# store cpu
+	mov		%rsp,%rcx
+	sub		$0x1000,%rcx
+	mov		%rcx, _startup_info + 16	# store stack-begin
+	mov		%rdi, _startup_info + 24	# store cpu
 	sub		$16, %rsp					# leave space for Ec and Pd
 
 	# call early setup (current ec and pd)
@@ -66,4 +69,5 @@ _start:
 _startup_info:
 	.quad	0	# HIP
 	.quad	0	# UTCB
+	.quad	0	# thread
 	.quad	0	# cpu

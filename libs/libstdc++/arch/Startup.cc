@@ -27,16 +27,17 @@
 
 using namespace nul;
 
+EXTERN_C void dlmalloc_init();
+
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
-
-EXTERN_C void dlmalloc_init();
 
 // TODO the setup-stuff is not really nice. I think we need init-priorities or something
 
 void _presetup() {
 	static Pd initpd(CapSpace::INIT_PD,true);
-	static GlobalEc initec(_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&initpd);
+	static GlobalEc initec(_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,
+			&initpd,_startup_info.stack);
 	// force the linker to include the pthread object-file. FIXME why is this necessary??
 	pthread_cancel(0);
 }

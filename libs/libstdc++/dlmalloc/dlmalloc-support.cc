@@ -2,6 +2,7 @@
 
 #include <cap/CapSpace.h>
 #include <mem/DataSpace.h>
+#include <kobj/Pd.h>
 #include <stream/Log.h>
 #include <cstring>
 #include <Syscalls.h>

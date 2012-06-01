@@ -28,13 +28,11 @@ namespace nul {
 
 class LocalEc : public Ec {
 public:
-	explicit LocalEc(cpu_t cpu) : Ec(cpu,Hip::get().service_caps() * cpu) {
+	explicit LocalEc(cpu_t cpu,capsel_t event_base = INVALID,uintptr_t stackaddr = 0)
+			: Ec(cpu,event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,INVALID,0,stackaddr) {
 		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
-	}
-	explicit LocalEc(cpu_t cpu,capsel_t event_base) : Ec(cpu,event_base) {
-		Pd *pd = Pd::current();
-		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,portal_reply_landing_spot));
+		create(pd,Syscalls::EC_LOCAL,
+				ExecEnv::setup_stack(pd,this,portal_reply_landing_spot,stack().virt()));
 	}
 	virtual ~LocalEc() {
 	}

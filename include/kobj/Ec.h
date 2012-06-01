@@ -20,6 +20,7 @@
 
 #include <arch/ExecEnv.h>
 #include <cap/CapHolder.h>
+#include <mem/DataSpace.h>
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <kobj/UserSm.h>
@@ -40,9 +41,12 @@ public:
 	}
 
 protected:
-	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0)
-			: ObjCap(cap), _utcb(utcb), _stack(), _event_base(event_base), _cpu(cpu),
-			  _tls_idx(0), _tls() {
+	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0,uintptr_t stack = 0)
+			: ObjCap(cap), _utcb(utcb),
+			  _stack(ExecEnv::STACK_SIZE,DataSpace::ANONYMOUS,DataSpace::RW,0,stack),
+			  _event_base(event_base), _cpu(cpu), _tls_idx(0), _tls() {
+		if(!_stack.virt())
+			_stack.map();
 		if(!_utcb) {
 			// TODO
 			static UserSm sm;
@@ -55,15 +59,16 @@ protected:
 		CapHolder ch;
 		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->sel());
 		sel(ch.release());
-		_stack = reinterpret_cast<uintptr_t>(sp) & ~(ExecEnv::PAGE_SIZE - 1);
 	}
 
 public:
 	virtual ~Ec() {
-		// TODO stack, utcb
+		if(!_stack.virt())
+			_stack.unmap();
+		// TODO utcb
 	}
 
-	uintptr_t stack() const {
+	const DataSpace &stack() const {
 		return _stack;
 	}
 	capsel_t event_base() const {
@@ -95,7 +100,7 @@ private:
 	Ec& operator=(const Ec&);
 
 	Utcb *_utcb;
-	uintptr_t _stack;
+	DataSpace _stack;
 	capsel_t _event_base;
 	cpu_t _cpu;
 	size_t _tls_idx;

@@ -28,20 +28,23 @@
 
 _start:
 	mov		%eax, %ebx
-	and		$0x7FFFFFFF, %eax		# remove bit
-	and		$0x80000000, %ebx		# the bit says that we're not the root-task
+	and		$0x7FFFFFFF, %eax			# remove bit
+	and		$0x80000000, %ebx			# the bit says that we're not the root-task
 	test	%ebx, %ebx
 	jnz		1f
-	mov		%esp, _startup_info		# store pointer to HIP
-	lea		-0x1000(%esp), %edx	# UTCB is below HIP
-	mov		$_stack, %esp			# switch to our stack
+	mov		%esp, _startup_info			# store pointer to HIP
+	lea		-0x1000(%esp), %edx		# UTCB is below HIP
+	mov		$_stack, %esp				# switch to our stack
 	jmp		2f
 1:
-	mov		%ecx, _startup_info		# store pointer to HIP
+	mov		%ecx, _startup_info			# store pointer to HIP
 2:
-	mov		%edx, _startup_info + 4 # store pointer to UTCB
-	mov		%eax, _startup_info + 8	# store cpu
-	sub		$8, %esp				# leave space for Ec and Pd
+	mov		%edx, _startup_info + 4 	# store pointer to UTCB
+	mov		%esp,%ecx
+	sub		$0x1000,%ecx
+	mov		%ecx, _startup_info + 8		# store stack-begin
+	mov		%eax, _startup_info + 12	# store cpu
+	sub		$8, %esp					# leave space for Ec and Pd
 
 	# call early setup (current ec and pd)
 	call	_presetup
@@ -49,7 +52,7 @@ _start:
 	call	_init
 	# other init stuff
 	shr		$31, %ebx
-	push	%ebx					# 0 for root, 1 otherwise
+	push	%ebx						# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp
 	# finally, call main
@@ -66,4 +69,5 @@ _start:
 _startup_info:
 	.long	0	# HIP
 	.long	0	# UTCB
+	.long	0	# stack
 	.long	0	# cpu

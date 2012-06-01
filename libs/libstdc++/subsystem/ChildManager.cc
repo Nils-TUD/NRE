@@ -140,7 +140,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),RegionList::RW);
+		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack().virt(),RegionList::RW);
 		// and a HIP
 		{
 			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
@@ -271,6 +271,8 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 
 // TODO code-duplication; we already have that in the Client class
 static capsel_t get_parent_service(const char *name) {
+	if(!CPU::current().get_pt)
+		throw Exception("Service not found");
 	UtcbFrame uf;
 	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 	uf.clear();
@@ -439,7 +441,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				c->cmdline(),pfaddr,eip,cpu,error);
 		c->reglist().write(Serial::get());
 		Serial::get().writef("Unable to resolve fault; killing child\n");
-		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
+		ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
 		Serial::get().writef("Backtrace:\n");
 		addr = addrs;
 		while(*addr != 0) {
@@ -457,7 +459,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		c->reglist().map(pfaddr,msize);
 		// ensure that we have the memory (if we're a subsystem this might not be true)
 		// TODO this is not sufficient, in general
-		volatile int x = *reinterpret_cast<int*>(src);
+		UNUSED volatile int x = *reinterpret_cast<int*>(src);
 	}
 }
 

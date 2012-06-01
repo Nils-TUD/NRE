@@ -18,14 +18,15 @@
 
 #pragma once
 
-#include <kobj/Sm.h>
-#include <kobj/Pt.h>
-#include <utcb/UtcbFrame.h>
+#include <arch/Types.h>
+#include <kobj/ObjCap.h>
 
 namespace nul {
 
 class DataSpace;
-static UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
+class UtcbFrameRef;
+
+UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
 
 class DataSpace {
 	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
@@ -48,8 +49,8 @@ public:
 	DataSpace() : _virt(), _phys(), _size(), _perm(), _type(), _own(true), _sel(ObjCap::INVALID),
 			_unmapsel(ObjCap::INVALID) {
 	}
-	DataSpace(size_t size,Type type,uint perm,uintptr_t phys = 0)
-		: _virt(), _phys(phys), _size(size), _perm(perm), _type(type), _own(true), _sel(ObjCap::INVALID),
+	DataSpace(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
+		: _virt(virt), _phys(phys), _size(size), _perm(perm), _type(type), _own(true), _sel(ObjCap::INVALID),
 		  _unmapsel(ObjCap::INVALID) {
 	}
 	~DataSpace() {
@@ -90,18 +91,5 @@ private:
 	capsel_t _sel;
 	capsel_t _unmapsel;
 };
-
-static inline UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
-	int type;
-	// TODO check for errors
-	uf >> type >> ds._virt >> ds._phys >> ds._size >> ds._perm >> ds._type;
-	TypedItem ti;
-	uf.get_typed(ti);
-	if(type == 0)
-		ds._sel = ti.crd().cap();
-	else
-		ds._unmapsel = ti.crd().cap();
-	return uf;
-}
 
 }

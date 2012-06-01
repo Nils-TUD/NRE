@@ -51,7 +51,10 @@ PORTAL static void portal_startup(capsel_t pid);
 static void mythread(void *tls);
 static void start_childs();
 
+// stack for initial Ec (overwrites the weak-symbol defined in Startup.cc)
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
+// stack for LocalEc of first CPU
+static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static Pt *hv_pt = 0;
 static Memory mem;
 
@@ -119,7 +122,8 @@ int main() {
 
 	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
 	CPU &cpu = CPU::current();
-	LocalEc *ec = new LocalEc(cpu.id);
+	// use the local stack here since we can't map dataspaces yet
+	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack));
 	cpu.map_pt = new Pt(ec,portal_map);
 	cpu.unmap_pt = new Pt(ec,portal_unmap);
 	// accept translated caps
@@ -128,6 +132,8 @@ int main() {
 	// create the portal for allocating resources from HV for the current cpu
 	hv_pt = new Pt(ec,portal_hvmap);
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
+			MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
 
 	// allocate serial ports and VGA memory
 	allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
@@ -181,7 +187,8 @@ int main() {
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
-			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,MTD_RSP | MTD_RIP_LEN | MTD_QUAL);
+			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
+					MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
 		}
 	}
 
@@ -220,16 +227,18 @@ static void start_childs() {
 					Caps::TYPE_MEM | Caps::MEM_RWX,start));
 			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
 			start += it->size >> ExecEnv::PAGE_SHIFT;
-			// we assume that the cmdline does not cross pages
+			// TODO we assume that the cmdline does not cross pages
 			char *aux = 0;
 			if(it->aux) {
 				if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
 					throw Exception("Out of memory for modules");
 				allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
-				aux = reinterpret_cast<char*>((start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
+				aux = reinterpret_cast<char*>(
+						(start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
 				start++;
 				// ensure that its terminated at the end of the page
-				uintptr_t endaddr = Util::roundup<uintptr_t>(reinterpret_cast<uintptr_t>(aux),ExecEnv::PAGE_SIZE) - 1;
+				uintptr_t endaddr = Util::roundup<uintptr_t>(
+						reinterpret_cast<uintptr_t>(aux),ExecEnv::PAGE_SIZE) - 1;
 				char *end = reinterpret_cast<char*>(endaddr);
 				*end = '\0';
 			}
