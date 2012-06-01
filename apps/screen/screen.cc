@@ -55,14 +55,6 @@ int ScreenClientData::_next_id = 0;
 static ScreenService *srv;
 
 int main() {
-	/*
-	DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
-	ds.map();
-	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
-	ds.unmap();
-	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
-	*/
-
 	// TODO might be something else than 0x3f8
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
 	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
@@ -91,5 +83,5 @@ static void portal_write(capsel_t pid) {
 	int *data = reinterpret_cast<int*>(c->ds()->virt());
 	i = *data;
 	//uf >> i;
-	Screen::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
+	Log::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
 }

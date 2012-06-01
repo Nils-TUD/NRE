@@ -43,10 +43,11 @@ using namespace nul;
 
 EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
-PORTAL static void portal_startup(capsel_t pid);
 PORTAL static void portal_map(capsel_t);
 PORTAL static void portal_unmap(capsel_t);
 PORTAL static void portal_hvmap(capsel_t);
+PORTAL static void portal_pagefault(capsel_t);
+PORTAL static void portal_startup(capsel_t pid);
 static void mythread(void *tls);
 static void start_childs();
 
@@ -179,10 +180,8 @@ int main() {
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-			// create the portal for allocating resources from HV for the current cpu
-			if(it->id() == CPU::current().id)
-				hv_pt = new Pt(ec,portal_hvmap);
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,MTD_RSP | MTD_RIP_LEN | MTD_QUAL);
 		}
 	}
 
@@ -271,6 +270,23 @@ static void portal_hvmap(capsel_t) {
 	uf >> range;
 	uf.clear();
 	uf.delegate(range,DelItem::FROM_HV);
+}
+
+static void portal_pagefault(capsel_t) {
+	UtcbExcFrameRef uf;
+	uintptr_t *addr,addrs[32];
+	uintptr_t pfaddr = uf->qual[1];
+	unsigned error = uf->qual[0];
+	uintptr_t eip = uf->rip;
+	Serial::get().writef("Root: Pagefault for %p @ %p on cpu %u, error=%#x\n",
+			pfaddr,eip,CPU::current().id,error);
+	ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1),uf->rbp,addrs,32);
+	Serial::get().writef("Backtrace:\n");
+	addr = addrs;
+	while(*addr != 0) {
+		Serial::get().writef("\t%p\n",*addr);
+		addr++;
+	}
 }
 
 static void portal_startup(capsel_t) {

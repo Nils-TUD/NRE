@@ -439,7 +439,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				c->cmdline(),pfaddr,eip,cpu,error);
 		c->reglist().write(Serial::get());
 		Serial::get().writef("Unable to resolve fault; killing child\n");
-		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,sizeof(addrs));
+		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 		Serial::get().writef("Backtrace:\n");
 		addr = addrs;
 		while(*addr != 0) {
