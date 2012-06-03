@@ -79,9 +79,8 @@ static void portal_write(capsel_t pid) {
 	ScopedLock<UserSm> guard(&sm);
 	ScreenClientData *c = srv->get_client<ScreenClientData>(pid);
 	UtcbFrameRef uf;
-	int i;
 	int *data = reinterpret_cast<int*>(c->ds()->virt());
-	i = *data;
+	int i = *data;
 	//uf >> i;
 	Log::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
 }

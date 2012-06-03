@@ -48,8 +48,8 @@ static void write(void *) {
 	Client scr("screen");
 	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
 	ds.map();
+	ds.share(scr);
 	int *data = reinterpret_cast<int*>(ds.virt());
-	scr.share(ds);
 	for(uint i = 0; ; ++i) {
 		UtcbFrame uf;
 		*data = i;

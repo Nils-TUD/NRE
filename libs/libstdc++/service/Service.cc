@@ -14,10 +14,14 @@ namespace nul {
 void ClientData::portal_ds(capsel_t pid) {
 	Service *s = Ec::current()->get_tls<Service>(0);
 	ClientData *c = s->get_client<ClientData>(pid);
+
 	UtcbFrameRef uf;
 	c->_ds = new DataSpace();
 	uf >> *c->_ds;
 	c->_ds->map();
+
+	uf.clear();
+	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 }
 
 }

@@ -12,50 +12,72 @@
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
+#include <service/Client.h>
+#include <stream/Serial.h>
 #include <Syscalls.h>
 #include <CPU.h>
 
 namespace nul {
 
-void DataSpace::map() {
-	assert(_unmapsel == ObjCap::INVALID);
+void DataSpace::create() {
+	Serial::get().writef("### Before Create: ");
+	this->write(Serial::get());
+	Serial::get().writef("\n");
+
+	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
 	UtcbFrame uf;
-	CapHolder umcap,mcap;
-	try {
-		// if the sm-sel hasn't been passed in by IPC, create a new one
-		if(_sel == ObjCap::INVALID)
-			Syscalls::create_sm(mcap.get(),0,Pd::current()->sel());
-		// prepare for receiving the unmap-cap
-		uf.set_receive_crd(Crd(umcap.get(),0,DESC_CAP_ALL));
-		if(_own)
-			uf.delegate(_sel);
-		else
-			uf.translate(_sel);
-		uf << 0 << _virt << _phys << _size << _perm << _type;
-		CPU::current().map_pt->call(uf);
-		// TODO error-handling
-		uf >> _virt >> _size >> _perm >> _type;
-		_unmapsel = umcap.release();
-		if(_sel == ObjCap::INVALID)
-			_sel = mcap.get();
-		mcap.release();
-	}
-	catch(...) {
-		// make sure that we don't leak the Sm
-		if(_sel == ObjCap::INVALID)
-			Syscalls::revoke(Crd(mcap.get(),0,DESC_CAP_ALL),true);
-		throw;
-	}
+	CapHolder caps(2,2);
+	// prepare for receiving map and unmap-cap
+	uf.set_receive_crd(Crd(caps.get(),1,DESC_CAP_ALL));
+	uf << CREATE << _virt << _phys << _size << _perm << _type;
+	CPU::current().map_pt->call(uf);
+	// TODO error-handling
+	uf >> _virt >> _size >> _perm >> _type;
+	_sel = caps.get();
+	_unmapsel = caps.get() + 1;
+	caps.release();
+
+	Serial::get().writef("### After Create: ");
+	this->write(Serial::get());
+	Serial::get().writef("\n");
+}
+
+void DataSpace::share(Client &c) {
+	UtcbFrame uf;
+	uf << JOIN << 0 << 0 << _size << _perm << _type;
+	uf.delegate(_sel);
+	c.shpt()->call(uf);
+}
+
+void DataSpace::join() {
+	Serial::get().writef("### Before Join: ");
+	this->write(Serial::get());
+	Serial::get().writef("\n");
+
+	assert(_sel != ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
+	UtcbFrame uf;
+	CapHolder umcap;
+	// prepare for receiving unmap-cap
+	uf.set_receive_crd(Crd(umcap.get(),0,DESC_CAP_ALL));
+	uf.translate(_sel);
+	uf << JOIN << _virt << _phys << _size << _perm << _type;
+	CPU::current().map_pt->call(uf);
+	// TODO error-handling
+	uf >> _virt >> _size >> _perm >> _type;
+	_unmapsel = umcap.release();
+
+	Serial::get().writef("### After Join: ");
+	this->write(Serial::get());
+	Serial::get().writef("\n");
 }
 
 void DataSpace::unmap() {
 	assert(_sel != ObjCap::INVALID && _unmapsel != ObjCap::INVALID);
 	UtcbFrame uf;
 	uf.translate(_unmapsel);
-	uf << 1 << _virt << _phys << _size << _perm << _type;
+	uf << DESTROY << _virt << _phys << _size << _perm << _type;
 	CPU::current().unmap_pt->call(uf);
 	// TODO error-handling
-	Syscalls::revoke(Crd(_sel,0,DESC_CAP_ALL),true);
 	CapSpace::get().free(_unmapsel);
 	CapSpace::get().free(_sel);
 	_unmapsel = ObjCap::INVALID;
@@ -63,15 +85,22 @@ void DataSpace::unmap() {
 }
 
 UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
-	int type;
+	DataSpace::RequestType type;
 	// TODO check for errors
 	uf >> type >> ds._virt >> ds._phys >> ds._size >> ds._perm >> ds._type;
 	TypedItem ti;
-	uf.get_typed(ti);
-	if(type == 0)
-		ds._sel = ti.crd().cap();
-	else
-		ds._unmapsel = ti.crd().cap();
+	switch(type) {
+		case DataSpace::CREATE:
+			break;
+		case DataSpace::JOIN:
+			uf.get_typed(ti);
+			ds._sel = ti.crd().cap();
+			break;
+		case DataSpace::DESTROY:
+			uf.get_typed(ti);
+			ds._unmapsel = ti.crd().cap();
+			break;
+	}
 	return uf;
 }
 

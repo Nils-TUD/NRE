@@ -20,9 +20,11 @@
 
 #include <arch/Types.h>
 #include <kobj/ObjCap.h>
+#include <stream/OStream.h>
 
 namespace nul {
 
+class Client;
 class DataSpace;
 class UtcbFrameRef;
 
@@ -30,6 +32,12 @@ UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
 
 class DataSpace {
 	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
+
+	enum RequestType {
+		CREATE,
+		JOIN,
+		DESTROY
+	};
 
 public:
 	enum Type {
@@ -46,11 +54,11 @@ public:
 		RWX	= R | W | X,
 	};
 
-	DataSpace() : _virt(), _phys(), _size(), _perm(), _type(), _own(true), _sel(ObjCap::INVALID),
+	DataSpace() : _virt(), _phys(), _size(), _perm(), _type(), _sel(ObjCap::INVALID),
 			_unmapsel(ObjCap::INVALID) {
 	}
 	DataSpace(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _virt(virt), _phys(phys), _size(size), _perm(perm), _type(type), _own(true), _sel(ObjCap::INVALID),
+		: _virt(virt), _phys(phys), _size(size), _perm(perm), _type(type), _sel(ObjCap::INVALID),
 		  _unmapsel(ObjCap::INVALID) {
 	}
 	~DataSpace() {
@@ -78,16 +86,29 @@ public:
 		return _type;
 	}
 
-	void map();
+	void map() {
+		if(_sel == ObjCap::INVALID)
+			create();
+		else
+			join();
+	}
+	void share(Client &c);
 	void unmap();
 
+	void write(OStream &os) const {
+		os.writef("DataSpace[%p..%p (%zu)]: perm=%#x, type=%u, sel=%#x, umsel=%#x",
+				_virt,_virt + _size - 1,_size,_perm,_type,_sel,_unmapsel);
+	}
+
 private:
+	void create();
+	void join();
+
 	uintptr_t _virt;
 	uintptr_t _phys;
 	size_t _size;
 	uint _perm;
 	Type _type;
-	bool _own;
 	capsel_t _sel;
 	capsel_t _unmapsel;
 };

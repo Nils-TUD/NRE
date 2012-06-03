@@ -48,7 +48,9 @@ public:
 				// not do more ups than necessary. and it might happen that the connect failed,
 				// but immediatly afterwards the service is registered and up() is called. when
 				// calling zero() we would ignore this signal and might block for ever.
+				Serial::get().writef("Waiting for service...\n");
 				CPU::current().srv_sm->down();
+				Serial::get().writef("Retrying...\n");
 			}
 		}
 		while(cap == ObjCap::INVALID);
@@ -64,13 +66,8 @@ public:
 	Pt *pt() {
 		return _pt;
 	}
-
-	// TODO move to DataSpace?
-	void share(const DataSpace &ds) {
-		UtcbFrame uf;
-		uf << 0 << ds.virt() << ds.phys() << ds.size() << ds.perm() << ds.type();
-		uf.delegate(ds.sel());
-		_shpt->call(uf);
+	Pt *shpt() {
+		return _shpt;
 	}
 
 private:

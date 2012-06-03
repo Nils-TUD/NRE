@@ -8,7 +8,7 @@ loader="../morbo/tftp/farnsworth"
 if [ "$NOVA_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom -m 256 -smp 1"
+	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	export QEMU="qemu-system-x86_64"
@@ -61,7 +61,7 @@ cp hypervisor-$NOVA_TARGET $root/$build/bin/apps/hypervisor
 cd $root
 
 # copy loader
-cp $loader $build/bin/apps/chainloader
+#cp $loader $build/bin/apps/chainloader
 
 # run the specified command, if any
 case "$1" in

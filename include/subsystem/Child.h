@@ -64,18 +64,25 @@ private:
 			_stack(), _utcb(), _hip(), _sm() {
 	}
 	~Child() {
-		if(_pd)
-			delete _pd;
-		if(_ec)
-			delete _ec;
-		if(_sc)
-			delete _sc;
 		for(size_t i = 0; i < _ptcount; ++i)
 			delete _pts[i];
 		for(size_t i = 0; i < _smcount; ++i)
 			delete _sms[i];
 		delete[] _waits;
 		delete[] _pts;
+		if(_sc)
+			delete _sc;
+		if(_ec)
+			delete _ec;
+		if(_pd)
+			delete _pd;
+	}
+
+	void increase_refs() {
+		Util::atomic_xadd(&_refs,+1);
+	}
+	void decrease_refs() {
+		Util::atomic_xadd(&_refs,-1);
 	}
 
 	Child(const Child&);

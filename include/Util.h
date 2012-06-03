@@ -118,6 +118,9 @@ public:
 		return min(basealign,shiftalign);
 	}
 
+	/**
+	 * Adds <value> to *<ptr> and returns the old value
+	 */
 	template<typename T,typename Y>
 	static T atomic_xadd(T volatile *ptr,Y value) {
 		return __sync_fetch_and_add(ptr,value);

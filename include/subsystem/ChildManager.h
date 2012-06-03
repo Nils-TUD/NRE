@@ -86,7 +86,8 @@ private:
 	void destroy_child(capsel_t pid) {
 		size_t i = (pid - _portal_caps) / per_child_caps();
 		Child *c = _childs[i];
-		if(--c->_refs == 0) {
+		c->decrease_refs();
+		if(c->refs() == 0) {
 			// note that we're safe here because we only get here if there is only one Ec left and
 			// this one has just caused a fault. thus, there can't be somebody else using this
 			// client instance

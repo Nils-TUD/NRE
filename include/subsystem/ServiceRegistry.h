@@ -30,7 +30,7 @@ class ServiceRegistry {
 public:
 	class Service {
 	public:
-		Service(Child *child,const char *name,cpu_t cpu,capsel_t pt)
+		Service(Child *child,const String &name,cpu_t cpu,capsel_t pt)
 			: _child(child), _name(name), _cpu(cpu), _pt(pt) {
 		}
 		~Service() {
@@ -41,7 +41,7 @@ public:
 		Child *child() const {
 			return _child;
 		}
-		const char *name() const {
+		const String &name() const {
 			return _name;
 		}
 		cpu_t cpu() const {
@@ -53,7 +53,7 @@ public:
 
 	private:
 		Child *_child;
-		const char *_name;
+		String _name;
 		cpu_t _cpu;
 		capsel_t _pt;
 	};
@@ -73,7 +73,7 @@ public:
 		}
 		throw Exception("All service slots in use");
 	}
-	void unreg(Child *child,const char *name,cpu_t cpu) {
+	void unreg(Child *child,const String &name,cpu_t cpu) {
 		size_t i;
 		Service *s = search(name,cpu,&i);
 		if(s && s->child() == child) {
@@ -81,7 +81,7 @@ public:
 			_srvs[i] = 0;
 		}
 	}
-	const Service* find(const char *name,cpu_t cpu) const {
+	const Service* find(const String &name,cpu_t cpu) const {
 		return search(name,cpu);
 	}
 	void remove(Child *child) {
@@ -94,9 +94,9 @@ public:
 	}
 
 private:
-	Service *search(const char *name,cpu_t cpu,size_t *idx = 0) const {
+	Service *search(const String &name,cpu_t cpu,size_t *idx = 0) const {
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
-			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name(),name) == 0) {
+			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name().str(),name.str()) == 0) {
 				if(idx)
 					*idx = i;
 				return _srvs[i];

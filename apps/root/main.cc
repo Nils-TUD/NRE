@@ -254,13 +254,17 @@ static void portal_map(capsel_t) {
 	// alloc mem
 	DataSpace ds;
 	uf >> ds;
-	uintptr_t addr = mem.alloc(ds.size());
-	// create an unmap-cap and delegate it to the caller
-	CapHolder cap;
+	size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
+	uintptr_t addr = mem.alloc(size);
+	// create a map and unmap-cap and delegate it to the caller
+	CapHolder cap(2,2);
 	Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
+	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
 	uf.clear();
-	uf.delegate(cap.release());
-	uf << addr << ds.size() << ds.perm() << ds.type();
+	uf.delegate(cap.get(),0);
+	uf.delegate(cap.get() + 1,1);
+	uf << addr << size << ds.perm() << ds.type();
+	cap.release();
 }
 
 static void portal_unmap(capsel_t) {
@@ -269,8 +273,11 @@ static void portal_unmap(capsel_t) {
 	DataSpace ds;
 	uf >> ds;
 	mem.free(ds.virt(),ds.size());
-	// revoke unmap-cap
+	// revoke caps and free selectors
+	Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
+	CapSpace::get().free(ds.sel());
 	Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
+	CapSpace::get().free(ds.unmapsel());
 }
 
 static void portal_hvmap(capsel_t) {
@@ -296,6 +303,8 @@ static void portal_pagefault(capsel_t) {
 		Serial::get().writef("\t%p\n",*addr);
 		addr++;
 	}
+	// kill ourself; TODO
+	Ec::current()->recall();
 }
 
 static void portal_startup(capsel_t) {

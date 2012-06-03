@@ -181,6 +181,10 @@ public:
 		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial);
 	}
 
+	static inline void ec_recall(capsel_t ec) {
+		SyscallABI::syscall(ec << 8 | RECALL);
+	}
+
 	static inline void sm_ctrl(capsel_t sm,SmOp op) {
 		SyscallABI::syscall(sm << 8 | SM_CTL | op);
 	}

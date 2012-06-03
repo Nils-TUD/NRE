@@ -29,6 +29,10 @@ namespace nul {
 ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
 		: _s(s), _ec(cpu), _pt(&_ec,portal_newclient), _sm() {
 	_ec.set_tls(_ec.create_tls(),s);
+	// accept cap (for ds sharing)
+	UtcbFrameRef ecuf(_ec.utcb());
+	ecuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+
 	UtcbFrame uf;
 	uf.delegate(_pt.sel());
 	uf << String(s->name()) << cpu;

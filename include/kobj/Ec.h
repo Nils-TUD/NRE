@@ -68,6 +68,10 @@ public:
 		// TODO utcb
 	}
 
+	void recall() {
+		Syscalls::ec_recall(sel());
+	}
+
 	const DataSpace &stack() const {
 		return _stack;
 	}

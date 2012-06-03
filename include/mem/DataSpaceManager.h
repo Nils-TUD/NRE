@@ -29,20 +29,21 @@ public:
 	}
 
 	void create(DataSpace& ds) {
-		Slot *slot = find_free();
+		Slot *slot = 0;
+		if(ds.sel() != ObjCap::INVALID) {
+			slot = find(ds);
+			if(slot) {
+				ds = slot->ds;
+				slot->refs++;
+				return;
+			}
+		}
+
 		// TODO phys
+		slot = find_free();
 		ds.map();
 		slot->ds = ds;
 		slot->refs = 1;
-	}
-	uintptr_t join(capsel_t sel) {
-		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds.sel() == sel) {
-				_slots[i].refs++;
-				return _slots[i].ds.phys();
-			}
-		}
-		return 0;
 	}
 	DataSpace *destroy(capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
@@ -56,6 +57,13 @@ public:
 	}
 
 private:
+	Slot *find(const DataSpace& ds) {
+		for(size_t i = 0; i < MAX_SLOTS; ++i) {
+			if(_slots[i].refs && _slots[i].ds.sel() == ds.sel())
+				return _slots + i;
+		}
+		return 0;
+	}
 	Slot *find_free() {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs == 0)

@@ -180,6 +180,8 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			return;
 		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)));
 		uf->mtd = MTD_RIP_LEN;
+		Serial::get().writef("### Start @ %p\n",uf->rip);
+		c->increase_refs();
 	}
 	else {
 		uf->rip = *reinterpret_cast<word_t*>(uf->rsp);
@@ -228,7 +230,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		uf >> cpu;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().reg(ServiceRegistry::Service(c,name.str(),cpu,cap.crd().cap()));
+			cm->registry().reg(ServiceRegistry::Service(c,name,cpu,cap.crd().cap()));
 			cm->notify_childs(cpu);
 		}
 
@@ -257,7 +259,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		uf >> cpu;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().unreg(c,name.str(),cpu);
+			cm->registry().unreg(c,name,cpu);
 		}
 
 		uf.clear();
@@ -298,10 +300,10 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
 			c->_waits[cpu]++;
-			const ServiceRegistry::Service* s = cm->registry().find(name.str(),cpu);
+			const ServiceRegistry::Service* s = cm->registry().find(name,cpu);
 			if(!s) {
 				capsel_t sel = get_parent_service(name.str());
-				s = cm->registry().reg(ServiceRegistry::Service(0,name.str(),cpu,sel));
+				s = cm->registry().reg(ServiceRegistry::Service(0,name,cpu,sel));
 			}
 			c->_waits[cpu]--;
 
@@ -350,8 +352,13 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
 
+		Serial::get().writef("\n### %s: Created dataspace @ %p with %zu bytes\n",c->cmdline(),addr,ds.size());
+		c->reglist().write(Serial::get());
+		Serial::get().writef("\n");
+
 		uf.clear();
-		uf.delegate(ds.unmapsel());
+		uf.delegate(ds.sel(),0);
+		uf.delegate(ds.unmapsel(),1);
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		uf << addr << ds.size() << ds.perm() << ds.type();
 	}
@@ -414,52 +421,64 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	if(!c)
 		return;
 
-	ScopedLock<UserSm> guard(&c->_sm);
-	uintptr_t pfaddr = uf->qual[1];
-	unsigned error = uf->qual[0];
-	uintptr_t eip = uf->rip;
+	bool kill = false;
+	{
+		ScopedLock<UserSm> guard(&c->_sm);
+		uintptr_t pfaddr = uf->qual[1];
+		unsigned error = uf->qual[0];
+		uintptr_t eip = uf->rip;
 
-	Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-			c->cmdline(),pfaddr,eip,cpu,error);
-
-	// TODO different handlers (cow, ...)
-	pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
-	uintptr_t src;
-	size_t size;
-	uint flags = c->reglist().find(pfaddr,src,size);
-	bool kill = !flags;
-	// check if the access rights are violated
-	if(flags & RegionList::M) {
-		if((error & 0x2) && !(flags & RegionList::W))
-			kill = true;
-		if((error & 0x4) && !(flags & RegionList::R))
-			kill = true;
-	}
-	if(kill) {
-		uintptr_t *addr,addrs[32];
 		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 				c->cmdline(),pfaddr,eip,cpu,error);
-		c->reglist().write(Serial::get());
-		Serial::get().writef("Unable to resolve fault; killing child\n");
-		ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
-		Serial::get().writef("Backtrace:\n");
-		addr = addrs;
-		while(*addr != 0) {
-			Serial::get().writef("\t%p\n",*addr);
-			addr++;
+
+		// TODO different handlers (cow, ...)
+		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
+		uintptr_t src;
+		size_t size;
+		uint flags = c->reglist().find(pfaddr,src,size);
+		kill = !flags;
+		// check if the access rights are violated
+		if(flags & RegionList::M) {
+			if((error & 0x2) && !(flags & RegionList::W))
+				kill = true;
+			if((error & 0x4) && !(flags & RegionList::R))
+				kill = true;
 		}
-		cm->destroy_child(pid);
+		if(kill) {
+			uintptr_t *addr,addrs[32];
+			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+					c->cmdline(),pfaddr,eip,cpu,error);
+			c->reglist().write(Serial::get());
+			Serial::get().writef("Unable to resolve fault; killing child\n");
+			ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
+			Serial::get().writef("Backtrace:\n");
+			addr = addrs;
+			while(*addr != 0) {
+				Serial::get().writef("\t%p\n",*addr);
+				addr++;
+			}
+		}
+		else if(!(flags & RegionList::M)) {
+			uint perms = flags & RegionList::RWX;
+			// try to map the next 32 pages
+			size_t msize = Util::min<size_t>(Util::roundup<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
+			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
+					DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
+			c->reglist().map(pfaddr,msize);
+			// ensure that we have the memory (if we're a subsystem this might not be true)
+			// TODO this is not sufficient, in general
+			UNUSED volatile int x = *reinterpret_cast<int*>(src);
+		}
 	}
-	else if(!(flags & RegionList::M)) {
-		uint perms = flags & RegionList::RWX;
-		// try to map the next 32 pages
-		size_t msize = Util::min<size_t>(Util::roundup<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
-		uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
-				DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
-		c->reglist().map(pfaddr,msize);
-		// ensure that we have the memory (if we're a subsystem this might not be true)
-		// TODO this is not sufficient, in general
-		UNUSED volatile int x = *reinterpret_cast<int*>(src);
+
+	// we can't release the lock after having killed the child. thus, we do out here (it's save
+	// because there can't be any running Ecs anyway since we only destroy it when there are no
+	// other Ecs left)
+	if(kill) {
+		// let the kernel kill the Ec by causing it a pagefault in kernel-area
+		uf->mtd = MTD_RIP_LEN;
+		uf->rip = ExecEnv::KERNEL_START;
+		cm->destroy_child(pid);
 	}
 }
 
