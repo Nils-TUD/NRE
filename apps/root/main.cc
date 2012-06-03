@@ -251,18 +251,20 @@ static void start_childs() {
 
 static void portal_map(capsel_t) {
 	UtcbFrameRef uf;
-	// alloc mem
 	DataSpace ds;
 	uf >> ds;
+	// alloc mem
 	size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
 	uintptr_t addr = mem.alloc(size);
-	// create a map and unmap-cap and delegate it to the caller
+	// create a map and unmap-cap
 	CapHolder cap(2,2);
 	Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
 	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
 	uf.clear();
+	// delegate them to caller
 	uf.delegate(cap.get(),0);
 	uf.delegate(cap.get() + 1,1);
+	// pass back attributes so that the caller has the correct ones
 	uf << addr << size << ds.perm() << ds.type();
 	cap.release();
 }
@@ -294,6 +296,7 @@ static void portal_pagefault(capsel_t) {
 	uintptr_t pfaddr = uf->qual[1];
 	unsigned error = uf->qual[0];
 	uintptr_t eip = uf->rip;
+
 	Serial::get().writef("Root: Pagefault for %p @ %p on cpu %u, error=%#x\n",
 			pfaddr,eip,CPU::current().id,error);
 	ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1),uf->rbp,addrs,32);
@@ -303,14 +306,16 @@ static void portal_pagefault(capsel_t) {
 		Serial::get().writef("\t%p\n",*addr);
 		addr++;
 	}
-	// kill ourself; TODO
-	Ec::current()->recall();
+
+	// let the kernel kill us
+	uf->rip = ExecEnv::KERNEL_START;
+	uf->mtd = MTD_RIP_LEN;
 }
 
 static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
-	uf->rip = *reinterpret_cast<word_t*>(uf->rsp);
+	uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
 }
 
 static void mythread(void *) {

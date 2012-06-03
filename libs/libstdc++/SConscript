@@ -9,6 +9,6 @@ env.Install(env['SYSGCCLIBPATH'], [crt0, crt1, crtn])
 
 ccsrc = [Glob('*.cc'), Glob('*/*.cc'), Glob('*/' + env['ARCH'] + '/*.cc')]
 csrc = [Glob('*.c'), Glob('*/*.c'), Glob('*/' + env['ARCH'] + '/*.c')]
-ssrc = [Glob('*/' + env['ARCH'] + '/*.s')]
+ssrc = [Glob('arch/*.s'), Glob('*/' + env['ARCH'] + '/*.s')]
 lib = env.StaticLibrary('libstdc++', ccsrc + csrc + ssrc)
 env.Install(env['LIBPATH'], lib)

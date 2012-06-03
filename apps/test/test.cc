@@ -50,12 +50,13 @@ static void write(void *) {
 	ds.map();
 	ds.share(scr);
 	int *data = reinterpret_cast<int*>(ds.virt());
-	for(uint i = 0; ; ++i) {
+	for(uint i = 0; i < 100; ++i) {
 		UtcbFrame uf;
 		*data = i;
 		//uf << i;
 		scr.pt()->call(uf);
 	}
+	ds.unmap();
 }
 
 int main() {

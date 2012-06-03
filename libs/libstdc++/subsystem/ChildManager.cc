@@ -178,13 +178,13 @@ void ChildManager::Portals::startup(capsel_t pid) {
 		size_t size;
 		if(!c->reglist().find(uf->rsp,src,size))
 			return;
-		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)));
+		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 		uf->mtd = MTD_RIP_LEN;
 		Serial::get().writef("### Start @ %p\n",uf->rip);
 		c->increase_refs();
 	}
 	else {
-		uf->rip = *reinterpret_cast<word_t*>(uf->rsp);
+		uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
 		uf->rsp = c->stack() + (uf->rsp & (ExecEnv::PAGE_SIZE - 1));
 		// the bit indicates that its not the root-task
 		// TODO not nice

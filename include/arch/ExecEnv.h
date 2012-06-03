@@ -67,9 +67,9 @@ public:
 		set_current(1,ec);
 	}
 
-	static void *setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t stack);
+	static void *setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t ret,uintptr_t stack);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
-	static size_t collect_backtrace(uintptr_t stack,uintptr_t ebp,uintptr_t *frames,size_t max);
+	static size_t collect_backtrace(uintptr_t stack,uintptr_t bp,uintptr_t *frames,size_t max);
 
 private:
 	ExecEnv();
