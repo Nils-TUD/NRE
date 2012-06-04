@@ -20,7 +20,7 @@
 
 #include <utcb/UtcbHead.h>
 #include <Syscalls.h>
-#include <assert.h>
+#include <Assert.h>
 
 namespace nul {
 

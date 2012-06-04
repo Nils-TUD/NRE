@@ -18,7 +18,6 @@
 
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
-#include <ex/SyscallException.h>
 #include <cap/CapSpace.h>
 #include <Syscalls.h>
 

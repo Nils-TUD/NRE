@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <ex/SyscallException.h>
-#include <Errors.h>
 #include <arch/Types.h>
+#include <Compiler.h>
+#include <Errors.h>
 
 namespace nul {
 
@@ -100,7 +100,7 @@ public:
 
 private:
 	static inline void handle_result(uint8_t res) {
-		if(EXPECT_FALSE(res != ESUCCESS))
+		if(EXPECT_FALSE(res != E_SUCCESS))
 			throw SyscallException(static_cast<ErrorCode>(res));
 	}
 };

@@ -35,9 +35,9 @@
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
-#include <exception>
+#include <Exception.h>
 #include <cstring>
-#include <assert.h>
+#include <Assert.h>
 
 using namespace nul;
 
@@ -221,7 +221,7 @@ static void start_childs() {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
 			if((start << ExecEnv::PAGE_SHIFT) + it->size > ExecEnv::KERNEL_START)
-				throw Exception("Out of memory for modules");
+				throw Exception(E_CAPACITY);
 			// map the memory of the module
 			allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
 					Caps::TYPE_MEM | Caps::MEM_RWX,start));
@@ -231,7 +231,7 @@ static void start_childs() {
 			char *aux = 0;
 			if(it->aux) {
 				if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
-					throw Exception("Out of memory for modules");
+					throw Exception(E_CAPACITY);
 				allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
 				aux = reinterpret_cast<char*>(
 						(start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));

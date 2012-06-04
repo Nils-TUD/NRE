@@ -10,7 +10,7 @@
 #pragma once
 
 #include <mem/DataSpace.h>
-#include <ex/Exception.h>
+#include <Exception.h>
 
 namespace nul {
 
@@ -53,7 +53,7 @@ public:
 				return 0;
 			}
 		}
-		throw Exception("Dataspace not found");
+		throw DataSpaceException(E_NOT_FOUND);
 	}
 
 private:
@@ -69,8 +69,7 @@ private:
 			if(_slots[i].refs == 0)
 				return _slots + i;
 		}
-		// TODO different exception
-		throw Exception("No free slot");
+		throw DataSpaceException(E_CAPACITY);
 	}
 
 	Slot _slots[MAX_SLOTS];

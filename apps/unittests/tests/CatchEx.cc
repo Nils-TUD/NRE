@@ -44,7 +44,7 @@ static void test_catchex() {
 	for(unsigned i = 0; i < tries; i++) {
 		tic = Util::tsc();
 		try {
-			throw Exception("foobar");
+			throw Exception(E_CAPACITY);
 		}
 		catch(const Exception& e) {
 			sum++;

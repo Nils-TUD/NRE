@@ -21,13 +21,13 @@
 #include <kobj/Pt.h>
 #include <subsystem/ServiceRegistry.h>
 #include <mem/DataSpaceManager.h>
+#include <Exception.h>
 
 namespace nul {
 
-// TODO wrong place?
 class ElfException : public Exception {
 public:
-	ElfException(const char *msg) : Exception(msg) {
+	ElfException(ErrorCode code) : Exception(code) {
 	}
 };
 

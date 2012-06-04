@@ -23,15 +23,22 @@
 #include <cap/CapRange.h>
 #include <stream/OStream.h>
 #include <stream/Serial.h>
+#include <Exception.h>
 #include <kobj/Ec.h>
 #include <String.h>
 #include <cstring>
-#include <assert.h>
+#include <Assert.h>
 
 namespace nul {
 
 class Pt;
 class UtcbFrameRef;
+
+class UtcbException : public Exception {
+public:
+	explicit UtcbException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class TypedItem {
 	friend class UtcbFrameRef;
@@ -87,17 +94,16 @@ class UtcbFrameRef {
 	}
 
 	void check_write(size_t words) {
-		// TODO use a different exception
 		if(_utcb->freewords() < words)
-			throw Exception("Utcb has not enough capacity");
+			throw UtcbException(E_CAPACITY);
 	}
 	void check_untyped_read(size_t words) {
 		if(_upos + words > untyped())
-			throw Exception("Utcb has no more untyped items");
+			throw Exception(E_UTCB_UNTYPED);
 	}
 	void check_typed_read(size_t words) {
 		if(_tpos + words > typed())
-			throw Exception("Utcb has no more typed items");
+			throw Exception(E_UTCB_TYPED);
 	}
 
 	UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _upos(), _tpos() {

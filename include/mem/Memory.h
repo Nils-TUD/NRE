@@ -19,12 +19,17 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <ex/Exception.h>
+#include <Exception.h>
 #include <stream/OStream.h>
 
 namespace nul {
 
-// TODO thread-safety?
+class MemoryException : public Exception {
+public:
+	explicit MemoryException(ErrorCode code) throw() : Exception(code) {
+	}
+};
+
 class Memory {
 	enum {
 		MAX_REGIONS		= 64
@@ -42,7 +47,7 @@ public:
 	uintptr_t alloc(size_t size) {
 		Region *r = get(size);
 		if(!r)
-			throw Exception("Not enough space");
+			throw MemoryException(E_CAPACITY);
 		r->addr += size;
 		r->size -= size;
 		return r->addr - size;
@@ -106,7 +111,7 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw Exception("No free regions");
+		throw MemoryException(E_CAPACITY);
 	}
 
 	Region _regs[MAX_REGIONS];

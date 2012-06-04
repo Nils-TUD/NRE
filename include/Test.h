@@ -72,20 +72,7 @@ class WvTest {
 		}
 
 		const char *tostr() {
-			switch(err) {
-				case ESUCCESS: return "ok";
-				case ETIMEOUT: return "ETIMEOUT";
-				case EABORT: return "EABORT";
-				case ESYS: return "ESYS";
-				case ECAP: return "ECAP";
-				case EMEM: return "EMEM";
-				case EFTR: return "EFTR";
-				case ECPU: return "ECPU";
-				case EDEV: return "EDEV";
-			}
-			char *ret = new char[30]; // XXX memory leak
-			OStringStream::format(ret,30,"ERR:0x%x",err);
-			return ret;
+			return to_string(err);
 		}
 	};
 

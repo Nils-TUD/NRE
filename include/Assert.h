@@ -18,31 +18,47 @@
 
 #pragma once
 
-#include <ex/Exception.h>
-#include <Errors.h>
-
 namespace nul {
 
-class SyscallException : public Exception {
+class AssertException : public Exception {
 public:
-	explicit SyscallException(ErrorCode code) throw() : Exception(), _code(code) {
+	explicit AssertException(const char *expr,const char *file,int line) throw()
+		: Exception(E_ASSERT), _expr(expr), _file(file), _line(line) {
 	}
-	virtual ~SyscallException() throw() {
+	virtual ~AssertException() throw() {
 	}
 
-	ErrorCode error_code() const throw() {
-		return _code;
+	const char *expr() const throw() {
+		return _expr;
 	}
-	const char *error_msg() const throw();
+	const char *file() const throw() {
+		return _file;
+	}
+	int line() const throw() {
+		return _line;
+	}
 
 	virtual void write(OStream& os) const {
-		os.writef("Systemcall failed: %s (%d)\n",error_msg(),error_code());
+		os.writef("Assert '%s' failed in %s, line %d\n",code(),file(),line());
 		write_backtrace(os);
 	}
 
 private:
-	ErrorCode _code;
-	static const char *_msgs[];
+	const char *_expr;
+	const char *_file;
+	int _line;
 };
 
 }
+
+#ifndef NDEBUG
+
+#	define assert(cond) do { if(!(cond)) { \
+			throw nul::AssertException(#cond,__FILE__,__LINE__); \
+		} } while(0);
+
+#else
+
+#	define assert(cond)
+
+#endif

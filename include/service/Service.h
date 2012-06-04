@@ -25,10 +25,17 @@
 #include <service/ServiceInstance.h>
 #include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
+#include <Exception.h>
 #include <ScopedPtr.h>
 #include <CPU.h>
 
 namespace nul {
+
+class ServiceException : public Exception {
+public:
+	explicit ServiceException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class ClientData {
 public:
@@ -110,8 +117,7 @@ private:
 				return _clients[i];
 			}
 		}
-		// TODO different exception
-		throw Exception("No free slots");
+		throw ServiceException(E_CAPACITY);
 	}
 
 	Service(const Service&);

@@ -28,9 +28,9 @@
 #include <Syscalls.h>
 #include <Hip.h>
 #include <CPU.h>
-#include <exception>
+#include <Exception.h>
 #include <cstring>
-#include <assert.h>
+#include <Assert.h>
 
 #include "tests/Pingpong.h"
 #include "tests/UtcbTest.h"

@@ -21,6 +21,47 @@
 #include <arch/ExecEnv.h>
 #include <arch/Types.h>
 #include <stream/OStream.h>
+#include <Errors.h>
+#include <Compiler.h>
+
+namespace std {
+	/**
+	 * Type of terminate-handlers
+	 */
+	typedef void (*terminate_handler)(void);
+	/**
+	 * Type of unexpected-handlers
+	 */
+	typedef void (*unexpected_handler)(void);
+
+	/**
+	 * Sets the terminate-handler
+	 *
+	 * @param pHandler the new one
+	 * @return the old one
+	 */
+	terminate_handler set_terminate(terminate_handler pHandler) throw ();
+	/**
+	 * Is called by the runtime if exception-handling must be aborted
+	 */
+	void terminate(void) NORETURN;
+	/**
+	 * Sets the unexpected-handler
+	 *
+	 * @param pHandler the new one
+	 * @return the old one
+	 */
+	unexpected_handler set_unexpected(unexpected_handler pHandler) throw ();
+	/**
+	 * Is called by the runtime if an exception is thrown which violates the functions exception
+	 * specification
+	 */
+	void unexpected(void) NORETURN;
+	/**
+	 * @return true if the caught exception violates the throw specification.
+	 */
+	bool uncaught_exception() throw ();
+}
 
 namespace nul {
 
@@ -33,16 +74,26 @@ public:
 	typedef const uintptr_t *backtrace_iterator;
 
 public:
-	explicit Exception(const char *msg = 0) throw() : _msg(msg), _backtrace(), _count() {
+	explicit Exception(ErrorCode code,const char *msg = 0) throw()
+		: _code(code), _msg(msg), _backtrace(), _count() {
 		_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
 	}
 	virtual ~Exception() throw() {
 	}
 
-	backtrace_iterator backtrace_begin() const throw() {
+	const char *msg() const {
+		return _msg;
+	}
+	const char *name() const {
+		return to_string(_code);
+	}
+	ErrorCode code() const {
+		return _code;
+	}
+	backtrace_iterator backtrace_begin() const {
 		return _backtrace;
 	}
-	backtrace_iterator backtrace_end() const throw() {
+	backtrace_iterator backtrace_end() const {
 		return _backtrace + _count;
 	}
 
@@ -62,9 +113,11 @@ protected:
 	}
 
 private:
+	ErrorCode _code;
 	const char *_msg;
 	uintptr_t _backtrace[MAX_TRACE_DEPTH];
 	size_t _count;
+	static const char *_msgs[];
 };
 
 }

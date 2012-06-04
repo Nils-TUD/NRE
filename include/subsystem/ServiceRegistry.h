@@ -19,8 +19,15 @@
 #pragma once
 
 #include <subsystem/Child.h>
+#include <Exception.h>
 
 namespace nul {
+
+class ServiceRegistryException : public Exception {
+public:
+	explicit ServiceRegistryException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class ServiceRegistry {
 	enum {
@@ -64,14 +71,14 @@ public:
 	const Service* reg(const Service& s) {
 		// TODO use different exception
 		if(search(s.name(),s.cpu()))
-			throw Exception("Service does already exist");
+			throw ServiceRegistryException(E_EXISTS);
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
 			if(_srvs[i] == 0) {
 				_srvs[i] = new Service(s);
 				return _srvs[i];
 			}
 		}
-		throw Exception("All service slots in use");
+		throw ServiceRegistryException(E_CAPACITY);
 	}
 	void unreg(Child *child,const String &name,cpu_t cpu) {
 		size_t i;

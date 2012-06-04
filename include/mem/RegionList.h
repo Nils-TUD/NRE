@@ -10,15 +10,21 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <ex/Exception.h>
+#include <Exception.h>
 #include <stream/OStream.h>
 #include <mem/DataSpace.h>
 #include <Util.h>
-#include <assert.h>
+#include <Assert.h>
 
 extern void test_reglist();
 
 namespace nul {
+
+class RegionException : public Exception {
+public:
+	explicit RegionException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class RegionList {
 	friend void ::test_reglist();
@@ -84,7 +90,7 @@ public:
 		end = (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
 		if(end + size < end || end + size > ExecEnv::KERNEL_START)
-			throw Exception("Not enough space");
+			throw RegionException(E_CAPACITY);
 		return end;
 	}
 
@@ -109,7 +115,7 @@ public:
 				return;
 			}
 		}
-		throw Exception("No free dataspace slot");
+		throw RegionException(E_CAPACITY);
 	}
 
 	void remove(const DataSpace& ds) {
@@ -120,7 +126,7 @@ public:
 				return;
 			}
 		}
-		throw Exception("Dataspace not found");
+		throw RegionException(E_NOT_FOUND);
 	}
 
 	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
@@ -209,7 +215,7 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw Exception("No free regions");
+		throw RegionException(E_CAPACITY);
 	}
 
 	Region _regs[MAX_REGIONS];

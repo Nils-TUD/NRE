@@ -24,7 +24,7 @@
 #include <stream/OStringStream.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
-#include <exception>
+#include <Exception.h>
 
 using namespace nul;
 

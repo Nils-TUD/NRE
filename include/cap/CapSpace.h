@@ -20,11 +20,17 @@
 
 #include <arch/SpinLock.h>
 #include <arch/Types.h>
-#include <ex/Exception.h>
+#include <Exception.h>
 #include <ScopedLock.h>
 #include <Hip.h>
 
 namespace nul {
+
+class CapException : public Exception {
+public:
+	explicit CapException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class CapSpace {
 public:
@@ -77,7 +83,7 @@ public:
 		ScopedLock<SpinLock> lock(&_lck);
 		capsel_t res = (_off + align - 1) & ~(align - 1);
 		if(res + count < res || res + count > Hip::get().cfg_cap)
-			throw Exception("Out of caps");
+			throw CapException(E_NO_CAP_SELS);
 		_off = res + count;
 		return res;
 	}

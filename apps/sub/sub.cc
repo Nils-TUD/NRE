@@ -22,7 +22,7 @@
 #include <stream/Serial.h>
 #include <subsystem/ChildManager.h>
 #include <cap/Caps.h>
-#include <exception>
+#include <Exception.h>
 
 using namespace nul;
 

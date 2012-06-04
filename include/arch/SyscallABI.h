@@ -18,6 +18,23 @@
 
 #pragma once
 
+#include <Exception.h>
+
+namespace nul {
+
+class SyscallException : public Exception {
+public:
+	explicit SyscallException(ErrorCode code) throw() : Exception(code) {
+	}
+
+	virtual void write(OStream& os) const {
+		os.writef("Systemcall failed: %s (%d)\n",name(),code());
+		write_backtrace(os);
+	}
+};
+
+}
+
 #ifdef __i386__
 #include <arch/x86_32/SyscallABI.h>
 #elif defined __x86_64__

@@ -61,7 +61,7 @@ cp hypervisor-$NOVA_TARGET $root/$build/bin/apps/hypervisor
 cd $root
 
 # copy loader
-#cp $loader $build/bin/apps/chainloader
+cp $loader $build/bin/apps/chainloader
 
 # run the specified command, if any
 case "$1" in

@@ -70,10 +70,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 	// check ELF
 	if(size < sizeof(ElfEh) || sizeof(ElfPh) > elf->e_phentsize ||
 			size < elf->e_phoff + elf->e_phentsize * elf->e_phnum)
-		throw ElfException("Invalid ELF");
+		throw ElfException(E_ELF_INVALID);
 	if(!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' &&
 			elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
-		throw ElfException("Invalid signature");
+		throw ElfException(E_ELF_SIG);
 
 	// create child
 	Child *c = new Child(cmdline);
@@ -114,11 +114,11 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		for(size_t i = 0; i < elf->e_phnum; i++) {
 			ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
 			if(reinterpret_cast<uintptr_t>(ph) + sizeof(ElfPh) > addr + size)
-				throw ElfException("Load segment pointer invalid");
+				throw ElfException(E_ELF_INVALID);
 			if(ph->p_type != 1)
 				continue;
 			if(size < ph->p_offset + ph->p_filesz)
-				throw ElfException("Load segment invalid");
+				throw ElfException(E_ELF_INVALID);
 
 			uint perms = 0;
 			if(ph->p_flags & PF_R)
@@ -274,7 +274,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 // TODO code-duplication; we already have that in the Client class
 static capsel_t get_parent_service(const char *name) {
 	if(!CPU::current().get_pt)
-		throw Exception("Service not found");
+		throw ServiceRegistryException(E_NOT_FOUND);
 	UtcbFrame uf;
 	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 	uf.clear();

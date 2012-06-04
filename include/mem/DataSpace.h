@@ -21,8 +21,15 @@
 #include <arch/Types.h>
 #include <kobj/ObjCap.h>
 #include <stream/OStream.h>
+#include <Exception.h>
 
 namespace nul {
+
+class DataSpaceException : public Exception {
+public:
+	explicit DataSpaceException(ErrorCode code) throw() : Exception(code) {
+	}
+};
 
 class Client;
 class DataSpace;
