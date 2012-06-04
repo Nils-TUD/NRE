@@ -30,6 +30,14 @@ class Serial : public OStream {
 		COM4	= 0x3E8
 	};
 	enum {
+		DLR_LO	= 0,
+		DLR_HI	= 1,
+		IER		= 1,	// interrupt enable register
+		FCR		= 2,	// FIFO control register
+		LCR		= 3,	// line control register
+		MCR		= 4,	// modem control register
+	};
+	enum {
 		port = COM1
 	};
 

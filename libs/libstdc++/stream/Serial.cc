@@ -24,19 +24,22 @@ namespace nul {
 Serial Serial::_inst;
 
 void Serial::init() {
-	Ports::out<uint8_t>(port + 1,0x00); // Disable all interrupts
-	Ports::out<uint8_t>(port + 3,0x80); // Enable DLAB (set baud rate divisor)
-	Ports::out<uint8_t>(port + 0,0x03); // Set divisor to 3 (lo byte) 38400 baud
-	Ports::out<uint8_t>(port + 1,0x00); //                  (hi byte)
-	Ports::out<uint8_t>(port + 3,0x03); // 8 bits, no parity, one stop bit
-	Ports::out<uint8_t>(port + 2,0xC7); // Enable FIFO, clear them, with 14-byte threshold
-	Ports::out<uint8_t>(port + 4,0x0B); // IRQs enabled, RTS/DSR set
+	Ports::out<uint8_t>(port + LCR,0x80);		// Enable DLAB (set baud rate divisor)
+	Ports::out<uint8_t>(port + DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
+	Ports::out<uint8_t>(port + DLR_HI,0x00);	//                  (hi byte)
+	Ports::out<uint8_t>(port + LCR,0x03);		// 8 bits, no parity, one stop bit
+	Ports::out<uint8_t>(port + IER,0);			// disable interrupts
+	Ports::out<uint8_t>(port + FCR,7);
+	Ports::out<uint8_t>(port + MCR,3);
 	_inited = true;
 }
 
 void Serial::write(char c) {
 	if(c == '\0' || !_inited)
 		return;
+
+	if(c == '\n')
+		write('\r');
 
 	while((Ports::in<uint8_t>(port + 5) & 0x20) == 0)
 		;
