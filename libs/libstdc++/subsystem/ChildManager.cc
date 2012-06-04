@@ -364,6 +364,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 	}
 	catch(const Exception& e) {
 		// TODO revoke ds-cap?
+		// TODO that just decreases the references
 		if(created)
 			cm->_dsm.destroy(ds.unmapsel());
 		uf.clear();

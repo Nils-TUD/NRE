@@ -29,6 +29,10 @@ namespace nul {
 class Client {
 public:
 	Client(const char *service) : _pt(), _shpt() {
+		// TODO I think, a better solution would be to have a kind of boot-process that loads the
+		// services and clients in a way that a service is always available when someone wants
+		// to use it. this way, we don't need such a complicated and error-prone mechanism.
+
 		// the idea is the following: the parent creates a semaphore for each client and cpu and
 		// delegates them to the clients. whenever a client fails to connect to a service, the
 		// parent stores that (for the cpu it used). when a service is registered on a specific cpu,
@@ -75,7 +79,6 @@ private:
 		// TODO we need a function to receive a cap, right?
 		UtcbFrame uf;
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		uf.clear();
 		uf << String(service);
 		CPU::current().get_pt->call(uf);
 
