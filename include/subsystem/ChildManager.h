@@ -31,6 +31,12 @@ public:
 	}
 };
 
+class ChildException : public Exception {
+public:
+	ChildException(ErrorCode code) : Exception(code) {
+	}
+};
+
 class ChildManager {
 	class Portals;
 	friend class Portals;
@@ -81,7 +87,10 @@ private:
 		return off / Hip::get().service_caps();
 	}
 	Child *get_child(capsel_t pid) const {
-		return _childs[((pid - _portal_caps) / per_child_caps())];
+		Child *c = _childs[((pid - _portal_caps) / per_child_caps())];
+		if(!c)
+			throw ChildException(E_NOT_FOUND);
+		return c;
 	}
 	void destroy_child(capsel_t pid) {
 		size_t i = (pid - _portal_caps) / per_child_caps();

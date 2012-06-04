@@ -47,6 +47,7 @@ public:
 				cap = connect(service);
 			}
 			catch(const Exception& e) {
+				e.write(Serial::get());
 				// if it failed, wait until the parent notifies us. down() instead of zero() is
 				// correct here, because the parent tracks the number of tries and thus, he will
 				// not do more ups than necessary. and it might happen that the connect failed,
@@ -81,6 +82,10 @@ private:
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		uf << String(service);
 		CPU::current().get_pt->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
 
 		TypedItem ti;
 		uf.get_typed(ti);
@@ -93,6 +98,10 @@ private:
 		// receive the two portals (take care of alignment)
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(2,2),1,DESC_CAP_ALL));
 		init.call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
 
 		TypedItem ti;
 		uf.get_typed(ti);

@@ -31,6 +31,7 @@ static const char *msgs[] = {
 	/* E_EXISTS */			"Object does already exist",
 	/* E_ELF_INVALID */		"Invalid ELF file",
 	/* E_ELF_SIG */			"Invalid ELF signature",
+	/* E_ARGS_INVALID */	"Invalid arguments",
 };
 
 const char *to_string(ErrorCode code) {

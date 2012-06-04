@@ -110,6 +110,7 @@ public:
 private:
 	void create();
 	void join();
+	void handle_response(UtcbFrameRef& uf);
 
 	uintptr_t _virt;
 	uintptr_t _phys;

@@ -37,14 +37,25 @@ ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
 	uf.delegate(_pt.sel());
 	uf << String(s->name()) << cpu;
 	CPU::current().reg_pt->call(uf);
+	ErrorCode res;
+	uf >> res;
+	if(res != E_SUCCESS)
+		throw Exception(res);
 }
 
 void ServiceInstance::portal_newclient(capsel_t) {
+	UtcbFrameRef uf;
 	// TODO not everyone wants client-specific portals
 	Service *s = Ec::current()->get_tls<Service>(0);
-	ClientData *c = s->new_client();
-	UtcbFrameRef uf;
-	uf.delegate(CapRange(c->pt().sel(),2,Caps::TYPE_CAP | Caps::ALL));
+	uf.clear();
+	try {
+		ClientData *c = s->new_client();
+		uf.delegate(CapRange(c->pt().sel(),2,Caps::TYPE_CAP | Caps::ALL));
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf << e.code();
+	}
 }
 
 }

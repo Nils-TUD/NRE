@@ -16,12 +16,19 @@ void ClientData::portal_ds(capsel_t pid) {
 	ClientData *c = s->get_client<ClientData>(pid);
 
 	UtcbFrameRef uf;
-	c->_ds = new DataSpace();
-	uf >> *c->_ds;
-	c->_ds->map();
+	try {
+		c->_ds = new DataSpace();
+		uf >> *c->_ds;
+		c->_ds->map();
 
-	uf.clear();
-	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		uf.clear();
+		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
 }
 
 }

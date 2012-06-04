@@ -108,6 +108,22 @@ int memcmp(const void *str1,const void *str2,size_t count) {
 	return 0;
 }
 
-int strcmp(const char *dst,const char *src) {
-	return memcmp(dst,src,strlen(dst));
+int strcmp(const char *str1,const char *str2) {
+	char c1 = *str1,c2 = *str2;
+	while(c1 && c2) {
+		/* different? */
+		if(c1 != c2) {
+			if(c1 > c2)
+				return 1;
+			return -1;
+		}
+		c1 = *++str1;
+		c2 = *++str2;
+	}
+	/* check which strings are finished */
+	if(!c1 && !c2)
+		return 0;
+	if(!c1 && c2)
+		return -1;
+	return 1;
 }

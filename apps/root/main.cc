@@ -251,35 +251,47 @@ static void start_childs() {
 
 static void portal_map(capsel_t) {
 	UtcbFrameRef uf;
-	DataSpace ds;
-	uf >> ds;
-	// alloc mem
-	size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
-	uintptr_t addr = mem.alloc(size);
-	// create a map and unmap-cap
-	CapHolder cap(2,2);
-	Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
-	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
-	uf.clear();
-	// delegate them to caller
-	uf.delegate(cap.get(),0);
-	uf.delegate(cap.get() + 1,1);
-	// pass back attributes so that the caller has the correct ones
-	uf << addr << size << ds.perm() << ds.type();
-	cap.release();
+	try {
+		DataSpace ds;
+		uf >> ds;
+		// alloc mem
+		size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
+		uintptr_t addr = mem.alloc(size);
+		// create a map and unmap-cap
+		CapHolder cap(2,2);
+		// TODO if this throws we might leak one sem and the memory
+		Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
+		Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
+		uf.clear();
+		// delegate them to caller
+		uf.delegate(cap.get(),0);
+		uf.delegate(cap.get() + 1,1);
+		// pass back attributes so that the caller has the correct ones
+		uf << E_SUCCESS << addr << size << ds.perm() << ds.type();
+		cap.release();
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
 }
 
 static void portal_unmap(capsel_t) {
 	UtcbFrameRef uf;
-	// free mem (we can trust the dataspace properties, because its sent from ourself)
-	DataSpace ds;
-	uf >> ds;
-	mem.free(ds.virt(),ds.size());
-	// revoke caps and free selectors
-	Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
-	CapSpace::get().free(ds.sel());
-	Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
-	CapSpace::get().free(ds.unmapsel());
+	try {
+		// free mem (we can trust the dataspace properties, because its sent from ourself)
+		DataSpace ds;
+		uf >> ds;
+		mem.free(ds.virt(),ds.size());
+		// revoke caps and free selectors
+		Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
+		CapSpace::get().free(ds.sel());
+		Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
+		CapSpace::get().free(ds.unmapsel());
+	}
+	catch(...) {
+		// ignore
+	}
 }
 
 static void portal_hvmap(capsel_t) {

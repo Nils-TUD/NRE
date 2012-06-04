@@ -98,10 +98,10 @@ public:
 	}
 
 	virtual void write(OStream& os) const {
-		if(_msg) {
-			os.writef(_msg);
-			os.writef("\n");
-		}
+		os.writef("Exception: %s (%d)",name(),code());
+		if(msg())
+			os.writef(": %s",msg());
+		os.writef("\n");
 		write_backtrace(os);
 	}
 

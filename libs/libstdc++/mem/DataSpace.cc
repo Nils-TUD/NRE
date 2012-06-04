@@ -19,27 +19,28 @@
 
 namespace nul {
 
-void DataSpace::create() {
-	Serial::get().writef("### Before Create: ");
-	this->write(Serial::get());
-	Serial::get().writef("\n");
+void DataSpace::handle_response(UtcbFrameRef& uf) {
+	ErrorCode res;
+	uf >> res;
+	if(res != E_SUCCESS)
+		throw DataSpaceException(res);
+}
 
+void DataSpace::create() {
 	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
 	UtcbFrame uf;
-	CapHolder caps(2,2);
+
 	// prepare for receiving map and unmap-cap
+	CapHolder caps(2,2);
 	uf.set_receive_crd(Crd(caps.get(),1,DESC_CAP_ALL));
 	uf << CREATE << _virt << _phys << _size << _perm << _type;
 	CPU::current().map_pt->call(uf);
-	// TODO error-handling
+
+	handle_response(uf);
 	uf >> _virt >> _size >> _perm >> _type;
 	_sel = caps.get();
 	_unmapsel = caps.get() + 1;
 	caps.release();
-
-	Serial::get().writef("### After Create: ");
-	this->write(Serial::get());
-	Serial::get().writef("\n");
 }
 
 void DataSpace::share(Client &c) {
@@ -47,37 +48,33 @@ void DataSpace::share(Client &c) {
 	uf << JOIN << 0 << 0 << _size << _perm << _type;
 	uf.delegate(_sel);
 	c.shpt()->call(uf);
+	handle_response(uf);
 }
 
 void DataSpace::join() {
-	Serial::get().writef("### Before Join: ");
-	this->write(Serial::get());
-	Serial::get().writef("\n");
-
 	assert(_sel != ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
 	UtcbFrame uf;
-	CapHolder umcap;
+
 	// prepare for receiving unmap-cap
+	CapHolder umcap;
 	uf.set_receive_crd(Crd(umcap.get(),0,DESC_CAP_ALL));
 	uf.translate(_sel);
 	uf << JOIN << _virt << _phys << _size << _perm << _type;
 	CPU::current().map_pt->call(uf);
-	// TODO error-handling
+
+	handle_response(uf);
 	uf >> _virt >> _size >> _perm >> _type;
 	_unmapsel = umcap.release();
-
-	Serial::get().writef("### After Join: ");
-	this->write(Serial::get());
-	Serial::get().writef("\n");
 }
 
 void DataSpace::unmap() {
 	assert(_sel != ObjCap::INVALID && _unmapsel != ObjCap::INVALID);
 	UtcbFrame uf;
+
 	uf.translate(_unmapsel);
 	uf << DESTROY << _virt << _phys << _size << _perm << _type;
 	CPU::current().unmap_pt->call(uf);
-	// TODO error-handling
+
 	CapSpace::get().free(_unmapsel);
 	CapSpace::get().free(_sel);
 	_unmapsel = ObjCap::INVALID;
@@ -86,8 +83,13 @@ void DataSpace::unmap() {
 
 UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
 	DataSpace::RequestType type;
-	// TODO check for errors
 	uf >> type >> ds._virt >> ds._phys >> ds._size >> ds._perm >> ds._type;
+	if(ds._type != DataSpace::ANONYMOUS && ds._type != DataSpace::LOCKED)
+		throw DataSpaceException(E_ARGS_INVALID);
+	if(ds._size == 0 || (ds._perm & DataSpace::RWX) == 0)
+		throw DataSpaceException(E_ARGS_INVALID);
+	// TODO check phys
+
 	TypedItem ti;
 	switch(type) {
 		case DataSpace::CREATE:

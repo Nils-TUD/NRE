@@ -169,59 +169,65 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 void ChildManager::Portals::startup(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbExcFrameRef uf;
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
-	if(c->_started) {
-		uintptr_t src;
-		size_t size;
-		if(!c->reglist().find(uf->rsp,src,size))
-			return;
-		uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
-		uf->mtd = MTD_RIP_LEN;
-		Serial::get().writef("### Start @ %p\n",uf->rip);
-		c->increase_refs();
+	try {
+		Child *c = cm->get_child(pid);
+		if(c->_started) {
+			uintptr_t src;
+			size_t size;
+			if(!c->reglist().find(uf->rsp,src,size))
+				throw RegionException(E_NOT_FOUND);
+			uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
+			uf->mtd = MTD_RIP_LEN;
+			Serial::get().writef("### Start @ %p\n",uf->rip);
+			c->increase_refs();
+		}
+		else {
+			uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
+			uf->rsp = c->stack() + (uf->rsp & (ExecEnv::PAGE_SIZE - 1));
+			// the bit indicates that its not the root-task
+			// TODO not nice
+	#ifdef __i386__
+			uf->rax = (1 << 31) | c->_ec->cpu();
+	#else
+			uf->rdi = (1 << 31) | c->_ec->cpu();
+	#endif
+			uf->rcx = c->hip();
+			uf->rdx = c->utcb();
+			uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB | MTD_GPR_BSD;
+			c->_started = true;
+		}
 	}
-	else {
-		uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
-		uf->rsp = c->stack() + (uf->rsp & (ExecEnv::PAGE_SIZE - 1));
-		// the bit indicates that its not the root-task
-		// TODO not nice
-#ifdef __i386__
-		uf->rax = (1 << 31) | c->_ec->cpu();
-#else
-		uf->rdi = (1 << 31) | c->_ec->cpu();
-#endif
-		uf->rcx = c->hip();
-		uf->rdx = c->utcb();
-		uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB | MTD_GPR_BSD;
-		c->_started = true;
+	catch(...) {
+		// let the kernel kill the Ec
+		uf->rip = ExecEnv::KERNEL_START;
+		uf->mtd = MTD_RIP_LEN;
 	}
 }
 
 void ChildManager::Portals::initcaps(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
-	// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
-	// grabs them afterwards with this portal
-	uf.delegate(c->_pd->sel(),0);
-	uf.delegate(c->_ec->sel(),1);
-	uf.delegate(c->_sc->sel(),2);
+	try {
+		Child *c = cm->get_child(pid);
+		// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
+		// grabs them afterwards with this portal
+		uf.clear();
+		uf.delegate(c->_pd->sel(),0);
+		uf.delegate(c->_ec->sel(),1);
+		uf.delegate(c->_sc->sel(),2);
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
 }
 
 void ChildManager::Portals::reg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
 	try {
+		Child *c = cm->get_child(pid);
 		TypedItem cap;
 		uf.get_typed(cap);
 		String name;
@@ -236,23 +242,19 @@ void ChildManager::Portals::reg(capsel_t pid) {
 
 		uf.clear();
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		// TODO error/success codes?
-		uf << 1;
+		uf << E_SUCCESS;
 	}
-	catch(Exception& e) {
+	catch(const Exception& e) {
 		uf.clear();
-		uf << 0;
+		uf << e.code();
 	}
 }
 
 void ChildManager::Portals::unreg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
 	try {
+		Child *c = cm->get_child(pid);
 		String name;
 		cpu_t cpu;
 		uf >> name;
@@ -263,11 +265,11 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		}
 
 		uf.clear();
-		uf << 1;
+		uf << E_SUCCESS;
 	}
-	catch(Exception& e) {
+	catch(const Exception& e) {
 		uf.clear();
-		uf << 0;
+		uf << e.code();
 	}
 }
 
@@ -289,12 +291,9 @@ static capsel_t get_parent_service(const char *name) {
 void ChildManager::Portals::getservice(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
-	Child *c = cm->get_child(pid);
-	cpu_t cpu = cm->get_cpu(pid);
-	if(!c)
-		return;
-
 	try {
+		Child *c = cm->get_child(pid);
+		cpu_t cpu = cm->get_cpu(pid);
 		String name;
 		uf >> name;
 		{
@@ -309,12 +308,12 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 
 			uf.clear();
 			uf.delegate(s->pt());
-			uf << 1;
+			uf << E_SUCCESS;
 		}
 	}
-	catch(Exception& e) {
+	catch(const Exception& e) {
 		uf.clear();
-		uf << 0;
+		uf << e.code();
 	}
 }
 
@@ -326,25 +325,22 @@ void ChildManager::Portals::allocio(capsel_t) {
 		uf >> caps;
 		uf.clear();
 		uf.delegate(caps,DelItem::FROM_HV);
-		uf << 0;
+		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
 		uf.clear();
-		uf << 0;
+		uf << e.code();
 	}
 }
 
 void ChildManager::Portals::map(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
 	ScopedLock<UserSm> guard(&cm->_sm);
 	bool created = false;
 	UtcbFrameRef uf;
 	DataSpace ds;
 	try {
+		Child *c = cm->get_child(pid);
 		uf >> ds;
 		// create and add can throw; ensure that the state doesn't change if something throws
 		cm->_dsm.create(ds);
@@ -352,23 +348,20 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
 
-		Serial::get().writef("\n### %s: Created dataspace @ %p with %zu bytes\n",c->cmdline(),addr,ds.size());
-		c->reglist().write(Serial::get());
-		Serial::get().writef("\n");
-
 		uf.clear();
 		uf.delegate(ds.sel(),0);
 		uf.delegate(ds.unmapsel(),1);
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		uf << addr << ds.size() << ds.perm() << ds.type();
+		uf << E_SUCCESS << addr << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
 		// TODO revoke ds-cap?
-		// TODO that just decreases the references
-		if(created)
-			cm->_dsm.destroy(ds.unmapsel());
+		if(created) {
+			if(cm->_dsm.destroy(ds.unmapsel()))
+				ds.unmap();
+		}
 		uf.clear();
-		uf << 0;
+		uf << e.code();
 	}
 }
 
@@ -385,13 +378,10 @@ static void revoke_mem(uintptr_t addr,size_t size) {
 
 void ChildManager::Portals::unmap(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
-	Child *c = cm->get_child(pid);
-	if(!c)
-		return;
-
 	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
+		Child *c = cm->get_child(pid);
 		// we can't trust the dataspace properties, except unmapsel
 		DataSpace uds;
 		uf >> uds;
@@ -406,11 +396,9 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 			ds->unmap();
 		}
 		uf.clear();
-		uf << 0;
 	}
 	catch(const Exception& e) {
-		uf.clear();
-		uf << 0;
+		// ignore
 	}
 }
 
@@ -419,11 +407,9 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);
-	if(!c)
-		return;
 
 	bool kill = false;
-	{
+	try {
 		ScopedLock<UserSm> guard(&c->_sm);
 		uintptr_t pfaddr = uf->qual[1];
 		unsigned error = uf->qual[0];
@@ -450,7 +436,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline(),pfaddr,eip,cpu,error);
 			c->reglist().write(Serial::get());
-			Serial::get().writef("Unable to resolve fault; killing child\n");
+			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
 			addr = addrs;
@@ -470,6 +456,9 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// TODO this is not sufficient, in general
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
 		}
+	}
+	catch(...) {
+		kill = true;
 	}
 
 	// we can't release the lock after having killed the child. thus, we do out here (it's save

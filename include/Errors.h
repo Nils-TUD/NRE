@@ -42,6 +42,7 @@ enum ErrorCode {
 	E_EXISTS,
 	E_ELF_INVALID,
 	E_ELF_SIG,
+	E_ARGS_INVALID,
 };
 
 const char *to_string(ErrorCode code);
