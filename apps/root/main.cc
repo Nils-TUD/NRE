@@ -59,7 +59,6 @@ static Pt *hv_pt = 0;
 static Memory mem;
 
 // TODO clang!
-// TODO use dataspaces to pass around memory in an easy fashion? (and reference-counting)
 // TODO perhaps we don't want to have a separate Pd for the logging service
 // TODO but we want to have one for the console-stuff
 // TODO perhaps we need a general concept for identifying clients
@@ -68,9 +67,12 @@ static Memory mem;
 // TODO KObjects reference-counted? copying, ...
 // TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
 // TODO access to the first page doesn't cause a kill
-// TODO how can we explicitly terminate childs?
 // TODO what about resource-release when terminating entire subsystems?
 // TODO it would be a good idea to protect us from stack over- or underflow
+// TODO when a service dies, the client will notice it as soon as it tries to access the service
+// again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
+// what if the client has more than one Ec? I mean, the client is basically dead and we should
+// restart it (the service gets restarted as well).
 
 void verbose_terminate() {
 	// TODO put that in abort or something?

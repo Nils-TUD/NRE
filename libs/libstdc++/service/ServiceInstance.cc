@@ -27,11 +27,12 @@
 namespace nul {
 
 ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
-		: _s(s), _ec(cpu), _pt(&_ec,portal_newclient), _sm() {
+		: _s(s), _ec(cpu), _pt(&_ec,portal), _sm() {
 	_ec.set_tls(_ec.create_tls(),s);
 	// accept cap (for ds sharing)
 	UtcbFrameRef ecuf(_ec.utcb());
 	ecuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+	ecuf.set_translate_crd(Crd(s->_caps,Service::MAX_SESSIONS_SHIFT,DESC_CAP_ALL));
 
 	UtcbFrame uf;
 	uf.delegate(_pt.sel());
@@ -43,17 +44,41 @@ ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
 		throw Exception(res);
 }
 
-void ServiceInstance::portal_newclient(capsel_t) {
+void ServiceInstance::portal(capsel_t) {
 	UtcbFrameRef uf;
 	// TODO not everyone wants client-specific portals
 	Service *s = Ec::current()->get_tls<Service>(0);
 	uf.clear();
 	try {
-		ClientData *c = s->new_client();
-		uf.delegate(CapRange(c->pt().sel(),2,Caps::TYPE_CAP | Caps::ALL));
+		Service::Command cmd;
+		uf >> cmd;
+		switch(cmd) {
+			case Service::OPEN_SESSION: {
+				SessionData *c = s->new_session();
+				uf.delegate(c->pt().sel());
+			}
+			break;
+
+			case Service::SHARE_DATASPACE: {
+				TypedItem ti;
+				uf.get_typed(ti);
+				if(ti.crd().cap() == 0)
+					throw Exception(E_ARGS_INVALID);
+
+				SessionData *c = s->get_session<SessionData>(ti.crd().cap());
+				c->_ds = new DataSpace();
+				uf >> *c->_ds;
+				c->_ds->map();
+
+				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+			}
+			break;
+		}
+		uf.clear();
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		uf.clear();
 		uf << e.code();
 	}
 }

@@ -25,10 +25,9 @@ using namespace nul;
 
 PORTAL static void portal_write(capsel_t);
 
-class ScreenClientData : public ClientData {
+class ScreenSessionData : public SessionData {
 public:
-	ScreenClientData(capsel_t srvpt,capsel_t dspt,Pt::portal_func func)
-		: ClientData(srvpt,dspt,func), _id(++_next_id) {
+	ScreenSessionData(capsel_t pt,Pt::portal_func func) : SessionData(pt,func), _id(++_next_id) {
 	}
 
 	int id() const {
@@ -46,12 +45,12 @@ public:
 	}
 
 private:
-	virtual ClientData *create_client(capsel_t srvpt,capsel_t dspt,Pt::portal_func func) {
-		return new ScreenClientData(srvpt,dspt,func);
+	virtual SessionData *create_session(capsel_t pt,Pt::portal_func func) {
+		return new ScreenSessionData(pt,func);
 	}
 };
 
-int ScreenClientData::_next_id = 0;
+int ScreenSessionData::_next_id = 0;
 static ScreenService *srv;
 
 int main() {
@@ -77,7 +76,7 @@ int main() {
 static void portal_write(capsel_t pid) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
-	ScreenClientData *c = srv->get_client<ScreenClientData>(pid);
+	ScreenSessionData *c = srv->get_session<ScreenSessionData>(pid);
 	UtcbFrameRef uf;
 	int *data = reinterpret_cast<int*>(c->ds()->virt());
 	int i = *data;

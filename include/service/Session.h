@@ -19,16 +19,24 @@
 #pragma once
 
 #include <utcb/UtcbFrame.h>
+#include <service/Service.h>
 #include <cap/CapSpace.h>
-#include <mem/DataSpace.h>
 #include <kobj/Pt.h>
 #include <CPU.h>
 
 namespace nul {
 
-class Client {
+class Session {
 public:
-	Client(const char *service) : _pt(), _shpt() {
+	Session(const char *service) : _pt(connect(service)) {
+	}
+
+	Pt &pt() {
+		return _pt;
+	}
+
+private:
+	static capsel_t connect(const char *service) {
 		// TODO I think, a better solution would be to have a kind of boot-process that loads the
 		// services and clients in a way that a service is always available when someone wants
 		// to use it. this way, we don't need such a complicated and error-prone mechanism.
@@ -44,10 +52,21 @@ public:
 		capsel_t cap = ObjCap::INVALID;
 		do {
 			try {
-				cap = connect(service);
+				// TODO we need a function to receive a cap, right?
+				UtcbFrame uf;
+				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+				uf << String(service);
+				CPU::current().get_pt->call(uf);
+				ErrorCode res;
+				uf >> res;
+				if(res != E_SUCCESS)
+					throw Exception(res);
+
+				TypedItem ti;
+				uf.get_typed(ti);
+				cap = ti.crd().cap();
 			}
 			catch(const Exception& e) {
-				e.write(Serial::get());
 				// if it failed, wait until the parent notifies us. down() instead of zero() is
 				// correct here, because the parent tracks the number of tries and thus, he will
 				// not do more ups than necessary. and it might happen that the connect failed,
@@ -59,60 +78,13 @@ public:
 			}
 		}
 		while(cap == ObjCap::INVALID);
-		capsel_t start = get_portals(cap);
-		_pt = new Pt(start);
-		_shpt = new Pt(start + 1);
-	}
-	~Client() {
-		delete _pt;
-		delete _shpt;
+		return cap;
 	}
 
-	Pt *pt() {
-		return _pt;
-	}
-	Pt *shpt() {
-		return _shpt;
-	}
+	Session(const Session&);
+	Session& operator=(const Session&);
 
-private:
-	capsel_t connect(const char *service) const {
-		// TODO we need a function to receive a cap, right?
-		UtcbFrame uf;
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		uf << String(service);
-		CPU::current().get_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
-
-		TypedItem ti;
-		uf.get_typed(ti);
-		return ti.crd().cap();
-	}
-
-	capsel_t get_portals(capsel_t cap) const {
-		Pt init(cap);
-		UtcbFrame uf;
-		// receive the two portals (take care of alignment)
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(2,2),1,DESC_CAP_ALL));
-		init.call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
-
-		TypedItem ti;
-		uf.get_typed(ti);
-		return ti.crd().cap();
-	}
-
-	Client(const Client&);
-	Client& operator=(const Client&);
-
-	Pt *_pt;
-	Pt *_shpt;
+	Pt _pt;
 };
 
 }

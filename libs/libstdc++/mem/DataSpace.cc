@@ -12,7 +12,7 @@
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <service/Client.h>
+#include <service/Session.h>
 #include <stream/Serial.h>
 #include <Syscalls.h>
 #include <CPU.h>
@@ -43,11 +43,15 @@ void DataSpace::create() {
 	caps.release();
 }
 
-void DataSpace::share(Client &c) {
+void DataSpace::share(Session &c) {
 	UtcbFrame uf;
+	// for the service protocol
+	uf.translate(c.pt().sel());
+	uf << Service::SHARE_DATASPACE;
+	// for the dataspace protocol
 	uf << JOIN << 0 << 0 << _size << _perm << _type;
 	uf.delegate(_sel);
-	c.shpt()->call(uf);
+	c.pt().call(uf);
 	handle_response(uf);
 }
 

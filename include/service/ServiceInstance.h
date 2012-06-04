@@ -36,7 +36,7 @@ public:
 	}
 
 private:
-	PORTAL static void portal_newclient(capsel_t pid);
+	PORTAL static void portal(capsel_t pid);
 
 	ServiceInstance(const ServiceInstance&);
 	ServiceInstance& operator=(const ServiceInstance&);

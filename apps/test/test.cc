@@ -20,7 +20,8 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
-#include <service/Client.h>
+#include <service/Session.h>
+#include <service/Channel.h>
 #include <stream/OStringStream.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
@@ -29,6 +30,8 @@
 using namespace nul;
 
 EXTERN_C void abort();
+
+static Session *sess;
 
 static void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -45,16 +48,16 @@ static void verbose_terminate() {
 }
 
 static void write(void *) {
-	Client scr("screen");
+	Channel chan(sess);
 	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
 	ds.map();
-	ds.share(scr);
+	ds.share(*sess);
 	int *data = reinterpret_cast<int*>(ds.virt());
 	for(uint i = 0; i < 100; ++i) {
 		UtcbFrame uf;
 		*data = i;
 		//uf << i;
-		scr.pt()->call(uf);
+		chan.pt().call(uf);
 	}
 	ds.unmap();
 }
@@ -65,6 +68,7 @@ int main() {
 
 	std::set_terminate(verbose_terminate);
 
+	sess = new Session("screen");
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())

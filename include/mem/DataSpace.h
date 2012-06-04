@@ -31,7 +31,7 @@ public:
 	}
 };
 
-class Client;
+class Session;
 class DataSpace;
 class UtcbFrameRef;
 
@@ -99,7 +99,7 @@ public:
 		else
 			join();
 	}
-	void share(Client &c);
+	void share(Session &c);
 	void unmap();
 
 	void write(OStream &os) const {

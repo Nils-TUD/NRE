@@ -37,28 +37,26 @@ public:
 	}
 };
 
-class ClientData {
+class SessionData {
+	friend class ServiceInstance;
+
 public:
-	ClientData(capsel_t srvpt,capsel_t dspt,Pt::portal_func func)
-		: _srvpt(static_cast<LocalEc*>(Ec::current()),srvpt,func),
-		  _dspt(static_cast<LocalEc*>(Ec::current()),dspt,portal_ds), _ds() {
+	SessionData(capsel_t pt,Pt::portal_func func)
+		: _pt(static_cast<LocalEc*>(Ec::current()),pt,func), _ds() {
 	}
-	virtual ~ClientData() {
+	virtual ~SessionData() {
 		delete _ds;
 	}
 
 	Pt &pt() {
-		return _srvpt;
+		return _pt;
 	}
 	const DataSpace *ds() const {
 		return _ds;
 	}
 
 private:
-	PORTAL static void portal_ds(capsel_t pid);
-
-	Pt _srvpt;
-	Pt _dspt;
+	Pt _pt;
 	DataSpace *_ds;
 };
 
@@ -66,21 +64,26 @@ class Service {
 	friend class ServiceInstance;
 
 public:
+	enum Command {
+		OPEN_SESSION,
+		SHARE_DATASPACE
+	};
+
 	enum {
-		MAX_CLIENTS	= 16
+		MAX_SESSIONS_SHIFT	= 5,
+		MAX_SESSIONS		= 1 << MAX_SESSIONS_SHIFT
 	};
 
 	Service(const char *name,Pt::portal_func portal)
-		// aligned by 2 because we give out two portals at once
-		: _caps(CapSpace::get().allocate(MAX_CLIENTS * 2,2)), _sm(), _name(name), _func(portal),
-		  _insts(), _clients() {
+		: _caps(CapSpace::get().allocate(MAX_SESSIONS,MAX_SESSIONS)), _sm(), _name(name), _func(portal),
+		  _insts(), _sessions() {
 	}
 	virtual ~Service() {
-		for(size_t i = 0; i < MAX_CLIENTS; ++i)
-			delete _clients[i];
+		for(size_t i = 0; i < MAX_SESSIONS; ++i)
+			delete _sessions[i];
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
 			delete _insts[i];
-		CapSpace::get().free(_caps,MAX_CLIENTS);
+		CapSpace::get().free(_caps,MAX_SESSIONS);
 	}
 
 	const char *name() const {
@@ -91,8 +94,8 @@ public:
 	}
 
 	template<class T>
-	T *get_client(capsel_t pid) {
-		return static_cast<T*>(_clients[(pid - _caps) / 2]);
+	T *get_session(capsel_t pid) {
+		return static_cast<T*>(_sessions[pid - _caps]);
 	}
 
 	void reg(cpu_t cpu) {
@@ -105,16 +108,16 @@ public:
 	}
 
 private:
-	virtual ClientData *create_client(capsel_t srvpt,capsel_t dspt,Pt::portal_func func) {
-		return new ClientData(srvpt,dspt,func);
+	virtual SessionData *create_session(capsel_t pt,Pt::portal_func func) {
+		return new SessionData(pt,func);
 	}
 
-	ClientData *new_client() {
+	SessionData *new_session() {
 		ScopedLock<UserSm> guard(&_sm);
-		for(size_t i = 0; i < MAX_CLIENTS; ++i) {
-			if(_clients[i] == 0) {
-				_clients[i] = create_client(_caps + i * 2,_caps + i * 2 + 1,_func);
-				return _clients[i];
+		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
+			if(_sessions[i] == 0) {
+				_sessions[i] = create_session(_caps + i,_func);
+				return _sessions[i];
 			}
 		}
 		throw ServiceException(E_CAPACITY);
@@ -128,7 +131,7 @@ private:
 	const char *_name;
 	Pt::portal_func _func;
 	ServiceInstance *_insts[Hip::MAX_CPUS];
-	ClientData *_clients[MAX_CLIENTS];
+	SessionData *_sessions[MAX_SESSIONS];
 };
 
 }
