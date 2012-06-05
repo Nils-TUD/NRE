@@ -36,6 +36,7 @@
 #include <Hip.h>
 #include <CPU.h>
 #include <Exception.h>
+#include <BitField.h>
 #include <cstring>
 #include <Assert.h>
 
