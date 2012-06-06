@@ -39,7 +39,7 @@ public:
 	}
 
 	virtual void write(OStream& os) const {
-		os.writef("Assert '%s' failed in %s, line %d\n",code(),file(),line());
+		os.writef("Assert '%s' failed in %s, line %d\n",expr(),file(),line());
 		write_backtrace(os);
 	}
 

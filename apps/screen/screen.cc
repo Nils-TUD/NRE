@@ -27,7 +27,8 @@ PORTAL static void portal_write(capsel_t);
 
 class ScreenSessionData : public SessionData {
 public:
-	ScreenSessionData(capsel_t pt,Pt::portal_func func) : SessionData(pt,func), _id(++_next_id) {
+	ScreenSessionData(Service *s,capsel_t caps,Pt::portal_func func)
+		: SessionData(s,caps,func), _id(++_next_id) {
 	}
 
 	int id() const {
@@ -45,8 +46,8 @@ public:
 	}
 
 private:
-	virtual SessionData *create_session(capsel_t pt,Pt::portal_func func) {
-		return new ScreenSessionData(pt,func);
+	virtual SessionData *create_session(capsel_t caps,Pt::portal_func func) {
+		return new ScreenSessionData(this,caps,func);
 	}
 };
 
@@ -67,8 +68,9 @@ int main() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
-			srv->reg(it->id());
+			srv->provide_on(it->id());
 	}
+	srv->reg();
 	srv->wait();
 	return 0;
 }

@@ -28,29 +28,28 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
 ChildManager::ChildManager() : _child(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _ecs(), _capecs() {
+		_dsm(), _registry(), _sm(), _regsm(0), _ecs(), _regecs(), _mapecs() {
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
-			{
-				_ecs[it->id()] = new LocalEc(it->id());
-				size_t tls = _ecs[it->id()]->create_tls();
+			LocalEc **ecs[] = {_ecs,_regecs,_mapecs};
+			for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
+				ecs[i][it->id()] = new LocalEc(it->id());
+				size_t tls = ecs[i][it->id()]->create_tls();
 				assert(tls == 0);
-				_ecs[it->id()]->set_tls(tls,this);
+				ecs[i][it->id()]->set_tls(tls,this);
 			}
+
 			UtcbFrameRef defuf(_ecs[it->id()]->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-			{
-				// we need a dedicated Ec for the register-portal which does always accept one
-				// capability from the caller
-				_capecs[it->id()] = new LocalEc(it->id());
-				size_t tls = _capecs[it->id()]->create_tls();
-				assert(tls == 0);
-				_capecs[it->id()]->set_tls(tls,this);
-			}
-			UtcbFrameRef capuf(_capecs[it->id()]->utcb());
-			capuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-			capuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+
+			UtcbFrameRef mapuf(_mapecs[it->id()]->utcb());
+			mapuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+			mapuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+
+			UtcbFrameRef reguf(_regecs[it->id()]->utcb());
+			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
+			reguf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 		}
 	}
 }
@@ -60,7 +59,8 @@ ChildManager::~ChildManager() {
 		delete _childs[i];
 	for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
 		delete _ecs[i];
-		delete _capecs[i];
+		delete _mapecs[i];
+		delete _regecs[i];
 	}
 }
 
@@ -82,10 +82,6 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		capsel_t pts = _portal_caps + _child * per_child_caps();
 		c->_ptcount = _cpu_count * Portals::COUNT;
 		c->_pts = new Pt*[c->_ptcount];
-		c->_smcount = _cpu_count;
-		c->_sms = new Sm*[_cpu_count];
-		c->_waitcount = _cpu_count;
-		c->_waits = new uint[_cpu_count];
 		for(cpu_t cpu = 0; cpu < _cpu_count; ++cpu) {
 			size_t idx = cpu * Portals::COUNT;
 			size_t off = cpu * Hip::get().service_caps();
@@ -93,14 +89,12 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
 			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,MTD_RSP);
 			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::initcaps,0);
-			c->_pts[idx + 3] = new Pt(_capecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
+			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
 			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
 			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::getservice,0);
 			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_ALLOCIO,Portals::allocio,0);
-			c->_pts[idx + 7] = new Pt(_capecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_pts[idx + 7] = new Pt(_mapecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
 			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
-			c->_sms[cpu] = new Sm(pts + off + CapSpace::SM_SERVICE,0U);
-			c->_waits[cpu] = 0;
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Util::nextpow2shift(per_child_caps()),DESC_CAP_ALL));
@@ -163,6 +157,23 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		delete c;
 		_childs[--_child] = 0;
 		throw;
+	}
+
+	// TODO well, we should make this more general
+	const char *provides = strstr(cmdline,"provides=");
+	if(provides != 0) {
+		provides += sizeof("provides=") - 1;
+		size_t i;
+		const char *cur = provides;
+		for(i = 0; *cur >= 'a' && *cur <= 'z'; ++i)
+			cur++;
+
+		// wait until the service has been registered
+		String name(provides,i);
+		Serial::get().writef("Waiting for '%s'...\n",name.str());
+		while(_registry.find(name) == 0)
+			_regsm.down();
+		Serial::get().writef("Found '%s'!\n",name.str());
 	}
 }
 
@@ -229,19 +240,20 @@ void ChildManager::Portals::reg(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		TypedItem cap;
-		uf.get_typed(cap);
 		String name;
-		cpu_t cpu;
+		BitField<Hip::MAX_CPUS> available;
+		uf.get_typed(cap);
 		uf >> name;
-		uf >> cpu;
+		uf >> available;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().reg(ServiceRegistry::Service(c,name,cpu,cap.crd().cap()));
-			cm->notify_childs(cpu);
+			cm->registry().reg(ServiceRegistry::Service(c,name,cap.crd().cap(),available));
+			cm->_regsm.up();
 		}
 
 		uf.clear();
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
+		uf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -253,15 +265,14 @@ void ChildManager::Portals::reg(capsel_t pid) {
 void ChildManager::Portals::unreg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
+	// TODO doesn't work; we need to make sure that only the owner of the service can use that
 	try {
 		Child *c = cm->get_child(pid);
 		String name;
-		cpu_t cpu;
 		uf >> name;
-		uf >> cpu;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().unreg(c,name,cpu);
+			cm->registry().unreg(c,name);
 		}
 
 		uf.clear();
@@ -273,19 +284,22 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 	}
 }
 
-// TODO code-duplication; we already have that in the Client class
-static capsel_t get_parent_service(const char *name) {
+// TODO code-duplication; we already have that in the Session class
+static capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	if(!CPU::current().get_pt)
 		throw ServiceRegistryException(E_NOT_FOUND);
 	UtcbFrame uf;
-	uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-	uf.clear();
+	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
+	uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
 
-	TypedItem ti;
-	uf.get_typed(ti);
-	return ti.crd().cap();
+	ErrorCode res;
+	uf >> res;
+	if(res != E_SUCCESS)
+		throw ServiceRegistryException(res);
+	uf >> available;
+	return caps.release();
 }
 
 void ChildManager::Portals::getservice(capsel_t pid) {
@@ -293,22 +307,21 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
-		cpu_t cpu = cm->get_cpu(pid);
 		String name;
 		uf >> name;
 		{
 			ScopedLock<UserSm> guard(&cm->_sm);
-			c->_waits[cpu]++;
-			const ServiceRegistry::Service* s = cm->registry().find(name,cpu);
+			const ServiceRegistry::Service* s = cm->registry().find(name);
 			if(!s) {
-				capsel_t sel = get_parent_service(name.str());
-				s = cm->registry().reg(ServiceRegistry::Service(0,name,cpu,sel));
+				BitField<Hip::MAX_CPUS> available;
+				capsel_t caps = get_parent_service(name.str(),available);
+				s = cm->registry().reg(ServiceRegistry::Service(0,name,caps,available));
+				cm->_regsm.up();
 			}
-			c->_waits[cpu]--;
 
 			uf.clear();
-			uf.delegate(s->pt());
-			uf << E_SUCCESS;
+			uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
+			uf << E_SUCCESS << s->available();
 		}
 	}
 	catch(const Exception& e) {

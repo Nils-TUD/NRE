@@ -45,13 +45,14 @@ void DataSpace::create() {
 
 void DataSpace::share(Session &c) {
 	UtcbFrame uf;
-	// for the service protocol
-	uf.translate(c.pt().sel());
+	Pt &pt = c.session_pt();
+	// for the service protocol (identifies our session)
+	uf.translate(c.pt(CPU::current().id).sel());
 	uf << Service::SHARE_DATASPACE;
 	// for the dataspace protocol
 	uf << JOIN << 0 << 0 << _size << _perm << _type;
 	uf.delegate(_sel);
-	c.pt().call(uf);
+	pt.call(uf);
 	handle_response(uf);
 }
 

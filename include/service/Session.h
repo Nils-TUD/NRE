@@ -28,62 +28,67 @@ namespace nul {
 
 class Session {
 public:
-	Session(const char *service) : _pt(connect(service)) {
+	Session(const char *service) : _pts(), _pt(connect(service)) {
+		get_portals();
+	}
+	~Session() {
+		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
+			delete _pts[i];
+		CapSpace::get().free(_caps,Hip::MAX_CPUS);
 	}
 
-	Pt &pt() {
+	Pt &session_pt() {
 		return _pt;
+	}
+	bool available_on(cpu_t cpu) const {
+		return _pts[cpu] != 0;
+	}
+	Pt &pt(cpu_t cpu) {
+		assert(available_on(cpu));
+		return *_pts[cpu];
 	}
 
 private:
-	static capsel_t connect(const char *service) {
-		// TODO I think, a better solution would be to have a kind of boot-process that loads the
-		// services and clients in a way that a service is always available when someone wants
-		// to use it. this way, we don't need such a complicated and error-prone mechanism.
+	capsel_t connect(const char *service) const {
+		// TODO we need a function to receive caps, right?
+		UtcbFrame uf;
+		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
+		uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf << String(service);
+		CPU::current().get_pt->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+		return caps.release() + CPU::current().id;
+	}
 
-		// the idea is the following: the parent creates a semaphore for each client and cpu and
-		// delegates them to the clients. whenever a client fails to connect to a service, the
-		// parent stores that (for the cpu it used). when a service is registered on a specific cpu,
-		// the parent goes through all clients and does an up on each semaphore for that cpu X times,
-		// where X is the number of times a client tried to connect on that cpu.
-		// note that we track the number of tries because a client might start multiple Ecs on one
-		// cpu that try to connect to services, so that the parent can't simply notify the client
-		// once for that cpu.
-		capsel_t cap = ObjCap::INVALID;
-		do {
-			try {
-				// TODO we need a function to receive a cap, right?
-				UtcbFrame uf;
-				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-				uf << String(service);
-				CPU::current().get_pt->call(uf);
-				ErrorCode res;
-				uf >> res;
-				if(res != E_SUCCESS)
-					throw Exception(res);
+	void get_portals() {
+		UtcbFrame uf;
+		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
+		uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf << Service::OPEN_SESSION;
+		_pt.call(uf);
 
-				TypedItem ti;
-				uf.get_typed(ti);
-				cap = ti.crd().cap();
-			}
-			catch(const Exception& e) {
-				// if it failed, wait until the parent notifies us. down() instead of zero() is
-				// correct here, because the parent tracks the number of tries and thus, he will
-				// not do more ups than necessary. and it might happen that the connect failed,
-				// but immediatly afterwards the service is registered and up() is called. when
-				// calling zero() we would ignore this signal and might block for ever.
-				Serial::get().writef("Waiting for service...\n");
-				CPU::current().srv_sm->down();
-				Serial::get().writef("Retrying...\n");
-			}
+		BitField<Hip::MAX_CPUS> bf;
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+
+		uf >> bf;
+		for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
+			if(bf.is_set(i))
+				_pts[i] = new Pt(caps.get() + i);
 		}
-		while(cap == ObjCap::INVALID);
-		return cap;
+		_caps = caps.release();
 	}
 
 	Session(const Session&);
 	Session& operator=(const Session&);
 
+	capsel_t _caps;
+	Pt *_pts[Hip::MAX_CPUS];
 	Pt _pt;
 };
 

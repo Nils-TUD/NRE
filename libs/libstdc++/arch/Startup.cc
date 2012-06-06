@@ -61,7 +61,6 @@ void _setup(bool child) {
 			cpu.unmap_pt = new Pt(off + CapSpace::SRV_UNMAP);
 			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
-			cpu.srv_sm = new Sm(off + CapSpace::SM_SERVICE,true);
 			cpu.allocio_pt = new Pt(off + CapSpace::SRV_ALLOCIO);
 			if(cpu.id == CPU::current().id) {
 				// switch to dlmalloc, since we have created its dependencies now

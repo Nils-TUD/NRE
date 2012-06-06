@@ -127,3 +127,28 @@ int strcmp(const char *str1,const char *str2) {
 		return -1;
 	return 1;
 }
+
+char *strstr(const char *str1,const char *str2) {
+	char *res = 0;
+	char *sub;
+
+	/* handle special case to prevent looping the string */
+	if(!*str2)
+		return 0;
+	while(*str1) {
+		/* matching char? */
+		if(*str1++ == *str2) {
+			res = (char*)--str1;
+			sub = (char*)str2;
+			/* continue until the strings don't match anymore */
+			while(*sub && *str1 == *sub) {
+				str1++;
+				sub++;
+			}
+			/* complete substring matched? */
+			if(!*sub)
+				return res;
+		}
+	}
+	return 0;
+}

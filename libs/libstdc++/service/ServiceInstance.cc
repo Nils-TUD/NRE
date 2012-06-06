@@ -26,36 +26,28 @@
 
 namespace nul {
 
-ServiceInstance::ServiceInstance(Service* s,cpu_t cpu)
-		: _s(s), _ec(cpu), _pt(&_ec,portal), _sm() {
+ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
+		: _s(s), _ec(cpu), _pt(&_ec,pt,portal), _sm() {
 	_ec.set_tls(_ec.create_tls(),s);
 	// accept cap (for ds sharing)
 	UtcbFrameRef ecuf(_ec.utcb());
 	ecuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-	ecuf.set_translate_crd(Crd(s->_caps,Service::MAX_SESSIONS_SHIFT,DESC_CAP_ALL));
-
-	UtcbFrame uf;
-	uf.delegate(_pt.sel());
-	uf << String(s->name()) << cpu;
-	CPU::current().reg_pt->call(uf);
-	ErrorCode res;
-	uf >> res;
-	if(res != E_SUCCESS)
-		throw Exception(res);
+	ecuf.set_translate_crd(Crd(s->_caps,Util::nextpow2shift(Service::MAX_SESSIONS * Hip::MAX_CPUS),DESC_CAP_ALL));
 }
 
 void ServiceInstance::portal(capsel_t) {
 	UtcbFrameRef uf;
 	// TODO not everyone wants client-specific portals
 	Service *s = Ec::current()->get_tls<Service>(0);
-	uf.clear();
 	try {
 		Service::Command cmd;
 		uf >> cmd;
 		switch(cmd) {
 			case Service::OPEN_SESSION: {
 				SessionData *c = s->new_session();
-				uf.delegate(c->pt().sel());
+				uf.clear();
+				uf.delegate(CapRange(c->caps(),Hip::MAX_CPUS,DESC_CAP_ALL));
+				uf << E_SUCCESS << s->_bf;
 			}
 			break;
 
@@ -70,12 +62,12 @@ void ServiceInstance::portal(capsel_t) {
 				uf >> *c->_ds;
 				c->_ds->map();
 
+				uf.clear();
 				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+				uf << E_SUCCESS;
 			}
 			break;
 		}
-		uf.clear();
-		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
 		uf.clear();

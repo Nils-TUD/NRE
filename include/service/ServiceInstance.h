@@ -29,10 +29,13 @@ class Service;
 
 class ServiceInstance {
 public:
-	ServiceInstance(Service* s,cpu_t cpu);
+	ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
 
 	cpu_t cpu() const {
 		return _ec.cpu();
+	}
+	LocalEc &ec() {
+		return _ec;
 	}
 
 private:

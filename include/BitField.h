@@ -16,16 +16,23 @@ namespace nul {
 
 template<uint BITS>
 class BitField {
+	static size_t idx(uint bit) {
+		return bit / (sizeof(word_t) * 8);
+	}
+	static size_t bitpos(uint bit) {
+		return 1 << (bit % (sizeof(word_t) * 8));
+	}
+
 public:
 	BitField() : _words() {
 	}
 
 	bool is_set(uint bit) const {
-		return (_words[bit / 8] & (1 << (bit % 8))) != 0;
+		return (_words[idx(bit)] & bitpos(bit)) != 0;
 	}
 
 	void set(uint bit) {
-		_words[bit / 8] |= 1 << (bit % 8);
+		_words[idx(bit)] |= bitpos(bit);
 	}
 	void set(uint bit,bool value) {
 		if(value)
@@ -34,18 +41,18 @@ public:
 			clear(bit);
 	}
 	void clear(uint bit) {
-		_words[bit / 8] &= ~(1 << (bit % 8));
+		_words[idx(bit)] &= ~bitpos(bit);
 	}
 
 	void set_all() {
-		memset(_words,-1,(BITS / 8) * sizeof(word_t));
+		memset(_words,-1,sizeof(_words));
 	}
 	void clear_all() {
-		memset(_words,0,(BITS / 8) * sizeof(word_t));
+		memset(_words,0,sizeof(_words));
 	}
 
 private:
-	word_t _words[BITS / 8];
+	word_t _words[BITS / (sizeof(word_t) * 8)];
 };
 
 }

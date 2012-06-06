@@ -27,9 +27,12 @@
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <ScopedPtr.h>
+#include <BitField.h>
 #include <CPU.h>
 
 namespace nul {
+
+class Service;
 
 class ServiceException : public Exception {
 public:
@@ -41,22 +44,24 @@ class SessionData {
 	friend class ServiceInstance;
 
 public:
-	SessionData(capsel_t pt,Pt::portal_func func)
-		: _pt(static_cast<LocalEc*>(Ec::current()),pt,func), _ds() {
-	}
+	SessionData(Service *s,capsel_t pts,Pt::portal_func func);
 	virtual ~SessionData() {
-		delete _ds;
+		for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
+			if(_pts[i])
+				delete _pts[i];
+		}
 	}
 
-	Pt &pt() {
-		return _pt;
+	capsel_t caps() const {
+		return _caps;
 	}
 	const DataSpace *ds() const {
 		return _ds;
 	}
 
 private:
-	Pt _pt;
+	capsel_t _caps;
+	Pt *_pts[Hip::MAX_CPUS];
 	DataSpace *_ds;
 };
 
@@ -70,20 +75,21 @@ public:
 	};
 
 	enum {
-		MAX_SESSIONS_SHIFT	= 5,
-		MAX_SESSIONS		= 1 << MAX_SESSIONS_SHIFT
+		MAX_SESSIONS		= 32
 	};
 
 	Service(const char *name,Pt::portal_func portal)
-		: _caps(CapSpace::get().allocate(MAX_SESSIONS,MAX_SESSIONS)), _sm(), _name(name), _func(portal),
-		  _insts(), _sessions() {
+		: _regcaps(CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS)),
+		  _caps(CapSpace::get().allocate(MAX_SESSIONS * Hip::MAX_CPUS,MAX_SESSIONS * Hip::MAX_CPUS)),
+		  _sm(), _name(name), _func(portal), _insts(), _sessions() {
 	}
 	virtual ~Service() {
 		for(size_t i = 0; i < MAX_SESSIONS; ++i)
 			delete _sessions[i];
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
 			delete _insts[i];
-		CapSpace::get().free(_caps,MAX_SESSIONS);
+		CapSpace::get().free(_caps,MAX_SESSIONS * Hip::MAX_CPUS);
+		CapSpace::get().free(_regcaps,Hip::MAX_CPUS);
 	}
 
 	const char *name() const {
@@ -95,28 +101,43 @@ public:
 
 	template<class T>
 	T *get_session(capsel_t pid) {
-		return static_cast<T*>(_sessions[pid - _caps]);
+		return static_cast<T*>(_sessions[(pid - _caps) / Hip::MAX_CPUS]);
 	}
 
-	void reg(cpu_t cpu) {
+	void provide_on(cpu_t cpu) {
 		assert(_insts[cpu] == 0);
-		_insts[cpu] = new ServiceInstance(this,cpu);
+		_insts[cpu] = new ServiceInstance(this,_regcaps + cpu,cpu);
+		_bf.set(cpu);
 	}
+	LocalEc *get_ec(cpu_t cpu) const {
+		return _insts[cpu] != 0 ? &_insts[cpu]->ec() : 0;
+	}
+	void reg() {
+		UtcbFrame uf;
+		uf.delegate(CapRange(_regcaps,Util::nextpow2<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf << String(_name) << _bf;
+		CPU::current().reg_pt->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw ServiceException(res);
+	}
+
 	void wait() {
 		Sm sm(0);
 		sm.down();
 	}
 
 private:
-	virtual SessionData *create_session(capsel_t pt,Pt::portal_func func) {
-		return new SessionData(pt,func);
+	virtual SessionData *create_session(capsel_t pts,Pt::portal_func func) {
+		return new SessionData(this,pts,func);
 	}
 
 	SessionData *new_session() {
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			if(_sessions[i] == 0) {
-				_sessions[i] = create_session(_caps + i,_func);
+				_sessions[i] = create_session(_caps + i * Hip::MAX_CPUS,_func);
 				return _sessions[i];
 			}
 		}
@@ -126,11 +147,13 @@ private:
 	Service(const Service&);
 	Service& operator=(const Service&);
 
+	capsel_t _regcaps;
 	capsel_t _caps;
 	UserSm _sm;
 	const char *_name;
 	Pt::portal_func _func;
 	ServiceInstance *_insts[Hip::MAX_CPUS];
+	BitField<Hip::MAX_CPUS> _bf;
 	SessionData *_sessions[MAX_SESSIONS];
 };
 

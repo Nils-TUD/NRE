@@ -73,15 +73,6 @@ public:
 	}
 
 private:
-	void notify_childs(cpu_t cpu) {
-		for(size_t i = 0; i < MAX_CHILDS; ++i) {
-			if(_childs[i]) {
-				for(uint x = 0; x < _childs[i]->_waits[cpu]; ++x)
-					_childs[i]->_sms[cpu]->up();
-				_childs[i]->_waits[cpu] = 0;
-			}
-		}
-	}
 	cpu_t get_cpu(capsel_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
@@ -119,8 +110,11 @@ private:
 	DataSpaceManager _dsm;
 	ServiceRegistry _registry;
 	UserSm _sm;
+	Sm _regsm;
+	// we need different Ecs to be able to receive a different number of caps
 	LocalEc *_ecs[Hip::MAX_CPUS];
-	LocalEc *_capecs[Hip::MAX_CPUS];
+	LocalEc *_regecs[Hip::MAX_CPUS];
+	LocalEc *_mapecs[Hip::MAX_CPUS];
 	static size_t _cpu_count;
 };
 

@@ -19,6 +19,7 @@
 #pragma once
 
 #include <subsystem/Child.h>
+#include <BitField.h>
 #include <Exception.h>
 
 namespace nul {
@@ -37,12 +38,11 @@ class ServiceRegistry {
 public:
 	class Service {
 	public:
-		Service(Child *child,const String &name,cpu_t cpu,capsel_t pt)
-			: _child(child), _name(name), _cpu(cpu), _pt(pt) {
+		Service(Child *child,const String &name,capsel_t pts,BitField<Hip::MAX_CPUS> available)
+			: _child(child), _name(name), _pts(pts), _available(available) {
 		}
 		~Service() {
 			// TODO ?
-			CapSpace::get().free(_pt);
 		}
 
 		Child *child() const {
@@ -51,18 +51,18 @@ public:
 		const String &name() const {
 			return _name;
 		}
-		cpu_t cpu() const {
-			return _cpu;
+		const BitField<Hip::MAX_CPUS> &available() const {
+			return _available;
 		}
-		capsel_t pt() const {
-			return _pt;
+		capsel_t pts() const {
+			return _pts;
 		}
 
 	private:
 		Child *_child;
 		String _name;
-		cpu_t _cpu;
-		capsel_t _pt;
+		capsel_t _pts;
+		BitField<Hip::MAX_CPUS> _available;
 	};
 
 	ServiceRegistry() : _srvs() {
@@ -70,7 +70,7 @@ public:
 
 	const Service* reg(const Service& s) {
 		// TODO use different exception
-		if(search(s.name(),s.cpu()))
+		if(search(s.name()))
 			throw ServiceRegistryException(E_EXISTS);
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
 			if(_srvs[i] == 0) {
@@ -80,16 +80,16 @@ public:
 		}
 		throw ServiceRegistryException(E_CAPACITY);
 	}
-	void unreg(Child *child,const String &name,cpu_t cpu) {
+	void unreg(Child *child,const String &name) {
 		size_t i;
-		Service *s = search(name,cpu,&i);
+		Service *s = search(name,&i);
 		if(s && s->child() == child) {
 			delete _srvs[i];
 			_srvs[i] = 0;
 		}
 	}
-	const Service* find(const String &name,cpu_t cpu) const {
-		return search(name,cpu);
+	const Service* find(const String &name) const {
+		return search(name);
 	}
 	void remove(Child *child) {
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
@@ -101,9 +101,9 @@ public:
 	}
 
 private:
-	Service *search(const String &name,cpu_t cpu,size_t *idx = 0) const {
+	Service *search(const String &name,size_t *idx = 0) const {
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {
-			if(_srvs[i] && _srvs[i]->cpu() == cpu && strcmp(_srvs[i]->name().str(),name.str()) == 0) {
+			if(_srvs[i] && strcmp(_srvs[i]->name().str(),name.str()) == 0) {
 				if(idx)
 					*idx = i;
 				return _srvs[i];

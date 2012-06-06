@@ -26,7 +26,6 @@
 namespace nul {
 
 class Pt;
-class Sm;
 
 class CPU {
 public:
@@ -44,10 +43,9 @@ public:
 	Pt *allocio_pt;
 	Pt *reg_pt;
 	Pt *get_pt;
-	Sm *srv_sm;
 
 private:
-	CPU() : id(), map_pt(), unmap_pt(), allocio_pt(), reg_pt(), get_pt(), srv_sm() {
+	CPU() : id(), map_pt(), unmap_pt(), allocio_pt(), reg_pt(), get_pt() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);

@@ -66,8 +66,6 @@ public:
 		SRV_ALLOCIO		= 0x27,		// alloc io ports
 		SRV_MAP			= 0x28,		// map dataspace portal
 		SRV_UNMAP		= 0x29,		// unmap dataspace portal
-
-		SM_SERVICE		= 0x30,		// semaphore for service registration
 	};
 
 	static CapSpace& get() {
