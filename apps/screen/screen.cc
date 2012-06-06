@@ -17,6 +17,7 @@
 #include <stream/Log.h>
 #include <service/Service.h>
 #include <service/ServiceInstance.h>
+#include <service/Producer.h>
 #include <mem/DataSpace.h>
 #include <ScopedLock.h>
 #include <CPU.h>
@@ -34,10 +35,19 @@ public:
 	int id() const {
 		return _id;
 	}
+	Producer<int> *prod() {
+		return _prod;
+	}
+
+	virtual void set_ds(DataSpace *ds) {
+		SessionData::set_ds(ds);
+		_prod = new Producer<int>(ds);
+	}
 
 private:
 	static int _next_id;
 	int _id;
+	Producer<int> *_prod;
 };
 
 class ScreenService : public Service {
@@ -71,6 +81,17 @@ int main() {
 			srv->provide_on(it->id());
 	}
 	srv->reg();
+
+	int x = 0;
+	while(1) {
+		for(size_t i = 0; i < Service::MAX_SESSIONS; ++i) {
+			ScreenSessionData *sess = srv->get_session_at<ScreenSessionData>(i);
+			if(sess && sess->prod())
+				sess->prod()->produce(x);
+		}
+		x++;
+	}
+
 	srv->wait();
 	return 0;
 }

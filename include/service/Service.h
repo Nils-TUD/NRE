@@ -59,6 +59,11 @@ public:
 		return _ds;
 	}
 
+protected:
+	virtual void set_ds(DataSpace *ds) {
+		_ds = ds;
+	}
+
 private:
 	capsel_t _caps;
 	Pt *_pts[Hip::MAX_CPUS];
@@ -102,6 +107,12 @@ public:
 	template<class T>
 	T *get_session(capsel_t pid) {
 		return static_cast<T*>(_sessions[(pid - _caps) / Hip::MAX_CPUS]);
+	}
+	// TODO iterator
+	template<class T>
+	T *get_session_at(size_t i) {
+		assert(i < MAX_SESSIONS);
+		return static_cast<T*>(_sessions[i]);
 	}
 
 	void provide_on(cpu_t cpu) {

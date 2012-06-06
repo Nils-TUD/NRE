@@ -9,43 +9,38 @@
 
 #pragma once
 
+#include <mem/DataSpace.h>
+#include <service/Consumer.h>
+#include <Util.h>
+
 namespace nul {
 
-/**
- * Producer with fixed items.
- */
-template <typename T, unsigned SIZE>
-class Producer
-{
-protected:
-  Consumer<T, SIZE> *_consumer;
-  KernelSemaphore    _sem;
-  bool               _dropping;
-
+template<typename T>
+class Producer {
 public:
-  /**
-   * Put something in the buffer. Please note that this function is
-   * not locked, thus only a single producer should do the access at
-   * the very same time.
-   */
-  bool produce(T &value)
-  {
-    if (!_consumer || ((_consumer->_wpos + 1) % SIZE == _consumer->_rpos))
-      {
-        _dropping = true;
-        return false;
-      }
-    _dropping = false;
-    _consumer->_buffer[_consumer->_wpos] = value;
-    _consumer->_wpos = (_consumer->_wpos + 1) % SIZE;
-    MEMORY_BARRIER;
-    if (_sem.up(false)) Logging::printf("  : producer issue - wake up failed\n");
-    return true;
-  }
+	Producer(DataSpace *ds)
+		: _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
+		  _max((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T)),
+		  _sm(_ds->sel(),true) {
+		_if->rpos = 0;
+		_if->wpos = 0;
+	}
 
-  unsigned sm() { return _sem.sm(); }
+	bool produce(T &value) {
+		if((_if->wpos + 1) % _max == _if->rpos)
+			return false;
+		_if->buffer[_if->wpos] = value;
+		_if->wpos = (_if->wpos + 1) % _max;
+		Util::memory_barrier();
+		_sm.up();
+		return true;
+	}
 
-  Producer(Consumer<T, SIZE> *consumer = 0, unsigned nq = 0) : _consumer(consumer), _sem(nq) {};
+private:
+	DataSpace *_ds;
+	typename Consumer<T>::Interface *_if;
+	size_t _max;
+	Sm _sm;
 };
 
 }

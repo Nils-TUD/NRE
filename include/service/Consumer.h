@@ -9,10 +9,17 @@
 
 #pragma once
 
+#include <mem/DataSpace.h>
+
 namespace nul {
 
 template<typename T>
+class Producer;
+
+template<typename T>
 class Consumer {
+	friend class Producer<T>;
+
 	struct Interface {
 		volatile size_t rpos;
 		volatile size_t wpos;
@@ -21,32 +28,23 @@ class Consumer {
 
 public:
 	Consumer(DataSpace *ds)
-		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())), _sm(_ds->sel(),true) {
+		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
+		  _max((ds->size() - sizeof(Interface)) / sizeof(T)), _sm(_ds->sel(),true) {
 	}
 
-	bool has_data() const {
-		return _if->rpos != _if->wpos;
+	T *get() {
+		if(_if->rpos == _if->wpos)
+			_sm.zero();
+		return _if->buffer + _if->rpos;
 	}
-
-	T *receive() {
-		_sm.down();
-	}
-
-	T * get_buffer() {
-		return _buffer + _rpos;
-	}
-
-	void free_buffer() {
-		_rpos = (_rpos + 1) % SIZE;
-	}
-
-	Consumer() :
-			_rpos(0), _wpos(0) {
+	void next() {
+		_if->rpos = (_if->rpos + 1) % _max;
 	}
 
 private:
 	DataSpace *_ds;
 	Interface *_if;
+	size_t _max;
 	Sm _sm;
 };
 

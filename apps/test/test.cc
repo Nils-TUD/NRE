@@ -21,6 +21,7 @@
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
 #include <service/Session.h>
+#include <service/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
@@ -68,6 +69,13 @@ int main() {
 	ds = new DataSpace(100,DataSpace::ANONYMOUS,DataSpace::RW);
 	ds->map();
 	ds->share(*sess);
+
+	Consumer<int> c(ds);
+	while(1) {
+		int *i = c.get();
+		Serial::get().writef("Got %d\n",*i);
+		c.next();
+	}
 
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {

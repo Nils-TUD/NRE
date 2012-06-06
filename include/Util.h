@@ -118,6 +118,10 @@ public:
 		return min(basealign,shiftalign);
 	}
 
+	static inline void memory_barrier() {
+		asm volatile ("" : : : "memory");
+	}
+
 	/**
 	 * Adds <value> to *<ptr> and returns the old value
 	 */
