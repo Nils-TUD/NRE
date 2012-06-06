@@ -123,6 +123,7 @@ public:
 			throw ServiceException(res);
 	}
 
+	// TODO wrong place?
 	void wait() {
 		Sm sm(0);
 		sm.down();
