@@ -13,6 +13,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <service/Session.h>
+#include <service/Service.h>
 #include <stream/Serial.h>
 #include <Syscalls.h>
 #include <CPU.h>
@@ -45,14 +46,13 @@ void DataSpace::create() {
 
 void DataSpace::share(Session &c) {
 	UtcbFrame uf;
-	Pt &pt = c.session_pt();
 	// for the service protocol (identifies our session)
 	uf.translate(c.pt(CPU::current().id).sel());
 	uf << Service::SHARE_DATASPACE;
 	// for the dataspace protocol
 	uf << JOIN << 0 << 0 << _size << _perm << _type;
 	uf.delegate(_sel);
-	pt.call(uf);
+	c.con().pt(CPU::current().id)->call(uf);
 	handle_response(uf);
 }
 

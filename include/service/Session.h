@@ -19,6 +19,7 @@
 #pragma once
 
 #include <utcb/UtcbFrame.h>
+#include <service/Connection.h>
 #include <service/Service.h>
 #include <cap/CapSpace.h>
 #include <kobj/Pt.h>
@@ -28,8 +29,7 @@ namespace nul {
 
 class Session {
 public:
-	Session(const char *service) : _pts(), _pt(connect(service)) {
-		get_portals();
+	Session(Connection &con) : _pts(), _caps(get_portals(con)), _con(con) {
 	}
 	~Session() {
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
@@ -37,59 +37,39 @@ public:
 		CapSpace::get().free(_caps,Hip::MAX_CPUS);
 	}
 
-	Pt &session_pt() {
-		return _pt;
-	}
-	bool available_on(cpu_t cpu) const {
-		return _pts[cpu] != 0;
+	Connection &con() {
+		return _con;
 	}
 	Pt &pt(cpu_t cpu) {
-		assert(available_on(cpu));
 		return *_pts[cpu];
 	}
 
 private:
-	capsel_t connect(const char *service) const {
-		// TODO we need a function to receive caps, right?
-		UtcbFrame uf;
-		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
-		uf << String(service);
-		CPU::current().get_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
-		return caps.release() + CPU::current().id;
-	}
-
-	void get_portals() {
+	capsel_t get_portals(Connection &con) {
 		UtcbFrame uf;
 		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 		uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
 		uf << Service::OPEN_SESSION;
-		_pt.call(uf);
+		con.pt(CPU::current().id)->call(uf);
 
-		BitField<Hip::MAX_CPUS> bf;
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
 
-		uf >> bf;
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
-			if(bf.is_set(i))
+			if(con.available_on(i))
 				_pts[i] = new Pt(caps.get() + i);
 		}
-		_caps = caps.release();
+		return caps.release();
 	}
 
 	Session(const Session&);
 	Session& operator=(const Session&);
 
-	capsel_t _caps;
 	Pt *_pts[Hip::MAX_CPUS];
-	Pt _pt;
+	capsel_t _caps;
+	Connection &_con;
 };
 
 }

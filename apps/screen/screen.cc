@@ -84,12 +84,12 @@ int main() {
 
 	int x = 0;
 	while(1) {
-		for(size_t i = 0; i < Service::MAX_SESSIONS; ++i) {
-			ScreenSessionData *sess = srv->get_session_at<ScreenSessionData>(i);
-			if(sess && sess->prod())
-				sess->prod()->produce(x);
+		for(SessionIterator<ScreenSessionData> it = srv->sessions_begin<ScreenSessionData>(); it != srv->sessions_end<ScreenSessionData>(); ++it) {
+			if(it->prod()) {
+				if(it->prod()->produce(x))
+					x++;
+			}
 		}
-		x++;
 	}
 
 	srv->wait();
@@ -99,10 +99,17 @@ int main() {
 static void portal_write(capsel_t pid) {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
-	ScreenSessionData *c = srv->get_session<ScreenSessionData>(pid);
 	UtcbFrameRef uf;
-	int *data = reinterpret_cast<int*>(c->ds()->virt());
-	int i = *data;
-	//uf >> i;
-	Log::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
+	try {
+		ScreenSessionData *c = srv->get_session<ScreenSessionData>(pid);
+		int *data = reinterpret_cast<int*>(c->ds()->virt());
+		int i = *data;
+		//uf >> i;
+		Log::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
 }

@@ -20,6 +20,7 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
+#include <service/Connection.h>
 #include <service/Session.h>
 #include <service/Consumer.h>
 #include <stream/OStringStream.h>
@@ -31,8 +32,7 @@ using namespace nul;
 
 EXTERN_C void abort();
 
-static Session *sess;
-static DataSpace *ds;
+static Connection *con;
 
 static void verbose_terminate() {
 	// TODO put that in abort or something?
@@ -48,9 +48,26 @@ static void verbose_terminate() {
 	abort();
 }
 
+static void read(void *) {
+	Session sess(*con);
+	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
+	ds.map();
+	ds.share(sess);
+	Consumer<int> c(&ds);
+	while(1) {
+		int *i = c.get();
+		Serial::get().writef("[%p] Got %d\n",ds.virt(),*i);
+		c.next();
+	}
+}
+
 static void write(void *) {
-	Pt &pt = sess->pt(CPU::current().id);
-	int *data = reinterpret_cast<int*>(ds->virt());
+	Session sess(*con);
+	Pt &pt = sess.pt(CPU::current().id);
+	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
+	ds.map();
+	ds.share(sess);
+	int *data = reinterpret_cast<int*>(ds.virt());
 	for(uint i = 0; i < 100; ++i) {
 		UtcbFrame uf;
 		*data = i;
@@ -65,22 +82,13 @@ int main() {
 
 	std::set_terminate(verbose_terminate);
 
-	sess = new Session("screen");
-	ds = new DataSpace(100,DataSpace::ANONYMOUS,DataSpace::RW);
-	ds->map();
-	ds->share(*sess);
-
-	Consumer<int> c(ds);
-	while(1) {
-		int *i = c.get();
-		Serial::get().writef("Got %d\n",*i);
-		c.next();
-	}
+	con = new Connection("screen");
 
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled())
-			new Sc(new GlobalEc(write,it->id()),Qpd());
+			//new Sc(new GlobalEc(write,it->id()),Qpd());
+			new Sc(new GlobalEc(read,it->id()),Qpd());
 	}
 
 	Sm sm(0);
