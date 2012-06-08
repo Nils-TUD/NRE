@@ -12,7 +12,7 @@
 namespace nul {
 
 SessionData::SessionData(Service *s,capsel_t pts,Pt::portal_func func)
-	: _caps(pts), _pts(), _ds() {
+	: _sm(), _caps(pts), _pts(), _ds() {
 	for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
 		LocalEc *ec = s->get_ec(i);
 		if(ec)

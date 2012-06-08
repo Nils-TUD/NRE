@@ -57,11 +57,17 @@ void ServiceInstance::portal(capsel_t) {
 				if(ti.crd().cap() == 0)
 					throw Exception(E_ARGS_INVALID);
 
-				SessionData *c = s->get_session<SessionData>(ti.crd().cap());
-				DataSpace *ds = new DataSpace();
-				uf >> *ds;
-				ds->map();
-				c->set_ds(ds);
+				{
+					// ensure that just one dataspace can be shared with one service
+					SessionData *c = s->get_session<SessionData>(ti.crd().cap());
+					ScopedLock<UserSm> guard(&c->sm());
+					if(c->ds())
+						throw Exception(E_EXISTS);
+					DataSpace *ds = new DataSpace();
+					uf >> *ds;
+					ds->map();
+					c->set_ds(ds);
+				}
 
 				uf.clear();
 				uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));

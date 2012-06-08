@@ -34,9 +34,6 @@ namespace nul {
 
 class Service;
 
-template<class T>
-class SessionIterator;
-
 class ServiceException : public Exception {
 public:
 	explicit ServiceException(ErrorCode code) throw() : Exception(code) {
@@ -56,6 +53,9 @@ public:
 		delete _ds;
 	}
 
+	UserSm &sm() {
+		return _sm;
+	}
 	capsel_t caps() const {
 		return _caps;
 	}
@@ -69,6 +69,7 @@ protected:
 	}
 
 private:
+	UserSm _sm;
 	capsel_t _caps;
 	Pt *_pts[Hip::MAX_CPUS];
 	DataSpace *_ds;
@@ -76,8 +77,6 @@ private:
 
 class Service {
 	friend class ServiceInstance;
-	template<class T>
-	friend class SessionIterator;
 
 public:
 	enum Command {
@@ -109,11 +108,6 @@ public:
 	Pt::portal_func portal() const {
 		return _func;
 	}
-
-	template<class T>
-	SessionIterator<T> sessions_begin();
-	template<class T>
-	SessionIterator<T> sessions_end();
 
 	template<class T>
 	T *get_session(capsel_t pid) {
@@ -148,6 +142,10 @@ public:
 		sm.down();
 	}
 
+	UserSm &sm() {
+		return _sm;
+	}
+
 private:
 	virtual SessionData *create_session(capsel_t pts,Pt::portal_func func) {
 		return new SessionData(this,pts,func);
@@ -176,65 +174,5 @@ private:
 	BitField<Hip::MAX_CPUS> _bf;
 	SessionData *_sessions[MAX_SESSIONS];
 };
-
-template<class T>
-class SessionIterator {
-	friend class Service;
-
-	SessionIterator(Service *s,size_t pos = 0) : _s(s), _pos(pos) {
-	}
-
-public:
-	~SessionIterator() {
-	}
-
-	T& operator *() const {
-		return *static_cast<T*>(_s->_sessions[_pos]);
-	}
-	T* operator ->() const {
-		return &(operator*());
-	}
-	SessionIterator& operator ++() {
-		while(_pos < Service::MAX_SESSIONS - 1 && !_s->_sessions[++_pos])
-			;
-		return *this;
-	}
-	SessionIterator operator ++(int) {
-		SessionIterator<T> tmp(*this);
-		operator++();
-		return tmp;
-	}
-	SessionIterator& operator --() {
-		while(_pos > 0 && !_s->_sessions[--_pos])
-			;
-		return *this;
-	}
-	SessionIterator operator --(int) {
-		SessionIterator<T> tmp(*this);
-		operator--();
-		return tmp;
-	}
-	bool operator ==(const SessionIterator<T>& rhs) {
-		return _pos == rhs._pos;
-	}
-	bool operator !=(const SessionIterator<T>& rhs) {
-		return _pos != rhs._pos;
-	}
-
-private:
-	Service* _s;
-	size_t _pos;
-};
-
-
-template<class T>
-SessionIterator<T> Service::sessions_begin() {
-	return SessionIterator<T>(this);
-}
-
-template<class T>
-SessionIterator<T> Service::sessions_end() {
-	return SessionIterator<T>(this,MAX_SESSIONS);
-}
 
 }
