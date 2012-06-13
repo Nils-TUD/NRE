@@ -13,6 +13,7 @@
 #include <kobj/UserSm.h>
 #include <ScopedLock.h>
 #include <Sync.h>
+#include <Util.h>
 
 /**
  * Usage:
@@ -219,7 +220,7 @@ public:
 		if(force) {
 			// wait until all objects are deletable
 			while(!deletable())
-				asm volatile("pause");
+				Util::pause();
 			_objs->_state = RCUObject::DELETABLE;
 		}
 		// check if the last invalidated object is deletable as well

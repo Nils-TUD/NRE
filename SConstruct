@@ -32,13 +32,13 @@ env = Environment(
 
 btype = os.environ.get('NOVA_BUILD')
 if btype == 'debug':
-	env.Append(CXXFLAGS = ' -O0 -g')
-	env.Append(CFLAGS = ' -O0 -g')
+	env.Append(CXXFLAGS = ' -O0 -g -mno-sse')
+	env.Append(CFLAGS = ' -O0 -g -mno-sse')
 else:
 	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
 	# disable stacktraces later, so that we don't need the framepointer.
-	env.Append(CXXFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer')
-	env.Append(CFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CXXFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
+	env.Append(CFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 

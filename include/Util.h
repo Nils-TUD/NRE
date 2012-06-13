@@ -118,6 +118,10 @@ public:
 		return min(basealign,shiftalign);
 	}
 
+	static inline void pause() {
+		asm volatile("pause");
+	}
+
 	static inline uint64_t tsc() {
 		uint32_t u,l;
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));
