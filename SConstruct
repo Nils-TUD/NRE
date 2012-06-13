@@ -35,8 +35,10 @@ if btype == 'debug':
 	env.Append(CXXFLAGS = ' -O0 -g')
 	env.Append(CFLAGS = ' -O0 -g')
 else:
-	env.Append(CXXFLAGS = ' -O3 -DNDEBUG')
-	env.Append(CFLAGS = ' -O3 -DNDEBUG')
+	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
+	# disable stacktraces later, so that we don't need the framepointer.
+	env.Append(CXXFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer')
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 

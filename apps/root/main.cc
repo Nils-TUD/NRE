@@ -49,7 +49,6 @@ PORTAL static void portal_unmap(capsel_t);
 PORTAL static void portal_hvmap(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
-static void mythread(void *tls);
 static void start_childs();
 
 // stack for initial Ec (overwrites the weak-symbol defined in Startup.cc)
@@ -81,10 +80,10 @@ void verbose_terminate() {
 		throw;
 	}
 	catch(const Exception& e) {
-		e.write(Log::get());
+		e.write(Serial::get());
 	}
 	catch(...) {
-		Log::get().writef("Uncatched, unknown exception\n");
+		Serial::get().writef("Uncatched, unknown exception\n");
 	}
 	abort();
 }
@@ -147,12 +146,12 @@ int main() {
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
-	// map all available memory
-	Log::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
+	// add all available memory
+	Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
-	Log::get().writef("Memory:\n");
+	Serial::get().writef("Memory:\n");
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		Log::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
+		Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
 		if(it->type == Hip_mem::AVAILABLE) {
 			// map it to our physical memory area, but take care that it fits in there
 			uintptr_t start = it->addr >> ExecEnv::PAGE_SHIFT;
@@ -163,15 +162,30 @@ int main() {
 				continue;
 			if(addr + pages > end)
 				pages = end - addr;
-			allocate(CapRange(start,pages,Caps::TYPE_MEM | Caps::MEM_RWX,addr));
 			mem.free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
 		}
 	}
-	mem.write(Log::get());
-	Log::get().writef("CPUs:\n");
+
+	// remove all not available memory
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+		if(it->type != Hip_mem::AVAILABLE)
+			mem.remove(it->addr + ExecEnv::PHYS_START,Util::roundup<size_t>(it->size,ExecEnv::PAGE_SIZE));
+	}
+	mem.write(Serial::get());
+
+	// now allocate the available memory from the hypervisor
+	for(Memory::iterator it = mem.begin(); it != mem.end(); ++it) {
+		if(it->size) {
+			uintptr_t start = (it->addr - ExecEnv::PHYS_START) >> ExecEnv::PAGE_SHIFT;
+			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Caps::TYPE_MEM | Caps::MEM_RWX,
+					it->addr >> ExecEnv::PAGE_SHIFT));
+		}
+	}
+
+	Serial::get().writef("CPUs:\n");
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		if(it->enabled()) {
-			Log::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
+			Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
 					it->package,it->core,it->thread,it->flags);
 		}
 	}
@@ -201,17 +215,6 @@ int main() {
 		Sm sm(0);
 		sm.down();
 	}
-
-	try {
-		new Sc(new GlobalEc(mythread,0),Qpd());
-		new Sc(new GlobalEc(mythread,1),Qpd(1,100));
-		new Sc(new GlobalEc(mythread,1),Qpd(1,1000));
-	}
-	catch(const SyscallException& e) {
-		e.write(Log::get());
-	}
-
-	mythread(0);
 	return 0;
 }
 
@@ -270,6 +273,7 @@ static void portal_map(capsel_t) {
 		uf.delegate(cap.get(),0);
 		uf.delegate(cap.get() + 1,1);
 		// pass back attributes so that the caller has the correct ones
+		Serial::get().writef("Created ds @ %p .. %p\n",addr,addr + size);
 		uf << E_SUCCESS << addr << size << ds.perm() << ds.type();
 		cap.release();
 	}
@@ -291,6 +295,7 @@ static void portal_unmap(capsel_t) {
 		CapSpace::get().free(ds.sel());
 		Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
 		CapSpace::get().free(ds.unmapsel());
+		Serial::get().writef("Destroyed ds @ %p .. %p\n",ds.virt(),ds.virt() + ds.size());
 	}
 	catch(...) {
 		// ignore
@@ -331,13 +336,4 @@ static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
 	uf->mtd = MTD_RIP_LEN;
 	uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
-}
-
-static void mythread(void *) {
-	static UserSm sm;
-	Ec *ec = Ec::current();
-	while(1) {
-		ScopedLock<UserSm> guard(&sm);
-		Log::get().writef("I am Ec %u, running on CPU %u\n",ec->sel(),ec->cpu());
-	}
 }

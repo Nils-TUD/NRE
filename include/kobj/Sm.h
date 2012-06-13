@@ -27,9 +27,9 @@ namespace nul {
 class Sm : public ObjCap {
 public:
 	// TODO get rid of the bool
-	Sm(capsel_t cap,bool) : ObjCap(cap) {
+	Sm(capsel_t cap,bool) : ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
-	Sm(capsel_t cap,unsigned initial,Pd *pd = Pd::current()) : ObjCap(cap) {
+	Sm(capsel_t cap,unsigned initial,Pd *pd = Pd::current()) : ObjCap(cap,KEEP_SEL_BIT) {
 		Syscalls::create_sm(cap,initial,pd->sel());
 	}
 	Sm(unsigned initial,Pd *pd = Pd::current());

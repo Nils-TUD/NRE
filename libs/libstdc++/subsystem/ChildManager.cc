@@ -189,7 +189,6 @@ void ChildManager::Portals::startup(capsel_t pid) {
 				throw RegionException(E_NOT_FOUND);
 			uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = MTD_RIP_LEN;
-			Serial::get().writef("### Start @ %p\n",uf->rip);
 			c->increase_refs();
 		}
 		else {
@@ -356,21 +355,27 @@ void ChildManager::Portals::map(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		uf >> ds;
 		// create and add can throw; ensure that the state doesn't change if something throws
-		cm->_dsm.create(ds);
+		bool newds = cm->_dsm.create(ds);
 		created = true;
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
 
 		uf.clear();
-		uf.delegate(ds.sel(),0);
-		uf.delegate(ds.unmapsel(),1);
+		if(newds) {
+			uf.delegate(ds.sel(),0);
+			uf.delegate(ds.unmapsel(),1);
+		}
+		else
+			uf.delegate(ds.unmapsel());
 		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		uf << E_SUCCESS << addr << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
 		// TODO revoke ds-cap?
 		if(created) {
-			if(cm->_dsm.destroy(ds.unmapsel()))
+			bool destroyable = false;
+			cm->_dsm.destroy(ds.unmapsel(),destroyable);
+			if(destroyable)
 				ds.unmap();
 		}
 		uf.clear();
@@ -399,12 +404,12 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 		DataSpace uds;
 		uf >> uds;
 		// destroy (decrease refs) the ds
-		DataSpace *ds = cm->_dsm.destroy(uds.unmapsel());
+		bool destroyable = false;
+		DataSpace *ds = cm->_dsm.destroy(uds.unmapsel(),destroyable);
+		c->reglist().remove(*ds);
 		// we can only revoke the memory if there are no references anymore, because we revoke it
-		// from all Pds we have delegated it to. thus, it does make no sense to remove it from the
-		// list before revoking the mem, because that would be really unpredictable.
-		if(ds) {
-			c->reglist().remove(*ds);
+		// from all Pds we have delegated it to.
+		if(destroyable) {
 			revoke_mem(ds->virt(),ds->size());
 			ds->unmap();
 		}

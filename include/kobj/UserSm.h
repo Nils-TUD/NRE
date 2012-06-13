@@ -10,7 +10,8 @@
 #pragma once
 
 #include <kobj/Sm.h>
-#include <Util.h>
+#include <Atomic.h>
+#include <stream/Serial.h>
 
 namespace nul {
 
@@ -26,11 +27,11 @@ public:
 	}
 
 	void down() {
-		if(Util::atomic_xadd(&_value,-1) <= 0)
+		if(Atomic::xadd(&_value,-1) <= 0)
 			_sem.down();
 	}
 	void up() {
-		if(Util::atomic_xadd(&_value,+1) < 0)
+		if(Atomic::xadd(&_value,+1) < 0)
 			_sem.up();
 	}
 

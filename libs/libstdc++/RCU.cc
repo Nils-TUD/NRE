@@ -7,17 +7,14 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <service/Service.h>
+#include <RCU.h>
 
 namespace nul {
-
-SessionData::SessionData(Service *s,capsel_t pts,Pt::portal_func func)
-	: RCUObject(), _sm(), _caps(pts), _pts(), _ds() {
-	for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
-		LocalEc *ec = s->get_ec(i);
-		if(ec)
-			_pts[i] = new Pt(ec,pts + i,func);
-	}
-}
-
+	uint32_t *RCU::_versions = 0;
+	size_t RCU::_versions_count = 0;
+	Ec *RCU::_ecs = 0;
+	size_t RCU::_ec_count = 0;
+	RCUObject *RCU::_objs = 0;
+	UserSm *RCU::_sm = 0;
+	RCULock RCU::_lock;
 }

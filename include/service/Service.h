@@ -28,11 +28,14 @@
 #include <Exception.h>
 #include <ScopedPtr.h>
 #include <BitField.h>
+#include <RCU.h>
 #include <CPU.h>
 
 namespace nul {
 
 class Service;
+template<class T>
+class SessionIterator;
 
 class ServiceException : public Exception {
 public:
@@ -40,7 +43,7 @@ public:
 	}
 };
 
-class SessionData {
+class SessionData : public RCUObject {
 	friend class ServiceInstance;
 
 public:
@@ -50,7 +53,10 @@ public:
 			if(_pts[i])
 				delete _pts[i];
 		}
-		delete _ds;
+		if(_ds) {
+			_ds->unmap();
+			delete _ds;
+		}
 	}
 
 	UserSm &sm() {
@@ -77,11 +83,14 @@ private:
 
 class Service {
 	friend class ServiceInstance;
+	template<class T>
+	friend class SessionIterator;
 
 public:
 	enum Command {
 		OPEN_SESSION,
-		SHARE_DATASPACE
+		SHARE_DATASPACE,
+		CLOSE_SESSION
 	};
 
 	enum {
@@ -110,8 +119,13 @@ public:
 	}
 
 	template<class T>
+	SessionIterator<T> sessions_begin();
+	template<class T>
+	SessionIterator<T> sessions_end();
+
+	template<class T>
 	T *get_session(capsel_t pid) {
-		T *sess = static_cast<T*>(_sessions[(pid - _caps) / Hip::MAX_CPUS]);
+		T *sess = static_cast<T*>(rcu_dereference(_sessions[(pid - _caps) / Hip::MAX_CPUS]));
 		if(!sess)
 			throw ServiceException(E_ARGS_INVALID);
 		return sess;
@@ -155,11 +169,22 @@ private:
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			if(_sessions[i] == 0) {
-				_sessions[i] = create_session(_caps + i * Hip::MAX_CPUS,_func);
+				rcu_assign_pointer(_sessions[i],create_session(_caps + i * Hip::MAX_CPUS,_func));
 				return _sessions[i];
 			}
 		}
 		throw ServiceException(E_CAPACITY);
+	}
+
+	void destroy_session(capsel_t pid) {
+		ScopedLock<UserSm> guard(&_sm);
+		size_t i = (pid - _caps) / Hip::MAX_CPUS;
+		SessionData *sess = _sessions[i];
+		if(!sess)
+			throw ServiceException(E_NOT_FOUND);
+		rcu_assign_pointer(_sessions[i],0);
+		RCU::invalidate(sess);
+		RCU::gc(true);
 	}
 
 	Service(const Service&);
@@ -174,5 +199,68 @@ private:
 	BitField<Hip::MAX_CPUS> _bf;
 	SessionData *_sessions[MAX_SESSIONS];
 };
+
+template<class T>
+class SessionIterator {
+	friend class Service;
+
+	SessionIterator(Service *s,size_t pos = 0) : _s(s), _pos(pos), _last(next()) {
+	}
+
+public:
+	~SessionIterator() {
+	}
+
+	T& operator *() const {
+		return *_last;
+	}
+	T *operator ->() const {
+		return &operator *();
+	}
+	SessionIterator& operator ++() {
+		if(_pos < Service::MAX_SESSIONS - 1) {
+			_pos++;
+			_last = next();
+		}
+		return *this;
+	}
+	SessionIterator operator ++(int) {
+		SessionIterator<T> tmp(*this);
+		operator++();
+		return tmp;
+	}
+	bool operator ==(const SessionIterator<T>& rhs) {
+		return _pos == rhs._pos;
+	}
+	bool operator !=(const SessionIterator<T>& rhs) {
+		return _pos != rhs._pos;
+	}
+
+private:
+	T *next() {
+		while(_pos < Service::MAX_SESSIONS) {
+			T *t = static_cast<T*>(rcu_dereference(_s->_sessions[_pos]));
+			if(t)
+				return t;
+			_pos++;
+		}
+		return 0;
+	}
+
+	Service* _s;
+	size_t _pos;
+	T *_last;
+};
+
+
+template<class T>
+SessionIterator<T> Service::sessions_begin() {
+	return SessionIterator<T>(this);
+}
+
+template<class T>
+SessionIterator<T> Service::sessions_end() {
+	return SessionIterator<T>(this,MAX_SESSIONS);
+}
 
 }

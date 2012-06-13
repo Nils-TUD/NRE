@@ -41,7 +41,16 @@ class Memory {
 	};
 
 public:
+	typedef const Region *iterator;
+
 	Memory() : _regs() {
+	}
+
+	iterator begin() const {
+		return _regs + 0;
+	}
+	iterator end() const {
+		return _regs + MAX_REGIONS;
 	}
 
 	uintptr_t alloc(size_t size) {
@@ -51,6 +60,31 @@ public:
 		r->addr += size;
 		r->size -= size;
 		return r->addr - size;
+	}
+
+	void remove(uintptr_t addr,size_t size) {
+		for(size_t i = 0; i < MAX_REGIONS; ++i) {
+			if(_regs[i].size && Util::overlapped(addr,size,_regs[i].addr,_regs[i].size)) {
+				// complete region should be removed?
+				if(addr <= _regs[i].addr && addr + size >= _regs[i].addr + _regs[i].size)
+					_regs[i].size = 0;
+				// at the beginning?
+				else if(addr <= _regs[i].addr) {
+					_regs[i].size -= (addr + size) - _regs[i].addr;
+					_regs[i].addr = addr + size;
+				}
+				// at the end?
+				else if(addr + size >= _regs[i].addr + _regs[i].size)
+					_regs[i].size = addr - _regs[i].addr;
+				// in the middle
+				else {
+					Region *r = get_free();
+					r->addr = addr + size;
+					r->size = (_regs[i].addr + _regs[i].size) - r->addr;
+					_regs[i].size = addr - _regs[i].addr;
+				}
+			}
+		}
 	}
 
 	void free(uintptr_t addr,size_t size) {

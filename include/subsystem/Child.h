@@ -24,6 +24,7 @@
 #include <kobj/Sc.h>
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
+#include <Atomic.h>
 
 namespace nul {
 
@@ -75,10 +76,10 @@ private:
 	}
 
 	void increase_refs() {
-		Util::atomic_xadd(&_refs,+1);
+		Atomic::xadd(&_refs,+1);
 	}
 	void decrease_refs() {
-		Util::atomic_xadd(&_refs,-1);
+		Atomic::xadd(&_refs,-1);
 	}
 
 	Child(const Child&);

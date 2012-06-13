@@ -11,7 +11,7 @@
 
 #include <mem/DataSpace.h>
 #include <service/Consumer.h>
-#include <Util.h>
+#include <Sync.h>
 
 namespace nul {
 
@@ -31,8 +31,13 @@ public:
 			return false;
 		_if->buffer[_if->wpos] = value;
 		_if->wpos = (_if->wpos + 1) % _max;
-		Util::memory_barrier();
-		_sm.up();
+		Sync::memory_barrier();
+		try {
+			_sm.up();
+		}
+		catch(...) {
+			// if the client closed the session, we might get here. so, just ignore it.
+		}
 		return true;
 	}
 

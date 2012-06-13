@@ -28,15 +28,15 @@ public:
 	DataSpaceManager() : _slots() {
 	}
 
-	void create(DataSpace& ds) {
+	bool create(DataSpace& ds) {
 		Slot *slot = 0;
 		if(ds.sel() != ObjCap::INVALID) {
 			slot = find(ds);
-			if(slot) {
-				ds = slot->ds;
-				slot->refs++;
-				return;
-			}
+			if(!slot)
+				throw DataSpaceException(E_NOT_FOUND);
+			ds = slot->ds;
+			slot->refs++;
+			return false;
 		}
 
 		// TODO phys
@@ -44,13 +44,14 @@ public:
 		ds.map();
 		slot->ds = ds;
 		slot->refs = 1;
+		return true;
 	}
-	DataSpace *destroy(capsel_t sel) {
+	DataSpace *destroy(capsel_t sel,bool &destroyable) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs && _slots[i].ds.unmapsel() == sel) {
 				if(--_slots[i].refs == 0)
-					return &_slots[i].ds;
-				return 0;
+					destroyable = true;
+				return &_slots[i].ds;
 			}
 		}
 		throw DataSpaceException(E_NOT_FOUND);

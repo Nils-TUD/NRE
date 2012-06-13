@@ -20,6 +20,7 @@
 #include <kobj/Ec.h>
 #include <pthread.h>
 #include <cstdlib>
+#include <Atomic.h>
 
 using namespace nul;
 
@@ -39,7 +40,7 @@ int pthread_cancel(pthread_t) {
 }
 
 int pthread_once(pthread_once_t* control,void (*init)(void)) {
-	if(Util::atomic_swap(control,1,2))
+	if(Atomic::swap(control,1,2))
 		(*init)();
 	return 0;
 }

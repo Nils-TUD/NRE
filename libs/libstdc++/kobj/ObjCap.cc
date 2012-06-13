@@ -25,14 +25,16 @@ namespace nul {
 
 ObjCap::~ObjCap() {
 	if(_sel != INVALID) {
-		// the destructor shouldn't throw
-		try {
-			Syscalls::revoke(Crd(_sel,0,DESC_CAP_ALL),true);
+		if(!(_sel & KEEP_CAP_BIT)) {
+			// the destructor shouldn't throw
+			try {
+				Syscalls::revoke(Crd(sel(),0,DESC_CAP_ALL),true);
+			}
+			catch(const SyscallException&) {
+				// ignore it
+			}
 		}
-		catch(const SyscallException&) {
-			// ignore it
-		}
-		if(!(_sel & KEEP_BIT))
+		if(!(_sel & KEEP_SEL_BIT))
 			CapSpace::get().free(_sel);
 	}
 }

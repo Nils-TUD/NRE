@@ -35,21 +35,29 @@ typedef uint64_t guard_t;
 static inline int trylock(guard_t *l) {
 	int res = 0;
 	asm volatile (
-		// try to exchange lock with 1
-		"mov	$1,%%" EXPAND(REG(cx)) ";"
+		// res = 0 (gcc assumes that we assign it within the inline-assembly and ignores res = 0 above)
+		"xor	%0,%0;"
+		// try to exchange lock with 0x100 (keep first byte 0)
+		"mov	$0x100,%%" EXPAND(REG(cx)) ";"
 		"xor	%%" EXPAND(REG(ax)) ",%%" EXPAND(REG(ax)) ";"
-		"lock	cmpxchg %%" EXPAND(REG(cx)) ",(%0);"
+		"lock	cmpxchg %%" EXPAND(REG(cx)) ",(%1);"
 		// if it succeeded, the zero-flag is set
 		"jnz	1f;"
 		// in this case we report success
-		"mov	$1,%1;"
+		"mov	$1,%0;"
 		"1:;"
-		: "=D"(res) : "D" (l) : EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
+		: "=S"(res) : "D" (l) : EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
 	);
+	if(!res) {
+		// wait until the first one has completely initialized the static object
+		while(*(volatile char*)l != 1)
+			asm volatile ("pause");
+	}
 	return res;
 }
-static inline void unlock(guard_t *) {
-	// keep it locked
+static inline void unlock(guard_t *l) {
+	// unlock it and mark it initialized
+	*(char*)l = 1;
 }
 
 EXTERN_C int __cxa_guard_acquire(guard_t *);

@@ -71,3 +71,4 @@ _startup_info:
 	.long	0	# UTCB
 	.long	0	# stack
 	.long	0	# cpu
+	.long	0	# inited

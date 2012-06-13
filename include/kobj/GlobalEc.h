@@ -22,6 +22,7 @@
 #include <arch/Startup.h>
 #include <kobj/Ec.h>
 #include <kobj/LocalEc.h>
+#include <RCU.h>
 
 EXTERN_C void ec_landing_spot(void);
 

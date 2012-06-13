@@ -35,6 +35,7 @@ struct StartupInfo {
 	Utcb *utcb;
 	uintptr_t stack;
 	word_t cpu;
+	word_t done;
 };
 
 }

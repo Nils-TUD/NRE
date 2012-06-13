@@ -118,23 +118,6 @@ public:
 		return min(basealign,shiftalign);
 	}
 
-	static inline void memory_barrier() {
-		asm volatile ("" : : : "memory");
-	}
-
-	/**
-	 * Adds <value> to *<ptr> and returns the old value
-	 */
-	template<typename T,typename Y>
-	static T atomic_xadd(T volatile *ptr,Y value) {
-		return __sync_fetch_and_add(ptr,value);
-	}
-
-	template<typename T,typename Y>
-	static bool atomic_swap(T volatile *ptr,Y oldval,Y newval) {
-		return __sync_bool_compare_and_swap(ptr,oldval,newval);
-	}
-
 	static inline uint64_t tsc() {
 		uint32_t u,l;
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));

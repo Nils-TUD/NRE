@@ -74,6 +74,18 @@ void ServiceInstance::portal(capsel_t) {
 				uf << E_SUCCESS;
 			}
 			break;
+
+			case Service::CLOSE_SESSION: {
+				TypedItem ti;
+				uf.get_typed(ti);
+				if(ti.crd().cap() == 0)
+					throw Exception(E_ARGS_INVALID);
+
+				s->destroy_session(ti.crd().cap());
+				uf.clear();
+				uf << E_SUCCESS;
+			}
+			break;
 		}
 	}
 	catch(const Exception& e) {

@@ -30,7 +30,13 @@
 
 namespace nul {
 
+class RCU;
+class RCULock;
+
 class Ec : public ObjCap {
+	friend class RCU;
+	friend class RCULock;
+
 	enum {
 		TLS_SIZE = 4
 	};
@@ -42,7 +48,7 @@ public:
 
 protected:
 	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0,uintptr_t stack = 0)
-			: ObjCap(cap), _utcb(utcb),
+			: ObjCap(cap), _next(0), _rcu_counter(0), _utcb(utcb),
 			  _stack(ExecEnv::STACK_SIZE,DataSpace::ANONYMOUS,DataSpace::RW,0,stack),
 			  _event_base(event_base), _cpu(cpu), _tls_idx(0), _tls() {
 		if(!_stack.virt())
@@ -55,11 +61,7 @@ protected:
 			_utcb_addr -= 0x1000;
 		}
 	}
-	void create(Pd *pd,Syscalls::ECType type,void *sp) {
-		CapHolder ch;
-		Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->sel());
-		sel(ch.release());
-	}
+	void create(Pd *pd,Syscalls::ECType type,void *sp);
 
 public:
 	virtual ~Ec() {
@@ -103,6 +105,8 @@ private:
 	Ec(const Ec&);
 	Ec& operator=(const Ec&);
 
+	Ec *_next;
+	uint32_t _rcu_counter;
 	Utcb *_utcb;
 	DataSpace _stack;
 	capsel_t _event_base;

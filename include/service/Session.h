@@ -32,6 +32,7 @@ public:
 	Session(Connection &con) : _pts(), _caps(get_portals(con)), _con(con) {
 	}
 	~Session() {
+		close();
 		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
 			delete _pts[i];
 		CapSpace::get().free(_caps,Hip::MAX_CPUS);
@@ -62,6 +63,13 @@ private:
 				_pts[i] = new Pt(caps.get() + i);
 		}
 		return caps.release();
+	}
+
+	void close() {
+		UtcbFrame uf;
+		uf.translate(pt(CPU::current().id).sel());
+		uf << Service::CLOSE_SESSION;
+		_con.pt(CPU::current().id)->call(uf);
 	}
 
 	Session(const Session&);

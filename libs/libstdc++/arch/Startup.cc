@@ -51,6 +51,12 @@ void _setup(bool child) {
 		initpt.call(uf);
 	}
 
+	// we can't create the semaphore before we've set Pd::current() and until the pd-cap is valid
+	// (see above; childs have to fetch it from their parent)
+	RCU::init();
+	// now we can use the semaphore to announce this Ec
+	RCU::announce(Ec::current());
+
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		CPU &cpu = CPU::get(it->id());
@@ -68,4 +74,5 @@ void _setup(bool child) {
 			}
 		}
 	}
+	_startup_info.done = true;
 }

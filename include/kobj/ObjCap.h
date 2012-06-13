@@ -23,29 +23,29 @@
 namespace nul {
 
 class ObjCap {
-private:
+protected:
 	enum {
-		KEEP_BIT	= 1 << (sizeof(capsel_t) * 8 - 1)
+		KEEP_SEL_BIT	= 1 << (sizeof(capsel_t) * 8 - 1),
+		KEEP_CAP_BIT	= 1 << (sizeof(capsel_t) * 8 - 2),
+		KEEP_BITS		= KEEP_SEL_BIT | KEEP_CAP_BIT
 	};
 
 public:
 	enum {
-		INVALID 	= (capsel_t)-1
+		INVALID 		= (capsel_t)-1
 	};
 
 	virtual ~ObjCap();
 
 	capsel_t sel() const {
-		return _sel & ~KEEP_BIT;
+		return _sel & ~KEEP_BITS;
 	}
 
 protected:
-	ObjCap(capsel_t sel = INVALID) : _sel(sel | KEEP_BIT) {
+	ObjCap(capsel_t sel = INVALID,uint flags = 0) : _sel(sel | flags) {
 	}
-	void sel(capsel_t sel,bool keep = false) {
-		_sel = sel;
-		if(keep)
-			_sel |= KEEP_BIT;
+	void sel(capsel_t sel) {
+		_sel = (_sel & KEEP_BITS) | sel;
 	}
 
 private:

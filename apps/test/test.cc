@@ -49,15 +49,18 @@ static void verbose_terminate() {
 }
 
 static void read(void *) {
-	Session sess(*con);
-	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
-	ds.map();
-	ds.share(sess);
-	Consumer<int> c(&ds);
 	while(1) {
-		int *i = c.get();
-		Serial::get().writef("[%p] Got %d\n",ds.virt(),*i);
-		c.next();
+		Session sess(*con);
+		DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
+		ds.map();
+		ds.share(sess);
+		Consumer<int> c(&ds);
+		for(int x = 0; x < 100; ++x) {
+			int *i = c.get();
+			Serial::get().writef("[%p] Got %d\n",ds.virt(),*i);
+			c.next();
+		}
+		ds.unmap();
 	}
 }
 

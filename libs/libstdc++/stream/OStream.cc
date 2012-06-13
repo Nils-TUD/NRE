@@ -17,6 +17,7 @@
  */
 
 #include <stream/OStream.h>
+#include <arch/Startup.h>
 #include <Digits.h>
 #include <cstring>
 
@@ -33,6 +34,10 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 	size_t size;
 	uint pad,width,base,flags;
 	bool readFlags;
+
+	// don't try to output something during initialization
+	if(!_startup_info.done)
+		return;
 
 	while(1) {
 		/* wait for a '%' */

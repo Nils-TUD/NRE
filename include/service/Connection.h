@@ -22,6 +22,8 @@ public:
 	Connection(const char *service) : _available(), _caps(connect(service)), _pts() {
 	}
 	~Connection() {
+		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
+			delete _pts[i];
 		CapSpace::get().free(_caps,Hip::MAX_CPUS);
 	}
 

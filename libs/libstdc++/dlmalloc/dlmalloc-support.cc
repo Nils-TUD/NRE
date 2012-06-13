@@ -6,6 +6,7 @@
 #include <stream/Log.h>
 #include <cstring>
 #include <Syscalls.h>
+#include <Atomic.h>
 #include "dlmalloc-config.h"
 
 using namespace nul;
@@ -49,12 +50,12 @@ void semaphore_destroy(DlMallocSm *lk) {
 }
 
 void semaphore_down(DlMallocSm *lk) {
-	if(Util::atomic_xadd(&lk->value,-1) <= 0)
+	if(Atomic::xadd(&lk->value,-1) <= 0)
 		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_DOWN);
 }
 
 void semaphore_up(DlMallocSm *lk) {
-	if(Util::atomic_xadd(&lk->value,+1) < 0)
+	if(Atomic::xadd(&lk->value,+1) < 0)
 		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_UP);
 }
 

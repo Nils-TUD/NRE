@@ -71,3 +71,4 @@ _startup_info:
 	.quad	0	# UTCB
 	.quad	0	# thread
 	.quad	0	# cpu
+	.quad	0	# inited

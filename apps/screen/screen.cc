@@ -29,7 +29,7 @@ PORTAL static void portal_write(capsel_t);
 class ScreenSessionData : public SessionData {
 public:
 	ScreenSessionData(Service *s,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,caps,func), _id(++_next_id) {
+		: SessionData(s,caps,func), _id(++_next_id), _prod() {
 	}
 
 	int id() const {
@@ -53,6 +53,13 @@ private:
 class ScreenService : public Service {
 public:
 	ScreenService() : Service("screen",portal_write) {
+	}
+
+	SessionIterator<ScreenSessionData> sessions_begin() {
+		return Service::sessions_begin<ScreenSessionData>();
+	}
+	SessionIterator<ScreenSessionData> sessions_end() {
+		return Service::sessions_end<ScreenSessionData>();
 	}
 
 private:
@@ -84,10 +91,11 @@ int main() {
 
 	int x = 0;
 	while(1) {
-		for(SessionIterator<ScreenSessionData> it = srv->sessions_begin<ScreenSessionData>(); it != srv->sessions_end<ScreenSessionData>(); ++it) {
+		ScopedLock<RCULock> guard(&RCU::lock());
+		for(SessionIterator<ScreenSessionData> it = srv->sessions_begin(); it != srv->sessions_end(); ++it) {
 			if(it->prod()) {
-				if(it->prod()->produce(x))
-					x++;
+				it->prod()->produce(x);
+				x++;
 			}
 		}
 	}

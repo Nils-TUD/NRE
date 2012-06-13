@@ -18,8 +18,17 @@
 
 #include <kobj/Ec.h>
 #include <Compiler.h>
+#include <RCU.h>
 
 namespace nul {
+
+void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
+	CapHolder ch;
+	Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->sel());
+	if(pd == Pd::current())
+		RCU::announce(this);
+	sel(ch.release());
+}
 
 // TODO arch-dependent; note that this assumes that these addresses are not already occupied by e.g.
 // the utcb selected by the parent at startup
