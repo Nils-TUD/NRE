@@ -33,6 +33,7 @@ public:
 	}
 
 	T *get() {
+		// TODO sm.zero() might also fail if the service is the consumer
 		if(_if->rpos == _if->wpos)
 			_sm.zero();
 		return _if->buffer + _if->rpos;

@@ -10,6 +10,8 @@
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <kobj/UserSm.h>
+#include <kobj/Gsi.h>
+#include <kobj/Ports.h>
 #include <cap/CapSpace.h>
 #include <cap/Caps.h>
 #include <stream/Screen.h>
@@ -73,13 +75,20 @@ static ScreenService *srv;
 
 int main() {
 	// TODO might be something else than 0x3f8
-	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
-	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
+	//Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	//		Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
-	Screen::get().clear();
+	//Screen::get().clear();
 	Serial::get().init();
-	Log::get().writef("I am the screen service!!\n");
+	Serial::get().writef("I am the screen service!!\n");
+
+	{
+		Gsi kb(1);
+		for(int i = 0; i < 10; ++i) {
+			kb.down();
+			Serial::get().writef("Got keyboard interrupt\n");
+		}
+	}
 
 	srv = new ScreenService();
 	const Hip& hip = Hip::get();
@@ -113,7 +122,7 @@ static void portal_write(capsel_t pid) {
 		int *data = reinterpret_cast<int*>(c->ds()->virt());
 		int i = *data;
 		//uf >> i;
-		Log::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
+		Serial::get().writef("Request on cpu %u from %d: %u\n",Ec::current()->cpu(),c->id(),i);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {

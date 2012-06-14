@@ -18,12 +18,18 @@
 
 #pragma once
 
-#include <mem/RegionList.h>
 #include <kobj/Pd.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
+#include <kobj/Gsi.h>
+#include <kobj/Ports.h>
+#include <subsystem/ChildMemory.h>
+#include <mem/RegionManager.h>
+#include <utcb/UtcbFrame.h>
+#include <BitField.h>
+#include <CPU.h>
 #include <Atomic.h>
 
 namespace nul {
@@ -40,11 +46,14 @@ public:
 	unsigned refs() const {
 		return _refs;
 	}
-	RegionList &reglist() {
+	ChildMemory &reglist() {
 		return _regs;
 	}
-	const RegionList &reglist() const {
+	const ChildMemory &reglist() const {
 		return _regs;
+	}
+	RegionManager &io() {
+		return _io;
 	}
 	uintptr_t entry() const {
 		return _entry;
@@ -58,10 +67,14 @@ public:
 	uintptr_t hip() const {
 		return _hip;
 	}
+	BitField<Hip::MAX_GSIS> &gsis() {
+		return _gsis;
+	}
 
 private:
 	Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
-			_pts(), _ptcount(), _regs(), _entry(), _stack(), _utcb(), _hip(), _sm() {
+			_pts(), _ptcount(), _regs(), _io(), _entry(), _stack(), _utcb(), _hip(), _gsis(),
+			_gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
 	}
 	~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
@@ -73,6 +86,9 @@ private:
 			delete _ec;
 		if(_pd)
 			delete _pd;
+		release_gsis();
+		release_ports();
+		CapSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
 	}
 
 	void increase_refs() {
@@ -80,6 +96,28 @@ private:
 	}
 	void decrease_refs() {
 		Atomic::xadd(&_refs,-1);
+	}
+
+	void release_gsis() {
+		UtcbFrame uf;
+		for(uint i = 0; i < Hip::MAX_GSIS; ++i) {
+			if(_gsis.is_set(i)) {
+				uf << Gsi::RELEASE << i;
+				CPU::current().gsi_pt->call(uf);
+				uf.clear();
+			}
+		}
+	}
+
+	void release_ports() {
+		UtcbFrame uf;
+		for(RegionManager::iterator it = _io.begin(); it != _io.end(); ++it) {
+			if(it->size) {
+				uf << Ports::RELEASE << it->addr << it->size;
+				CPU::current().io_pt->call(uf);
+				uf.clear();
+			}
+		}
 	}
 
 	Child(const Child&);
@@ -93,11 +131,14 @@ private:
 	Sc *_sc;
 	Pt **_pts;
 	size_t _ptcount;
-	RegionList _regs;
+	ChildMemory _regs;
+	RegionManager _io;
 	uintptr_t _entry;
 	uintptr_t _stack;
 	uintptr_t _utcb;
 	uintptr_t _hip;
+	BitField<Hip::MAX_GSIS> _gsis;
+	capsel_t _gsi_caps;
 	UserSm _sm;
 };
 

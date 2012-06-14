@@ -40,12 +40,13 @@ public:
 	cpu_t id;
 	Pt *map_pt;
 	Pt *unmap_pt;
-	Pt *allocio_pt;
+	Pt *io_pt;
+	Pt *gsi_pt;
 	Pt *reg_pt;
 	Pt *get_pt;
 
 private:
-	CPU() : id(), map_pt(), unmap_pt(), allocio_pt(), reg_pt(), get_pt() {
+	CPU() : id(), map_pt(), unmap_pt(), io_pt(), gsi_pt(), reg_pt(), get_pt() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);

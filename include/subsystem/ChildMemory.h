@@ -20,13 +20,13 @@ extern void test_reglist();
 
 namespace nul {
 
-class RegionException : public Exception {
+class ChildMemoryException : public Exception {
 public:
-	explicit RegionException(ErrorCode code) throw() : Exception(code) {
+	explicit ChildMemoryException(ErrorCode code) throw() : Exception(code) {
 	}
 };
 
-class RegionList {
+class ChildMemory {
 	friend void ::test_reglist();
 
 	enum {
@@ -56,7 +56,7 @@ public:
 		RWX	= R | W | X,
 	};
 
-	RegionList() : _regs(), _ds() {
+	ChildMemory() : _regs(), _ds() {
 	}
 
 	size_t regcount() const {
@@ -90,7 +90,7 @@ public:
 		end = (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
 		if(end + size < end || end + size > ExecEnv::KERNEL_START)
-			throw RegionException(E_CAPACITY);
+			throw ChildMemoryException(E_CAPACITY);
 		return end;
 	}
 
@@ -115,7 +115,7 @@ public:
 				return;
 			}
 		}
-		throw RegionException(E_CAPACITY);
+		throw ChildMemoryException(E_CAPACITY);
 	}
 
 	void remove(const DataSpace& ds) {
@@ -126,7 +126,7 @@ public:
 				return;
 			}
 		}
-		throw RegionException(E_NOT_FOUND);
+		throw ChildMemoryException(E_NOT_FOUND);
 	}
 
 	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
@@ -200,7 +200,7 @@ public:
 
 private:
 	Region *get(uintptr_t addr,size_t size) {
-		return const_cast<Region*>(const_cast<const RegionList*>(this)->get(addr,size));
+		return const_cast<Region*>(const_cast<const ChildMemory*>(this)->get(addr,size));
 	}
 	const Region *get(uintptr_t addr,size_t size) const {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
@@ -215,7 +215,7 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw RegionException(E_CAPACITY);
+		throw ChildMemoryException(E_CAPACITY);
 	}
 
 	Region _regs[MAX_REGIONS];

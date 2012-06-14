@@ -47,6 +47,9 @@ protected:
 	void sel(capsel_t sel) {
 		_sel = (_sel & KEEP_BITS) | sel;
 	}
+	void set_flags(uint flags) {
+		_sel = (_sel & ~KEEP_BITS) | flags;
+	}
 
 private:
 	// object-caps are non-copyable, because I think there are very few usecases and often it

@@ -20,6 +20,7 @@
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
+#include <kobj/Gsi.h>
 #include <service/Connection.h>
 #include <service/Session.h>
 #include <service/Consumer.h>
@@ -80,10 +81,17 @@ static void write(void *) {
 }
 
 int main() {
-	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
 	Serial::get().init();
 
 	std::set_terminate(verbose_terminate);
+
+	{
+		Gsi kb(1);
+		for(int i = 0; i < 10; ++i) {
+			kb.down();
+			Serial::get().writef("Got keyboard interrupt\n");
+		}
+	}
 
 	con = new Connection("screen");
 

@@ -18,7 +18,8 @@
 
 #include <subsystem/ChildManager.h>
 #include <stream/Serial.h>
-#include <mem/Memory.h>
+#include <kobj/Gsi.h>
+#include <kobj/Ports.h>
 #include <cap/Caps.h>
 #include <arch/Elf.h>
 
@@ -88,13 +89,14 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			c->_pts[idx + 0] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
 					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
 			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,MTD_RSP);
-			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::initcaps,0);
+			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,0);
 			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
 			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
-			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::getservice,0);
-			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_ALLOCIO,Portals::allocio,0);
-			c->_pts[idx + 7] = new Pt(_mapecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
-			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
+			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::get_service,0);
+			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,0);
+			c->_pts[idx + 7] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,0);
+			c->_pts[idx + 8] = new Pt(_mapecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Util::nextpow2shift(per_child_caps()),DESC_CAP_ALL));
@@ -116,13 +118,13 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 
 			uint perms = 0;
 			if(ph->p_flags & PF_R)
-				perms |= RegionList::R;
+				perms |= ChildMemory::R;
 			if(ph->p_flags & PF_W)
-				perms |= RegionList::W;
+				perms |= ChildMemory::W;
 			if(ph->p_flags & PF_X)
-				perms |= RegionList::X;
+				perms |= ChildMemory::X;
 
-			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,RegionList::RWX);
+			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,ChildMemory::RWX);
 			// TODO leak, if reglist().add throws
 			_dsm.create(ds);
 			// TODO actually it would be better to do that later
@@ -134,7 +136,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack().virt(),RegionList::RW);
+		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack().virt(),ChildMemory::RW);
 		// and a HIP
 		{
 			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
@@ -186,7 +188,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			uintptr_t src;
 			size_t size;
 			if(!c->reglist().find(uf->rsp,src,size))
-				throw RegionException(E_NOT_FOUND);
+				throw ChildMemoryException(E_NOT_FOUND);
 			uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = MTD_RIP_LEN;
 			c->increase_refs();
@@ -214,7 +216,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	}
 }
 
-void ChildManager::Portals::initcaps(capsel_t pid) {
+void ChildManager::Portals::init_caps(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	try {
@@ -301,7 +303,7 @@ static capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &ava
 	return caps.release();
 }
 
-void ChildManager::Portals::getservice(capsel_t pid) {
+void ChildManager::Portals::get_service(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
 	try {
@@ -329,14 +331,77 @@ void ChildManager::Portals::getservice(capsel_t pid) {
 	}
 }
 
-void ChildManager::Portals::allocio(capsel_t) {
+void ChildManager::Portals::gsi(capsel_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
 	UtcbFrameRef uf;
-	// TODO
 	try {
-		CapRange caps;
-		uf >> caps;
+		Child *c = cm->get_child(pid);
+		uint gsi;
+		Gsi::Op op;
+		uf >> op >> gsi;
+
+		if(gsi >= Hip::MAX_GSIS)
+			throw Exception(E_ARGS_INVALID);
+		// make sure that just the owner can release it
+		if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
+			throw Exception(E_ARGS_INVALID);
+
+		{
+			UtcbFrame puf;
+			if(op == Gsi::ALLOC)
+				puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,DESC_CAP_ALL));
+			puf << op << gsi;
+			CPU::current().gsi_pt->call(puf);
+			ErrorCode res;
+			puf >> res;
+			if(res != E_SUCCESS)
+				throw Exception(res);
+
+			c->gsis().set(gsi,op == Gsi::ALLOC);
+		}
+
 		uf.clear();
-		uf.delegate(caps,DelItem::FROM_HV);
+		if(op == Gsi::ALLOC)
+			uf.delegate(c->_gsi_caps + gsi);
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
+}
+
+void ChildManager::Portals::io(capsel_t pid) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	UtcbFrameRef uf;
+	try {
+		Child *c = cm->get_child(pid);
+		Ports::port_t base;
+		uint count;
+		Ports::Op op;
+		uf >> op >> base >> count;
+
+		// alloc() makes sure that nobody can free something from other childs.
+		if(op == Ports::RELEASE)
+			c->io().alloc(base,count);
+
+		{
+			UtcbFrame puf;
+			if(op == Ports::ALLOC)
+				puf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
+			puf << op << base << count;
+			CPU::current().io_pt->call(puf);
+			ErrorCode res;
+			puf >> res;
+			if(res != E_SUCCESS)
+				throw Exception(res);
+		}
+
+		uf.clear();
+		if(op == Ports::ALLOC) {
+			c->io().free(base,count);
+			uf.delegate(CapRange(base,count,DESC_IO_ALL));
+		}
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -443,10 +508,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		uint flags = c->reglist().find(pfaddr,src,size);
 		kill = !flags;
 		// check if the access rights are violated
-		if(flags & RegionList::M) {
-			if((error & 0x2) && !(flags & RegionList::W))
+		if(flags & ChildMemory::M) {
+			if((error & 0x2) && !(flags & ChildMemory::W))
 				kill = true;
-			if((error & 0x4) && !(flags & RegionList::R))
+			if((error & 0x4) && !(flags & ChildMemory::R))
 				kill = true;
 		}
 		if(kill) {
@@ -463,8 +528,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				addr++;
 			}
 		}
-		else if(!(flags & RegionList::M)) {
-			uint perms = flags & RegionList::RWX;
+		else if(!(flags & ChildMemory::M)) {
+			uint perms = flags & ChildMemory::RWX;
 			// try to map the next 32 pages
 			size_t msize = Util::min<size_t>(Util::roundup<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
 			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,

@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <mem/RegionList.h>
+#include <subsystem/ChildMemory.h>
 #include "RegionListTest.h"
 
 using namespace nul;
@@ -31,41 +31,41 @@ void test_reglist() {
 	size_t size;
 
 	{
-		RegionList l;
-		l.add(0x1000,0x4000,0x1000,RegionList::RW);
-		l.add(0x8000,0x2000,0x10000,RegionList::R);
-		l.add(0x10000,0x8000,0x20000,RegionList::RX);
+		ChildMemory l;
+		l.add(0x1000,0x4000,0x1000,ChildMemory::RW);
+		l.add(0x8000,0x2000,0x10000,ChildMemory::R);
+		l.add(0x10000,0x8000,0x20000,ChildMemory::RX);
 		WVPASSEQ(l.regcount(),3UL);
-		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x2000UL);
-		WVPASSEQ(l.find(0x9100,src,size),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x9100,src,size),static_cast<uint>(ChildMemory::R));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x10100,src,size),static_cast<uint>(RegionList::RX));
+		WVPASSEQ(l.find(0x10100,src,size),static_cast<uint>(ChildMemory::RX));
 		WVPASSEQ(src,0x20000UL);
 	}
 
 	{
-		RegionList l;
-		l.add(0x1000,0x4000,0x1000,RegionList::RW);
-		l.add(0x8000,0x2000,0x10000,RegionList::R);
-		l.add(0x10000,0x8000,0x20000,RegionList::RX);
+		ChildMemory l;
+		l.add(0x1000,0x4000,0x1000,ChildMemory::RW);
+		l.add(0x8000,0x2000,0x10000,ChildMemory::R);
+		l.add(0x10000,0x8000,0x20000,ChildMemory::RX);
 		WVPASSEQ(l.regcount(),3UL);
 		l.remove(0x2000,0x1000);
 		WVPASSEQ(l.regcount(),4UL);
 		WVPASSEQ(l.find(0x2000,src,size),0U);
-		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x3000UL);
 	}
 
 	{
-		RegionList l;
-		l.add(0x1000,0x4000,0x1000,RegionList::RW);
-		l.add(0x8000,0x2000,0x10000,RegionList::R);
-		l.add(0xA000,0x8000,0x20000,RegionList::RX);
+		ChildMemory l;
+		l.add(0x1000,0x4000,0x1000,ChildMemory::RW);
+		l.add(0x8000,0x2000,0x10000,ChildMemory::R);
+		l.add(0xA000,0x8000,0x20000,ChildMemory::RX);
 		l.remove(0x2000,0x1000);
 		l.remove(0x1000,0x1000);
 		l.remove(0x8000,0x4000);
@@ -76,41 +76,41 @@ void test_reglist() {
 	}
 
 	{
-		RegionList l;
-		l.add(0x1000,0x4000,0x1000,RegionList::RW);
-		l.add(0x8000,0x2000,0x10000,RegionList::R);
-		l.add(0xA000,0x8000,0x20000,RegionList::RX);
+		ChildMemory l;
+		l.add(0x1000,0x4000,0x1000,ChildMemory::RW);
+		l.add(0x8000,0x2000,0x10000,ChildMemory::R);
+		l.add(0xA000,0x8000,0x20000,ChildMemory::RX);
 
 		l.map(0x1000);
-		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(RegionList::RW | RegionList::M));
+		WVPASSEQ(l.find(0x1000,src,size),static_cast<uint>(ChildMemory::RW | ChildMemory::M));
 		WVPASSEQ(src,0x1000UL);
-		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x2123,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x2000UL);
-		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x3000,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x3000UL);
-		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(RegionList::RW));
+		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(ChildMemory::RW));
 		WVPASSEQ(src,0x4000UL);
 
 		l.map(0x9000);
-		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(RegionList::R | RegionList::M));
+		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(ChildMemory::R | ChildMemory::M));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(ChildMemory::R));
 		WVPASSEQ(src,0x10000UL);
 
 		l.unmap(0x9000);
-		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x9000,src,size),static_cast<uint>(ChildMemory::R));
 		WVPASSEQ(src,0x11000UL);
-		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(RegionList::R));
+		WVPASSEQ(l.find(0x8000,src,size),static_cast<uint>(ChildMemory::R));
 		WVPASSEQ(src,0x10000UL);
 
 		l.map(0x4000);
-		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(RegionList::RW | RegionList::M));
+		WVPASSEQ(l.find(0x4000,src,size),static_cast<uint>(ChildMemory::RW | ChildMemory::M));
 		WVPASSEQ(src,0x4000UL);
 
 		uintptr_t addr = l.find_free(0x1000);
 		WVPASSEQ(l.find(addr,src,size),0U);
-		l.add(addr,0x1000,0,RegionList::RWX);
-		WVPASSEQ(l.find(addr,src,size),static_cast<uint>(RegionList::RWX));
+		l.add(addr,0x1000,0,ChildMemory::RWX);
+		WVPASSEQ(l.find(addr,src,size),static_cast<uint>(ChildMemory::RWX));
 		addr = l.find_free(0x1000);
 		WVPASSEQ(l.find(addr,src,size),0U);
 

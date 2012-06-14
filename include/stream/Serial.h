@@ -22,6 +22,8 @@
 
 namespace nul {
 
+class Ports;
+
 class Serial : public OStream {
 	enum {
 		COM1	= 0x3F8,
@@ -50,10 +52,10 @@ public:
 	virtual void write(char c);
 
 private:
-	explicit Serial() : OStream(), _inited(false) {
+	explicit Serial() : OStream(), _ports(0) {
 	}
 
-	bool _inited;
+	Ports *_ports;
 	static Serial _inst;
 };
 

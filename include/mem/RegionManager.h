@@ -24,13 +24,13 @@
 
 namespace nul {
 
-class MemoryException : public Exception {
+class RegionManagerException : public Exception {
 public:
-	explicit MemoryException(ErrorCode code) throw() : Exception(code) {
+	explicit RegionManagerException(ErrorCode code) throw() : Exception(code) {
 	}
 };
 
-class Memory {
+class RegionManager {
 	enum {
 		MAX_REGIONS		= 64
 	};
@@ -43,7 +43,7 @@ class Memory {
 public:
 	typedef const Region *iterator;
 
-	Memory() : _regs() {
+	RegionManager() : _regs() {
 	}
 
 	iterator begin() const {
@@ -56,34 +56,23 @@ public:
 	uintptr_t alloc(size_t size) {
 		Region *r = get(size);
 		if(!r)
-			throw MemoryException(E_CAPACITY);
+			throw RegionManagerException(E_CAPACITY);
 		r->addr += size;
 		r->size -= size;
 		return r->addr - size;
 	}
 
+	void alloc(uintptr_t addr,size_t size) {
+		Region *r = get(addr,size);
+		if(!r)
+			throw RegionManagerException(E_CAPACITY);
+		remove_from(r,addr,size);
+	}
+
 	void remove(uintptr_t addr,size_t size) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size && Util::overlapped(addr,size,_regs[i].addr,_regs[i].size)) {
-				// complete region should be removed?
-				if(addr <= _regs[i].addr && addr + size >= _regs[i].addr + _regs[i].size)
-					_regs[i].size = 0;
-				// at the beginning?
-				else if(addr <= _regs[i].addr) {
-					_regs[i].size -= (addr + size) - _regs[i].addr;
-					_regs[i].addr = addr + size;
-				}
-				// at the end?
-				else if(addr + size >= _regs[i].addr + _regs[i].size)
-					_regs[i].size = addr - _regs[i].addr;
-				// in the middle
-				else {
-					Region *r = get_free();
-					r->addr = addr + size;
-					r->size = (_regs[i].addr + _regs[i].size) - r->addr;
-					_regs[i].size = addr - _regs[i].addr;
-				}
-			}
+			if(_regs[i].size && Util::overlapped(addr,size,_regs[i].addr,_regs[i].size))
+				remove_from(_regs + i,addr,size);
 		}
 	}
 
@@ -122,7 +111,7 @@ public:
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size > 0) {
 				os.writef(
-					"\t%zu: %p .. %p (%zu bytes)\n",i,_regs[i].addr,
+					"\t%zu: %p .. %p (%zu)\n",i,_regs[i].addr,
 						_regs[i].addr + _regs[i].size,_regs[i].size
 				);
 			}
@@ -130,12 +119,19 @@ public:
 	}
 
 private:
-	Memory(const Memory&);
-	Memory& operator=(const Memory&);
+	RegionManager(const RegionManager&);
+	RegionManager& operator=(const RegionManager&);
 
 	Region *get(size_t size) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size >= size)
+				return _regs + i;
+		}
+		return 0;
+	}
+	Region *get(uintptr_t addr,size_t size) {
+		for(size_t i = 0; i < MAX_REGIONS; ++i) {
+			if(addr >= _regs[i].addr && _regs[i].addr + _regs[i].size >= addr + size)
 				return _regs + i;
 		}
 		return 0;
@@ -145,7 +141,28 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw MemoryException(E_CAPACITY);
+		throw RegionManagerException(E_CAPACITY);
+	}
+
+	void remove_from(Region *r,uintptr_t addr,size_t size) {
+		// complete region should be removed?
+		if(addr <= r->addr && addr + size >= r->addr + r->size)
+			r->size = 0;
+		// at the beginning?
+		else if(addr <= r->addr) {
+			r->size -= (addr + size) - r->addr;
+			r->addr = addr + size;
+		}
+		// at the end?
+		else if(addr + size >= r->addr + r->size)
+			r->size = addr - r->addr;
+		// in the middle
+		else {
+			Region *nr = get_free();
+			nr->addr = addr + size;
+			nr->size = (r->addr + r->size) - nr->addr;
+			r->size = addr - r->addr;
+		}
 	}
 
 	Region _regs[MAX_REGIONS];

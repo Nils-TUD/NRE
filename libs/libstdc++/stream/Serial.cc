@@ -17,33 +17,33 @@
  */
 
 #include <stream/Serial.h>
-#include <Ports.h>
+#include <kobj/Ports.h>
 
 namespace nul {
 
 Serial Serial::_inst;
 
 void Serial::init() {
-	Ports::out<uint8_t>(port + LCR,0x80);		// Enable DLAB (set baud rate divisor)
-	Ports::out<uint8_t>(port + DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
-	Ports::out<uint8_t>(port + DLR_HI,0x00);	//                  (hi byte)
-	Ports::out<uint8_t>(port + LCR,0x03);		// 8 bits, no parity, one stop bit
-	Ports::out<uint8_t>(port + IER,0);			// disable interrupts
-	Ports::out<uint8_t>(port + FCR,7);
-	Ports::out<uint8_t>(port + MCR,3);
-	_inited = true;
+	_ports = new Ports(port,6);
+	_ports->out<uint8_t>(LCR,0x80);		// Enable DLAB (set baud rate divisor)
+	_ports->out<uint8_t>(DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
+	_ports->out<uint8_t>(DLR_HI,0x00);	//                  (hi byte)
+	_ports->out<uint8_t>(LCR,0x03);		// 8 bits, no parity, one stop bit
+	_ports->out<uint8_t>(IER,0);			// disable interrupts
+	_ports->out<uint8_t>(FCR,7);
+	_ports->out<uint8_t>(MCR,3);
 }
 
 void Serial::write(char c) {
-	if(c == '\0' || !_inited)
+	if(c == '\0' || !_ports)
 		return;
 
 	if(c == '\n')
 		write('\r');
 
-	while((Ports::in<uint8_t>(port + 5) & 0x20) == 0)
+	while((_ports->in<uint8_t>(5) & 0x20) == 0)
 		;
-	Ports::out<uint8_t>(port,c);
+	_ports->out<uint8_t>(0,c);
 }
 
 }

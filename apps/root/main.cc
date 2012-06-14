@@ -22,10 +22,12 @@
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
+#include <kobj/Gsi.h>
+#include <kobj/Ports.h>
 #include <utcb/UtcbFrame.h>
 #include <utcb/Utcb.h>
-#include <mem/RegionList.h>
-#include <mem/Memory.h>
+#include <subsystem/ChildMemory.h>
+#include <mem/RegionManager.h>
 #include <mem/DataSpace.h>
 #include <stream/Log.h>
 #include <stream/Screen.h>
@@ -46,6 +48,8 @@ EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
 PORTAL static void portal_map(capsel_t);
 PORTAL static void portal_unmap(capsel_t);
+PORTAL static void portal_gsi(capsel_t);
+PORTAL static void portal_io(capsel_t);
 PORTAL static void portal_hvmap(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
@@ -56,7 +60,10 @@ uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 // stack for LocalEc of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static Pt *hv_pt = 0;
-static Memory mem;
+static UserSm *mem_sm;
+static RegionManager mem;
+static RegionManager io;
+static BitField<Hip::MAX_GSIS> gsis;
 
 // TODO clang!
 // TODO perhaps we don't want to have a separate Pd for the logging service
@@ -122,12 +129,17 @@ static void allocate(const CapRange& caps) {
 int main() {
 	const Hip &hip = Hip::get();
 
+	// make all I/O ports available
+	io.free(0,0xFFFF);
+
 	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
 	CPU &cpu = CPU::current();
 	// use the local stack here since we can't map dataspaces yet
 	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack));
 	cpu.map_pt = new Pt(ec,portal_map);
 	cpu.unmap_pt = new Pt(ec,portal_unmap);
+	cpu.gsi_pt = new Pt(ec,portal_gsi);
+	cpu.io_pt = new Pt(ec,portal_io);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
@@ -136,13 +148,13 @@ int main() {
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
+	mem_sm = new UserSm();
 
-	// allocate serial ports and VGA memory
-	allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	// allocate VGA memory
 	allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
-	Serial::get().init();
+	//Serial::get().init();
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
@@ -174,7 +186,7 @@ int main() {
 	mem.write(Serial::get());
 
 	// now allocate the available memory from the hypervisor
-	for(Memory::iterator it = mem.begin(); it != mem.end(); ++it) {
+	for(RegionManager::iterator it = mem.begin(); it != mem.end(); ++it) {
 		if(it->size) {
 			uintptr_t start = (it->addr - ExecEnv::PHYS_START) >> ExecEnv::PAGE_SHIFT;
 			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Caps::TYPE_MEM | Caps::MEM_RWX,
@@ -200,6 +212,8 @@ int main() {
 			LocalEc *ec = new LocalEc(cpu.id);
 			cpu.map_pt = new Pt(ec,portal_map);
 			cpu.unmap_pt = new Pt(ec,portal_unmap);
+			cpu.gsi_pt = new Pt(ec,portal_gsi);
+			cpu.io_pt = new Pt(ec,portal_io);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
@@ -262,7 +276,11 @@ static void portal_map(capsel_t) {
 		uf >> ds;
 		// alloc mem
 		size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
-		uintptr_t addr = mem.alloc(size);
+		uintptr_t addr;
+		{
+			ScopedLock<UserSm> guard(mem_sm);
+			addr = mem.alloc(size);
+		}
 		// create a map and unmap-cap
 		CapHolder cap(2,2);
 		// TODO if this throws we might leak one sem and the memory
@@ -273,7 +291,6 @@ static void portal_map(capsel_t) {
 		uf.delegate(cap.get(),0);
 		uf.delegate(cap.get() + 1,1);
 		// pass back attributes so that the caller has the correct ones
-		Serial::get().writef("Created ds @ %p .. %p\n",addr,addr + size);
 		uf << E_SUCCESS << addr << size << ds.perm() << ds.type();
 		cap.release();
 	}
@@ -289,16 +306,85 @@ static void portal_unmap(capsel_t) {
 		// free mem (we can trust the dataspace properties, because its sent from ourself)
 		DataSpace ds;
 		uf >> ds;
-		mem.free(ds.virt(),ds.size());
+		{
+			ScopedLock<UserSm> guard(mem_sm);
+			mem.free(ds.virt(),ds.size());
+		}
 		// revoke caps and free selectors
 		Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
 		CapSpace::get().free(ds.sel());
 		Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
 		CapSpace::get().free(ds.unmapsel());
-		Serial::get().writef("Destroyed ds @ %p .. %p\n",ds.virt(),ds.virt() + ds.size());
 	}
 	catch(...) {
 		// ignore
+	}
+}
+
+static void portal_gsi(capsel_t) {
+	static UserSm sm;
+	UtcbFrameRef uf;
+	try {
+		uint gsi;
+		Gsi::Op op;
+		uf >> op >> gsi;
+		// we can trust the values because it's send from ourself
+		assert(gsi < Hip::MAX_GSIS);
+		{
+			ScopedLock<UserSm> guard(&sm);
+			switch(op) {
+				case Gsi::ALLOC:
+					if(gsis.is_set(gsi))
+						throw Exception(E_EXISTS);
+					gsis.set(gsi);
+					break;
+
+				case Gsi::RELEASE:
+					gsis.clear(gsi);
+					break;
+			}
+		}
+
+		uf.clear();
+		if(op == Gsi::ALLOC)
+			uf.delegate(Hip::MAX_CPUS + gsi,0,DelItem::FROM_HV);
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
+	}
+}
+
+static void portal_io(capsel_t) {
+	static UserSm sm;
+	UtcbFrameRef uf;
+	try {
+		Ports::port_t base;
+		uint count;
+		Ports::Op op;
+		uf >> op >> base >> count;
+		{
+			ScopedLock<UserSm> guard(&sm);
+			switch(op) {
+				case Ports::ALLOC:
+					io.alloc(base,count);
+					break;
+
+				case Ports::RELEASE:
+					io.free(base,count);
+					break;
+			}
+		}
+
+		uf.clear();
+		if(op == Ports::ALLOC)
+			uf.delegate(CapRange(base,count,DESC_IO_ALL),DelItem::FROM_HV);
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
 	}
 }
 

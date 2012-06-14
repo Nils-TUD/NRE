@@ -189,6 +189,15 @@ public:
 		SyscallABI::syscall(sm << 8 | SM_CTL | op);
 	}
 
+	static inline void assign_gsi(capsel_t sm,cpu_t cpu,void *pci_cfg_mem = 0,uint64_t *msi_address = 0,word_t *msi_value = 0) {
+		word_t out1,out2;
+		SyscallABI::syscall(sm << 8 | ASSIGN_GSI,reinterpret_cast<word_t>(pci_cfg_mem),cpu,0,0,out1,out2);
+		if(msi_address)
+			*msi_address = out1;
+		if(msi_value)
+			*msi_value = out2;
+	}
+
 	static inline void revoke(Crd crd,bool myself) {
 		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value());
 	}
