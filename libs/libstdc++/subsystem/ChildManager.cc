@@ -36,9 +36,7 @@ ChildManager::ChildManager() : _child(), _childs(),
 			LocalEc **ecs[] = {_ecs,_regecs,_mapecs};
 			for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
 				ecs[i][it->id()] = new LocalEc(it->id());
-				size_t tls = ecs[i][it->id()]->create_tls();
-				assert(tls == 0);
-				ecs[i][it->id()]->set_tls(tls,this);
+				ecs[i][it->id()]->set_tls(Ec::TLS_PARAM,this);
 			}
 
 			UtcbFrameRef defuf(_ecs[it->id()]->utcb());
@@ -180,7 +178,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 }
 
 void ChildManager::Portals::startup(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbExcFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -217,7 +215,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 }
 
 void ChildManager::Portals::init_caps(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -236,7 +234,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 }
 
 void ChildManager::Portals::reg(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -264,7 +262,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 }
 
 void ChildManager::Portals::unreg(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	// TODO doesn't work; we need to make sure that only the owner of the service can use that
 	try {
@@ -286,7 +284,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 }
 
 // TODO code-duplication; we already have that in the Session class
-static capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
+capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	if(!CPU::current().get_pt)
 		throw ServiceRegistryException(E_NOT_FOUND);
 	UtcbFrame uf;
@@ -303,27 +301,18 @@ static capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &ava
 	return caps.release();
 }
 
-void ChildManager::Portals::get_service(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+void ChildManager::Portals::get_service(capsel_t) {
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
-		Child *c = cm->get_child(pid);
 		String name;
 		uf >> name;
-		{
-			ScopedLock<UserSm> guard(&cm->_sm);
-			const ServiceRegistry::Service* s = cm->registry().find(name);
-			if(!s) {
-				BitField<Hip::MAX_CPUS> available;
-				capsel_t caps = get_parent_service(name.str(),available);
-				s = cm->registry().reg(ServiceRegistry::Service(0,name,caps,available));
-				cm->_regsm.up();
-			}
 
-			uf.clear();
-			uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
-			uf << E_SUCCESS << s->available();
-		}
+		const ServiceRegistry::Service* s = cm->get_service(name);
+
+		uf.clear();
+		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
+		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
 		uf.clear();
@@ -332,7 +321,7 @@ void ChildManager::Portals::get_service(capsel_t pid) {
 }
 
 void ChildManager::Portals::gsi(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -372,7 +361,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 }
 
 void ChildManager::Portals::io(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -411,20 +400,37 @@ void ChildManager::Portals::io(capsel_t pid) {
 }
 
 void ChildManager::Portals::map(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	ScopedLock<UserSm> guard(&cm->_sm);
 	bool created = false;
 	UtcbFrameRef uf;
 	DataSpace ds;
+	int state = 0;
 	try {
 		Child *c = cm->get_child(pid);
 		uf >> ds;
-		// create and add can throw; ensure that the state doesn't change if something throws
-		bool newds = cm->_dsm.create(ds);
-		created = true;
+		// map and add can throw; ensure that the state doesn't change if something throws
+		bool newds = ds.sel() == ObjCap::INVALID;
+		if(ds.sel() != ObjCap::INVALID) {
+			bool res = cm->_dsm.join(ds);
+			if(!res) {
+				ds.map();
+				state = 1;
+				cm->_dsm.add(ds,ds.virt(),ds.size());
+			}
+		}
+		else {
+			ds.map();
+			state = 1;
+			cm->_dsm.add(ds,ds.virt(),ds.size());
+		}
+		state = 2;
+
+		// add it to the regions of the child
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
 
+		// build answer
 		uf.clear();
 		if(newds) {
 			uf.delegate(ds.sel(),0);
@@ -436,31 +442,26 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uf << E_SUCCESS << addr << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
-		// TODO revoke ds-cap?
-		if(created) {
-			bool destroyable = false;
-			cm->_dsm.destroy(ds.unmapsel(),destroyable);
-			if(destroyable)
+		switch(state) {
+			case 2: {
+				bool destroyable = false;
+				cm->_dsm.release(ds.unmapsel(),destroyable);
+				if(!destroyable)
+					break;
+				// fall through
+			}
+
+			case 1:
 				ds.unmap();
+				break;
 		}
 		uf.clear();
 		uf << e.code();
 	}
 }
 
-static void revoke_mem(uintptr_t addr,size_t size) {
-	size_t count = size >> ExecEnv::PAGE_SHIFT;
-	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
-	while(count > 0) {
-		uint minshift = Util::minshift(start,count);
-		Syscalls::revoke(Crd(start,minshift,DESC_MEM_ALL),false);
-		start += 1 << minshift;
-		count -= 1 << minshift;
-	}
-}
-
 void ChildManager::Portals::unmap(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
@@ -470,14 +471,12 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 		uf >> uds;
 		// destroy (decrease refs) the ds
 		bool destroyable = false;
-		DataSpace *ds = cm->_dsm.destroy(uds.unmapsel(),destroyable);
+		DataSpace *ds = cm->_dsm.release(uds.unmapsel(),destroyable);
 		c->reglist().remove(*ds);
 		// we can only revoke the memory if there are no references anymore, because we revoke it
 		// from all Pds we have delegated it to.
-		if(destroyable) {
-			revoke_mem(ds->virt(),ds->size());
+		if(destroyable)
 			ds->unmap();
-		}
 		uf.clear();
 	}
 	catch(const Exception& e) {
@@ -486,7 +485,7 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 }
 
 void ChildManager::Portals::pf(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager>(0);
+	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);

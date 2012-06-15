@@ -90,6 +90,9 @@ int main() {
 		}
 	}
 
+	Serial::get().deinit();
+	Serial::get().init();
+
 	srv = new ScreenService();
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
@@ -97,6 +100,10 @@ int main() {
 			srv->provide_on(it->id());
 	}
 	srv->reg();
+
+	while(1) {
+		Serial::get().writef("I am the screen service again!!\n");
+	}
 
 	int x = 0;
 	while(1) {

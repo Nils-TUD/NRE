@@ -30,6 +30,8 @@ void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	sel(ch.release());
 }
 
+// slot 0 is reserved
+size_t Ec::_tls_idx = 1;
 // TODO arch-dependent; note that this assumes that these addresses are not already occupied by e.g.
 // the utcb selected by the parent at startup
 uintptr_t Ec::_utcb_addr = 0x7FFFE000;

@@ -19,10 +19,16 @@
 #pragma once
 
 #include <stream/OStream.h>
+#include <arch/ExecEnv.h>
 
 namespace nul {
 
 class Ports;
+class Connection;
+class Session;
+class DataSpace;
+template<class T>
+class Producer;
 
 class Serial : public OStream {
 	enum {
@@ -40,7 +46,8 @@ class Serial : public OStream {
 		MCR		= 4,	// modem control register
 	};
 	enum {
-		port = COM1
+		port	= COM1,
+		DS_SIZE	= ExecEnv::PAGE_SIZE
 	};
 
 public:
@@ -48,14 +55,20 @@ public:
 		return _inst;
 	}
 
-	void init();
+	void init(bool use_service = true);
+	void deinit();
 	virtual void write(char c);
 
 private:
-	explicit Serial() : OStream(), _ports(0) {
+	explicit Serial() : OStream(), _ports(0), _con(), _sess(), _ds(), _prod() {
 	}
+	~Serial();
 
 	Ports *_ports;
+	Connection *_con;
+	Session *_sess;
+	DataSpace *_ds;
+	Producer<char> *_prod;
 	static Serial _inst;
 };
 

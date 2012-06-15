@@ -44,6 +44,7 @@ public:
 };
 
 class SessionData : public RCUObject {
+	friend class Service;
 	friend class ServiceInstance;
 
 public:
@@ -70,6 +71,9 @@ public:
 	}
 
 protected:
+	virtual void invalidate() {
+	}
+
 	virtual void set_ds(DataSpace *ds) {
 		_ds = ds;
 	}
@@ -183,6 +187,7 @@ private:
 		if(!sess)
 			throw ServiceException(E_NOT_FOUND);
 		rcu_assign_pointer(_sessions[i],0);
+		sess->invalidate();
 		RCU::invalidate(sess);
 		RCU::gc(true);
 	}

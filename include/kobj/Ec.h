@@ -38,10 +38,15 @@ class Ec : public ObjCap {
 	friend class RCULock;
 
 	enum {
-		TLS_SIZE = 4
+		TLS_SIZE	= 4
 	};
 
 public:
+	enum {
+		// the slot 0 is reserved for putting a ec-parameter in it
+		TLS_PARAM	= 0
+	};
+
 	static Ec *current() {
 		return ExecEnv::get_current_ec();
 	}
@@ -50,7 +55,7 @@ protected:
 	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0,uintptr_t stack = 0)
 			: ObjCap(cap), _next(0), _rcu_counter(0), _utcb(utcb),
 			  _stack(ExecEnv::STACK_SIZE,DataSpace::ANONYMOUS,DataSpace::RW,0,stack),
-			  _event_base(event_base), _cpu(cpu), _tls_idx(0), _tls() {
+			  _event_base(event_base), _cpu(cpu), _tls() {
 		if(!_stack.virt())
 			_stack.map();
 		if(!_utcb) {
@@ -88,17 +93,19 @@ public:
 	}
 
 	size_t create_tls() {
-		assert(_tls_idx + 1 < TLS_SIZE);
-		return _tls_idx++;
+		size_t next = Atomic::xadd(&_tls_idx,+1);
+		assert(next < TLS_SIZE);
+		return next;
 	}
 	template<typename T>
-	T *get_tls(size_t idx) const {
+	T get_tls(size_t idx) const {
 		assert(idx < TLS_SIZE);
-		return const_cast<T*>(reinterpret_cast<const T*>(_tls[idx]));
+		return reinterpret_cast<T>(_tls[idx]);
 	}
-	void set_tls(size_t idx,const void *val) {
+	template<typename T>
+	void set_tls(size_t idx,T val) {
 		assert(idx < TLS_SIZE);
-		_tls[idx] = val;
+		_tls[idx] = reinterpret_cast<void*>(val);
 	}
 
 private:
@@ -111,8 +118,8 @@ private:
 	DataSpace _stack;
 	capsel_t _event_base;
 	cpu_t _cpu;
-	size_t _tls_idx;
-	const void *_tls[TLS_SIZE];
+	void *_tls[TLS_SIZE];
+	static size_t _tls_idx;
 
 	// TODO
 protected:

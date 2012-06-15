@@ -46,11 +46,11 @@ int pthread_once(pthread_once_t* control,void (*init)(void)) {
 }
 
 void* pthread_getspecific(pthread_key_t key) {
-	return Ec::current()->get_tls<void>(key);
+	return Ec::current()->get_tls<void*>(key);
 }
 
-int pthread_setspecific(pthread_key_t key,const void* data) {
-	Ec::current()->set_tls(key,data);
+int pthread_setspecific(pthread_key_t key,void* data) {
+	Ec::current()->set_tls<void*>(key,data);
 	return 0;
 }
 

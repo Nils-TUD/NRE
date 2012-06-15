@@ -1,10 +1,11 @@
 #!/usr/bin/env novaboot
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
-bin/apps/hypervisor spinner serial
+bin/apps/hypervisor spinner serial keyb
 #HYPERVISOR_PARAMS=spinner serial
 bin/apps/root
+bin/apps/log provides=log
 bin/apps/screen provides=screen
-bin/apps/test
+#bin/apps/test
 #bin/apps/sub
 

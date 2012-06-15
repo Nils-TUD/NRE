@@ -89,7 +89,11 @@ void* realloc(void *p,size_t size) {
 	return realloc_ptr(p,size);
 }
 void free(void *p) {
-	free_ptr(p);
+	char *addr = reinterpret_cast<char*>(p);
+	if(addr >= startup_heap && addr < startup_heap + sizeof(startup_heap))
+		startup_free(p);
+	else
+		free_ptr(p);
 }
 
 // startup malloc implementation

@@ -68,9 +68,22 @@ public:
 	ChildManager();
 	~ChildManager();
 
-	void load(uintptr_t addr,size_t size,const char *cmdline);
 	ServiceRegistry &registry() {
 		return _registry;
+	}
+
+	void load(uintptr_t addr,size_t size,const char *cmdline);
+
+	const ServiceRegistry::Service *get_service(const String &name) {
+		ScopedLock<UserSm> guard(&_sm);
+		const ServiceRegistry::Service* s = registry().find(name);
+		if(!s) {
+			BitField<Hip::MAX_CPUS> available;
+			capsel_t caps = get_parent_service(name.str(),available);
+			s = registry().reg(ServiceRegistry::Service(0,name,caps,available));
+			_regsm.up();
+		}
+		return s;
 	}
 
 private:
@@ -97,6 +110,7 @@ private:
 			delete c;
 		}
 	}
+	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
 
 	static inline size_t per_child_caps() {
 		return Util::nextpow2(Hip::get().service_caps() * _cpu_count);

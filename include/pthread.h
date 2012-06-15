@@ -36,7 +36,7 @@ int pthread_key_delete(pthread_key_t key);
 int pthread_cancel(pthread_t thread);
 int pthread_once(pthread_once_t* control, void (*init)(void));
 void* pthread_getspecific(pthread_key_t key);
-int pthread_setspecific(pthread_key_t key, const void* data);
+int pthread_setspecific(pthread_key_t key, void* data);
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attr);
 int pthread_mutex_lock(pthread_mutex_t* mutex);
 int pthread_mutex_unlock(pthread_mutex_t* mutex);

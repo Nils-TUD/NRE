@@ -32,11 +32,11 @@ public:
 		Slot *slot = 0;
 		if(ds.sel() != ObjCap::INVALID) {
 			slot = find(ds);
-			if(!slot)
-				throw DataSpaceException(E_NOT_FOUND);
-			ds = slot->ds;
-			slot->refs++;
-			return false;
+			if(slot) {
+				ds = slot->ds;
+				slot->refs++;
+				return false;
+			}
 		}
 
 		// TODO phys
@@ -46,7 +46,30 @@ public:
 		slot->refs = 1;
 		return true;
 	}
-	DataSpace *destroy(capsel_t sel,bool &destroyable) {
+
+	void add(DataSpace &ds,uintptr_t addr,size_t size,capsel_t caps = 0) {
+		Slot *slot = find_free();
+		ds._virt = addr;
+		ds._size = size;
+		if(caps) {
+			ds._sel = caps;
+			ds._unmapsel = caps + 1;
+		}
+		slot->ds = ds;
+		slot->refs = 1;
+	}
+
+	bool join(DataSpace &ds) {
+		// note that we can't trust the dataspace-attributes here except the selector
+		Slot *slot = find(ds);
+		if(!slot)
+			return false;
+		slot->refs++;
+		ds = slot->ds;
+		return true;
+	}
+
+	DataSpace *release(capsel_t sel,bool &destroyable) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs && _slots[i].ds.unmapsel() == sel) {
 				if(--_slots[i].refs == 0)
@@ -55,6 +78,17 @@ public:
 			}
 		}
 		throw DataSpaceException(E_NOT_FOUND);
+	}
+
+	void write(OStream &os) {
+		os.writef("DataSpaces:\n");
+		for(size_t i = 0; i < MAX_SLOTS; ++i) {
+			if(_slots[i].refs) {
+				os.writef("\tSlot %zu: ",i);
+				_slots[i].ds.write(os);
+				os.writef("\n");
+			}
+		}
 	}
 
 private:

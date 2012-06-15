@@ -48,6 +48,7 @@ EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
 PORTAL static void portal_map(capsel_t);
 PORTAL static void portal_unmap(capsel_t);
+PORTAL static void portal_get_service(capsel_t);
 PORTAL static void portal_gsi(capsel_t);
 PORTAL static void portal_io(capsel_t);
 PORTAL static void portal_hvmap(capsel_t);
@@ -64,6 +65,8 @@ static UserSm *mem_sm;
 static RegionManager mem;
 static RegionManager io;
 static BitField<Hip::MAX_GSIS> gsis;
+static ChildManager *mng;
+static DataSpaceManager dsmng;
 
 // TODO clang!
 // TODO perhaps we don't want to have a separate Pd for the logging service
@@ -140,6 +143,7 @@ int main() {
 	cpu.unmap_pt = new Pt(ec,portal_unmap);
 	cpu.gsi_pt = new Pt(ec,portal_gsi);
 	cpu.io_pt = new Pt(ec,portal_io);
+	cpu.get_pt = new Pt(ec,portal_get_service);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
@@ -154,7 +158,7 @@ int main() {
 	allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
-	//Serial::get().init();
+	Serial::get().init(false);
 	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
@@ -214,6 +218,7 @@ int main() {
 			cpu.unmap_pt = new Pt(ec,portal_unmap);
 			cpu.gsi_pt = new Pt(ec,portal_gsi);
 			cpu.io_pt = new Pt(ec,portal_io);
+			cpu.get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
@@ -223,7 +228,16 @@ int main() {
 		}
 	}
 
+	// free the io-ports again to make them usable for the log-service
+	io.free(0x3f8,6);
+
 	start_childs();
+
+	Serial::get().deinit();
+	Serial::get().init();
+	while(1) {
+		Serial::get().writef("Hi from root\n");
+	}
 
 	{
 		Sm sm(0);
@@ -233,7 +247,7 @@ int main() {
 }
 
 static void start_childs() {
-	ChildManager *mng = new ChildManager();
+	mng = new ChildManager();
 	int i = 0;
 	const Hip &hip = Hip::get();
 	uintptr_t start = ExecEnv::MOD_START_PAGE;
@@ -274,29 +288,56 @@ static void portal_map(capsel_t) {
 	try {
 		DataSpace ds;
 		uf >> ds;
-		// alloc mem
-		size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
-		uintptr_t addr;
+
+		bool newds = false;
 		{
 			ScopedLock<UserSm> guard(mem_sm);
-			addr = mem.alloc(size);
+			// is it a new dataspace?
+			if(ds.sel() == ObjCap::INVALID) {
+				size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
+				uintptr_t addr = mem.alloc(size);
+
+				// create a map and unmap-cap
+				CapHolder cap(2,2);
+				// TODO if this throws we might leak one sem and the memory
+				Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
+				Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
+
+				dsmng.add(ds,addr,size,cap.get());
+				newds = true;
+				cap.release();
+			}
+			else {
+				if(!dsmng.join(ds))
+					throw DataSpaceException(E_NOT_FOUND);
+			}
 		}
-		// create a map and unmap-cap
-		CapHolder cap(2,2);
-		// TODO if this throws we might leak one sem and the memory
-		Syscalls::create_sm(cap.get(),0,Pd::current()->sel());
-		Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
+
 		uf.clear();
-		// delegate them to caller
-		uf.delegate(cap.get(),0);
-		uf.delegate(cap.get() + 1,1);
+		if(newds) {
+			uf.delegate(ds.sel(),0);
+			uf.delegate(ds.unmapsel(),1);
+		}
+		else
+			uf.delegate(ds.unmapsel());
+
 		// pass back attributes so that the caller has the correct ones
-		uf << E_SUCCESS << addr << size << ds.perm() << ds.type();
-		cap.release();
+		uf << E_SUCCESS << ds.virt() << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
 		uf.clear();
 		uf << e.code();
+	}
+}
+
+static void revoke_mem(uintptr_t addr,size_t size) {
+	size_t count = size >> ExecEnv::PAGE_SHIFT;
+	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
+	while(count > 0) {
+		uint minshift = Util::minshift(start,count);
+		Syscalls::revoke(Crd(start,minshift,DESC_MEM_ALL),false);
+		start += 1 << minshift;
+		count -= 1 << minshift;
 	}
 }
 
@@ -308,16 +349,41 @@ static void portal_unmap(capsel_t) {
 		uf >> ds;
 		{
 			ScopedLock<UserSm> guard(mem_sm);
-			mem.free(ds.virt(),ds.size());
+			bool destroyable = false;
+			dsmng.release(ds.unmapsel(),destroyable);
+			if(destroyable) {
+				// release memory
+				revoke_mem(ds.virt(),ds.size());
+				mem.free(ds.virt(),ds.size());
+
+				// revoke caps and free selectors
+				Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
+				CapSpace::get().free(ds.sel());
+				Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
+				CapSpace::get().free(ds.unmapsel());
+			}
 		}
-		// revoke caps and free selectors
-		Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
-		CapSpace::get().free(ds.sel());
-		Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
-		CapSpace::get().free(ds.unmapsel());
 	}
 	catch(...) {
 		// ignore
+	}
+}
+
+static void portal_get_service(capsel_t) {
+	UtcbFrameRef uf;
+	try {
+		String name;
+		uf >> name;
+
+		const ServiceRegistry::Service* s = mng->get_service(name);
+
+		uf.clear();
+		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
+		uf << E_SUCCESS << s->available();
+	}
+	catch(const Exception& e) {
+		uf.clear();
+		uf << e.code();
 	}
 }
 

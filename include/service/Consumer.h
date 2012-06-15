@@ -27,19 +27,40 @@ class Consumer {
 	};
 
 public:
-	Consumer(DataSpace *ds)
+	Consumer(DataSpace *ds,bool init = false)
 		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
-		  _max((ds->size() - sizeof(Interface)) / sizeof(T)), _sm(_ds->sel(),true) {
+		  _max((ds->size() - sizeof(Interface)) / sizeof(T)),
+		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _stop(false) {
+		if(init) {
+			_if->rpos = 0;
+			_if->wpos = 0;
+		}
+	}
+
+	void stop() {
+		_stop = true;
+		Sync::memory_barrier();
+		_sm.up();
 	}
 
 	T *get() {
-		// TODO sm.zero() might also fail if the service is the consumer
-		if(_if->rpos == _if->wpos)
-			_sm.zero();
+		while(_if->rpos == _if->wpos) {
+			if(_stop)
+				return 0;
+			// sm.down() might fail if the service is the consumer
+			try {
+				_sm.down();
+			}
+			catch(...) {
+				return 0;
+			}
+		}
 		return _if->buffer + _if->rpos;
 	}
 	void next() {
 		_if->rpos = (_if->rpos + 1) % _max;
+		if(_if->rpos == _if->wpos)
+			_empty.up();
 	}
 
 private:
@@ -47,6 +68,8 @@ private:
 	Interface *_if;
 	size_t _max;
 	Sm _sm;
+	Sm _empty;
+	bool _stop;
 };
 
 }

@@ -65,7 +65,7 @@ public:
 	void alloc(uintptr_t addr,size_t size) {
 		Region *r = get(addr,size);
 		if(!r)
-			throw RegionManagerException(E_CAPACITY);
+			throw RegionManagerException(E_EXISTS);
 		remove_from(r,addr,size);
 	}
 

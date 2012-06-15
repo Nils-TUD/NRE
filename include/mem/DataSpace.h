@@ -34,11 +34,13 @@ public:
 class Session;
 class DataSpace;
 class UtcbFrameRef;
+class DataSpaceManager;
 
 UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
 
 class DataSpace {
 	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
+	friend class DataSpaceManager;
 
 	enum RequestType {
 		CREATE,

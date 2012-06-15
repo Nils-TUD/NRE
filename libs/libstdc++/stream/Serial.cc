@@ -17,33 +17,71 @@
  */
 
 #include <stream/Serial.h>
+#include <service/Connection.h>
+#include <service/Session.h>
+#include <service/Producer.h>
+#include <mem/DataSpace.h>
 #include <kobj/Ports.h>
 
 namespace nul {
 
 Serial Serial::_inst;
 
-void Serial::init() {
-	_ports = new Ports(port,6);
-	_ports->out<uint8_t>(LCR,0x80);		// Enable DLAB (set baud rate divisor)
-	_ports->out<uint8_t>(DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
-	_ports->out<uint8_t>(DLR_HI,0x00);	//                  (hi byte)
-	_ports->out<uint8_t>(LCR,0x03);		// 8 bits, no parity, one stop bit
-	_ports->out<uint8_t>(IER,0);			// disable interrupts
-	_ports->out<uint8_t>(FCR,7);
-	_ports->out<uint8_t>(MCR,3);
+Serial::~Serial() {
+	deinit();
+}
+
+void Serial::init(bool use_service) {
+	if(use_service) {
+		_con = new Connection("log");
+		_sess = new Session(*_con);
+		_ds = new DataSpace(DS_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
+		_ds->map();
+		_prod = new Producer<char>(_ds,true);
+		_ds->share(*_sess);
+	}
+	else {
+		_ports = new Ports(port,6);
+		_ports->out<uint8_t>(LCR,0x80);		// Enable DLAB (set baud rate divisor)
+		_ports->out<uint8_t>(DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
+		_ports->out<uint8_t>(DLR_HI,0x00);	//                  (hi byte)
+		_ports->out<uint8_t>(LCR,0x03);		// 8 bits, no parity, one stop bit
+		_ports->out<uint8_t>(IER,0);			// disable interrupts
+		_ports->out<uint8_t>(FCR,7);
+		_ports->out<uint8_t>(MCR,3);
+	}
+}
+
+void Serial::deinit() {
+	delete _prod;
+	_prod = 0;
+	if(_ds) {
+		_ds->unmap();
+		delete _ds;
+		_ds = 0;
+	}
+	delete _sess;
+	_sess = 0;
+	delete _con;
+	_con = 0;
+	delete _ports;
+	_ports = 0;
 }
 
 void Serial::write(char c) {
-	if(c == '\0' || !_ports)
+	if(c == '\0' || (!_ports && !_prod))
 		return;
 
-	if(c == '\n')
-		write('\r');
+	if(_ports) {
+		if(c == '\n')
+			write('\r');
 
-	while((_ports->in<uint8_t>(5) & 0x20) == 0)
-		;
-	_ports->out<uint8_t>(0,c);
+		while((_ports->in<uint8_t>(5) & 0x20) == 0)
+			;
+		_ports->out<uint8_t>(0,c);
+	}
+	else
+		_prod->produce(c);
 }
 
 }

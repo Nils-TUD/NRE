@@ -28,7 +28,7 @@ namespace nul {
 
 ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
 		: _s(s), _ec(cpu), _pt(&_ec,pt,portal), _sm() {
-	_ec.set_tls(_ec.create_tls(),s);
+	_ec.set_tls<Service*>(Ec::TLS_PARAM,s);
 	// accept cap (for ds sharing)
 	UtcbFrameRef ecuf(_ec.utcb());
 	ecuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
@@ -38,7 +38,7 @@ ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
 void ServiceInstance::portal(capsel_t) {
 	UtcbFrameRef uf;
 	// TODO not everyone wants client-specific portals
-	Service *s = Ec::current()->get_tls<Service>(0);
+	Service *s = Ec::current()->get_tls<Service*>(Ec::TLS_PARAM);
 	try {
 		Service::Command cmd;
 		uf >> cmd;
