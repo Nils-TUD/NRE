@@ -47,7 +47,7 @@ void ServiceInstance::portal(capsel_t) {
 				uf.finish_input();
 
 				SessionData *sess = s->new_session();
-				uf.delegate(CapRange(sess->caps(),Hip::MAX_CPUS,DESC_CAP_ALL));
+				uf.delegate(CapRange(sess->caps(),Hip::MAX_CPUS,Crd::OBJ_ALL));
 			}
 			break;
 

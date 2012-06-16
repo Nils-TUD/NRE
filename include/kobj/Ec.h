@@ -76,7 +76,7 @@ public:
 	}
 
 	void recall() {
-		Syscalls::ec_recall(sel());
+		Syscalls::ec_ctrl(sel(),Syscalls::RECALL);
 	}
 
 	const DataSpace &stack() const {

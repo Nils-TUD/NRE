@@ -29,11 +29,11 @@ static uint64_t results[tries];
 
 static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
-	uf.add_typed(DelItem(Crd(0x100,2,DESC_IO_ALL),0,0));
+	uf.delegate(CapRange(0x100,4,Crd::IO_ALL));
 }
 
 static void test_delegate() {
-	Caps::allocate(CapRange(0x100,1 << 2,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0x100,1 << 2,Crd::IO_ALL));
 
 	LocalEc ec(CPU::current().id);
 	Pt pt(&ec,portal_test);
@@ -42,16 +42,15 @@ static void test_delegate() {
 	tac = Util::tsc();
 	rdtsc = tac - tic;
 	UtcbFrame uf;
+	uf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
 	for(size_t i = 0; i < tries; i++) {
 		tic = Util::tsc();
-		uf.reset();
-		uf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
 		pt.call(uf);
+		uf.clear();
 		tac = Util::tsc();
 		ipc_duration = tac - tic - rdtsc;
 		min = Math::min(min,ipc_duration);
 		max = Math::max(max,ipc_duration);
-		Log::get().writef("i=%zu\n",i);
 		results[i] = ipc_duration;
 	}
 	uint64_t avg = 0;

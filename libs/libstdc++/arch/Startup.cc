@@ -46,7 +46,7 @@ void _setup(bool child) {
 	if(child) {
 		// grab our initial caps (pd, ec, sc) from parent
 		UtcbFrame uf;
-		uf.set_receive_crd(Crd(CapSpace::INIT_PD,2,DESC_CAP_ALL));
+		uf.set_receive_crd(Crd(CapSpace::INIT_PD,2,Crd::OBJ_ALL));
 		Pt initpt(CapSpace::SRV_INIT);
 		initpt.call(uf);
 	}

@@ -41,7 +41,7 @@ private:
 	capsel_t alloc(uint gsi) {
 		UtcbFrame uf;
 		CapHolder cap;
-		uf.set_receive_crd(Crd(cap.get(),0,DESC_CAP_ALL));
+		uf.set_receive_crd(Crd(cap.get(),0,Crd::OBJ_ALL));
 		uf << ALLOC << gsi;
 		CPU::current().gsi_pt->call(uf);
 		ErrorCode res;

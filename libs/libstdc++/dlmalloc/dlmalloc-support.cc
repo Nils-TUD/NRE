@@ -45,7 +45,7 @@ void semaphore_init(DlMallocSm *lk,unsigned initial) {
 }
 
 void semaphore_destroy(DlMallocSm *lk) {
-	Syscalls::revoke(Crd(lk->sm,0,DESC_CAP_ALL),true);
+	Syscalls::revoke(Crd(lk->sm,0,Crd::OBJ_ALL),true);
 	CapSpace::get().free(lk->sm);
 }
 

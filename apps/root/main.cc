@@ -147,21 +147,21 @@ int main() {
 	cpu.get_pt = new Pt(ec,portal_get_service);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
-	defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+	defuf.set_translate_crd(Crd(0,31,Crd::OBJ_ALL));
 	// for the reg-portal. its safe here to accept them in all portals, since they are only called
 	// by ourself
 	capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+	defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
 	// create the portal for allocating resources from HV for the current cpu
 	hv_pt = new Pt(ec,portal_hvmap);
-	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
-			MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
+			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 	mem_sm = new UserSm();
 
 	// allocate VGA memory
 	allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
+			Crd::MEM | Crd::RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init(false);
 	Screen::get().clear();
@@ -198,7 +198,7 @@ int main() {
 	for(RegionManager::iterator it = mem.begin(); it != mem.end(); ++it) {
 		if(it->size) {
 			uintptr_t start = (it->addr - ExecEnv::PHYS_START) >> ExecEnv::PAGE_SHIFT;
-			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Caps::TYPE_MEM | Caps::MEM_RWX,
+			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL,
 					it->addr >> ExecEnv::PAGE_SHIFT));
 		}
 	}
@@ -223,12 +223,12 @@ int main() {
 			it->get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
-			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+			defuf.set_translate_crd(Crd(0,31,Crd::OBJ_ALL));
 			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-			defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
-			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+			defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
-					MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
+					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 		}
 	}
 
@@ -260,7 +260,7 @@ static void start_childs() {
 				throw Exception(E_CAPACITY);
 			// map the memory of the module
 			allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
-					Caps::TYPE_MEM | Caps::MEM_RWX,start));
+					Crd::MEM_ALL,start));
 			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
 			start += it->size >> ExecEnv::PAGE_SHIFT;
 
@@ -274,7 +274,7 @@ static void start_childs() {
 				for(size_t x = 0; !found_end; ++x) {
 					if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
 						throw Exception(E_CAPACITY);
-					allocate(CapRange((it->aux >> ExecEnv::PAGE_SHIFT) + x,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
+					allocate(CapRange((it->aux >> ExecEnv::PAGE_SHIFT) + x,1,Crd::MEM | Crd::RW,start));
 					start++;
 					while(reinterpret_cast<uintptr_t>(str) < (start << ExecEnv::PAGE_SHIFT)) {
 						if(!*str) {
@@ -352,7 +352,7 @@ static void revoke_mem(uintptr_t addr,size_t size) {
 	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
 	while(count > 0) {
 		uint minshift = Math::minshift(start,count);
-		Syscalls::revoke(Crd(start,minshift,DESC_MEM_ALL),false);
+		Syscalls::revoke(Crd(start,minshift,Crd::MEM_ALL),false);
 		start += 1 << minshift;
 		count -= 1 << minshift;
 	}
@@ -374,9 +374,9 @@ static void portal_unmap(capsel_t) {
 				mem.free(ds.virt(),ds.size());
 
 				// revoke caps and free selectors
-				Syscalls::revoke(Crd(ds.sel(),0,DESC_CAP_ALL),true);
+				Syscalls::revoke(Crd(ds.sel(),0,Crd::OBJ_ALL),true);
 				CapSpace::get().free(ds.sel());
-				Syscalls::revoke(Crd(ds.unmapsel(),0,DESC_CAP_ALL),true);
+				Syscalls::revoke(Crd(ds.unmapsel(),0,Crd::OBJ_ALL),true);
 				CapSpace::get().free(ds.unmapsel());
 			}
 		}
@@ -395,7 +395,7 @@ static void portal_get_service(capsel_t) {
 		const ServiceRegistry::Service* s = mng->get_service(name);
 
 		uf.clear();
-		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
+		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,Crd::OBJ_ALL));
 		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
@@ -430,7 +430,7 @@ static void portal_gsi(capsel_t) {
 
 		uf.clear();
 		if(op == Gsi::ALLOC)
-			uf.delegate(Hip::MAX_CPUS + gsi,0,DelItem::FROM_HV);
+			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -463,7 +463,7 @@ static void portal_io(capsel_t) {
 
 		uf.clear();
 		if(op == Ports::ALLOC)
-			uf.delegate(CapRange(base,count,DESC_IO_ALL),DelItem::FROM_HV);
+			uf.delegate(CapRange(base,count,Crd::IO_ALL),UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -477,7 +477,7 @@ static void portal_hvmap(capsel_t) {
 	CapRange range;
 	uf >> range;
 	uf.clear();
-	uf.delegate(range,DelItem::FROM_HV);
+	uf.delegate(range,UtcbFrame::FROM_HV);
 }
 
 static void portal_pagefault(capsel_t) {
@@ -499,11 +499,11 @@ static void portal_pagefault(capsel_t) {
 
 	// let the kernel kill us
 	uf->rip = ExecEnv::KERNEL_START;
-	uf->mtd = MTD_RIP_LEN;
+	uf->mtd = Mtd::RIP_LEN;
 }
 
 static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
-	uf->mtd = MTD_RIP_LEN;
+	uf->mtd = Mtd::RIP_LEN;
 	uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
 }

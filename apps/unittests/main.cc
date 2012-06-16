@@ -73,12 +73,12 @@ int main() {
 	CPU &cpu = CPU::current();
 	LocalEc *cpuec = new LocalEc(cpu.id);
 	cpu.map_pt = new Pt(cpuec,portal_map);
-	new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
+	new Pt(cpuec,cpuec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 
 	// allocate serial ports and VGA memory
-	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0x3F8,6,Crd::IO_ALL));
 	Caps::allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
+			Crd::MEM | Crd::RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init();
 	Screen::get().clear();
@@ -102,11 +102,11 @@ static void portal_map(capsel_t) {
 	CapRange range;
 	uf >> range;
 	uf.reset();
-	uf.delegate(range,DelItem::FROM_HV);
+	uf.delegate(range,UtcbFrame::FROM_HV);
 }
 
 static void portal_startup(capsel_t) {
 	UtcbExcFrameRef uf;
-	uf->mtd = MTD_RIP_LEN;
+	uf->mtd = Mtd::RIP_LEN;
 	uf->rip = *reinterpret_cast<uint32_t*>(uf->rsp);
 }

@@ -154,7 +154,7 @@ public:
 	}
 	void reg() {
 		UtcbFrame uf;
-		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
 		uf << String(_name) << _reg_cpus;
 		CPU::current().reg_pt->call(uf);
 		ErrorCode res;

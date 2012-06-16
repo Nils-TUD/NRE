@@ -47,7 +47,7 @@ static void verbose_terminate() {
 }
 
 int main() {
-	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
+	Caps::allocate(CapRange(0x3F8,6,Crd::IO_ALL));
 	Serial::get().init();
 	std::set_terminate(verbose_terminate);
 

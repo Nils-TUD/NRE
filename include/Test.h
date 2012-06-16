@@ -149,7 +149,7 @@ class WvTest {
 			case 0:
 				OStringStream::format(buf,size,"CRD(0)");
 				return;
-			case DESC_TYPE_MEM: {
+			case Crd::MEM: {
 				char r = crd.value() & 0x04 ? 'r' : '-';
 				char w = crd.value() & 0x08 ? 'w' : '-';
 				char x = crd.value() & 0x10 ? 'x' : '-';
@@ -158,10 +158,10 @@ class WvTest {
 				);
 				return;
 			}
-			case DESC_TYPE_IO:
+			case Crd::IO:
 				OStringStream::format(buf,size,"CRD(io, 0x%x, 2^%d)",crd.base(),crd.order());
 				return;
-			case DESC_TYPE_CAP:
+			case Crd::OBJ:
 				OStringStream::format(
 					buf,size,"CRD(obj, 0x%x, 2^%d, 0x%x)",crd.cap(),crd.order(),crd.value() >> 2 & 0x1f
 				);

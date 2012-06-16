@@ -33,7 +33,7 @@ void DataSpace::create() {
 
 	// prepare for receiving map and unmap-cap
 	CapHolder caps(2,2);
-	uf.set_receive_crd(Crd(caps.get(),1,DESC_CAP_ALL));
+	uf.set_receive_crd(Crd(caps.get(),1,Crd::OBJ_ALL));
 	uf << CREATE << _virt << _phys << _size << _perm << _type;
 	CPU::current().map_pt->call(uf);
 
@@ -62,7 +62,7 @@ void DataSpace::join() {
 
 	// prepare for receiving unmap-cap
 	CapHolder umcap;
-	uf.set_receive_crd(Crd(umcap.get(),0,DESC_CAP_ALL));
+	uf.set_receive_crd(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN << _virt << _phys << _size << _perm << _type;
 	CPU::current().map_pt->call(uf);

@@ -78,8 +78,9 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			size_t idx = cpu * Portals::COUNT;
 			size_t off = cpu * Hip::get().service_caps();
 			c->_pts[idx + 0] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
-					MTD_GPR_BSD | MTD_QUAL | MTD_RIP_LEN);
-			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,MTD_RSP);
+					Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
+			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
+					Mtd(Mtd::RSP));
 			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,0);
 			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
 			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
@@ -90,7 +91,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
 		}
 		// now create Pd and pass portals
-		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),DESC_CAP_ALL));
+		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
 		// TODO wrong place
 		c->_utcb = 0x7FFFF000;
 		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),
@@ -182,7 +183,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			if(!c->reglist().find(uf->rsp,src,size))
 				throw ChildMemoryException(E_NOT_FOUND);
 			uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
-			uf->mtd = MTD_RIP_LEN;
+			uf->mtd = Mtd::RIP_LEN;
 			c->increase_refs();
 		}
 		else {
@@ -197,14 +198,14 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	#endif
 			uf->rcx = c->hip();
 			uf->rdx = c->utcb();
-			uf->mtd = MTD_RIP_LEN | MTD_RSP | MTD_GPR_ACDB | MTD_GPR_BSD;
+			uf->mtd = Mtd::RIP_LEN | Mtd::RSP | Mtd::GPR_ACDB | Mtd::GPR_BSD;
 			c->_started = true;
 		}
 	}
 	catch(...) {
 		// let the kernel kill the Ec
 		uf->rip = ExecEnv::KERNEL_START;
-		uf->mtd = MTD_RIP_LEN;
+		uf->mtd = Mtd::RIP_LEN;
 	}
 }
 
@@ -277,7 +278,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	UtcbFrame uf;
 	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
 
@@ -299,7 +300,7 @@ void ChildManager::Portals::get_service(capsel_t) {
 
 		const ServiceRegistry::Service* s = cm->get_service(name);
 
-		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
+		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,Crd::OBJ_ALL));
 		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
@@ -328,7 +329,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		{
 			UtcbFrame puf;
 			if(op == Gsi::ALLOC)
-				puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,DESC_CAP_ALL));
+				puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,Crd::OBJ_ALL));
 			puf << op << gsi;
 			CPU::current().gsi_pt->call(puf);
 			ErrorCode res;
@@ -368,7 +369,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 		{
 			UtcbFrame puf;
 			if(op == Ports::ALLOC)
-				puf.set_receive_crd(Crd(0,31,DESC_IO_ALL));
+				puf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
 			puf << op << base << count;
 			CPU::current().io_pt->call(puf);
 			ErrorCode res;
@@ -379,7 +380,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 
 		if(op == Ports::ALLOC) {
 			c->io().free(base,count);
-			uf.delegate(CapRange(base,count,DESC_IO_ALL));
+			uf.delegate(CapRange(base,count,Crd::IO_ALL));
 		}
 		uf << E_SUCCESS;
 	}
@@ -533,7 +534,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// try to map the next 32 pages
 			size_t msize = Math::min<size_t>(Math::round_up<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
 			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
-					DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
+					Crd::MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 			c->reglist().map(pfaddr,msize);
 			// ensure that we have the memory (if we're a subsystem this might not be true)
 			// TODO this is not sufficient, in general
@@ -549,7 +550,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	// other Ecs left)
 	if(kill) {
 		// let the kernel kill the Ec by causing it a pagefault in kernel-area
-		uf->mtd = MTD_RIP_LEN;
+		uf->mtd = Mtd::RIP_LEN;
 		uf->rip = ExecEnv::KERNEL_START;
 		cm->destroy_child(pid);
 	}

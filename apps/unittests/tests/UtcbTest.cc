@@ -51,8 +51,8 @@ static void test_nesting() {
 
 	UtcbFrame uf;
 	uf << 4 << 1 << 2;
-	uf.add_typed(DelItem(Crd(12,4,DESC_IO_ALL),0,10));
-	uf.add_typed(DelItem(Crd(1,1,DESC_MEM_ALL),0x1,2));
+	uf.delegate(CapRange(12,16,Crd::IO_ALL,10));
+	uf.delegate(CapRange(1,2,Crd::MEM_ALL,2),UtcbFrame::NONE);
 
 	{
 		UtcbFrame uf1;

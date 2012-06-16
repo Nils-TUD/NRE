@@ -41,52 +41,54 @@ public:
 	}
 };
 
-// TODO we should restructure this whole stuff here
-// TODO is_nul?
-class TypedItem {
-	friend class UtcbFrameRef;
+class UtcbFrameRef {
+	friend class Pt;
+	friend class Utcb;
+
 public:
-	enum {
-		TYPE_XLT		= 0,
-		TYPE_DEL		= 1,
-	};
-
-	TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
-	}
-
-	Crd crd() const {
-		return _crd;
-	}
-	word_t aux() const {
-		return _aux;
-	}
-
-private:
-	Crd _crd;
-	word_t _aux;
-};
-
-class XltItem : public TypedItem {
-public:
-	XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
-	}
-};
-
-class DelItem : public TypedItem {
-public:
-	enum {
+	enum DelFlags {
+		NONE	= 0,
 		FROM_HV	= 0x800,		// source = hypervisor
 		UPD_GPT	= 0x400,		// update guest page table
 		UPD_DPT	= 0x200,		// update DMA page table
 	};
 
-	DelItem(Crd crd,unsigned flags,word_t hotspot = 0) : TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
-	}
-};
+private:
+	class TypedItem {
+		friend class UtcbFrameRef;
+	public:
+		enum {
+			TYPE_XLT		= 0,
+			TYPE_DEL		= 1,
+		};
 
-class UtcbFrameRef {
-	friend class Pt;
-	friend class Utcb;
+		TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
+		}
+
+		Crd crd() const {
+			return _crd;
+		}
+		word_t aux() const {
+			return _aux;
+		}
+
+	private:
+		Crd _crd;
+		word_t _aux;
+	};
+
+	class XltItem : public TypedItem {
+	public:
+		XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
+		}
+	};
+
+	class DelItem : public TypedItem {
+	public:
+		DelItem(Crd crd,unsigned flags,word_t hotspot = 0)
+			: TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
+		}
+	};
 
 	static word_t *get_top(Utcb *frame,size_t toff) {
 		size_t utcbtop = Math::round_dn<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
@@ -127,14 +129,14 @@ public:
 	}
 
 	void accept_translates(word_t base = 0,uint order = 31) {
-		set_translate_crd(Crd(base,order,DESC_CAP_ALL));
+		set_translate_crd(Crd(base,order,Crd::OBJ_ALL));
 	}
 	void accept_delegates() {
 		accept_delegates(get_receive_crd().order());
 	}
 	void accept_delegates(uint order) {
 		capsel_t caps = CapSpace::get().allocate(1 << order,1 << order);
-		set_receive_crd(Crd(caps,order,DESC_CAP_ALL));
+		set_receive_crd(Crd(caps,order,Crd::OBJ_ALL));
 	}
 	void finish_input() {
 		if(has_more_untyped() || has_more_typed())
@@ -171,8 +173,8 @@ public:
 		_utcb->crd_translate = crd.value();
 	}
 
-	void translate(capsel_t cap) {
-		add_typed(XltItem(Crd(cap,0,DESC_CAP_ALL)));
+	void translate(capsel_t cap,uint perms = Crd::OBJ_ALL) {
+		add_typed(XltItem(Crd(cap,0,Crd::OBJ | perms)));
 	}
 	void translate(const CapRange& range) {
 		size_t count = range.count();
@@ -184,11 +186,10 @@ public:
 			count -= 1 << minshift;
 		}
 	}
-	void delegate(capsel_t cap,uint hotspot = 0,uint flags = 0) {
-		// TODO access rights
-		add_typed(DelItem(Crd(cap,0,DESC_CAP_ALL),flags,hotspot));
+	void delegate(capsel_t cap,uint hotspot = 0,DelFlags flags = NONE,uint perms = Crd::OBJ_ALL) {
+		add_typed(DelItem(Crd(cap,0,Crd::OBJ | perms),flags,hotspot));
 	}
-	void delegate(const CapRange& range,uint flags = 0) {
+	void delegate(const CapRange& range,DelFlags flags = NONE) {
 		uintptr_t hotspot = range.hotspot() ? range.hotspot() : range.start();
 		size_t count = range.count();
 		uintptr_t start = range.start();
