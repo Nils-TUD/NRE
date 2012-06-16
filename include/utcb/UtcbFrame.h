@@ -128,6 +128,7 @@ public:
 		_upos = _tpos = 0;
 	}
 
+	// TODO for mem and io as well?
 	void accept_translates(word_t base = 0,uint order = 31) {
 		set_translate_crd(Crd(base,order,Crd::OBJ_ALL));
 	}
@@ -173,6 +174,7 @@ public:
 		_utcb->crd_translate = crd.value();
 	}
 
+	// TODO for mem and io as well?
 	void translate(capsel_t cap,uint perms = Crd::OBJ_ALL) {
 		add_typed(XltItem(Crd(cap,0,Crd::OBJ | perms)));
 	}

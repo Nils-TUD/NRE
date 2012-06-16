@@ -51,9 +51,6 @@ public:
 
 private:
 	Digits();
-	~Digits();
-	Digits(const Digits&);
-	Digits& operator=(const Digits&);
 };
 
 }

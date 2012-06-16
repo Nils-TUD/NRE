@@ -81,7 +81,7 @@ public:
 		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd.value(),eip);
 	}
 
-	static inline void create_pd(capsel_t pd,Crd pt_crd,unsigned dstpd) {
+	static inline void create_pd(capsel_t pd,Crd pt_crd,capsel_t dstpd) {
 		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value());
 	}
 

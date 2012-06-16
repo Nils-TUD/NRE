@@ -16,6 +16,7 @@
 
 namespace nul {
 
+// TODO what to do with this class?
 class Caps {
 public:
 	static void allocate(const CapRange& caps) {
@@ -55,9 +56,6 @@ public:
 
 private:
 	Caps();
-	~Caps();
-	Caps(const Caps&);
-	Caps& operator=(const Caps&);
 };
 
 }

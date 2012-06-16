@@ -91,6 +91,8 @@ public:
 	}
 
 private:
+	SyscallABI();
+
 	static inline void handle_result(uint8_t res) {
 		if(EXPECT_FALSE(res != E_SUCCESS))
 			throw SyscallException(static_cast<ErrorCode>(res));

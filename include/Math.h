@@ -119,9 +119,6 @@ public:
 
 private:
 	Math();
-	~Math();
-	Math(const Math&);
-	Math& operator=(const Math&);
 };
 
 }

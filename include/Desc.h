@@ -141,7 +141,11 @@ public:
  * A quantum+period descriptor.
  */
 class Qpd: public Desc {
-	enum { DEFAULT_QUANTUM = 10000, DEFAULT_PRIORITY = 1 };
+	enum {
+		DEFAULT_QUANTUM = 10000,
+		DEFAULT_PRIORITY = 1
+	};
+
 public:
 	Qpd(uint prio = DEFAULT_PRIORITY,uint quantum = DEFAULT_QUANTUM) :
 			Desc((quantum << 12) | prio) {

@@ -70,14 +70,8 @@ static ChildManager *mng;
 static DataSpaceManager dsmng;
 
 // TODO clang!
-// TODO perhaps we don't want to have a separate Pd for the logging service
-// TODO but we want to have one for the console-stuff
-// TODO perhaps we need a general concept for identifying clients
-// TODO with the service system we have the problem that one client that uses a service on multiple
-// CPUs is treaten as a different client
 // TODO KObjects reference-counted? copying, ...
 // TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
-// TODO access to the first page doesn't cause a kill
 // TODO what about resource-release when terminating entire subsystems?
 // TODO it would be a good idea to protect us from stack over- or underflow
 // TODO when a service dies, the client will notice it as soon as it tries to access the service
@@ -147,11 +141,7 @@ int main() {
 	cpu.get_pt = new Pt(ec,portal_get_service);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
-	defuf.set_translate_crd(Crd(0,31,Crd::OBJ_ALL));
-	// for the reg-portal. its safe here to accept them in all portals, since they are only called
-	// by ourself
-	capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+	defuf.accept_translates();
 	// create the portal for allocating resources from HV for the current cpu
 	hv_pt = new Pt(ec,portal_hvmap);
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
@@ -223,9 +213,7 @@ int main() {
 			it->get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
-			defuf.set_translate_crd(Crd(0,31,Crd::OBJ_ALL));
-			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-			defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+			defuf.accept_translates();
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
@@ -297,6 +285,7 @@ static void portal_map(capsel_t) {
 	try {
 		DataSpace ds;
 		uf >> ds;
+		uf.finish_input();
 
 		Serial::get().writef("Got DS: ");
 		ds.write(Serial::get());
@@ -330,7 +319,6 @@ static void portal_map(capsel_t) {
 		ds.write(Serial::get());
 		Serial::get().writef("\n");
 
-		uf.clear();
 		if(newds) {
 			uf.delegate(ds.sel(),0);
 			uf.delegate(ds.unmapsel(),1);
@@ -364,6 +352,8 @@ static void portal_unmap(capsel_t) {
 		// free mem (we can trust the dataspace properties, because its sent from ourself)
 		DataSpace ds;
 		uf >> ds;
+		uf.finish_input();
+
 		{
 			ScopedLock<UserSm> guard(mem_sm);
 			bool destroyable = false;
@@ -391,10 +381,10 @@ static void portal_get_service(capsel_t) {
 	try {
 		String name;
 		uf >> name;
+		uf.finish_input();
 
 		const ServiceRegistry::Service* s = mng->get_service(name);
 
-		uf.clear();
 		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,Crd::OBJ_ALL));
 		uf << E_SUCCESS << s->available();
 	}
@@ -411,8 +401,10 @@ static void portal_gsi(capsel_t) {
 		uint gsi;
 		Gsi::Op op;
 		uf >> op >> gsi;
+		uf.finish_input();
 		// we can trust the values because it's send from ourself
 		assert(gsi < Hip::MAX_GSIS);
+
 		{
 			ScopedLock<UserSm> guard(&sm);
 			switch(op) {
@@ -428,7 +420,6 @@ static void portal_gsi(capsel_t) {
 			}
 		}
 
-		uf.clear();
 		if(op == Gsi::ALLOC)
 			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;
@@ -447,6 +438,8 @@ static void portal_io(capsel_t) {
 		uint count;
 		Ports::Op op;
 		uf >> op >> base >> count;
+		uf.finish_input();
+
 		{
 			ScopedLock<UserSm> guard(&sm);
 			switch(op) {
@@ -461,7 +454,6 @@ static void portal_io(capsel_t) {
 			}
 		}
 
-		uf.clear();
 		if(op == Ports::ALLOC)
 			uf.delegate(CapRange(base,count,Crd::IO_ALL),UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;

@@ -73,9 +73,6 @@ public:
 
 private:
 	ExecEnv();
-	~ExecEnv();
-	ExecEnv(const ExecEnv&);
-	ExecEnv& operator=(const ExecEnv&);
 
 	static inline void *get_current(size_t no) {
 		uintptr_t sp;

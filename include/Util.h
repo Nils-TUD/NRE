@@ -24,8 +24,6 @@
 
 namespace nul {
 
-// TODO this class contains various stuff that has nothing to do with each other.
-// find a better organization!
 class Util {
 public:
 	static void write_backtrace(OStream& os) {
@@ -43,10 +41,10 @@ public:
 		}
 	}
 
+	// TODO move that to somewhere else
 	static inline void pause() {
 		asm volatile("pause");
 	}
-
 	static inline uint64_t tsc() {
 		uint32_t u,l;
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));
@@ -55,9 +53,6 @@ public:
 
 private:
 	Util();
-	~Util();
-	Util(const Util&);
-	Util& operator=(const Util&);
 };
 
 }
