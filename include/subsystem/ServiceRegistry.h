@@ -38,7 +38,7 @@ class ServiceRegistry {
 public:
 	class Service {
 	public:
-		Service(Child *child,const String &name,capsel_t pts,BitField<Hip::MAX_CPUS> available)
+		Service(Child *child,const String &name,capsel_t pts,const BitField<Hip::MAX_CPUS> &available)
 			: _child(child), _name(name), _pts(pts), _available(available) {
 		}
 		~Service() {

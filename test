@@ -6,6 +6,6 @@ bin/apps/hypervisor spinner serial keyb
 bin/apps/root
 bin/apps/log provides=log
 bin/apps/screen provides=screen
-#bin/apps/test
+bin/apps/test
 #bin/apps/sub
 

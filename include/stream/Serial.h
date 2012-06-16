@@ -56,7 +56,6 @@ public:
 	}
 
 	void init(bool use_service = true);
-	void deinit();
 	virtual void write(char c);
 
 private:

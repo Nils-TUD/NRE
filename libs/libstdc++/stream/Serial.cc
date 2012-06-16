@@ -28,7 +28,19 @@ namespace nul {
 Serial Serial::_inst;
 
 Serial::~Serial() {
-	deinit();
+	delete _prod;
+	_prod = 0;
+	if(_ds) {
+		_ds->unmap();
+		delete _ds;
+		_ds = 0;
+	}
+	delete _sess;
+	_sess = 0;
+	delete _con;
+	_con = 0;
+	delete _ports;
+	_ports = 0;
 }
 
 void Serial::init(bool use_service) {
@@ -50,22 +62,6 @@ void Serial::init(bool use_service) {
 		_ports->out<uint8_t>(FCR,7);
 		_ports->out<uint8_t>(MCR,3);
 	}
-}
-
-void Serial::deinit() {
-	delete _prod;
-	_prod = 0;
-	if(_ds) {
-		_ds->unmap();
-		delete _ds;
-		_ds = 0;
-	}
-	delete _sess;
-	_sess = 0;
-	delete _con;
-	_con = 0;
-	delete _ports;
-	_ports = 0;
 }
 
 void Serial::write(char c) {

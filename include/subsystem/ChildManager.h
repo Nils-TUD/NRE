@@ -74,6 +74,12 @@ public:
 
 	void load(uintptr_t addr,size_t size,const char *cmdline);
 
+	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
+		ScopedLock<UserSm> guard(&_sm);
+		registry().reg(ServiceRegistry::Service(c,name,cap,available));
+		_regsm.up();
+	}
+
 	const ServiceRegistry::Service *get_service(const String &name) {
 		ScopedLock<UserSm> guard(&_sm);
 		const ServiceRegistry::Service* s = registry().find(name);
@@ -84,6 +90,11 @@ public:
 			_regsm.up();
 		}
 		return s;
+	}
+
+	void unreg_service(Child *c,const String& name) {
+		ScopedLock<UserSm> guard(&_sm);
+		registry().unreg(c,name);
 	}
 
 private:

@@ -16,7 +16,7 @@ namespace nul {
 
 class DataSpaceManager {
 	enum {
-		MAX_SLOTS	= 64
+		MAX_SLOTS	= 128
 	};
 
 	struct Slot {

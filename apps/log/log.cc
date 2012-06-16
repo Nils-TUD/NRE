@@ -17,18 +17,11 @@ using namespace nul;
 
 class LogService;
 
-static void receiver(void *s);
-
-static UserSm *serial_sm;
-static LogService *log;
-static cpu_t next_cpu = 1;
-static size_t cpu_count;
-
 class LogSessionData : public SessionData {
 public:
 	LogSessionData(Service *s,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,caps,func), _id(_next_id++), _bufpos(0), _buf(),
-		  _ec(receiver,Atomic::xadd(&next_cpu,+1) % cpu_count), _sc(), _cons() {
+		  _ec(receiver,Atomic::xadd(&_next_cpu,+1) % _cpu_count), _sc(), _cons() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
@@ -66,7 +59,10 @@ protected:
 		SessionData::set_ds(ds);
 		_cons = new Consumer<char>(ds);
 		_sc = new Sc(&_ec,Qpd());
+		_sc->start();
 	}
+
+	static void receiver(void *);
 
 private:
 	int _id;
@@ -76,6 +72,8 @@ private:
 	Sc *_sc;
 	Consumer<char> *_cons;
 	static int _next_id;
+	static cpu_t _next_cpu;
+	static size_t _cpu_count;
 };
 
 class LogService : public Service {
@@ -90,17 +88,22 @@ private:
 };
 
 int LogSessionData::_next_id = 0;
+cpu_t LogSessionData::_next_cpu = 1;
+size_t LogSessionData::_cpu_count = Hip::get().cpu_online_count();
+
+static LogService *log;
 
 void LogSessionData::flush() {
-	ScopedLock<UserSm> guard(serial_sm);
+	static UserSm sm;
+	ScopedLock<UserSm> guard(&sm);
 	Serial::get().writef("[%d] ",_id);
 	for(size_t i = 0; i < _bufpos; ++i)
 		Serial::get().write(_buf[i]);
 	_bufpos = 0;
 }
 
-static void receiver(void *) {
-	capsel_t caps = Ec::current()->get_tls<capsel_t>(Ec::TLS_PARAM);
+void LogSessionData::receiver(void *) {
+	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
 	while(1) {
 		ScopedLock<RCULock> guard(&RCU::lock());
 		LogSessionData *sess = log->get_session<LogSessionData>(caps);
@@ -115,8 +118,6 @@ static void receiver(void *) {
 }
 
 int main() {
-	cpu_count = Hip::get().cpu_online_count();
-	serial_sm = new UserSm();
 	Serial::get().init(false);
 
 	log = new LogService();

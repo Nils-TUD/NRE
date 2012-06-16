@@ -77,6 +77,19 @@ public:
 		handle_result(w0);
 	}
 
+	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3,word_t w4,word_t &out1,word_t &out2) {
+	    register word_t r8 asm ("r8") = w4;
+		asm volatile (
+			"syscall"
+			: "+D" (w0), "+S" (w1), "+d" (w2)
+			: "a" (w3), "r" (r8)
+			: "rcx", "r11", "memory"
+		);
+		handle_result(w0);
+		out1 = w1;
+		out2 = w2;
+	}
+
 private:
 	static inline void handle_result(uint8_t res) {
 		if(EXPECT_FALSE(res != E_SUCCESS))

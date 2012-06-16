@@ -152,6 +152,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		// start child; we have to put the child into the list before that
 		_childs[_child++] = c;
 		c->_sc = new Sc(c->_ec,Qpd(),c->_pd);
+		c->_sc->start();
 	}
 	catch(...) {
 		delete c;
@@ -244,11 +245,8 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		uf.get_typed(cap);
 		uf >> name;
 		uf >> available;
-		{
-			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().reg(ServiceRegistry::Service(c,name,cap.crd().cap(),available));
-			cm->_regsm.up();
-		}
+
+		cm->reg_service(c,cap.crd().cap(),name,available);
 
 		uf.clear();
 		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
@@ -269,10 +267,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		String name;
 		uf >> name;
-		{
-			ScopedLock<UserSm> guard(&cm->_sm);
-			cm->registry().unreg(c,name);
-		}
+		cm->unreg_service(c,name);
 
 		uf.clear();
 		uf << E_SUCCESS;
@@ -285,8 +280,6 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 
 // TODO code-duplication; we already have that in the Session class
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
-	if(!CPU::current().get_pt)
-		throw ServiceRegistryException(E_NOT_FOUND);
 	UtcbFrame uf;
 	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 	uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
@@ -402,7 +395,6 @@ void ChildManager::Portals::io(capsel_t pid) {
 void ChildManager::Portals::map(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	ScopedLock<UserSm> guard(&cm->_sm);
-	bool created = false;
 	UtcbFrameRef uf;
 	DataSpace ds;
 	int state = 0;

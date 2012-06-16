@@ -147,6 +147,10 @@ int main() {
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+	// for the reg-portal. its safe here to accept them in all portals, since they are only called
+	// by ourself
+	capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
+	defuf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 	// create the portal for allocating resources from HV for the current cpu
 	hv_pt = new Pt(ec,portal_hvmap);
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
@@ -222,6 +226,8 @@ int main() {
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
+			defuf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 					MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
@@ -233,11 +239,9 @@ int main() {
 
 	start_childs();
 
-	Serial::get().deinit();
-	Serial::get().init();
-	while(1) {
+	/*while(1) {
 		Serial::get().writef("Hi from root\n");
-	}
+	}*/
 
 	{
 		Sm sm(0);
@@ -439,6 +443,7 @@ static void portal_io(capsel_t) {
 
 				case Ports::RELEASE:
 					io.free(base,count);
+					// TODO revoke ports
 					break;
 			}
 		}

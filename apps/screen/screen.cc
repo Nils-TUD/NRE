@@ -90,9 +90,6 @@ int main() {
 		}
 	}
 
-	Serial::get().deinit();
-	Serial::get().init();
-
 	srv = new ScreenService();
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
