@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <kobj/RichLocalEc.h>
-#include <kobj/RichPt.h>
+#include <kobj/LocalEc.h>
+#include <kobj/Pt.h>
 #include <kobj/UserSm.h>
 #include <CPU.h>
 
@@ -28,17 +28,6 @@ namespace nul {
 class Service;
 
 class ServiceInstance {
-	class ServiceCapsPt : public RichPt {
-	public:
-		ServiceCapsPt(Service *s,RichLocalEc *ec,capsel_t pt) : RichPt(ec,pt,0), _s(s) {
-		}
-
-		virtual ErrorCode portal(UtcbFrameRef &uf,capsel_t pid);
-
-	private:
-		Service *_s;
-	};
-
 public:
 	ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
 
@@ -53,9 +42,11 @@ private:
 	ServiceInstance(const ServiceInstance&);
 	ServiceInstance& operator=(const ServiceInstance&);
 
+	PORTAL static void portal(capsel_t pid);
+
 	Service *_s;
-	RichLocalEc _ec;
-	ServiceCapsPt _pt;
+	LocalEc _ec;
+	Pt _pt;
 	UserSm _sm;
 };
 

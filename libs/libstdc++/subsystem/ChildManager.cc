@@ -30,24 +30,20 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
 ChildManager::ChildManager() : _child(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _regsm(0), _ecs(), _regecs(), _mapecs() {
+		_dsm(), _registry(), _sm(), _regsm(0), _ecs(), _regecs() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalEc **ecs[] = {_ecs,_regecs,_mapecs};
+		LocalEc **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
 			ecs[i][it->id] = new LocalEc(it->id);
 			ecs[i][it->id]->set_tls(Ec::TLS_PARAM,this);
 		}
 
 		UtcbFrameRef defuf(_ecs[it->id]->utcb());
-		defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-
-		UtcbFrameRef mapuf(_mapecs[it->id]->utcb());
-		mapuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-		mapuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+		defuf.accept_translates();
+		defuf.accept_delegates(0);
 
 		UtcbFrameRef reguf(_regecs[it->id]->utcb());
-		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		reguf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		reguf.accept_delegates(Math::next_pow2_shift<size_t>(Hip::MAX_CPUS));
 	}
 }
 
@@ -56,7 +52,6 @@ ChildManager::~ChildManager() {
 		delete _childs[i];
 	for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
 		delete _ecs[i];
-		delete _mapecs[i];
 		delete _regecs[i];
 	}
 }
@@ -91,7 +86,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::get_service,0);
 			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,0);
 			c->_pts[idx + 7] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,0);
-			c->_pts[idx + 8] = new Pt(_mapecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
+			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
 			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
 		}
 		// now create Pd and pass portals
@@ -220,13 +215,14 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
 		// grabs them afterwards with this portal
-		uf.clear();
+		uf.finish_input();
 		uf.delegate(c->_pd->sel(),0);
 		uf.delegate(c->_ec->sel(),1);
 		uf.delegate(c->_sc->sel(),2);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -237,21 +233,20 @@ void ChildManager::Portals::reg(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
-		TypedItem cap;
 		String name;
 		BitField<Hip::MAX_CPUS> available;
-		uf.get_typed(cap);
+		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).cap();
 		uf >> name;
 		uf >> available;
+		uf.finish_input();
 
-		cm->reg_service(c,cap.crd().cap(),name,available);
+		cm->reg_service(c,cap,name,available);
 
-		uf.clear();
-		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf.accept_delegates();
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -265,12 +260,14 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		String name;
 		uf >> name;
+		uf.finish_input();
+
 		cm->unreg_service(c,name);
 
-		uf.clear();
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -298,14 +295,15 @@ void ChildManager::Portals::get_service(capsel_t) {
 	try {
 		String name;
 		uf >> name;
+		uf.finish_input();
 
 		const ServiceRegistry::Service* s = cm->get_service(name);
 
-		uf.clear();
 		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,DESC_CAP_ALL));
 		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -319,6 +317,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		uint gsi;
 		Gsi::Op op;
 		uf >> op >> gsi;
+		uf.finish_input();
 
 		if(gsi >= Hip::MAX_GSIS)
 			throw Exception(E_ARGS_INVALID);
@@ -340,12 +339,12 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 			c->gsis().set(gsi,op == Gsi::ALLOC);
 		}
 
-		uf.clear();
 		if(op == Gsi::ALLOC)
 			uf.delegate(c->_gsi_caps + gsi);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -360,6 +359,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 		uint count;
 		Ports::Op op;
 		uf >> op >> base >> count;
+		uf.finish_input();
 
 		// alloc() makes sure that nobody can free something from other childs.
 		if(op == Ports::RELEASE)
@@ -377,7 +377,6 @@ void ChildManager::Portals::io(capsel_t pid) {
 				throw Exception(res);
 		}
 
-		uf.clear();
 		if(op == Ports::ALLOC) {
 			c->io().free(base,count);
 			uf.delegate(CapRange(base,count,DESC_IO_ALL));
@@ -385,6 +384,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -399,6 +399,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		uf >> ds;
+		uf.finish_input();
 
 		Serial::get().writef("[CM=%s] Got DS: ",c->cmdline());
 		ds.write(Serial::get());
@@ -430,17 +431,17 @@ void ChildManager::Portals::map(capsel_t pid) {
 		Serial::get().writef("\n");
 
 		// build answer
-		uf.clear();
+		uf.accept_delegates();
 		if(newds) {
 			uf.delegate(ds.sel(),0);
 			uf.delegate(ds.unmapsel(),1);
 		}
 		else
 			uf.delegate(ds.unmapsel());
-		uf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
 		uf << E_SUCCESS << addr << ds.size() << ds.perm() << ds.type();
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		switch(state) {
 			case 2: {
 				bool destroyable = false;
@@ -468,6 +469,8 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 		// we can't trust the dataspace properties, except unmapsel
 		DataSpace uds;
 		uf >> uds;
+		uf.finish_input();
+
 		// destroy (decrease refs) the ds
 		bool destroyable = false;
 		DataSpace *ds = cm->_dsm.release(uds.unmapsel(),destroyable);
@@ -476,7 +479,6 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 		// from all Pds we have delegated it to.
 		if(destroyable)
 			ds->unmap();
-		uf.clear();
 	}
 	catch(const Exception& e) {
 		// ignore

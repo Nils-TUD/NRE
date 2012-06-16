@@ -126,6 +126,22 @@ public:
 		_upos = _tpos = 0;
 	}
 
+	void accept_translates(word_t base = 0,uint order = 31) {
+		set_translate_crd(Crd(base,order,DESC_CAP_ALL));
+	}
+	void accept_delegates() {
+		accept_delegates(get_receive_crd().order());
+	}
+	void accept_delegates(uint order) {
+		capsel_t caps = CapSpace::get().allocate(1 << order,1 << order);
+		set_receive_crd(Crd(caps,order,DESC_CAP_ALL));
+	}
+	void finish_input() {
+		if(has_more_untyped() || has_more_typed())
+			throw UtcbException(E_ARGS_INVALID);
+		clear();
+	}
+
 	size_t freewords() const {
 		return _utcb->freewords();
 	}
@@ -193,17 +209,17 @@ public:
 		_utcb->typed++;
 	}
 
-	Crd get_translated() {
+	Crd get_translated(uint order = 0) {
 		TypedItem ti;
 		get_typed(ti);
-		if(ti.crd().cap() == 0 || (ti.aux() & TypedItem::TYPE_DEL))
+		if(ti.crd().cap() == 0 || (ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
 			throw UtcbException(E_ARGS_INVALID);
 		return ti.crd();
 	}
-	Crd get_delegated() {
+	Crd get_delegated(uint order = 0) {
 		TypedItem ti;
 		get_typed(ti);
-		if(ti.crd().cap() == 0 || !(ti.aux() & TypedItem::TYPE_DEL))
+		if(ti.crd().cap() == 0 || !(ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
 			throw UtcbException(E_ARGS_INVALID);
 		return ti.crd();
 	}

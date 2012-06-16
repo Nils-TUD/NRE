@@ -19,6 +19,7 @@
 #pragma once
 
 #include <kobj/Pt.h>
+#include <kobj/LocalEc.h>
 #include <subsystem/ServiceRegistry.h>
 #include <mem/DataSpaceManager.h>
 #include <Exception.h>
@@ -140,7 +141,6 @@ private:
 	// we need different Ecs to be able to receive a different number of caps
 	LocalEc *_ecs[Hip::MAX_CPUS];
 	LocalEc *_regecs[Hip::MAX_CPUS];
-	LocalEc *_mapecs[Hip::MAX_CPUS];
 	static size_t _cpu_count;
 };
 
