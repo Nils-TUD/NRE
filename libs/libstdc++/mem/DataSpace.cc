@@ -50,7 +50,7 @@ void DataSpace::share(Session &c) {
 	uf.translate(c.pt(CPU::current().id).sel());
 	uf << Service::SHARE_DATASPACE;
 	// for the dataspace protocol
-	uf << JOIN << 0 << 0 << _size << _perm << _type;
+	uf << SHARE << 0 << 0 << _size << _perm << _type;
 	uf.delegate(_sel);
 	c.con().pt(CPU::current().id)->call(uf);
 	handle_response(uf);
@@ -95,18 +95,23 @@ UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
 		throw DataSpaceException(E_ARGS_INVALID);
 	// TODO check phys
 
-	TypedItem ti;
-	switch(type) {
-		case DataSpace::CREATE:
-			break;
-		case DataSpace::JOIN:
-			uf.get_typed(ti);
-			ds._sel = ti.crd().cap();
-			break;
-		case DataSpace::DESTROY:
-			uf.get_typed(ti);
-			ds._unmapsel = ti.crd().cap();
-			break;
+	try {
+		switch(type) {
+			case DataSpace::CREATE:
+				break;
+			case DataSpace::JOIN:
+				ds._sel = uf.get_translated().cap();
+				break;
+			case DataSpace::SHARE:
+				ds._sel = uf.get_delegated().cap();
+				break;
+			case DataSpace::DESTROY:
+				ds._unmapsel = uf.get_translated().cap();
+				break;
+		}
+	}
+	catch(const Exception &e) {
+		throw DataSpaceException(e.code());
 	}
 	return uf;
 }

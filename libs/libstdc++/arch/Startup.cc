@@ -57,21 +57,39 @@ void _setup(bool child) {
 	// now we can use the semaphore to announce this Ec
 	RCU::announce(Ec::current());
 
+	CPU *last = 0;
 	const Hip& hip = Hip::get();
 	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
 		CPU &cpu = CPU::get(it->id());
 		cpu.id = it->id();
-		if(child && it->enabled()) {
-			capsel_t off = cpu.id * Hip::get().service_caps();
-			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
-			cpu.unmap_pt = new Pt(off + CapSpace::SRV_UNMAP);
-			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
-			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
-			cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
-			cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
-			if(cpu.id == CPU::current().id) {
-				// switch to dlmalloc, since we have created its dependencies now
-				dlmalloc_init();
+		if(it->enabled()) {
+			// build a list of all online CPUs
+			if(last)
+				last->_next = &cpu;
+			else
+				CPU::_online = &cpu;
+			cpu._next = 0;
+			last = &cpu;
+
+			// copy attributes from Hip-CPU
+			cpu.flags = it->flags;
+			cpu.package = it->package;
+			cpu.core = it->core;
+			cpu.thread = it->thread;
+
+			// create per-cpu-portals
+			if(child) {
+				capsel_t off = cpu.id * Hip::get().service_caps();
+				cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
+				cpu.unmap_pt = new Pt(off + CapSpace::SRV_UNMAP);
+				cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
+				cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
+				cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
+				cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
+				if(cpu.id == CPU::current().id) {
+					// switch to dlmalloc, since we have created its dependencies now
+					dlmalloc_init();
+				}
 			}
 		}
 	}

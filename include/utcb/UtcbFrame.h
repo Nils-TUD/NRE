@@ -28,6 +28,7 @@
 #include <String.h>
 #include <cstring>
 #include <Assert.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -40,6 +41,8 @@ public:
 	}
 };
 
+// TODO we should restructure this whole stuff here
+// TODO is_nul?
 class TypedItem {
 	friend class UtcbFrameRef;
 public:
@@ -86,7 +89,7 @@ class UtcbFrameRef {
 	friend class Utcb;
 
 	static word_t *get_top(Utcb *frame,size_t toff) {
-		size_t utcbtop = Util::rounddown<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
+		size_t utcbtop = Math::round_dn<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
 		return reinterpret_cast<word_t*>(utcbtop) - toff;
 	}
 	static Utcb *get_frame(Utcb *base,size_t off) {
@@ -99,11 +102,11 @@ class UtcbFrameRef {
 	}
 	void check_untyped_read(size_t words) {
 		if(_upos + words > untyped())
-			throw Exception(E_UTCB_UNTYPED);
+			throw UtcbException(E_UTCB_UNTYPED);
 	}
 	void check_typed_read(size_t words) {
 		if(_tpos + words > typed())
-			throw Exception(E_UTCB_TYPED);
+			throw UtcbException(E_UTCB_TYPED);
 	}
 
 	UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _upos(), _tpos() {
@@ -159,7 +162,7 @@ public:
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {
-			uint minshift = Util::minshift(start,count);
+			uint minshift = Math::minshift(start,count);
 			add_typed(XltItem(Crd(start,minshift,range.attr())));
 			start += 1 << minshift;
 			count -= 1 << minshift;
@@ -174,7 +177,7 @@ public:
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {
-			uint minshift = Util::minshift(start | hotspot,count);
+			uint minshift = Math::minshift(start | hotspot,count);
 			add_typed(DelItem(Crd(start,minshift,range.attr()),flags,hotspot));
 			start += 1 << minshift;
 			hotspot += 1 << minshift;
@@ -189,9 +192,22 @@ public:
 		_top[-(_utcb->typed * 2 + 2)] = item._crd.value();
 		_utcb->typed++;
 	}
+
+	Crd get_translated() {
+		TypedItem ti;
+		get_typed(ti);
+		if(ti.crd().cap() == 0 || (ti.aux() & TypedItem::TYPE_DEL))
+			throw UtcbException(E_ARGS_INVALID);
+		return ti.crd();
+	}
+	Crd get_delegated() {
+		TypedItem ti;
+		get_typed(ti);
+		if(ti.crd().cap() == 0 || !(ti.aux() & TypedItem::TYPE_DEL))
+			throw UtcbException(E_ARGS_INVALID);
+		return ti.crd();
+	}
 	void get_typed(TypedItem& item) {
-		// TODO perhaps we should provide a "type-safe" method for that? that is, a method which receives
-		// a e.g. memory item and makes sure that we received one?
 		check_typed_read(1);
 		item._aux = _top[-(_tpos * 2 + 1)];
 		item._crd = Crd(_top[-(_tpos * 2 + 2)]);
@@ -208,7 +224,7 @@ public:
 		return *this;
 	}
 	UtcbFrameRef &operator <<(const String& value) {
-		const size_t words = Util::blockcount(value.length(),sizeof(word_t)) + 1;
+		const size_t words = Math::blockcount(value.length(),sizeof(word_t)) + 1;
 		check_write(words);
 		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
 		*reinterpret_cast<size_t*>(_utcb->msg + untyped()) = value.length();
@@ -228,7 +244,7 @@ public:
 	UtcbFrameRef &operator >>(String &value) {
 		check_untyped_read(1);
 		size_t len = *reinterpret_cast<size_t*>(_utcb->msg + _upos);
-		const size_t words = Util::blockcount(len,sizeof(word_t)) + 1;
+		const size_t words = Math::blockcount(len,sizeof(word_t)) + 1;
 		check_untyped_read(words);
 		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1),len);
 		_upos += words;

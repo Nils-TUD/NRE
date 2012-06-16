@@ -8,7 +8,7 @@ loader="../morbo/tftp/farnsworth"
 if [ "$NOVA_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom -m 256 -smp 8"
+	export QEMU_FLAGS="-cpu phenom -m 256 -smp 1"
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	export QEMU="qemu-system-x86_64"
@@ -85,6 +85,7 @@ case "$1" in
 		;;
 	dbg=*)
 		BUILD_DIR="$PWD/$build" $build/tools/debug ./test $build/bin/apps/${1:4}
+		kill `pgrep qemu`
 		;;
 esac
 

@@ -22,6 +22,7 @@
 #include <kobj/Ports.h>
 #include <cap/Caps.h>
 #include <arch/Elf.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -30,26 +31,23 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 ChildManager::ChildManager() : _child(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
 		_dsm(), _registry(), _sm(), _regsm(0), _ecs(), _regecs(), _mapecs() {
-	const Hip& hip = Hip::get();
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
-			LocalEc **ecs[] = {_ecs,_regecs,_mapecs};
-			for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
-				ecs[i][it->id()] = new LocalEc(it->id());
-				ecs[i][it->id()]->set_tls(Ec::TLS_PARAM,this);
-			}
-
-			UtcbFrameRef defuf(_ecs[it->id()]->utcb());
-			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-
-			UtcbFrameRef mapuf(_mapecs[it->id()]->utcb());
-			mapuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
-			mapuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
-
-			UtcbFrameRef reguf(_regecs[it->id()]->utcb());
-			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-			reguf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		LocalEc **ecs[] = {_ecs,_regecs,_mapecs};
+		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
+			ecs[i][it->id] = new LocalEc(it->id);
+			ecs[i][it->id]->set_tls(Ec::TLS_PARAM,this);
 		}
+
+		UtcbFrameRef defuf(_ecs[it->id]->utcb());
+		defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+
+		UtcbFrameRef mapuf(_mapecs[it->id]->utcb());
+		mapuf.set_receive_crd(Crd(CapSpace::get().allocate(),0,DESC_CAP_ALL));
+		mapuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
+
+		UtcbFrameRef reguf(_regecs[it->id]->utcb());
+		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
+		reguf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 	}
 }
 
@@ -97,7 +95,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
 		}
 		// now create Pd and pass portals
-		c->_pd = new Pd(Crd(pts,Util::nextpow2shift(per_child_caps()),DESC_CAP_ALL));
+		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),DESC_CAP_ALL));
 		// TODO wrong place
 		c->_utcb = 0x7FFFF000;
 		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),
@@ -122,7 +120,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			if(ph->p_flags & PF_X)
 				perms |= ChildMemory::X;
 
-			DataSpace ds(Util::roundup<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,ChildMemory::RWX);
+			DataSpace ds(Math::round_up<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,ChildMemory::RWX);
 			// TODO leak, if reglist().add throws
 			_dsm.create(ds);
 			// TODO actually it would be better to do that later
@@ -250,7 +248,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 
 		uf.clear();
 		capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -282,7 +280,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	UtcbFrame uf;
 	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
 
@@ -401,6 +399,11 @@ void ChildManager::Portals::map(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		uf >> ds;
+
+		Serial::get().writef("[CM=%s] Got DS: ",c->cmdline());
+		ds.write(Serial::get());
+		Serial::get().writef("\n");
+
 		// map and add can throw; ensure that the state doesn't change if something throws
 		bool newds = ds.sel() == ObjCap::INVALID;
 		if(ds.sel() != ObjCap::INVALID) {
@@ -421,6 +424,10 @@ void ChildManager::Portals::map(capsel_t pid) {
 		// add it to the regions of the child
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
+
+		Serial::get().writef("[CM=%s] Mapped DS (%s): ",c->cmdline(),newds ? "new" : "join");
+		ds.write(Serial::get());
+		Serial::get().writef("\n");
 
 		// build answer
 		uf.clear();
@@ -522,7 +529,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		else if(!(flags & ChildMemory::M)) {
 			uint perms = flags & ChildMemory::RWX;
 			// try to map the next 32 pages
-			size_t msize = Util::min<size_t>(Util::roundup<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
+			size_t msize = Math::min<size_t>(Math::round_up<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
 			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
 					DESC_TYPE_MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 			c->reglist().map(pfaddr,msize);

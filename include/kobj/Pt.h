@@ -33,6 +33,7 @@ public:
 
 	Pt(capsel_t pt) : ObjCap(pt,KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
+	// TODO don't use unsigned for the mtd?
 	Pt(LocalEc *ec,capsel_t pt,portal_func func,unsigned mtd = 0) : ObjCap(pt,KEEP_SEL_BIT) {
 		Syscalls::create_pt(pt,ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 	}

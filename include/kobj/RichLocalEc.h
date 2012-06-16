@@ -18,45 +18,32 @@
 
 #pragma once
 
-#include <kobj/RichLocalEc.h>
-#include <kobj/RichPt.h>
-#include <kobj/UserSm.h>
-#include <CPU.h>
+#include <kobj/LocalEc.h>
+#include <utcb/UtcbFrame.h>
+#include <Util.h>
 
 namespace nul {
 
-class Service;
-
-class ServiceInstance {
-	class ServiceCapsPt : public RichPt {
-	public:
-		ServiceCapsPt(Service *s,RichLocalEc *ec,capsel_t pt) : RichPt(ec,pt,0), _s(s) {
-		}
-
-		virtual ErrorCode portal(UtcbFrameRef &uf,capsel_t pid);
-
-	private:
-		Service *_s;
+class RichLocalEc : public LocalEc {
+public:
+	enum {
+		NONE	= -1U
 	};
 
-public:
-	ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
-
-	cpu_t cpu() const {
-		return _ec.cpu();
+	RichLocalEc(cpu_t cpu,uint order = NONE) : LocalEc(cpu), _order(order) {
+		UtcbFrameRef uf(utcb());
+		prepare_utcb(uf);
 	}
-	LocalEc &ec() {
-		return _ec;
+
+	void prepare_utcb(UtcbFrameRef &uf) {
+		if(_order != NONE) {
+			capsel_t caps = CapSpace::get().allocate(1 << _order,1 << _order);
+			uf.set_receive_crd(Crd(caps,_order,DESC_CAP_ALL));
+		}
 	}
 
 private:
-	ServiceInstance(const ServiceInstance&);
-	ServiceInstance& operator=(const ServiceInstance&);
-
-	Service *_s;
-	RichLocalEc _ec;
-	ServiceCapsPt _pt;
-	UserSm _sm;
+	uint _order;
 };
 
 }

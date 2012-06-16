@@ -49,7 +49,7 @@ private:
 	capsel_t get_portals(Connection &con) {
 		UtcbFrame uf;
 		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps.get(),Util::nextpow2shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
+		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(Hip::MAX_CPUS),DESC_CAP_ALL));
 		uf << Service::OPEN_SESSION;
 		con.pt(CPU::current().id)->call(uf);
 

@@ -20,6 +20,7 @@
 
 namespace nul {
 
-CPU CPU::cpus[Hip::MAX_CPUS];
+CPU CPU::_cpus[Hip::MAX_CPUS];
+CPU *CPU::_online = 0;
 
 }

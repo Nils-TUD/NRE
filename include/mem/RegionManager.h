@@ -71,7 +71,7 @@ public:
 
 	void remove(uintptr_t addr,size_t size) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size && Util::overlapped(addr,size,_regs[i].addr,_regs[i].size))
+			if(_regs[i].size && Math::overlapped(addr,size,_regs[i].addr,_regs[i].size))
 				remove_from(_regs + i,addr,size);
 		}
 	}

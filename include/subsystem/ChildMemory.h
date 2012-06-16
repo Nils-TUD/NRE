@@ -13,7 +13,7 @@
 #include <Exception.h>
 #include <stream/OStream.h>
 #include <mem/DataSpace.h>
-#include <Util.h>
+#include <Math.h>
 #include <Assert.h>
 
 extern void test_reglist();
@@ -205,7 +205,7 @@ private:
 	const Region *get(uintptr_t addr,size_t size) const {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			// TODO overlapped is wrong here?
-			if(_regs[i].size > 0 && Util::overlapped(addr,size,_regs[i].begin,_regs[i].size))
+			if(_regs[i].size > 0 && Math::overlapped(addr,size,_regs[i].begin,_regs[i].size))
 				return _regs + i;
 		}
 		return 0;

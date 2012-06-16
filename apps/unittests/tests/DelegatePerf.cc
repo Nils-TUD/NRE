@@ -49,8 +49,8 @@ static void test_delegate() {
 		pt.call(uf);
 		tac = Util::tsc();
 		ipc_duration = tac - tic - rdtsc;
-		min = Util::min(min,ipc_duration);
-		max = Util::max(max,ipc_duration);
+		min = Math::min(min,ipc_duration);
+		max = Math::max(max,ipc_duration);
 		Log::get().writef("i=%zu\n",i);
 		results[i] = ipc_duration;
 	}

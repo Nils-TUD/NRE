@@ -124,7 +124,7 @@ private:
 	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
 
 	static inline size_t per_child_caps() {
-		return Util::nextpow2(Hip::get().service_caps() * _cpu_count);
+		return Math::next_pow2(Hip::get().service_caps() * _cpu_count);
 	}
 
 	ChildManager(const ChildManager&);

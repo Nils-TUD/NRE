@@ -18,45 +18,40 @@
 
 #pragma once
 
-#include <kobj/RichLocalEc.h>
-#include <kobj/RichPt.h>
-#include <kobj/UserSm.h>
-#include <CPU.h>
-
 namespace nul {
 
-class Service;
-
-class ServiceInstance {
-	class ServiceCapsPt : public RichPt {
-	public:
-		ServiceCapsPt(Service *s,RichLocalEc *ec,capsel_t pt) : RichPt(ec,pt,0), _s(s) {
-		}
-
-		virtual ErrorCode portal(UtcbFrameRef &uf,capsel_t pid);
-
-	private:
-		Service *_s;
-	};
-
+template<class T>
+class ListIterator {
 public:
-	ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
-
-	cpu_t cpu() const {
-		return _ec.cpu();
+	ListIterator(T *n = 0) : _n(n) {
 	}
-	LocalEc &ec() {
-		return _ec;
+	~ListIterator() {
+	}
+
+	T& operator *() const {
+		return *_n;
+	}
+	T *operator ->() const {
+		return &operator *();
+	}
+	ListIterator<T>& operator ++() {
+		_n = _n->next();
+		return *this;
+	}
+	ListIterator<T> operator ++(int) {
+		ListIterator<T> tmp(*this);
+		operator++();
+		return tmp;
+	}
+	bool operator ==(const ListIterator<T>& rhs) {
+		return _n == rhs._n;
+	}
+	bool operator !=(const ListIterator<T>& rhs) {
+		return _n != rhs._n;
 	}
 
 private:
-	ServiceInstance(const ServiceInstance&);
-	ServiceInstance& operator=(const ServiceInstance&);
-
-	Service *_s;
-	RichLocalEc _ec;
-	ServiceCapsPt _pt;
-	UserSm _sm;
+	T *_n;
 };
 
 }

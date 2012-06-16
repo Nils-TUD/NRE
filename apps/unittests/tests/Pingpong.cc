@@ -67,8 +67,8 @@ static void test_pingpong() {
 		sum += x + y;
 		tac = Util::tsc();
 		ipc_duration = tac - tic - rdtsc;
-		min = Util::min(min,ipc_duration);
-		max = Util::max(max,ipc_duration);
+		min = Math::min(min,ipc_duration);
+		max = Math::max(max,ipc_duration);
 		results[i] = ipc_duration;
 	}
 	uint64_t avg = 0;

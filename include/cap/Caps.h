@@ -12,6 +12,7 @@
 #include <cap/CapRange.h>
 #include <utcb/UtcbFrame.h>
 #include <CPU.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -70,9 +71,9 @@ public:
 				if(diff) {
 					// the lowest bit that's different defines how many we can map with one Crd.
 					// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
-					unsigned at_once = Util::bsf(diff);
+					unsigned at_once = Math::bit_scan_forward(diff);
 					if((1 << at_once) < count)
-						cr.count(Util::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
+						cr.count(Math::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
 				}
 			}
 

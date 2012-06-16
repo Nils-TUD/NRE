@@ -37,6 +37,7 @@
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
+#include <Math.h>
 #include <Exception.h>
 #include <BitField.h>
 #include <cstring>
@@ -111,9 +112,9 @@ static void allocate(const CapRange& caps) {
 			if(diff) {
 				// the lowest bit that's different defines how many we can map with one Crd.
 				// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
-				unsigned at_once = Util::bsf(diff);
+				unsigned at_once = Math::bit_scan_forward(diff);
 				if((1 << at_once) < count)
-					cr.count(Util::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
+					cr.count(Math::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
 			}
 		}
 
@@ -150,7 +151,7 @@ int main() {
 	// for the reg-portal. its safe here to accept them in all portals, since they are only called
 	// by ourself
 	capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	defuf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+	defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 	// create the portal for allocating resources from HV for the current cpu
 	hv_pt = new Pt(ec,portal_hvmap);
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
@@ -159,7 +160,7 @@ int main() {
 	mem_sm = new UserSm();
 
 	// allocate VGA memory
-	allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init(false);
@@ -177,7 +178,7 @@ int main() {
 			uintptr_t start = it->addr >> ExecEnv::PAGE_SHIFT;
 			uintptr_t addr = start + ExecEnv::PHYS_START_PAGE;
 			uintptr_t end = ExecEnv::MOD_START >> ExecEnv::PAGE_SHIFT;
-			size_t pages = Util::blockcount(it->size,ExecEnv::PAGE_SIZE);
+			size_t pages = Math::blockcount<size_t>(it->size,ExecEnv::PAGE_SIZE);
 			if(addr >= end)
 				continue;
 			if(addr + pages > end)
@@ -189,7 +190,7 @@ int main() {
 	// remove all not available memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		if(it->type != Hip_mem::AVAILABLE)
-			mem.remove(it->addr + ExecEnv::PHYS_START,Util::roundup<size_t>(it->size,ExecEnv::PAGE_SIZE));
+			mem.remove(it->addr + ExecEnv::PHYS_START,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
 	}
 	mem.write(Serial::get());
 
@@ -203,31 +204,28 @@ int main() {
 	}
 
 	Serial::get().writef("CPUs:\n");
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
-			Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
-					it->package,it->core,it->thread,it->flags);
-		}
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
+				it->package,it->core,it->thread,it->flags);
 	}
 
 	// now we can use dlmalloc (map-pt created and available memory added to pool)
 	dlmalloc_init();
 
 	// now init the stuff for all other CPUs (using dlmalloc)
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled() && it->id() != CPU::current().id) {
-			CPU &cpu = CPU::get(it->id());
-			LocalEc *ec = new LocalEc(cpu.id);
-			cpu.map_pt = new Pt(ec,portal_map);
-			cpu.unmap_pt = new Pt(ec,portal_unmap);
-			cpu.gsi_pt = new Pt(ec,portal_gsi);
-			cpu.io_pt = new Pt(ec,portal_io);
-			cpu.get_pt = new Pt(ec,portal_get_service);
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		if(it->id != CPU::current().id) {
+			LocalEc *ec = new LocalEc(it->id);
+			it->map_pt = new Pt(ec,portal_map);
+			it->unmap_pt = new Pt(ec,portal_unmap);
+			it->gsi_pt = new Pt(ec,portal_gsi);
+			it->io_pt = new Pt(ec,portal_io);
+			it->get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.set_translate_crd(Crd(0,31,DESC_CAP_ALL));
 			capsel_t caps = CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS);
-			defuf.set_receive_crd(Crd(caps,Util::nextpow2shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
+			defuf.set_receive_crd(Crd(caps,Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),DESC_CAP_ALL));
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,MTD_RSP);
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 					MTD_RSP | MTD_GPR_BSD | MTD_RIP_LEN | MTD_QUAL);
@@ -265,20 +263,27 @@ static void start_childs() {
 					Caps::TYPE_MEM | Caps::MEM_RWX,start));
 			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
 			start += it->size >> ExecEnv::PAGE_SHIFT;
-			// TODO we assume that the cmdline does not cross pages
+
 			char *aux = 0;
 			if(it->aux) {
-				if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
-					throw Exception(E_CAPACITY);
-				allocate(CapRange(it->aux >> ExecEnv::PAGE_SHIFT,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
+				// the cmdline might cross pages. so map one by one until the cmdline ends
+				bool found_end = false;
 				aux = reinterpret_cast<char*>(
 						(start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
-				start++;
-				// ensure that its terminated at the end of the page
-				uintptr_t endaddr = Util::roundup<uintptr_t>(
-						reinterpret_cast<uintptr_t>(aux),ExecEnv::PAGE_SIZE) - 1;
-				char *end = reinterpret_cast<char*>(endaddr);
-				*end = '\0';
+				char *str = aux;
+				for(size_t x = 0; !found_end; ++x) {
+					if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
+						throw Exception(E_CAPACITY);
+					allocate(CapRange((it->aux >> ExecEnv::PAGE_SHIFT) + x,1,Caps::TYPE_MEM | Caps::MEM_RW,start));
+					start++;
+					while(reinterpret_cast<uintptr_t>(str) < (start << ExecEnv::PAGE_SHIFT)) {
+						if(!*str) {
+							found_end = true;
+							break;
+						}
+						str++;
+					}
+				}
 			}
 
 			Log::get().writef("Loading module @ %p .. %p\n",addr,addr + it->size);
@@ -293,12 +298,16 @@ static void portal_map(capsel_t) {
 		DataSpace ds;
 		uf >> ds;
 
+		Serial::get().writef("Got DS: ");
+		ds.write(Serial::get());
+		Serial::get().writef("\n");
+
 		bool newds = false;
 		{
 			ScopedLock<UserSm> guard(mem_sm);
 			// is it a new dataspace?
 			if(ds.sel() == ObjCap::INVALID) {
-				size_t size = Util::roundup<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
+				size_t size = Math::round_up<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
 				uintptr_t addr = mem.alloc(size);
 
 				// create a map and unmap-cap
@@ -316,6 +325,10 @@ static void portal_map(capsel_t) {
 					throw DataSpaceException(E_NOT_FOUND);
 			}
 		}
+
+		Serial::get().writef("Mapped DS (%s): ",newds ? "new" : "join");
+		ds.write(Serial::get());
+		Serial::get().writef("\n");
 
 		uf.clear();
 		if(newds) {
@@ -338,7 +351,7 @@ static void revoke_mem(uintptr_t addr,size_t size) {
 	size_t count = size >> ExecEnv::PAGE_SHIFT;
 	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
 	while(count > 0) {
-		uint minshift = Util::minshift(start,count);
+		uint minshift = Math::minshift(start,count);
 		Syscalls::revoke(Crd(start,minshift,DESC_MEM_ALL),false);
 		start += 1 << minshift;
 		count -= 1 << minshift;

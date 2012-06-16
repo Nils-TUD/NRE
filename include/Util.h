@@ -29,93 +29,18 @@ namespace nul {
 class Util {
 public:
 	static void write_backtrace(OStream& os) {
-		uintptr_t *addr,addrs[32];
+		uintptr_t addrs[32];
 		ExecEnv::collect_backtrace(addrs,sizeof(addrs));
+		write_backtrace(os,addrs);
+	}
+	static void write_backtrace(OStream& os,const uintptr_t *addrs) {
+		const uintptr_t *addr;
 		os.writef("Backtrace:\n");
 		addr = addrs;
 		while(*addr != 0) {
 			os.writef("\t%p\n",*addr);
 			addr++;
 		}
-	}
-
-	template<typename T>
-	static inline T min(T a,T b) {
-		return a < b ? a : b;
-	}
-
-	template<typename T>
-	static inline T max(T a,T b) {
-		return a < b ? b : a;
-	}
-
-	template<typename T>
-	static inline T roundup(T value,T align) {
-		return (value + align - 1) & ~(align - 1);
-	}
-
-	template<typename T>
-	static inline T rounddown(T value,T align) {
-		return value & ~(align - 1);
-	}
-
-	static inline size_t blockcount(size_t value,size_t blocksize) {
-		return (value + blocksize - 1) / blocksize;
-	}
-
-	static inline bool overlapped(uintptr_t b1,size_t s1,uintptr_t b2,size_t s2) {
-		uintptr_t e1 = b1 + s1;
-		uintptr_t e2 = b2 + s2;
-		return (b1 >= b2 && b1 < e2) ||			// start in range
-				(e1 > b2 && e1 <= e2) ||		// end in range
-				(b1 < b2 && e1 > e2);			// completely overlapped
-	}
-
-	/**
-	 * Finds the position of the most significant "1" bit
-	 */
-	template<typename T>
-	static inline T bsr(T value) {
-		return __builtin_clz(value) ^ 0x1F;
-	}
-	/**
-	 * Finds the position of the least significant "1" bit
-	 */
-	template<typename T>
-	static inline T bsf(T value) {
-		return __builtin_ctz(value);
-	}
-
-	/**
-	 * Finds the next power of two. That is, if it is already a power of 2 it returns the input. If
-	 * not it rounds up to the next power of two.
-	 */
-	template<typename T>
-	static inline T nextpow2(T value) {
-		return 1 << nextpow2shift(value);
-	}
-	template<typename T>
-	static inline T nextpow2shift(T value) {
-		if(!value)
-			return 0;
-		if(value & (value - 1))
-			return bsr(value) + 1;
-		return bsr(value);
-	}
-
-	/**
-	 * Calculates the order (log2 of the size) of the largest naturally
-	 * aligned block that starts at start and is no larger than size.
-	 *
-	 * @param start the start of the block
-	 * @param size the size of the block
-	 * @return The calculated order or the minshift parameter is it is
-	 * smaller then the order.
-	 */
-	static inline uint minshift(uintptr_t start,size_t size) {
-		uint basealign = static_cast<uint>(bsf(start | (1ul << (8 * sizeof(uintptr_t) - 1))));
-		uint shiftalign = static_cast<uint>(bsr(size | 1));
-		return min(basealign,shiftalign);
 	}
 
 	static inline void pause() {
@@ -127,6 +52,12 @@ public:
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));
 		return (uint64_t)u << 32 | l;
 	}
+
+private:
+	Util();
+	~Util();
+	Util(const Util&);
+	Util& operator=(const Util&);
 };
 
 }

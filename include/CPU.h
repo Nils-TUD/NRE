@@ -20,6 +20,7 @@
 
 #include <kobj/Ec.h>
 #include <cap/CapSpace.h>
+#include <ListIterator.h>
 #include <Hip.h>
 #include <Assert.h>
 
@@ -28,16 +29,32 @@ namespace nul {
 class Pt;
 
 class CPU {
+	friend void ::_setup(bool);
+
 public:
+	typedef ListIterator<CPU> iterator;
+
 	static CPU &current() {
 		return get(Ec::current()->cpu());
 	}
 	static CPU &get(cpu_t id) {
 		assert(id < Hip::MAX_CPUS);
-		return cpus[id];
+		return _cpus[id];
+	}
+
+	static iterator begin() {
+		return ListIterator<CPU>(_online);
+	}
+	static iterator end() {
+		return ListIterator<CPU>();
 	}
 
 	cpu_t id;
+	uint8_t flags;
+	uint8_t thread;
+	uint8_t core;
+	uint8_t package;
+
 	Pt *map_pt;
 	Pt *unmap_pt;
 	Pt *io_pt;
@@ -45,13 +62,19 @@ public:
 	Pt *reg_pt;
 	Pt *get_pt;
 
+	CPU *next() {
+		return _next;
+	}
+
 private:
-	CPU() : id(), map_pt(), unmap_pt(), io_pt(), gsi_pt(), reg_pt(), get_pt() {
+	CPU() : id(), map_pt(), unmap_pt(), io_pt(), gsi_pt(), reg_pt(), get_pt(), _next() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);
 
-	static CPU cpus[Hip::MAX_CPUS];
+	CPU *_next;
+	static CPU _cpus[Hip::MAX_CPUS];
+	static CPU *_online;
 };
 
 }

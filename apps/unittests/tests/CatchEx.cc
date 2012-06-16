@@ -51,8 +51,8 @@ static void test_catchex() {
 		}
 		tac = Util::tsc();
 		duration = tac - tic - rdtsc;
-		min = Util::min(min,duration);
-		max = Util::max(max,duration);
+		min = Math::min(min,duration);
+		max = Math::max(max,duration);
 		results[i] = duration;
 	}
 	uint64_t avg = 0;

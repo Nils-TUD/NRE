@@ -28,6 +28,7 @@
 #include <Syscalls.h>
 #include <Hip.h>
 #include <CPU.h>
+#include <Math.h>
 #include <Exception.h>
 #include <cstring>
 #include <Assert.h>
@@ -76,7 +77,7 @@ int main() {
 
 	// allocate serial ports and VGA memory
 	Caps::allocate(CapRange(0x3F8,6,Caps::TYPE_IO | Caps::IO_A));
-	Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	Caps::allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 			Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init();

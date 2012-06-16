@@ -99,13 +99,10 @@ int main() {
 
 	con = new Connection("screen");
 
-	const Hip& hip = Hip::get();
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled()) {
-			//new Sc(new GlobalEc(write,it->id()),Qpd());
-			Sc *sc = new Sc(new GlobalEc(read,it->id()),Qpd());
-			sc->start();
-		}
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		//new Sc(new GlobalEc(write,it->id()),Qpd());
+		Sc *sc = new Sc(new GlobalEc(read,it->id),Qpd());
+		sc->start();
 	}
 
 	Sm sm(0);

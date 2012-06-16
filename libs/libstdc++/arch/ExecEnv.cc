@@ -20,7 +20,7 @@
 #include <kobj/UserSm.h>
 #include <ScopedLock.h>
 #include <Compiler.h>
-#include <Util.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -37,14 +37,14 @@ void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t ret,uintpt
 size_t ExecEnv::collect_backtrace(uintptr_t *frames,size_t max) {
 	uintptr_t bp;
 	asm volatile ("mov %%" EXPAND(REG(bp)) ",%0" : "=a" (bp));
-	return collect_backtrace(Util::rounddown<uintptr_t>(bp,ExecEnv::STACK_SIZE),bp,frames,max);
+	return collect_backtrace(Math::round_dn<uintptr_t>(bp,ExecEnv::STACK_SIZE),bp,frames,max);
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t stack,uintptr_t bp,uintptr_t *frames,size_t max) {
 	uintptr_t end,start;
 	uintptr_t *frame = frames;
 	size_t count = 0;
-	end = Util::roundup<uintptr_t>(bp,ExecEnv::STACK_SIZE);
+	end = Math::round_up<uintptr_t>(bp,ExecEnv::STACK_SIZE);
 	start = end - ExecEnv::STACK_SIZE;
 	for(size_t i = 0; i < max - 1; i++) {
 		// prevent page-fault

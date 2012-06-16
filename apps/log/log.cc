@@ -15,13 +15,11 @@
 
 using namespace nul;
 
-class LogService;
-
 class LogSessionData : public SessionData {
 public:
-	LogSessionData(Service *s,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,caps,func), _id(_next_id++), _bufpos(0), _buf(),
-		  _ec(receiver,Atomic::xadd(&_next_cpu,+1) % _cpu_count), _sc(), _cons() {
+	LogSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: SessionData(s,id,caps,func), _bufpos(0), _buf(),
+		  _ec(receiver,next_cpu()), _sc(), _cons() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
@@ -30,17 +28,8 @@ public:
 	}
 
 	virtual void invalidate() {
-		_cons->stop();
-	}
-
-	int id() const {
-		return _id;
-	}
-	const char *buffer() const {
-		return _buf;
-	}
-	size_t size() const {
-		return _bufpos;
+		if(_cons)
+			_cons->stop();
 	}
 
 	Consumer<char> *cons() {
@@ -52,7 +41,14 @@ public:
 			_buf[_bufpos++] = c;
 		return c == '\n' || _bufpos == sizeof(_buf);
 	}
-	void flush();
+	void flush() {
+		static UserSm sm;
+		ScopedLock<UserSm> guard(&sm);
+		Serial::get().writef("[%d] ",id());
+		for(size_t i = 0; i < _bufpos; ++i)
+			Serial::get().write(_buf[i]);
+		_bufpos = 0;
+	}
 
 protected:
 	virtual void set_ds(DataSpace *ds) {
@@ -62,45 +58,39 @@ protected:
 		_sc->start();
 	}
 
+	static cpu_t next_cpu() {
+		static UserSm sm;
+		ScopedLock<UserSm> guard(&sm);
+		if(_cpu_it == CPU::end())
+			_cpu_it = CPU::begin();
+		return (_cpu_it++)->id;
+	}
+
 	static void receiver(void *);
 
 private:
-	int _id;
 	size_t _bufpos;
 	char _buf[80];
 	GlobalEc _ec;
 	Sc *_sc;
 	Consumer<char> *_cons;
-	static int _next_id;
-	static cpu_t _next_cpu;
-	static size_t _cpu_count;
+	static CPU::iterator _cpu_it;
 };
 
 class LogService : public Service {
 public:
-	LogService() : Service("log",0) {
+	LogService() : Service("log") {
 	}
 
 private:
-	virtual SessionData *create_session(capsel_t caps,Pt::portal_func func) {
-		return new LogSessionData(this,caps,func);
+	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+		return new LogSessionData(this,id,caps,func);
 	}
 };
 
-int LogSessionData::_next_id = 0;
-cpu_t LogSessionData::_next_cpu = 1;
-size_t LogSessionData::_cpu_count = Hip::get().cpu_online_count();
+CPU::iterator LogSessionData::_cpu_it;
 
 static LogService *log;
-
-void LogSessionData::flush() {
-	static UserSm sm;
-	ScopedLock<UserSm> guard(&sm);
-	Serial::get().writef("[%d] ",_id);
-	for(size_t i = 0; i < _bufpos; ++i)
-		Serial::get().write(_buf[i]);
-	_bufpos = 0;
-}
 
 void LogSessionData::receiver(void *) {
 	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
@@ -121,11 +111,8 @@ int main() {
 	Serial::get().init(false);
 
 	log = new LogService();
-	const Hip& hip = Hip::get();
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled())
-			log->provide_on(it->id());
-	}
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+		log->provide_on(it->id);
 	log->reg();
 	log->wait();
 	return 0;

@@ -30,13 +30,10 @@ PORTAL static void portal_write(capsel_t);
 
 class ScreenSessionData : public SessionData {
 public:
-	ScreenSessionData(Service *s,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,caps,func), _id(++_next_id), _prod() {
+	ScreenSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: SessionData(s,id,caps,func), _prod() {
 	}
 
-	int id() const {
-		return _id;
-	}
 	Producer<int> *prod() {
 		return _prod;
 	}
@@ -47,8 +44,6 @@ public:
 	}
 
 private:
-	static int _next_id;
-	int _id;
 	Producer<int> *_prod;
 };
 
@@ -65,17 +60,16 @@ public:
 	}
 
 private:
-	virtual SessionData *create_session(capsel_t caps,Pt::portal_func func) {
-		return new ScreenSessionData(this,caps,func);
+	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+		return new ScreenSessionData(this,id,caps,func);
 	}
 };
 
-int ScreenSessionData::_next_id = 0;
 static ScreenService *srv;
 
 int main() {
 	// TODO might be something else than 0x3f8
-	//Caps::allocate(CapRange(0xB9,Util::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	//Caps::allocate(CapRange(0xB9,Math::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
 	//		Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	//Screen::get().clear();
@@ -91,11 +85,8 @@ int main() {
 	}
 
 	srv = new ScreenService();
-	const Hip& hip = Hip::get();
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		if(it->enabled())
-			srv->provide_on(it->id());
-	}
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+		srv->provide_on(it->id);
 	srv->reg();
 
 	while(1) {

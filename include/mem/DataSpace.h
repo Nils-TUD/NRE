@@ -45,6 +45,7 @@ class DataSpace {
 	enum RequestType {
 		CREATE,
 		JOIN,
+		SHARE,
 		DESTROY
 	};
 
