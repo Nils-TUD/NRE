@@ -14,7 +14,11 @@
 
 namespace nul {
 
+static inline OStream &operator<<(OStream &os,const DataSpaceManager &mng);
+
 class DataSpaceManager {
+	friend OStream &operator<<(OStream &os,const DataSpaceManager &mng);
+
 	enum {
 		MAX_SLOTS	= 128
 	};
@@ -80,17 +84,6 @@ public:
 		throw DataSpaceException(E_NOT_FOUND);
 	}
 
-	void write(OStream &os) {
-		os.writef("DataSpaces:\n");
-		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs) {
-				os.writef("\tSlot %zu: ",i);
-				_slots[i].ds.write(os);
-				os.writef("\n");
-			}
-		}
-	}
-
 private:
 	Slot *find(const DataSpace& ds) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
@@ -109,5 +102,14 @@ private:
 
 	Slot _slots[MAX_SLOTS];
 };
+
+static inline OStream &operator<<(OStream &os,const DataSpaceManager &mng) {
+	os << "DataSpaces:\n";
+	for(size_t i = 0; i < DataSpaceManager::MAX_SLOTS; ++i) {
+		if(mng._slots[i].refs)
+			os << "\tSlot " << i << ":" << mng._slots[i].ds << "\n";
+	}
+	return os;
+}
 
 }

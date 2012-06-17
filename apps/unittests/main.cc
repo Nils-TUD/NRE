@@ -61,10 +61,10 @@ void verbose_terminate() {
 		throw;
 	}
 	catch(const Exception& e) {
-		e.write(Log::get());
+		Serial::get() << e;
 	}
 	catch(...) {
-		Log::get().writef("Uncatched, unknown exception\n");
+		Serial::get() << "Uncatched, unknown exception\n";
 	}
 	abort();
 }
@@ -90,7 +90,7 @@ int main() {
 			testcases[i].func();
 		}
 		catch(const Exception& e) {
-			e.write(Log::get());
+			Log::get() << e;
 		}
 		Log::get().writef("Done\n");
 	}

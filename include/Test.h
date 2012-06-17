@@ -154,7 +154,7 @@ class WvTest {
 				char w = crd.value() & 0x08 ? 'w' : '-';
 				char x = crd.value() & 0x10 ? 'x' : '-';
 				OStringStream::format(
-					buf,size,"CRD(mem, 0x%x+0x%x, %c%c%c)",crd.base(),crd.size(),r,w,x
+					buf,size,"CRD(mem, 0x%x+0x%x, %c%c%c)",crd.base(),1 << (crd.order() + ExecEnv::PAGE_SHIFT),r,w,x
 				);
 				return;
 			}

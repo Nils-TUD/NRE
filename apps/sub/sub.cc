@@ -38,10 +38,10 @@ static void verbose_terminate() {
 		throw;
 	}
 	catch(const Exception& e) {
-		e.write(Serial::get());
+		Serial::get() << e;
 	}
 	catch(...) {
-		Serial::get().writef("Uncatched, unknown exception\n");
+		Serial::get() << "Uncatched, unknown exception\n";
 	}
 	abort();
 }

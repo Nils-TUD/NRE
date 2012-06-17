@@ -31,7 +31,6 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 	char *s;
 	llong n;
 	ullong u;
-	size_t size;
 	uint pad,width,base,flags;
 	bool readFlags;
 
@@ -132,17 +131,8 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 
 			/* pointer */
 			case 'p':
-				size = sizeof(uintptr_t);
 				u = va_arg(ap, uintptr_t);
-				flags |= PADZEROS;
-				/* 2 hex-digits per byte and a ':' every 2 bytes */
-				pad = size * 2 + size / 2;
-				while(size > 0) {
-					printupad((u >> (size * 8 - 16)) & 0xFFFF,16,4,flags);
-					size -= 2;
-					if(size > 0)
-						write(':');
-				}
+				printptr(u,flags);
 				break;
 
 			/* unsigned integer */
@@ -281,6 +271,18 @@ int OStream::printn(llong n) {
 		res += printn(n / 10);
 	write('0' + n % 10);
 	return res + 1;
+}
+
+void OStream::printptr(uintptr_t u,uint flags) {
+	size_t size = sizeof(uintptr_t);
+	flags |= PADZEROS;
+	/* 2 hex-digits per byte and a ':' every 2 bytes */
+	while(size > 0) {
+		printupad((u >> (size * 8 - 16)) & 0xFFFF,16,4,flags);
+		size -= 2;
+		if(size > 0)
+			write(':');
+	}
 }
 
 int OStream::puts(const char *str) {

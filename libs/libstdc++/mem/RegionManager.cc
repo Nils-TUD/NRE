@@ -16,36 +16,19 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
+#include <mem/RegionManager.h>
 #include <stream/OStream.h>
-#include <cstring>
 
 namespace nul {
 
-class OStringStream : public OStream {
-public:
-	static void format(char *dst,size_t max,const char *fmt,...) {
-		OStringStream os(dst,max);
-		va_list ap;
-		va_start(ap,fmt);
-		os.vwritef(fmt,ap);
-		va_end(ap);
+OStream &operator<<(OStream &os,const RegionManager &rm) {
+	os << "Regions:\n";
+	for(size_t i = 0; i < RegionManager::MAX_REGIONS; ++i) {
+		const RegionManager::Region *r = rm._regs + i;
+		if(r->size > 0)
+			os.writef("\t%zu: %p .. %p (%zu)\n",i,r->addr,r->addr + r->size,r->size);
 	}
-
-	explicit OStringStream(char *dst,size_t max) : OStream(),
-			_dst(dst), _max(max), _pos() {
-	}
-
-private:
-	virtual void write(char c) {
-		if(_pos < _max)
-			_dst[_pos++] = c;
-	}
-
-	char *_dst;
-	size_t _max;
-	size_t _pos;
-};
+	return os;
+}
 
 }

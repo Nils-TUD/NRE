@@ -19,6 +19,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -30,6 +31,10 @@ public:
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
 	}
 
+	Crd receive_crd() const {
+		uint order = Math::next_pow2_shift(_count);
+		return Crd(Math::round_dn<word_t>(_hotspot,1 << order),order + 1,_attr);
+	}
 	uintptr_t start() const {
 		return _start;
 	}

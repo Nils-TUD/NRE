@@ -34,6 +34,8 @@ namespace nul {
 
 class Pt;
 class UtcbFrameRef;
+OStream &operator<<(OStream &os,const Utcb &utcb);
+OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 class UtcbException : public Exception {
 public:
@@ -44,6 +46,8 @@ public:
 class UtcbFrameRef {
 	friend class Pt;
 	friend class Utcb;
+	friend OStream &operator<<(OStream &os,const Utcb &utcb);
+	friend 	OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 public:
 	enum DelFlags {
@@ -268,18 +272,6 @@ public:
 		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1),len);
 		_upos += words;
 		return *this;
-	}
-
-	void write(OStream &os) const {
-		os.writef("UtcbFrame @ %p:\n",_utcb);
-		os.writef("\tCrd: %u\n",_utcb->crd);
-		os.writef("\tCrd translate: %u\n",_utcb->crd_translate);
-		os.writef("\tUntyped: %u\n",untyped());
-		for(size_t i = 0; i < untyped(); ++i)
-			os.writef("\t\t%zu: %#x\n",i,_utcb->msg[i]);
-		os.writef("\tTyped: %u\n",typed());
-		for(size_t i = 0; i < typed() * 2; i += 2)
-			os.writef("\t\t%zu: %#x : %#x\n",i,_top[-(i + 1)],_top[-(i + 2)]);
 	}
 
 private:

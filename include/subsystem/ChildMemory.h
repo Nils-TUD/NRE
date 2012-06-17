@@ -11,7 +11,6 @@
 
 #include <arch/Types.h>
 #include <Exception.h>
-#include <stream/OStream.h>
 #include <mem/DataSpace.h>
 #include <Math.h>
 #include <Assert.h>
@@ -26,8 +25,13 @@ public:
 	}
 };
 
+class OStream;
+class ChildMemory;
+OStream &operator<<(OStream &os,const ChildMemory &cm);
+
 class ChildMemory {
 	friend void ::test_reglist();
+	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
 
 	enum {
 		MAX_REGIONS		= 128,
@@ -177,23 +181,6 @@ public:
 					nr->src = r->src + (nr->begin - r->begin);
 					r->size = addr - r->begin;
 				}
-			}
-		}
-	}
-
-	void write(OStream &os) const {
-		os.writef("Regions:\n");
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size > 0) {
-				os.writef(
-					"\t%zu: %p .. %p (%zu bytes) : %c%c%c%c, src=%p\n",i,_regs[i].begin,
-						_regs[i].begin + _regs[i].size,_regs[i].size,
-						(_regs[i].flags & R) ? 'r' : '-',
-						(_regs[i].flags & W) ? 'w' : '-',
-						(_regs[i].flags & X) ? 'x' : '-',
-						(_regs[i].flags & M) ? 'm' : '-',
-						_regs[i].src
-				);
 			}
 		}
 	}

@@ -27,9 +27,10 @@ public:
 	explicit SyscallException(ErrorCode code) throw() : Exception(code) {
 	}
 
-	virtual void write(OStream& os) const {
-		os.writef("Systemcall failed: %s (%d)\n",name(),code());
+	virtual OStream& operator<<(OStream& os) const {
+		os << "Systemcall failed: " << name() << "(" << code() << ")\n";
 		write_backtrace(os);
+		return os;
 	}
 };
 

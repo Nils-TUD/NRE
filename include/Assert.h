@@ -38,16 +38,17 @@ public:
 		return _line;
 	}
 
-	virtual void write(OStream& os) const {
-		os.writef("Assert '%s' failed in %s, line %d\n",expr(),file(),line());
-		write_backtrace(os);
-	}
-
 private:
 	const char *_expr;
 	const char *_file;
 	int _line;
 };
+
+static inline OStream &operator<<(OStream &os,const AssertException &e) {
+	os << "Assert '" << e.expr() << "' failed in " << e.file() << ", line " << e.line() << "\n";
+	e.write_backtrace(os);
+	return os;
+}
 
 }
 

@@ -85,17 +85,17 @@ void verbose_terminate() {
 		throw;
 	}
 	catch(const Exception& e) {
-		e.write(Serial::get());
+		Serial::get() << e;
 	}
 	catch(...) {
-		Serial::get().writef("Uncatched, unknown exception\n");
+		Serial::get() << "Uncatched, unknown exception\n";
 	}
 	abort();
 }
 
 static void allocate(const CapRange& caps) {
 	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,caps.attr()));
+	uf.set_receive_crd(caps.receive_crd());
 	CapRange cr = caps;
 	size_t count = cr.count();
 	while(count > 0) {
@@ -107,8 +107,12 @@ static void allocate(const CapRange& caps) {
 				// the lowest bit that's different defines how many we can map with one Crd.
 				// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
 				unsigned at_once = Math::bit_scan_forward(diff);
-				if((1 << at_once) < count)
-					cr.count(Math::min<uintptr_t>(uf.freewords() / 2,count >> at_once) << at_once);
+				if((1 << at_once) < count) {
+					// be carefull that we might have to align it to 1 << at_once first. this takes
+					// at most at_once typed items.
+					size_t min = Math::min<uintptr_t>((uf.freewords() / 2) - at_once,count >> at_once);
+					cr.count(min << at_once);
+				}
 			}
 		}
 
@@ -182,7 +186,7 @@ int main() {
 		if(it->type != Hip_mem::AVAILABLE)
 			mem.remove(it->addr + ExecEnv::PHYS_START,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
 	}
-	mem.write(Serial::get());
+	Serial::get() << mem;
 
 	// now allocate the available memory from the hypervisor
 	for(RegionManager::iterator it = mem.begin(); it != mem.end(); ++it) {
@@ -287,9 +291,7 @@ static void portal_map(capsel_t) {
 		uf >> ds;
 		uf.finish_input();
 
-		Serial::get().writef("Got DS: ");
-		ds.write(Serial::get());
-		Serial::get().writef("\n");
+		Serial::get() << "Got DS: " << ds << "\n";
 
 		bool newds = false;
 		{
@@ -315,9 +317,7 @@ static void portal_map(capsel_t) {
 			}
 		}
 
-		Serial::get().writef("Mapped DS (%s): ",newds ? "new" : "join");
-		ds.write(Serial::get());
-		Serial::get().writef("\n");
+		Serial::get() << "Mapped DS (" << (newds ? "new" : "join") << "):" << ds << "\n";
 
 		if(newds) {
 			uf.delegate(ds.sel(),0);

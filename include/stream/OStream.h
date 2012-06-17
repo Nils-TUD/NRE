@@ -43,6 +43,48 @@ public:
 	virtual ~OStream() {
 	}
 
+	OStream &operator <<(char c) {
+		write(c);
+		return *this;
+	}
+	OStream &operator <<(uchar u) {
+		return operator<<(static_cast<ullong>(u));
+	}
+	OStream &operator <<(short n) {
+		return operator<<(static_cast<llong>(n));
+	}
+	OStream &operator <<(ushort u) {
+		return operator<<(static_cast<ullong>(u));
+	}
+	OStream &operator <<(int n) {
+		return operator<<(static_cast<llong>(n));
+	}
+	OStream &operator <<(uint u) {
+		return operator<<(static_cast<ullong>(u));
+	}
+	OStream &operator <<(long n) {
+		return operator<<(static_cast<llong>(n));
+	}
+	OStream &operator <<(ulong u) {
+		return operator<<(static_cast<ullong>(u));
+	}
+	OStream &operator <<(llong n) {
+		printn(n);
+		return *this;
+	}
+	OStream &operator <<(ullong u) {
+		printu(u,10,_hexchars_small);
+		return *this;
+	}
+	OStream &operator <<(const char *str) {
+		puts(str);
+		return *this;
+	}
+	OStream &operator <<(const void *p) {
+		printptr(reinterpret_cast<uintptr_t>(p),0);
+		return *this;
+	}
+
 	void writef(const char *fmt,...) {
 		va_list ap;
 		va_start(ap,fmt);
@@ -51,14 +93,15 @@ public:
 	}
 	void vwritef(const char *fmt,va_list ap);
 
+private:
 	virtual void write(char c) = 0;
 
-private:
 	void printnpad(llong n, uint pad, uint flags);
 	void printupad(ullong u, uint base, uint pad, uint flags);
 	int printpad(int count, uint flags);
 	int printu(ullong n, uint base, char *chars);
 	int printn(llong n);
+	void printptr(uintptr_t u,uint flags);
 	int puts(const char *str);
 
 	static char _hexchars_big[];

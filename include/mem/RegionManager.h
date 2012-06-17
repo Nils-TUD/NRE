@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 #include <Exception.h>
-#include <stream/OStream.h>
+#include <Math.h>
 
 namespace nul {
 
@@ -30,7 +30,13 @@ public:
 	}
 };
 
+class OStream;
+class RegionManager;
+OStream &operator<<(OStream &os,const RegionManager &rm);
+
 class RegionManager {
+	friend OStream &operator<<(OStream &os,const RegionManager &rm);
+
 	enum {
 		MAX_REGIONS		= 64
 	};
@@ -103,18 +109,6 @@ public:
 			Region *f = get_free();
 			f->addr = addr;
 			f->size = size;
-		}
-	}
-
-	void write(OStream &os) const {
-		os.writef("Regions:\n");
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size > 0) {
-				os.writef(
-					"\t%zu: %p .. %p (%zu)\n",i,_regs[i].addr,
-						_regs[i].addr + _regs[i].size,_regs[i].size
-				);
-			}
 		}
 	}
 

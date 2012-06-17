@@ -22,12 +22,18 @@
 
 namespace nul {
 
+class Utcb;
 class UtcbFrame;
 class UtcbFrameRef;
+class OStream;
+OStream &operator<<(OStream &os,const Utcb &utcb);
+OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 class UtcbHead {
 	friend class UtcbFrame;
 	friend class UtcbFrameRef;
+	friend OStream &operator<<(OStream &os,const Utcb &utcb);
+	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 protected:
 	uint16_t top;

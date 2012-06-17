@@ -29,8 +29,11 @@ class Session;
 class DataSpace;
 template<class T>
 class Producer;
+class Log;
 
 class Serial : public OStream {
+	friend class Log;
+
 	enum {
 		COM1	= 0x3F8,
 		COM2	= 0x2E8,
@@ -56,12 +59,13 @@ public:
 	}
 
 	void init(bool use_service = true);
-	virtual void write(char c);
 
 private:
 	explicit Serial() : OStream(), _ports(0), _con(), _sess(), _ds(), _prod() {
 	}
 	~Serial();
+
+	virtual void write(char c);
 
 	Ports *_ports;
 	Connection *_con;

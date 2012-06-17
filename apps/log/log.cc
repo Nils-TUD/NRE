@@ -44,9 +44,9 @@ public:
 	void flush() {
 		static UserSm sm;
 		ScopedLock<UserSm> guard(&sm);
-		Serial::get().writef("[%d] ",id());
+		Serial::get() << "[" << id() << "] ";
 		for(size_t i = 0; i < _bufpos; ++i)
-			Serial::get().write(_buf[i]);
+			Serial::get() << _buf[i];
 		_bufpos = 0;
 	}
 

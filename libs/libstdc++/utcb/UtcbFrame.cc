@@ -16,36 +16,21 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <stream/OStream.h>
-#include <cstring>
+#include <utcb/UtcbFrame.h>
 
 namespace nul {
 
-class OStringStream : public OStream {
-public:
-	static void format(char *dst,size_t max,const char *fmt,...) {
-		OStringStream os(dst,max);
-		va_list ap;
-		va_start(ap,fmt);
-		os.vwritef(fmt,ap);
-		va_end(ap);
-	}
-
-	explicit OStringStream(char *dst,size_t max) : OStream(),
-			_dst(dst), _max(max), _pos() {
-	}
-
-private:
-	virtual void write(char c) {
-		if(_pos < _max)
-			_dst[_pos++] = c;
-	}
-
-	char *_dst;
-	size_t _max;
-	size_t _pos;
-};
+OStream &operator<<(OStream &os,const UtcbFrameRef &frm) {
+	os << "UtcbFrame @ " << frm._utcb << ":\n";
+	os << "\tDelegate: " << Crd(frm._utcb->crd) << "\n";
+	os << "\tTranslate: " << Crd(frm._utcb->crd_translate) << "\n";
+	os << "\tUntyped: " << frm.untyped() << "\n";
+	for(size_t i = 0; i < frm.untyped(); ++i)
+		os << "\t\t" << i << ": " << frm._utcb->msg[i] << "\n";
+	os << "\tTyped: " << frm.typed() << "\n";
+	for(size_t i = 0; i < frm.typed() * 2; i += 2)
+		os << "\t\t" << i << ": " << frm._top[-(i + 1)] << " " << frm._top[-(i + 2)] << "\n";
+	return os;
+}
 
 }

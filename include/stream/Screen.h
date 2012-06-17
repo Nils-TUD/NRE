@@ -14,7 +14,11 @@
 
 namespace nul {
 
+class Log;
+
 class Screen : public OStream {
+	friend class Log;
+
 	enum {
 		COLS		= 80,
 		ROWS		= 25,
@@ -29,7 +33,6 @@ public:
 		return _inst;
 	}
 
-	virtual void write(char c);
 	void clear() {
 		memset(SCREEN,0,ROWS * COLS * 2);
 		_col = _row = 0;
@@ -38,7 +41,9 @@ public:
 private:
 	Screen() : OStream(), _col(), _row() {
 	}
+
 	void move();
+	virtual void write(char c);
 
 	int _col;
 	int _row;

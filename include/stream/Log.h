@@ -30,13 +30,13 @@ public:
 		return _inst;
 	}
 
+private:
+	explicit Log() : OStream() {
+	}
+
 	virtual void write(char c) {
 		Screen::get().write(c);
 		Serial::get().write(c);
-	}
-
-private:
-	explicit Log() : OStream() {
 	}
 
 	static Log _inst;

@@ -83,9 +83,6 @@ public:
 	uint order() const {
 		return ((value() >> 7) & 0x1f);
 	}
-	word_t size() const {
-		return 1 << (order() + 12);
-	}
 	word_t base() const {
 		return value() & ~0xfff;
 	}
@@ -102,6 +99,11 @@ public:
 			Desc(v) {
 	}
 };
+
+static inline OStream &operator<<(OStream &os,const Crd &crd) {
+	os.writef("Crd[offset=%#x order=%#x attr=%#x]",crd.cap(),crd.order(),crd.attr());
+	return os;
+}
 
 /**
  * A message-transfer descriptor

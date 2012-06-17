@@ -105,11 +105,6 @@ public:
 	void share(Session &c);
 	void unmap();
 
-	void write(OStream &os) const {
-		os.writef("DataSpace[%p..%p (%zu)]: perm=%#x, type=%u, sel=%#x, umsel=%#x",
-				_virt,_virt + _size - 1,_size,_perm,_type,_sel,_unmapsel);
-	}
-
 private:
 	void create();
 	void join();
@@ -123,5 +118,11 @@ private:
 	capsel_t _sel;
 	capsel_t _unmapsel;
 };
+
+static inline OStream &operator<<(OStream &os,const DataSpace &ds) {
+	os.writef("DataSpace[%p..%p (%zu)]: perm=%#x, type=%u, sel=%#x, umsel=%#x",
+			ds.virt(),ds.virt() + ds.size() - 1,ds.size(),ds.perm(),ds.type(),ds.sel(),ds.unmapsel());
+	return os;
+}
 
 }

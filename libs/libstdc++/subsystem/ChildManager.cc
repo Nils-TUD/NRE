@@ -140,8 +140,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		}
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
-		c->reglist().write(Serial::get());
-		Serial::get().writef("\n");
+		Serial::get() << c->reglist() << "\n";
 
 		// start child; we have to put the child into the list before that
 		_childs[_child++] = c;
@@ -402,9 +401,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uf >> ds;
 		uf.finish_input();
 
-		Serial::get().writef("[CM=%s] Got DS: ",c->cmdline());
-		ds.write(Serial::get());
-		Serial::get().writef("\n");
+		Serial::get() << "[CM=" << c->cmdline() << "] Got " << ds << "\n";
 
 		// map and add can throw; ensure that the state doesn't change if something throws
 		bool newds = ds.sel() == ObjCap::INVALID;
@@ -427,9 +424,8 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
 
-		Serial::get().writef("[CM=%s] Mapped DS (%s): ",c->cmdline(),newds ? "new" : "join");
-		ds.write(Serial::get());
-		Serial::get().writef("\n");
+		Serial::get() << "[CM=" << c->cmdline() << "] Mapped DS (";
+		Serial::get() << (newds ? "new" : "join") << ") " << ds << "\n";
 
 		// build answer
 		uf.accept_delegates();
@@ -519,7 +515,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline(),pfaddr,eip,cpu,error);
-			c->reglist().write(Serial::get());
+			Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");

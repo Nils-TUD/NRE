@@ -21,21 +21,22 @@
 
 namespace nul {
 
-void Utcb::write(OStream &os) const {
-	os.writef("Utcb @ %p:\n",this);
-	os.writef("top: %u\n",top);
-	os.writef("bottom: %u\n",bottom);
-	uint16_t boff = bottom;
-	uint16_t toff = top;
+OStream &operator<<(OStream &os,const Utcb &utcb) {
+	os.writef("Utcb @ %p:\n",&utcb);
+	os.writef("top: %u\n",utcb.top);
+	os.writef("bottom: %u\n",utcb.bottom);
+	uint16_t boff = utcb.bottom;
+	uint16_t toff = utcb.top;
 	while(1) {
-		Utcb *utcb = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) + boff * sizeof(word_t));
-		UtcbFrameRef frame(utcb,toff);
-		frame.write(os);
+		Utcb *u = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(&utcb) + boff * sizeof(word_t));
+		UtcbFrameRef frame(u,toff);
+		os << frame;
 		if(boff == 0)
 			break;
 		boff = frame._utcb->bottom;
 		toff = frame._utcb->top;
 	}
+	return os;
 }
 
 }

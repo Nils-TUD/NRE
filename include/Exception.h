@@ -97,16 +97,7 @@ public:
 		return _backtrace + _count;
 	}
 
-	virtual void write(OStream& os) const {
-		os.writef("Exception: %s (%d)",name(),code());
-		if(msg())
-			os.writef(": %s",msg());
-		os.writef("\n");
-		write_backtrace(os);
-	}
-
-protected:
-	void write_backtrace(OStream& os) const {
+	void write_backtrace(OStream &os) const {
 		os.writef("Backtrace:\n");
 		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
 			os.writef("\t%p\n",*it);
@@ -119,5 +110,14 @@ private:
 	size_t _count;
 	static const char *_msgs[];
 };
+
+static inline OStream &operator<<(OStream &os,const Exception &e) {
+	os << "Exception: " << e.name() << " (" << e.code() << ")";
+	if(e.msg())
+		os << ": " << e.msg();
+	os << '\n';
+	e.write_backtrace(os);
+	return os;
+}
 
 }

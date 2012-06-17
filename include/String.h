@@ -10,6 +10,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <stream/OStream.h>
 #include <cstring>
 
 namespace nul {
@@ -57,5 +58,9 @@ private:
 	char *_str;
 	size_t _len;
 };
+
+static inline OStream &operator <<(OStream &os,const String &str) {
+	return os << str.str();
+}
 
 }

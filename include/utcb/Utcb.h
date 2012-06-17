@@ -24,13 +24,20 @@
 
 namespace nul {
 
+class Utcb;
 class UtcbFrameRef;
 class UtcbFrame;
+class OStream;
+
+OStream &operator<<(OStream &os,const Utcb &utcb);
+OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 // TODO can we provide a compiler-flag-controlled copying-version instead of top/bottom offsets?
 class Utcb : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
+	friend 	OStream &operator<<(OStream &os,const Utcb &utcb);
+	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 	enum {
 		SIZE		= ExecEnv::PAGE_SIZE,
@@ -83,8 +90,6 @@ public:
 		crd = 0;
 		crd_translate = 0;
 	}
-
-	void write(OStream &os) const;
 };
 
 }
