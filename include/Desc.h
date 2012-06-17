@@ -101,7 +101,9 @@ public:
 };
 
 static inline OStream &operator<<(OStream &os,const Crd &crd) {
-	os.writef("Crd[offset=%#x order=%#x attr=%#x]",crd.cap(),crd.order(),crd.attr());
+	static const char *types[] = {"MEM","IO","OBJ"};
+	os.writef("Crd[type=%s offset=%#x order=%#x attr=%#x]",
+			types[(crd.attr() & 0x3) - 1],crd.cap(),crd.order(),crd.attr());
 	return os;
 }
 
@@ -139,6 +141,25 @@ public:
 	}
 };
 
+static inline OStream &operator<<(OStream &os,const Mtd &mtd) {
+	static const char *flags[] = {
+		"GPR_ACDB","GPR_BSD","RSP","RIP_LEN","RFLAGS","DS_ES","FS_GS","CS_SS","TR","LDTR","GDTR",
+		"IDTR","CR","DR","SYSENTER","QUAL","CTRL","INJ","STATE","TSC"
+	};
+	os << "Mtd[";
+	bool first = true;
+	for(size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i) {
+		if(mtd.value() & (1 << i)) {
+			if(!first)
+				os << " ";
+			os << flags[i];
+			first = false;
+		}
+	}
+	os << "]";
+	return os;
+}
+
 /**
  * A quantum+period descriptor.
  */
@@ -160,5 +181,10 @@ public:
 		return value() >> 12;
 	}
 };
+
+static inline OStream &operator<<(OStream &os,const Qpd &qpd) {
+	os << "Qpd[prio=" << qpd.prio() << " quantum=" << qpd.quantum() << "]";
+	return os;
+}
 
 }

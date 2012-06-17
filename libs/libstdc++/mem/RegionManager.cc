@@ -22,7 +22,6 @@
 namespace nul {
 
 OStream &operator<<(OStream &os,const RegionManager &rm) {
-	os << "Regions:\n";
 	for(size_t i = 0; i < RegionManager::MAX_REGIONS; ++i) {
 		const RegionManager::Region *r = rm._regs + i;
 		if(r->size > 0)

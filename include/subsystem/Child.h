@@ -34,10 +34,15 @@
 
 namespace nul {
 
+class OStream;
+class Child;
 class ChildManager;
+
+OStream &operator<<(OStream &os,const Child &c);
 
 class Child {
 	friend class ChildManager;
+	friend OStream &operator<<(OStream &os,const Child &c);
 
 public:
 	const char *cmdline() const {
@@ -55,6 +60,9 @@ public:
 	RegionManager &io() {
 		return _io;
 	}
+	const RegionManager &io() const {
+		return _io;
+	}
 	uintptr_t entry() const {
 		return _entry;
 	}
@@ -68,6 +76,9 @@ public:
 		return _hip;
 	}
 	BitField<Hip::MAX_GSIS> &gsis() {
+		return _gsis;
+	}
+	const BitField<Hip::MAX_GSIS> &gsis() const {
 		return _gsis;
 	}
 

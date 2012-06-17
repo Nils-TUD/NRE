@@ -140,7 +140,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		}
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
-		Serial::get() << c->reglist() << "\n";
+		Serial::get() << *c << "\n";
 
 		// start child; we have to put the child into the list before that
 		_childs[_child++] = c;

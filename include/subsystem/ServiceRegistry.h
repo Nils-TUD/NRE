@@ -69,7 +69,6 @@ public:
 	}
 
 	const Service* reg(const Service& s) {
-		// TODO use different exception
 		if(search(s.name()))
 			throw ServiceRegistryException(E_EXISTS);
 		for(size_t i = 0; i < MAX_SERVICES; ++i) {

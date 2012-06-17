@@ -15,7 +15,16 @@
 namespace nul {
 
 template<uint BITS>
+class BitField;
+class OStream;
+template<uint BITS>
+static inline OStream &operator<<(OStream &os,const BitField<BITS> &bf);
+
+template<uint BITS>
 class BitField {
+	template<uint N>
+	friend OStream &operator<<(OStream &os,const BitField<N> &bf);
+
 	static size_t idx(uint bit) {
 		return bit / (sizeof(word_t) * 8);
 	}
@@ -54,5 +63,17 @@ public:
 private:
 	word_t _words[BITS / (sizeof(word_t) * 8)];
 };
+
+template<uint BITS>
+static inline OStream &operator<<(OStream &os,const BitField<BITS> &bf) {
+	os << "Bitfield[";
+	for(size_t i = 0; i < sizeof(bf._words) / sizeof(bf._words[0]); ++i) {
+		os.writef("%0"FMT_WORD_LEN"x",bf._words[i]);
+		if(i + 1 < sizeof(bf._words) / sizeof(bf._words[0]))
+			os << ' ';
+	}
+	os << ']';
+	return os;
+}
 
 }

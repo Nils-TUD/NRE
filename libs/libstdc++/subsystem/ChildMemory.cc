@@ -22,7 +22,6 @@
 namespace nul {
 
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
-	os << "Child regions:\n";
 	for(size_t i = 0; i < ChildMemory::MAX_REGIONS; ++i) {
 		const ChildMemory::Region *r = cm._regs + i;
 		if(r->size > 0) {

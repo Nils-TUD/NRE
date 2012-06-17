@@ -16,9 +16,18 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
+#include <subsystem/Child.h>
+#include <stream/OStream.h>
 
-#define REG(X)				e##X
-#define KERNEL_START_ADDR	0xC0000000
-#define MOD_START_ADDR		0xB0000000
-#define FMT_WORD_LEN		"4"
+namespace nul {
+
+OStream &operator<<(OStream &os,const Child &c) {
+	os << "Child[cmdline='" << c.cmdline() << "', refs=" << c.refs() << ", entry=" << c.entry() << "]:\n";
+	os << "\tGSIs: " << c.gsis() << "\n";
+	os << "\tRegions:\n" << c.reglist();
+	os << "\tPorts:\n" << c.io();
+	os << "\n";
+	return os;
+}
+
+}

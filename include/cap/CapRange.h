@@ -67,4 +67,10 @@ private:
 	uintptr_t _hotspot;
 };
 
+static inline OStream &operator<<(OStream &os,const CapRange &cr) {
+	os.writef("CapRange[start=%#x, count=%#x, hotspot=%#x, attr=%#x]",
+			cr.start(),cr.count(),cr.hotspot(),cr.attr());
+	return os;
+}
+
 }
