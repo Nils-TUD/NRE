@@ -21,8 +21,6 @@
 #include <arch/UtcbExcLayout.h>
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
-#include <stream/OStream.h>
-#include <stream/Serial.h>
 #include <Exception.h>
 #include <kobj/Ec.h>
 #include <String.h>

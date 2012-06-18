@@ -54,13 +54,13 @@ void Serial::init(bool use_service) {
 	}
 	else {
 		_ports = new Ports(port,6);
-		_ports->out<uint8_t>(LCR,0x80);		// Enable DLAB (set baud rate divisor)
-		_ports->out<uint8_t>(DLR_LO,0x01);	// Set divisor to 1 (lo byte) 115200 baud
-		_ports->out<uint8_t>(DLR_HI,0x00);	//                  (hi byte)
-		_ports->out<uint8_t>(LCR,0x03);		// 8 bits, no parity, one stop bit
-		_ports->out<uint8_t>(IER,0);			// disable interrupts
-		_ports->out<uint8_t>(FCR,7);
-		_ports->out<uint8_t>(MCR,3);
+		_ports->out<uint8_t>(0x80,LCR);		// Enable DLAB (set baud rate divisor)
+		_ports->out<uint8_t>(0x01,DLR_LO);	// Set divisor to 1 (lo byte) 115200 baud
+		_ports->out<uint8_t>(0x00,DLR_HI);	//                  (hi byte)
+		_ports->out<uint8_t>(0x03,LCR);		// 8 bits, no parity, one stop bit
+		_ports->out<uint8_t>(0,IER);			// disable interrupts
+		_ports->out<uint8_t>(7,FCR);
+		_ports->out<uint8_t>(3,MCR);
 	}
 }
 
@@ -74,7 +74,7 @@ void Serial::write(char c) {
 
 		while((_ports->in<uint8_t>(5) & 0x20) == 0)
 			;
-		_ports->out<uint8_t>(0,c);
+		_ports->out<uint8_t>(c,0);
 	}
 	else
 		_prod->produce(c);

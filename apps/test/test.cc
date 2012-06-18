@@ -26,6 +26,8 @@
 #include <service/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/Serial.h>
+#include <dev/Keyboard.h>
+#include <dev/Mouse.h>
 #include <cap/Caps.h>
 #include <Exception.h>
 
@@ -83,12 +85,29 @@ static void write(void *) {
 int main() {
 	Serial::get().init();
 
-	while(1) {
-		Serial::get().writef("Hi from test\n");
-	}
-
 	std::set_terminate(verbose_terminate);
 
+	{
+		Keyboard::keycode_t kc = 0;
+		Keyboard kb;
+		while(kc != Keyboard::VK_ESC) {
+			Keyboard::Data *data = kb.consumer()->get();
+			Serial::get().writef("Got sc=%#x kc=%#x, flags=%#x\n",data->scancode,data->keycode,data->flags);
+			kc = data->keycode;
+			kb.consumer()->next();
+		}
+	}
+
+	{
+		Mouse ms;
+		while(1) {
+			Mouse::Data *data = ms.consumer()->get();
+			Serial::get().writef("Got status=%#x (%u,%u,%u)\n",data->status,data->x,data->y,data->z);
+			ms.consumer()->next();
+		}
+	}
+
+	/*
 	{
 		Gsi kb(1);
 		for(int i = 0; i < 10; ++i) {
@@ -103,7 +122,7 @@ int main() {
 		//new Sc(new GlobalEc(write,it->id()),Qpd());
 		Sc *sc = new Sc(new GlobalEc(read,it->id),Qpd());
 		sc->start();
-	}
+	}*/
 
 	Sm sm(0);
 	sm.down();

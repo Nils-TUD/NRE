@@ -60,7 +60,7 @@ public:
 	}
 
 	template<typename T>
-	inline T in(port_t offset) {
+	inline T in(port_t offset = 0) {
 		assert(offset < _count);
 		T val;
 		asm volatile ("in %w1, %0" : "=a" (val) : "Nd" (_base + offset));
@@ -68,7 +68,7 @@ public:
 	}
 
     template<typename T>
-	inline void out(port_t offset,T val) {
+	inline void out(T val,port_t offset = 0) {
 		assert(offset < _count);
 		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
 	}

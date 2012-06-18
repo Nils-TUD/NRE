@@ -26,10 +26,10 @@ OStream &operator<<(OStream &os,const UtcbFrameRef &frm) {
 	os << "\tTranslate: " << Crd(frm._utcb->crd_translate) << "\n";
 	os << "\tUntyped: " << frm.untyped() << "\n";
 	for(size_t i = 0; i < frm.untyped(); ++i)
-		os << "\t\t" << i << ": " << frm._utcb->msg[i] << "\n";
+		os.writef("\t\t%zu: %#x\n",i,frm._utcb->msg[i]);
 	os << "\tTyped: " << frm.typed() << "\n";
 	for(size_t i = 0; i < frm.typed() * 2; i += 2)
-		os << "\t\t" << i << ": " << frm._top[-(i + 1)] << " " << frm._top[-(i + 2)] << "\n";
+		os.writef("\t\t%zu: %#x %#x\n",i,frm._top[-(i + 1)],frm._top[-(i + 2)]);
 	return os;
 }
 

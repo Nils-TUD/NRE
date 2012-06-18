@@ -38,6 +38,8 @@ class DataSpaceManager;
 
 UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
 
+// TODO the API is not nice. perhaps we should have a DataSpaceDescriptor for the properties to
+// pass them around and this class for carrying out the operations. and of course, with RAII semantics
 class DataSpace {
 	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
 	friend class DataSpaceManager;

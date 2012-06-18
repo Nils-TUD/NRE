@@ -44,9 +44,10 @@ public:
 	void flush() {
 		static UserSm sm;
 		ScopedLock<UserSm> guard(&sm);
-		Serial::get() << "[" << id() << "] ";
+		Serial::get() << "\e[0;" << _colors[id() % 8] << "m[" << id() << "] ";
 		for(size_t i = 0; i < _bufpos; ++i)
 			Serial::get() << _buf[i];
+		Serial::get() << "\e[0m";
 		_bufpos = 0;
 	}
 
@@ -58,6 +59,7 @@ protected:
 		_sc->start();
 	}
 
+private:
 	static cpu_t next_cpu() {
 		static UserSm sm;
 		ScopedLock<UserSm> guard(&sm);
@@ -68,12 +70,12 @@ protected:
 
 	static void receiver(void *);
 
-private:
 	size_t _bufpos;
 	char _buf[80];
 	GlobalEc _ec;
 	Sc *_sc;
 	Consumer<char> *_cons;
+	static const char *_colors[];
 	static CPU::iterator _cpu_it;
 };
 
@@ -88,6 +90,9 @@ private:
 	}
 };
 
+const char *LogSessionData::_colors[] = {
+	"31","32","33","34","35","36","37","30"
+};
 CPU::iterator LogSessionData::_cpu_it;
 
 static LogService *log;

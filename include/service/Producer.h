@@ -18,20 +18,23 @@ namespace nul {
 template<typename T>
 class Producer {
 public:
-	Producer(DataSpace *ds,bool init = true)
+	Producer(DataSpace *ds,bool block = true,bool init = true)
 		: _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
 		  _max((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T)),
-		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true) {
+		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _block(block) {
 		if(init) {
 			_if->rpos = 0;
 			_if->wpos = 0;
 		}
 	}
 
-	void produce(T &value) {
-		// wait until its not empty
-		while((_if->wpos + 1) % _max == _if->rpos)
+	bool produce(const T &value) {
+		// wait until its not full anymore
+		while((_if->wpos + 1) % _max == _if->rpos) {
+			if(!_block)
+				return false;
 			_empty.down();
+		}
 
 		size_t old = _if->wpos;
 		_if->buffer[_if->wpos] = value;
@@ -45,6 +48,7 @@ public:
 				// if the client closed the session, we might get here. so, just ignore it.
 			}
 		}
+		return true;
 	}
 
 private:
@@ -53,6 +57,7 @@ private:
 	size_t _max;
 	Sm _sm;
 	Sm _empty;
+	bool _block;
 };
 
 }

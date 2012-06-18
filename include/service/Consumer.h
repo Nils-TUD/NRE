@@ -59,8 +59,10 @@ public:
 	}
 	void next() {
 		_if->rpos = (_if->rpos + 1) % _max;
-		if(_if->rpos == _if->wpos)
+		if(_if->rpos == _if->wpos) {
+			Sync::memory_barrier();
 			_empty.up();
+		}
 	}
 
 private:

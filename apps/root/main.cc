@@ -95,7 +95,7 @@ void verbose_terminate() {
 
 static void allocate(const CapRange& caps) {
 	UtcbFrame uf;
-	uf.set_receive_crd(caps.receive_crd());
+	uf.set_receive_crd(Crd(0,31,Crd::MEM_ALL));
 	CapRange cr = caps;
 	size_t count = cr.count();
 	while(count > 0) {

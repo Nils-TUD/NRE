@@ -101,9 +101,9 @@ public:
 };
 
 static inline OStream &operator<<(OStream &os,const Crd &crd) {
-	static const char *types[] = {"MEM","IO","OBJ"};
-	os.writef("Crd[type=%s offset=%#x order=%#x attr=%#x]",
-			types[(crd.attr() & 0x3) - 1],crd.cap(),crd.order(),crd.attr());
+	static const char *types[] = {"NULL","MEM","IO","OBJ"};
+	os.writef("Crd[type=%s offset=%#x order=%#x attr=%#x]",types[crd.attr() & 0x3],
+			crd.cap(),crd.order(),crd.attr());
 	return os;
 }
 

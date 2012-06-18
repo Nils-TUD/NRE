@@ -96,7 +96,7 @@ public:
 	static inline T next_pow2_shift(T value) {
 		if(!value)
 			return 0;
-		if(!is_pow2<T>(value))
+		if(!is_pow2(value))
 			return bit_scan_reverse(value) + 1;
 		return bit_scan_reverse(value);
 	}
