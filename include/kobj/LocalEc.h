@@ -32,7 +32,7 @@ public:
 			: Ec(cpu,event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,INVALID,0,stackaddr) {
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,0,
-				reinterpret_cast<uintptr_t>(portal_reply_landing_spot),stack().virt()));
+				reinterpret_cast<uintptr_t>(portal_reply_landing_spot),stack()));
 	}
 	virtual ~LocalEc() {
 	}

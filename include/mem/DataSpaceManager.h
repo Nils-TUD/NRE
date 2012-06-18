@@ -14,80 +14,71 @@
 
 namespace nul {
 
-static inline OStream &operator<<(OStream &os,const DataSpaceManager &mng);
+template<class DS>
+class DataSpaceManager;
 
+template<class DS>
+static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng);
+
+template<class DS>
 class DataSpaceManager {
-	friend OStream &operator<<(OStream &os,const DataSpaceManager &mng);
+	template<class DS2>
+	friend OStream &operator<<(OStream &os,const DataSpaceManager<DS2> &mng);
 
 	enum {
 		MAX_SLOTS	= 128
 	};
 
 	struct Slot {
-		DataSpace ds;
+		DS *ds;
 		unsigned refs;
 	};
 
 public:
 	DataSpaceManager() : _slots() {
 	}
+	virtual ~DataSpaceManager() {
+	}
 
-	bool create(DataSpace& ds) {
+	const DS &create(const DataSpaceDesc& desc) {
 		Slot *slot = 0;
-		if(ds.sel() != ObjCap::INVALID) {
-			slot = find(ds);
-			if(slot) {
-				ds = slot->ds;
-				slot->refs++;
-				return false;
-			}
-		}
-
 		// TODO phys
 		slot = find_free();
-		ds.map();
-		slot->ds = ds;
+		slot->ds = new DS(desc);
 		slot->refs = 1;
-		return true;
+		return *slot->ds;
 	}
 
-	void add(DataSpace &ds,uintptr_t addr,size_t size,capsel_t caps = 0) {
-		Slot *slot = find_free();
-		ds._virt = addr;
-		ds._size = size;
-		if(caps) {
-			ds._sel = caps;
-			ds._unmapsel = caps + 1;
+	const DS &join(const DataSpaceDesc &desc,capsel_t sel) {
+		Slot *slot = find(sel);
+		if(!slot) {
+			slot = find_free();
+			slot->ds = new DS(desc,sel);
+			slot->refs = 1;
 		}
-		slot->ds = ds;
-		slot->refs = 1;
+		else
+			slot->refs++;
+		return *slot->ds;
 	}
 
-	bool join(DataSpace &ds) {
-		// note that we can't trust the dataspace-attributes here except the selector
-		Slot *slot = find(ds);
-		if(!slot)
-			return false;
-		slot->refs++;
-		ds = slot->ds;
-		return true;
-	}
-
-	DataSpace *release(capsel_t sel,bool &destroyable) {
+	void release(DataSpaceDesc &desc,capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds.unmapsel() == sel) {
-				if(--_slots[i].refs == 0)
-					destroyable = true;
-				return &_slots[i].ds;
+			if(_slots[i].refs && _slots[i].ds->unmapsel() == sel) {
+				if(--_slots[i].refs == 0) {
+					desc = _slots[i].ds->desc();
+					delete _slots[i].ds;
+					_slots[i].ds = 0;
+				}
+				return;
 			}
 		}
 		throw DataSpaceException(E_NOT_FOUND);
 	}
 
 private:
-	Slot *find(const DataSpace& ds) {
+	Slot *find(capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds.sel() == ds.sel())
+			if(_slots[i].refs && _slots[i].ds->sel() == sel)
 				return _slots + i;
 		}
 		return 0;
@@ -103,11 +94,12 @@ private:
 	Slot _slots[MAX_SLOTS];
 };
 
-static inline OStream &operator<<(OStream &os,const DataSpaceManager &mng) {
+template<class DS>
+static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng) {
 	os << "DataSpaces:\n";
-	for(size_t i = 0; i < DataSpaceManager::MAX_SLOTS; ++i) {
+	for(size_t i = 0; i < DataSpaceManager<DS>::MAX_SLOTS; ++i) {
 		if(mng._slots[i].refs)
-			os << "\tSlot " << i << ":" << mng._slots[i].ds << "\n";
+			os << "\tSlot " << i << ":" << *(mng._slots[i].ds) << "\n";
 	}
 	return os;
 }

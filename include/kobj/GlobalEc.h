@@ -44,12 +44,12 @@ public:
 	explicit GlobalEc(startup_func start,cpu_t cpu,Pd *pd = Pd::current(),uintptr_t utcb = 0)
 			: Ec(cpu,Hip::get().service_caps() * cpu,INVALID,reinterpret_cast<Utcb*>(utcb)) {
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,
-				reinterpret_cast<uintptr_t>(ec_landing_spot),stack().virt()));
+				reinterpret_cast<uintptr_t>(ec_landing_spot),stack()));
 	}
 	explicit GlobalEc(startup_func start,cpu_t cpu,capsel_t event_base,Pd *pd = Pd::current(),
 			uintptr_t utcb = 0) : Ec(cpu,event_base,INVALID,reinterpret_cast<Utcb*>(utcb)) {
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,
-				reinterpret_cast<uintptr_t>(ec_landing_spot),stack().virt()));
+				reinterpret_cast<uintptr_t>(ec_landing_spot),stack()));
 	}
 };
 

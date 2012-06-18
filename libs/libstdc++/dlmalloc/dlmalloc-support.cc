@@ -62,10 +62,10 @@ void semaphore_up(DlMallocSm *lk) {
 // Backend allocator
 
 void *mmap(void *,size_t size,int prot,int,int,off_t) {
-	DataSpace ds(size,DataSpace::ANONYMOUS,prot);
-	ds.map();
-	memset(reinterpret_cast<void*>(ds.virt()),0,ds.size());
-	return reinterpret_cast<void*>(ds.virt());
+	DataSpaceDesc desc(size,DataSpaceDesc::ANONYMOUS,prot);
+	DataSpace::create(desc);
+	memset(reinterpret_cast<void*>(desc.virt()),0,desc.size());
+	return reinterpret_cast<void*>(desc.virt());
 }
 
 int munmap(void *start,size_t size) {

@@ -134,7 +134,7 @@ private:
 	size_t _child;
 	Child *_childs[MAX_CHILDS];
 	capsel_t _portal_caps;
-	DataSpaceManager _dsm;
+	DataSpaceManager<DataSpace> _dsm;
 	ServiceRegistry _registry;
 	UserSm _sm;
 	Sm _regsm;

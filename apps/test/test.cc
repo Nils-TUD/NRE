@@ -54,8 +54,7 @@ static void verbose_terminate() {
 static void read(void *) {
 	while(1) {
 		Session sess(*con);
-		DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
-		ds.map();
+		DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 		ds.share(sess);
 		Consumer<int> c(&ds);
 		for(int x = 0; x < 100; ++x) {
@@ -63,15 +62,13 @@ static void read(void *) {
 			Serial::get().writef("[%p] Got %d\n",ds.virt(),*i);
 			c.next();
 		}
-		ds.unmap();
 	}
 }
 
 static void write(void *) {
 	Session sess(*con);
 	Pt &pt = sess.pt(CPU::current().id);
-	DataSpace ds(100,DataSpace::ANONYMOUS,DataSpace::RW);
-	ds.map();
+	DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 	ds.share(sess);
 	int *data = reinterpret_cast<int*>(ds.virt());
 	for(uint i = 0; i < 100; ++i) {
@@ -87,7 +84,7 @@ int main() {
 
 	std::set_terminate(verbose_terminate);
 
-	{
+	/*{
 		Keyboard::keycode_t kc = 0;
 		Keyboard kb;
 		while(kc != Keyboard::VK_ESC) {
@@ -96,14 +93,14 @@ int main() {
 			kc = data->keycode;
 			kb.consumer()->next();
 		}
-	}
+	}*/
 
 	{
 		Mouse ms;
 		while(1) {
-			Mouse::Data *data = ms.consumer()->get();
+			Mouse::Data *data = ms.consumer().get();
 			Serial::get().writef("Got status=%#x (%u,%u,%u)\n",data->status,data->x,data->y,data->z);
-			ms.consumer()->next();
+			ms.consumer().next();
 		}
 	}
 

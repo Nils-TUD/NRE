@@ -39,17 +39,12 @@ public:
 		uint8_t z;
 	};
 
-	Mouse() : _con("mouse"), _sess(_con), _ds(DS_SIZE,DataSpace::ANONYMOUS,DataSpace::RW), _consumer() {
-		_ds.map();
-		_consumer = new Consumer<Data>(&_ds,true);
+	Mouse() : _con("mouse"), _sess(_con), _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
+			_consumer(&_ds,true) {
 		_ds.share(_sess);
 	}
-	~Mouse() {
-		delete _consumer;
-		_ds.unmap();
-	}
 
-	Consumer<Data> *consumer() {
+	Consumer<Data> &consumer() {
 		return _consumer;
 	}
 
@@ -57,7 +52,7 @@ private:
 	Connection _con;
 	Session _sess;
 	DataSpace _ds;
-	Consumer<Data> *_consumer;
+	Consumer<Data> _consumer;
 };
 
 }

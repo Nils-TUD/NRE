@@ -20,6 +20,7 @@
 
 #include <arch/Types.h>
 #include <kobj/ObjCap.h>
+#include <mem/DataSpaceDesc.h>
 #include <stream/OStream.h>
 #include <Exception.h>
 
@@ -32,18 +33,15 @@ public:
 };
 
 class Session;
-class DataSpace;
 class UtcbFrameRef;
+template<class DS>
 class DataSpaceManager;
 
-UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
-
-// TODO the API is not nice. perhaps we should have a DataSpaceDescriptor for the properties to
-// pass them around and this class for carrying out the operations. and of course, with RAII semantics
 class DataSpace {
-	friend UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds);
+	template<class DS>
 	friend class DataSpaceManager;
 
+public:
 	enum RequestType {
 		CREATE,
 		JOIN,
@@ -51,29 +49,22 @@ class DataSpace {
 		DESTROY
 	};
 
-public:
-	enum Type {
-		ANONYMOUS,
-		LOCKED
-	};
-	enum Perm {
-		// note that this equals the values in a Crd
-		R	= 1 << 0,
-		W	= 1 << 1,
-		X	= 1 << 2,
-		RW	= R | W,
-		RX	= R | X,
-		RWX	= R | W | X,
-	};
+	static void create(DataSpaceDesc &desc,capsel_t *sel = 0,capsel_t *unmapsel = 0);
 
-	DataSpace() : _virt(), _phys(), _size(), _perm(), _type(), _sel(ObjCap::INVALID),
-			_unmapsel(ObjCap::INVALID) {
+	DataSpace(size_t size,DataSpaceDesc::Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
+		: _desc(size,type,perm,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
+		create();
 	}
-	DataSpace(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _virt(virt), _phys(phys), _size(size), _perm(perm), _type(type), _sel(ObjCap::INVALID),
-		  _unmapsel(ObjCap::INVALID) {
+	DataSpace(const DataSpaceDesc &desc) : _desc(desc), _sel(ObjCap::INVALID),
+			_unmapsel(ObjCap::INVALID) {
+		create();
+	}
+	DataSpace(const DataSpaceDesc &desc,capsel_t sel) : _desc(desc), _sel(sel),
+			_unmapsel(ObjCap::INVALID) {
+		join();
 	}
 	~DataSpace() {
+		destroy();
 	}
 
 	capsel_t sel() const {
@@ -82,41 +73,34 @@ public:
 	capsel_t unmapsel() const {
 		return _unmapsel;
 	}
-	uintptr_t virt() const {
-		return _virt;
+	const DataSpaceDesc &desc() const {
+		return _desc;
 	}
-	uintptr_t phys() const {
-		return _phys;
+	uintptr_t virt() const {
+		return _desc.virt();
 	}
 	size_t size() const {
-		return _size;
+		return _desc.size();
 	}
 	uint perm() const {
-		return _perm;
+		return _desc.perm();
 	}
-	Type type() const {
-		return _type;
+	DataSpaceDesc::Type type() const {
+		return _desc.type();
 	}
 
-	void map() {
-		if(_sel == ObjCap::INVALID)
-			create();
-		else
-			join();
-	}
 	void share(Session &c);
-	void unmap();
 
 private:
 	void create();
 	void join();
-	void handle_response(UtcbFrameRef& uf);
+	void destroy();
+	static void handle_response(UtcbFrameRef& uf);
 
-	uintptr_t _virt;
-	uintptr_t _phys;
-	size_t _size;
-	uint _perm;
-	Type _type;
+	DataSpace(const DataSpace&);
+	DataSpace& operator=(const DataSpace&);
+
+	DataSpaceDesc _desc;
 	capsel_t _sel;
 	capsel_t _unmapsel;
 };

@@ -43,12 +43,12 @@
 #include <cstring>
 #include <Assert.h>
 
+#include "mem.h"
+
 using namespace nul;
 
 EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
-PORTAL static void portal_map(capsel_t);
-PORTAL static void portal_unmap(capsel_t);
 PORTAL static void portal_get_service(capsel_t);
 PORTAL static void portal_gsi(capsel_t);
 PORTAL static void portal_io(capsel_t);
@@ -62,12 +62,9 @@ uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 // stack for LocalEc of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static Pt *hv_pt = 0;
-static UserSm *mem_sm;
-static RegionManager mem;
 static RegionManager io;
 static BitField<Hip::MAX_GSIS> gsis;
 static ChildManager *mng;
-static DataSpaceManager dsmng;
 
 // TODO clang!
 // TODO KObjects reference-counted? copying, ...
@@ -131,9 +128,6 @@ static void allocate(const CapRange& caps) {
 int main() {
 	const Hip &hip = Hip::get();
 
-	//while(1)
-	//	;
-
 	// make all I/O ports available
 	io.free(0,0xFFFF);
 
@@ -141,8 +135,8 @@ int main() {
 	CPU &cpu = CPU::current();
 	// use the local stack here since we can't map dataspaces yet
 	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack));
-	cpu.map_pt = new Pt(ec,portal_map);
-	cpu.unmap_pt = new Pt(ec,portal_unmap);
+	cpu.map_pt = new Pt(ec,RootMemory::portal_map);
+	cpu.unmap_pt = new Pt(ec,RootMemory::portal_unmap);
 	cpu.gsi_pt = new Pt(ec,portal_gsi);
 	cpu.io_pt = new Pt(ec,portal_io);
 	cpu.get_pt = new Pt(ec,portal_get_service);
@@ -154,7 +148,7 @@ int main() {
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
-	mem_sm = new UserSm();
+	RootMemory::init();
 
 	// allocate VGA memory
 	allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
@@ -180,19 +174,22 @@ int main() {
 				continue;
 			if(addr + pages > end)
 				pages = end - addr;
-			mem.free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
+			RootMemory::regions().free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
 		}
 	}
 
 	// remove all not available memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type != Hip_mem::AVAILABLE)
-			mem.remove(it->addr + ExecEnv::PHYS_START,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
+		if(it->type != Hip_mem::AVAILABLE) {
+			RootMemory::regions().remove(
+					it->addr + ExecEnv::PHYS_START,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
+		}
 	}
-	Serial::get() << mem;
+	Serial::get() << RootMemory::regions();
 
 	// now allocate the available memory from the hypervisor
-	for(RegionManager::iterator it = mem.begin(); it != mem.end(); ++it) {
+	RegionManager &regs = RootMemory::regions();
+	for(RegionManager::iterator it = regs.begin(); it != regs.end(); ++it) {
 		if(it->size) {
 			uintptr_t start = (it->addr - ExecEnv::PHYS_START) >> ExecEnv::PAGE_SHIFT;
 			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL,
@@ -213,8 +210,8 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->id != CPU::current().id) {
 			LocalEc *ec = new LocalEc(it->id);
-			it->map_pt = new Pt(ec,portal_map);
-			it->unmap_pt = new Pt(ec,portal_unmap);
+			it->map_pt = new Pt(ec,RootMemory::portal_map);
+			it->unmap_pt = new Pt(ec,RootMemory::portal_unmap);
 			it->gsi_pt = new Pt(ec,portal_gsi);
 			it->io_pt = new Pt(ec,portal_io);
 			it->get_pt = new Pt(ec,portal_get_service);
@@ -284,94 +281,6 @@ static void start_childs() {
 			Log::get().writef("Loading module @ %p .. %p\n",addr,addr + it->size);
 			mng->load(addr,it->size,aux);
 		}
-	}
-}
-
-static void portal_map(capsel_t) {
-	UtcbFrameRef uf;
-	try {
-		DataSpace ds;
-		uf >> ds;
-		uf.finish_input();
-
-		bool newds = false;
-		{
-			ScopedLock<UserSm> guard(mem_sm);
-			// is it a new dataspace?
-			if(ds.sel() == ObjCap::INVALID) {
-				size_t size = Math::round_up<size_t>(ds.size(),ExecEnv::PAGE_SIZE);
-				uintptr_t addr = mem.alloc(size);
-
-				// create a map and unmap-cap
-				CapHolder cap(2,2);
-				// TODO if this throws we might leak one sem and the memory
-				Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
-				Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
-
-				dsmng.add(ds,addr,size,cap.get());
-				newds = true;
-				cap.release();
-			}
-			else {
-				if(!dsmng.join(ds))
-					throw DataSpaceException(E_NOT_FOUND);
-			}
-		}
-
-		if(newds) {
-			uf.delegate(ds.sel(),0);
-			uf.delegate(ds.unmapsel(),1);
-		}
-		else
-			uf.delegate(ds.unmapsel());
-
-		// pass back attributes so that the caller has the correct ones
-		uf << E_SUCCESS << ds.virt() << ds.size() << ds.perm() << ds.type();
-	}
-	catch(const Exception& e) {
-		uf.clear();
-		uf << e.code();
-	}
-}
-
-static void revoke_mem(uintptr_t addr,size_t size) {
-	size_t count = size >> ExecEnv::PAGE_SHIFT;
-	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
-	while(count > 0) {
-		uint minshift = Math::minshift(start,count);
-		Syscalls::revoke(Crd(start,minshift,Crd::MEM_ALL),false);
-		start += 1 << minshift;
-		count -= 1 << minshift;
-	}
-}
-
-static void portal_unmap(capsel_t) {
-	UtcbFrameRef uf;
-	try {
-		// free mem (we can trust the dataspace properties, because its sent from ourself)
-		DataSpace ds;
-		uf >> ds;
-		uf.finish_input();
-
-		{
-			ScopedLock<UserSm> guard(mem_sm);
-			bool destroyable = false;
-			dsmng.release(ds.unmapsel(),destroyable);
-			if(destroyable) {
-				// release memory
-				revoke_mem(ds.virt(),ds.size());
-				mem.free(ds.virt(),ds.size());
-
-				// revoke caps and free selectors
-				Syscalls::revoke(Crd(ds.sel(),0,Crd::OBJ_ALL),true);
-				CapSpace::get().free(ds.sel());
-				Syscalls::revoke(Crd(ds.unmapsel(),0,Crd::OBJ_ALL),true);
-				CapSpace::get().free(ds.unmapsel());
-			}
-		}
-	}
-	catch(...) {
-		// ignore
 	}
 }
 

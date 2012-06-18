@@ -54,8 +54,10 @@ void ServiceInstance::portal(capsel_t) {
 			case Service::SHARE_DATASPACE: {
 				// the translated cap of the client identifies his session
 				capsel_t sid = uf.get_translated().cap();
-				ScopedPtr<DataSpace> ds(new DataSpace());
-				uf >> *ds.get();
+				capsel_t dssel = uf.get_delegated(0).cap();
+				DataSpaceDesc desc;
+				DataSpace::RequestType type;
+				uf >> type >> desc;
 				uf.finish_input();
 
 				{
@@ -65,14 +67,9 @@ void ServiceInstance::portal(capsel_t) {
 					if(sess->ds())
 						throw Exception(E_EXISTS);
 
-					ds->map();
-					try {
-						sess->set_ds(ds.get());
-						ds.release();
-					}
-					catch(...) {
-						ds->unmap();
-					}
+					ScopedPtr<DataSpace> ds(new DataSpace(desc,dssel));
+					sess->set_ds(ds.get());
+					ds.release();
 				}
 
 				uf.accept_delegates();

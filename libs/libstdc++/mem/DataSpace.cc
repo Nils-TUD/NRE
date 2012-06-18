@@ -27,21 +27,26 @@ void DataSpace::handle_response(UtcbFrameRef& uf) {
 		throw DataSpaceException(res);
 }
 
-void DataSpace::create() {
-	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
+void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	UtcbFrame uf;
-
 	// prepare for receiving map and unmap-cap
 	CapHolder caps(2,2);
 	uf.set_receive_crd(Crd(caps.get(),1,Crd::OBJ_ALL));
-	uf << CREATE << _virt << _phys << _size << _perm << _type;
+	uf << CREATE << desc;
 	CPU::current().map_pt->call(uf);
 
 	handle_response(uf);
-	uf >> _virt >> _size >> _perm >> _type;
-	_sel = caps.get();
-	_unmapsel = caps.get() + 1;
+	uf >> desc;
+	if(sel)
+		*sel = caps.get();
+	if(unmapsel)
+		*unmapsel = caps.get() + 1;
 	caps.release();
+}
+
+void DataSpace::create() {
+	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
+	create(_desc,&_sel,&_unmapsel);
 }
 
 void DataSpace::share(Session &c) {
@@ -50,7 +55,7 @@ void DataSpace::share(Session &c) {
 	uf.translate(c.pt(CPU::current().id).sel());
 	uf << Service::SHARE_DATASPACE;
 	// for the dataspace protocol
-	uf << SHARE << 0 << 0 << _size << _perm << _type;
+	uf << SHARE << _desc;
 	uf.delegate(_sel);
 	c.con().pt(CPU::current().id)->call(uf);
 	handle_response(uf);
@@ -64,56 +69,24 @@ void DataSpace::join() {
 	CapHolder umcap;
 	uf.set_receive_crd(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
-	uf << JOIN << _virt << _phys << _size << _perm << _type;
+	uf << JOIN << _desc;
 	CPU::current().map_pt->call(uf);
 
 	handle_response(uf);
-	uf >> _virt >> _size >> _perm >> _type;
+	uf >> _desc;
 	_unmapsel = umcap.release();
 }
 
-void DataSpace::unmap() {
+void DataSpace::destroy() {
 	assert(_sel != ObjCap::INVALID && _unmapsel != ObjCap::INVALID);
 	UtcbFrame uf;
 
 	uf.translate(_unmapsel);
-	uf << DESTROY << _virt << _phys << _size << _perm << _type;
+	uf << DESTROY << _desc;
 	CPU::current().unmap_pt->call(uf);
 
 	CapSpace::get().free(_unmapsel);
 	CapSpace::get().free(_sel);
-	_unmapsel = ObjCap::INVALID;
-	_sel = ObjCap::INVALID;
-}
-
-UtcbFrameRef &operator >>(UtcbFrameRef &uf,DataSpace &ds) {
-	DataSpace::RequestType type;
-	uf >> type >> ds._virt >> ds._phys >> ds._size >> ds._perm >> ds._type;
-	if(ds._type != DataSpace::ANONYMOUS && ds._type != DataSpace::LOCKED)
-		throw DataSpaceException(E_ARGS_INVALID);
-	if(ds._size == 0 || (ds._perm & DataSpace::RWX) == 0)
-		throw DataSpaceException(E_ARGS_INVALID);
-	// TODO check phys
-
-	try {
-		switch(type) {
-			case DataSpace::CREATE:
-				break;
-			case DataSpace::JOIN:
-				ds._sel = uf.get_translated().cap();
-				break;
-			case DataSpace::SHARE:
-				ds._sel = uf.get_delegated().cap();
-				break;
-			case DataSpace::DESTROY:
-				ds._unmapsel = uf.get_translated().cap();
-				break;
-		}
-	}
-	catch(const Exception &e) {
-		throw DataSpaceException(e.code());
-	}
-	return uf;
 }
 
 }

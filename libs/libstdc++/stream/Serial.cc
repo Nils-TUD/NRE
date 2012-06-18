@@ -30,11 +30,8 @@ Serial Serial::_inst;
 Serial::~Serial() {
 	delete _prod;
 	_prod = 0;
-	if(_ds) {
-		_ds->unmap();
-		delete _ds;
-		_ds = 0;
-	}
+	delete _ds;
+	_ds = 0;
 	delete _sess;
 	_sess = 0;
 	delete _con;
@@ -47,8 +44,7 @@ void Serial::init(bool use_service) {
 	if(use_service) {
 		_con = new Connection("log");
 		_sess = new Session(*_con);
-		_ds = new DataSpace(DS_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
-		_ds->map();
+		_ds = new DataSpace(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 		_prod = new Producer<char>(_ds,true);
 		_ds->share(*_sess);
 	}

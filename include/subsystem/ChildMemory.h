@@ -11,7 +11,7 @@
 
 #include <arch/Types.h>
 #include <Exception.h>
-#include <mem/DataSpace.h>
+#include <mem/DataSpaceDesc.h>
 #include <Math.h>
 #include <Assert.h>
 
@@ -38,8 +38,8 @@ class ChildMemory {
 		MAX_DS			= 32
 	};
 
-	struct DSInst {
-		uintptr_t addr;
+	struct DS {
+		DataSpaceDesc desc;
 		capsel_t unmapsel;
 	};
 	struct Region {
@@ -51,9 +51,9 @@ class ChildMemory {
 
 public:
 	enum Perm {
-		R	= DataSpace::R,
-		W	= DataSpace::W,
-		X	= DataSpace::X,
+		R	= DataSpaceDesc::R,
+		W	= DataSpaceDesc::W,
+		X	= DataSpaceDesc::X,
 		M	= 1 << 3,	// mapped
 		RW	= R | W,
 		RX	= R | X,
@@ -110,23 +110,23 @@ public:
 		add(addr,size,r->src + addr - r->begin,r->flags & ~M);
 	}
 
-	void add(const DataSpace& ds,uintptr_t addr,uint perm) {
+	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t ds) {
 		for(size_t i = 0; i < MAX_DS; ++i) {
 			if(_ds[i].unmapsel == 0) {
-				_ds[i].unmapsel = ds.unmapsel();
-				_ds[i].addr = addr;
-				add(addr,ds.size(),ds.virt(),perm);
+				_ds[i].unmapsel = ds;
+				_ds[i].desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),desc.virt(),addr);
+				add(addr,desc.size(),desc.virt(),perm);
 				return;
 			}
 		}
 		throw ChildMemoryException(E_CAPACITY);
 	}
 
-	void remove(const DataSpace& ds) {
+	void remove(capsel_t ds) {
 		for(size_t i = 0; i < MAX_DS; ++i) {
-			if(_ds[i].unmapsel == ds.unmapsel()) {
+			if(_ds[i].unmapsel == ds) {
 				_ds[i].unmapsel = 0;
-				remove(_ds[i].addr,ds.size());
+				remove(_ds[i].desc.virt(),_ds[i].desc.size());
 				return;
 			}
 		}
@@ -206,7 +206,7 @@ private:
 	}
 
 	Region _regs[MAX_REGIONS];
-	DSInst _ds[MAX_DS];
+	DS _ds[MAX_DS];
 };
 
 }

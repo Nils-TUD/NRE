@@ -116,27 +116,28 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 			if(ph->p_flags & PF_X)
 				perms |= ChildMemory::X;
 
-			DataSpace ds(Math::round_up<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE),DataSpace::ANONYMOUS,ChildMemory::RWX);
+			size_t dssize = Math::round_up<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE);
 			// TODO leak, if reglist().add throws
-			_dsm.create(ds);
+			const DataSpace &ds = _dsm.create(
+					DataSpaceDesc(dssize,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX));
 			// TODO actually it would be better to do that later
 			memcpy(reinterpret_cast<void*>(ds.virt()),
 					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
 			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
-			c->reglist().add(ds,ph->p_vaddr,perms);
+			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.sel());
 		}
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack().virt(),ChildMemory::RW);
+		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),ChildMemory::RW);
 		// and a HIP
 		{
-			DataSpace ds(ExecEnv::PAGE_SIZE,DataSpace::ANONYMOUS,DataSpace::RW);
-			_dsm.create(ds);
+			const DataSpace &ds = _dsm.create(
+					DataSpaceDesc(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
 			c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
 			memcpy(reinterpret_cast<void*>(ds.virt()),&Hip::get(),ExecEnv::PAGE_SIZE);
 			// TODO we need to adjust the hip
-			c->reglist().add(ds,c->hip(),DataSpace::R);
+			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.sel());
 		}
 
 		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
@@ -394,59 +395,42 @@ void ChildManager::Portals::map(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
-	DataSpace ds;
-	int state = 0;
 	try {
+		capsel_t sel;
+		DataSpaceDesc desc;
+		DataSpace::RequestType type;
 		Child *c = cm->get_child(pid);
-		uf >> ds;
+		uf >> type >> desc;
+		if(type == DataSpace::JOIN)
+			sel = uf.get_translated(0).cap();
 		uf.finish_input();
 
-		// map and add can throw; ensure that the state doesn't change if something throws
-		bool newds = ds.sel() == ObjCap::INVALID;
-		if(ds.sel() != ObjCap::INVALID) {
-			bool res = cm->_dsm.join(ds);
-			if(!res) {
-				ds.map();
-				state = 1;
-				cm->_dsm.add(ds,ds.virt(),ds.size());
-			}
-		}
-		else {
-			ds.map();
-			state = 1;
-			cm->_dsm.add(ds,ds.virt(),ds.size());
-		}
-		state = 2;
+		// create it or attach to the existing dataspace
+		const DataSpace &ds = type == DataSpace::JOIN ? cm->_dsm.join(desc,sel) : cm->_dsm.create(desc);
 
 		// add it to the regions of the child
-		uintptr_t addr = c->reglist().find_free(ds.size());
-		c->reglist().add(ds,addr,ds.perm());
+		uintptr_t addr = 0;
+		try {
+			addr = c->reglist().find_free(ds.size());
+			c->reglist().add(ds.desc(),addr,ds.perm(),ds.sel());
+		}
+		catch(...) {
+			cm->_dsm.release(desc,ds.sel());
+			throw;
+		}
 
 		// build answer
 		uf.accept_delegates();
-		if(newds) {
+		if(type == DataSpace::CREATE) {
 			uf.delegate(ds.sel(),0);
 			uf.delegate(ds.unmapsel(),1);
 		}
 		else
 			uf.delegate(ds.unmapsel());
-		uf << E_SUCCESS << addr << ds.size() << ds.perm() << ds.type();
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.virt(),addr);
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);
-		switch(state) {
-			case 2: {
-				bool destroyable = false;
-				cm->_dsm.release(ds.unmapsel(),destroyable);
-				if(!destroyable)
-					break;
-				// fall through
-			}
-
-			case 1:
-				ds.unmap();
-				break;
-		}
 		uf.clear();
 		uf << e.code();
 	}
@@ -459,20 +443,18 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		// we can't trust the dataspace properties, except unmapsel
-		DataSpace uds;
-		uf >> uds;
+		DataSpaceDesc desc;
+		DataSpace::RequestType type;
+		capsel_t sel = uf.get_translated(0).cap();
+		uf >> type >> desc;
 		uf.finish_input();
 
 		// destroy (decrease refs) the ds
-		bool destroyable = false;
-		DataSpace *ds = cm->_dsm.release(uds.unmapsel(),destroyable);
-		c->reglist().remove(*ds);
-		// we can only revoke the memory if there are no references anymore, because we revoke it
-		// from all Pds we have delegated it to.
-		if(destroyable)
-			ds->unmap();
+		cm->_dsm.release(desc,sel);
+		c->reglist().remove(sel);
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
 		// ignore
 	}
 }
@@ -512,7 +494,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 					c->cmdline(),pfaddr,eip,cpu,error);
 			Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
-			ExecEnv::collect_backtrace(c->_ec->stack().virt(),uf->rbp,addrs,32);
+			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
 			addr = addrs;
 			while(*addr != 0) {

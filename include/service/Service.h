@@ -55,10 +55,7 @@ public:
 			if(_objs[i])
 				delete _objs[i];
 		}
-		if(_ds) {
-			_ds->unmap();
-			delete _ds;
-		}
+		delete _ds;
 	}
 
 	size_t id() const {

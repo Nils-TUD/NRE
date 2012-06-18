@@ -54,10 +54,8 @@ public:
 protected:
 	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0,uintptr_t stack = 0)
 			: ObjCap(cap), _next(0), _rcu_counter(0), _utcb(utcb),
-			  _stack(ExecEnv::STACK_SIZE,DataSpace::ANONYMOUS,DataSpace::RW,0,stack),
-			  _event_base(event_base), _cpu(cpu), _tls() {
-		if(!_stack.virt())
-			_stack.map();
+			  _stack(stack == 0 ? new DataSpace(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW) : 0),
+			  _stack_addr(stack == 0 ? _stack->virt() : stack), _event_base(event_base), _cpu(cpu), _tls() {
 		if(!_utcb) {
 			// TODO
 			static UserSm sm;
@@ -70,8 +68,7 @@ protected:
 
 public:
 	virtual ~Ec() {
-		if(!_stack.virt())
-			_stack.unmap();
+		delete _stack;
 		// TODO utcb
 	}
 
@@ -79,8 +76,8 @@ public:
 		Syscalls::ec_ctrl(sel(),Syscalls::RECALL);
 	}
 
-	const DataSpace &stack() const {
-		return _stack;
+	uintptr_t stack() const {
+		return _stack_addr;
 	}
 	capsel_t event_base() const {
 		return _event_base;
@@ -115,7 +112,8 @@ private:
 	Ec *_next;
 	uint32_t _rcu_counter;
 	Utcb *_utcb;
-	DataSpace _stack;
+	DataSpace *_stack;
+	uintptr_t _stack_addr;
 	capsel_t _event_base;
 	cpu_t _cpu;
 	void *_tls[TLS_SIZE];
