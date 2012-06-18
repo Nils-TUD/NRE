@@ -32,7 +32,7 @@ class Mouse {
 	};
 
 public:
-	struct Data {
+	struct Packet {
 		uint8_t status;
 		uint8_t x;
 		uint8_t y;
@@ -44,7 +44,7 @@ public:
 		_ds.share(_sess);
 	}
 
-	Consumer<Data> &consumer() {
+	Consumer<Packet> &consumer() {
 		return _consumer;
 	}
 
@@ -52,7 +52,7 @@ private:
 	Connection _con;
 	Session _sess;
 	DataSpace _ds;
-	Consumer<Data> _consumer;
+	Consumer<Packet> _consumer;
 };
 
 }

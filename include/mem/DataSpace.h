@@ -37,6 +37,12 @@ class UtcbFrameRef;
 template<class DS>
 class DataSpaceManager;
 
+/**
+ * A dataspace object represents a piece of memory, that is automatically created at construction
+ * and destroyed at destruction. That is, the parent adds this piece of memory to the address
+ * space of your Pd and backs it with memory. By calling share() you can share this memory with
+ * a session that you have at a service.
+ */
 class DataSpace {
 	template<class DS>
 	friend class DataSpaceManager;
@@ -49,47 +55,96 @@ public:
 		DESTROY
 	};
 
+	/**
+	 * Creates a new dataspace with given properties and assigns the received capability selectors
+	 * to <sel> and <unmapsel>, if not zero. This function is only intended for the malloc-backend,
+	 * which can't use dynamic memory.
+	 */
 	static void create(DataSpaceDesc &desc,capsel_t *sel = 0,capsel_t *unmapsel = 0);
 
+	/**
+	 * Creates a new dataspace with given properties
+	 *
+	 * @throws DataSpaceException if the creation failed
+	 */
 	DataSpace(size_t size,DataSpaceDesc::Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
 		: _desc(size,type,perm,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
 		create();
 	}
+	/**
+	 * Creates a new dataspace, described by the given descriptor
+	 *
+	 * @throws DataSpaceException if the creation failed
+	 */
 	DataSpace(const DataSpaceDesc &desc) : _desc(desc), _sel(ObjCap::INVALID),
 			_unmapsel(ObjCap::INVALID) {
 		create();
 	}
+	/**
+	 * Attaches to the given dataspace, identified by the given selector
+	 *
+	 * @throws DataSpaceException if the attachment failed
+	 */
 	DataSpace(const DataSpaceDesc &desc,capsel_t sel) : _desc(desc), _sel(sel),
 			_unmapsel(ObjCap::INVALID) {
 		join();
 	}
-	~DataSpace() {
+	~DataSpace() throw() {
 		destroy();
 	}
 
+	/**
+	 * @return the selector (=identifier) of this dataspace. It always refers to a semaphore.
+	 */
 	capsel_t sel() const {
 		return _sel;
 	}
+	/**
+	 * @return the selector to unmap this dataspace. Does also refer to a semaphore
+	 */
 	capsel_t unmapsel() const {
 		return _unmapsel;
 	}
+	/**
+	 * @return the descriptor for this dataspace
+	 */
 	const DataSpaceDesc &desc() const {
 		return _desc;
 	}
+	/**
+	 * @return the virtual address
+	 */
 	uintptr_t virt() const {
 		return _desc.virt();
 	}
+	/**
+	 * @return the size in bytes
+	 */
 	size_t size() const {
 		return _desc.size();
 	}
+	/**
+	 * @return the permissions (see DataSpaceDesc::Perm)
+	 */
 	uint perm() const {
 		return _desc.perm();
 	}
+	/**
+	 * @return the type of dataspace
+	 */
 	DataSpaceDesc::Type type() const {
 		return _desc.type();
 	}
 
-	void share(Session &c);
+	/**
+	 * Shares this dataspace with the given session. That is, it passes this dataspace to the
+	 * service where you have the given session. The service will then map the dataspace for himself
+	 * and attach them to the session, so that you can communicate with the service
+	 *
+	 * @param s the session
+	 * @throws DataSpaceException if sharing failed
+	 */
+	void share(Session &s);
 
 private:
 	void create();

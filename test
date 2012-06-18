@@ -8,5 +8,5 @@ bin/apps/log provides=log
 bin/apps/keyboard provides=keyboard
 #bin/apps/screen provides=screen
 bin/apps/test
-#bin/apps/sub
+bin/apps/sub
 

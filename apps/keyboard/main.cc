@@ -73,8 +73,8 @@ private:
 };
 
 static HostKeyboard *hostkb;
-static KeyboardService<Keyboard::Data> *kbsrv;
-static KeyboardService<Mouse::Data> *mousesrv;
+static KeyboardService<Keyboard::Packet> *kbsrv;
+static KeyboardService<Mouse::Packet> *mousesrv;
 
 template<class T>
 static void broadcast(KeyboardService<T> *srv,const T &data) {
@@ -90,7 +90,7 @@ static void kbhandler(void*) {
 	while(1) {
 		gsi.down();
 
-		Keyboard::Data data;
+		Keyboard::Packet data;
 		if(hostkb->read(data))
 			broadcast(kbsrv,data);
 	}
@@ -101,7 +101,7 @@ static void mousehandler(void*) {
 	while(1) {
 		gsi.down();
 
-		Mouse::Data data;
+		Mouse::Packet data;
 		if(hostkb->read(data))
 			broadcast(mousesrv,data);
 	}
@@ -113,13 +113,13 @@ int main() {
 	hostkb = new HostKeyboard(0x60,1,true);
 	hostkb->reset();
 
-	kbsrv = new KeyboardService<Keyboard::Data>("keyboard");
+	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		kbsrv->provide_on(it->id);
 	kbsrv->reg();
 
 	if(hostkb->mouse_enabled()) {
-		mousesrv = new KeyboardService<Mouse::Data>("mouse");
+		mousesrv = new KeyboardService<Mouse::Packet>("mouse");
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 			mousesrv->provide_on(it->id);
 		mousesrv->reg();

@@ -33,7 +33,7 @@ class Keyboard {
 public:
 	typedef uint keycode_t;
 
-	struct Data {
+	struct Packet {
 		uint8_t scancode;
 		keycode_t keycode;
 		uint flags;
@@ -175,7 +175,7 @@ public:
 		_ds.share(_sess);
 	}
 
-	Consumer<Data> &consumer() {
+	Consumer<Packet> &consumer() {
 		return _consumer;
 	}
 
@@ -183,7 +183,7 @@ private:
 	Connection _con;
 	Session _sess;
 	DataSpace _ds;
-	Consumer<Data> _consumer;
+	Consumer<Packet> _consumer;
 };
 
 }

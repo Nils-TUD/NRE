@@ -90,8 +90,8 @@ public:
 	bool mouse_enabled() const {
 		return _mouse_enabled;
 	}
-	bool read(nul::Keyboard::Data &data);
-	bool read(nul::Mouse::Data &data);
+	bool read(nul::Keyboard::Packet &data);
+	bool read(nul::Mouse::Packet &data);
 	void reset();
 
 private:
@@ -110,8 +110,8 @@ private:
 	bool write_keyboard_ack(uint8_t value);
 	bool write_mouse_ack(uint8_t value);
 
-	bool handle_aux(nul::Mouse::Data &data,uint8_t byte);
-	bool handle_scancode(nul::Keyboard::Data &data,uint8_t key);
+	bool handle_aux(nul::Mouse::Packet &data,uint8_t byte);
+	bool handle_scancode(nul::Keyboard::Packet &data,uint8_t key);
 
 	static uint8_t sc1_to_sc2(uint8_t scancode);
 

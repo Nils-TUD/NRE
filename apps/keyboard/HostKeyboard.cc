@@ -302,7 +302,7 @@ bool HostKeyboard::write_mouse_ack(uint8_t value) {
 	return wait_ack();
 }
 
-bool HostKeyboard::read(Keyboard::Data &data) {
+bool HostKeyboard::read(Keyboard::Packet &data) {
 	uint8_t status;
 	while((status = _port_ctrl.in<uint8_t>()) & STATUS_DATA_AVAIL) {
 		if(status & STATUS_MOUSE_DATA_AVAIL)
@@ -314,7 +314,7 @@ bool HostKeyboard::read(Keyboard::Data &data) {
 	return false;
 }
 
-bool HostKeyboard::read(Mouse::Data &data) {
+bool HostKeyboard::read(Mouse::Packet &data) {
 	uint8_t status;
 	while((status = _port_ctrl.in<uint8_t>()) & STATUS_DATA_AVAIL) {
 		if(~status & STATUS_MOUSE_DATA_AVAIL)
@@ -326,7 +326,7 @@ bool HostKeyboard::read(Mouse::Data &data) {
 	return false;
 }
 
-bool HostKeyboard::handle_aux(Mouse::Data &data,uint8_t byte) {
+bool HostKeyboard::handle_aux(Mouse::Packet &data,uint8_t byte) {
 	switch(_mousestate) {
 		// wait for reset ack
 		case 0xfe:
@@ -377,7 +377,7 @@ bool HostKeyboard::handle_aux(Mouse::Data &data,uint8_t byte) {
 	return true;
 }
 
-bool HostKeyboard::handle_scancode(Keyboard::Data &data,uint8_t key) {
+bool HostKeyboard::handle_scancode(Keyboard::Packet &data,uint8_t key) {
 	/**
 	 * There are some bad BIOSes around which do not emulate SC2.
 	 * We have to convert from SC1.
@@ -531,10 +531,10 @@ void HostKeyboard::reset() {
 	_mousestate = 0xfe;
 
 	// consume pending characters
-	Keyboard::Data kb;
+	Keyboard::Packet kb;
 	while(read(kb))
 		;
-	Mouse::Data mouse;
+	Mouse::Packet mouse;
 	while(read(mouse))
 		;
 }

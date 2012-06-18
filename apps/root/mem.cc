@@ -51,7 +51,7 @@ RootMemory::RootDataSpace::~RootDataSpace() {
 	CapSpace::get().free(_unmapsel);
 }
 
-void *RootMemory::RootDataSpace::operator new (size_t size) throw() {
+void *RootMemory::RootDataSpace::operator new (size_t) throw() {
 	for(size_t i = 0; i < MAX_SLOTS; ++i) {
 		if(_slots[i]._desc.size() == 0)
 			return _slots + i;
@@ -82,7 +82,7 @@ void RootMemory::init() {
 void RootMemory::portal_map(capsel_t) {
 	UtcbFrameRef uf;
 	try {
-		capsel_t sel;
+		capsel_t sel = 0;
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
 		uf >> type >> desc;

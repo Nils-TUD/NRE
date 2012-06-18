@@ -84,21 +84,21 @@ int main() {
 
 	std::set_terminate(verbose_terminate);
 
-	/*{
-		Keyboard::keycode_t kc = 0;
+	{
 		Keyboard kb;
+		Keyboard::keycode_t kc = 0;
 		while(kc != Keyboard::VK_ESC) {
-			Keyboard::Data *data = kb.consumer()->get();
+			Keyboard::Packet *data = kb.consumer().get();
 			Serial::get().writef("Got sc=%#x kc=%#x, flags=%#x\n",data->scancode,data->keycode,data->flags);
 			kc = data->keycode;
-			kb.consumer()->next();
+			kb.consumer().next();
 		}
-	}*/
+	}
 
 	{
 		Mouse ms;
 		while(1) {
-			Mouse::Data *data = ms.consumer().get();
+			Mouse::Packet *data = ms.consumer().get();
 			Serial::get().writef("Got status=%#x (%u,%u,%u)\n",data->status,data->x,data->y,data->z);
 			ms.consumer().next();
 		}

@@ -396,7 +396,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
-		capsel_t sel;
+		capsel_t sel = 0;
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
 		Child *c = cm->get_child(pid);
