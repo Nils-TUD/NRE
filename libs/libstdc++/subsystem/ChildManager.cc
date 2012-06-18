@@ -511,6 +511,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			c->reglist().map(pfaddr,msize);
 			// ensure that we have the memory (if we're a subsystem this might not be true)
 			// TODO this is not sufficient, in general
+			// TODO perhaps we could find the dataspace, that belongs to this address and use this
+			// one to notify the parent that he should map it?
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
 		}
 	}
