@@ -503,9 +503,11 @@ void HostKeyboard::reset() {
 		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
 
 	// switch to our scancode set
-	if(!(write_keyboard_ack(KB_CMD_GETSET_SCANCODE) && write_keyboard_ack(2))) {
-		Serial::get().writef("kb: %s() failed at %d -- buggy keyboard?\n",__func__,__LINE__);
-		_scset1 = true;
+	if(!_scset1) {
+		if(!(write_keyboard_ack(KB_CMD_GETSET_SCANCODE) && write_keyboard_ack(2))) {
+			Serial::get().writef("kb: %s() failed at %d -- buggy keyboard?\n",__func__,__LINE__);
+			_scset1 = true;
+		}
 	}
 
 	// enable Keyboard
@@ -514,8 +516,10 @@ void HostKeyboard::reset() {
 
 	if(_mouse_enabled) {
 		// reset mouse, we enable data reporting later after the reset is completed
-		if(!write_mouse_ack(MOUSE_CMD_RESET))
-			Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		if(!write_mouse_ack(MOUSE_CMD_RESET)) {
+			Serial::get().writef("kb: %s() failed at %d\nDisabling mouse.\n",__func__,__LINE__);
+			_mouse_enabled = false;
+		}
 
 		// wait until we got response from the mice
 		if(!wait_output_full())

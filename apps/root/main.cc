@@ -131,6 +131,9 @@ static void allocate(const CapRange& caps) {
 int main() {
 	const Hip &hip = Hip::get();
 
+	//while(1)
+	//	;
+
 	// make all I/O ports available
 	io.free(0,0xFFFF);
 
@@ -291,8 +294,6 @@ static void portal_map(capsel_t) {
 		uf >> ds;
 		uf.finish_input();
 
-		Serial::get() << "Got DS: " << ds << "\n";
-
 		bool newds = false;
 		{
 			ScopedLock<UserSm> guard(mem_sm);
@@ -316,8 +317,6 @@ static void portal_map(capsel_t) {
 					throw DataSpaceException(E_NOT_FOUND);
 			}
 		}
-
-		Serial::get() << "Mapped DS (" << (newds ? "new" : "join") << "):" << ds << "\n";
 
 		if(newds) {
 			uf.delegate(ds.sel(),0);

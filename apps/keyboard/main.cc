@@ -110,20 +110,24 @@ static void mousehandler(void*) {
 int main() {
 	Serial::get().init();
 
-	hostkb = new HostKeyboard(0x60,2,true);
+	hostkb = new HostKeyboard(0x60,1,true);
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Data>("keyboard");
-	mousesrv = new KeyboardService<Mouse::Data>("mouse");
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		kbsrv->provide_on(it->id);
-		mousesrv->provide_on(it->id);
-	}
 	kbsrv->reg();
-	mousesrv->reg();
 
-	Sc *sc = new Sc(new GlobalEc(kbhandler,CPU::current().id),Qpd());
-	sc->start();
-	mousehandler(0);
+	if(hostkb->mouse_enabled()) {
+		mousesrv = new KeyboardService<Mouse::Data>("mouse");
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+			mousesrv->provide_on(it->id);
+		mousesrv->reg();
+
+		Sc *sc = new Sc(new GlobalEc(mousehandler,CPU::current().id),Qpd());
+		sc->start();
+	}
+
+	kbhandler(0);
 	return 0;
 }

@@ -401,8 +401,6 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uf >> ds;
 		uf.finish_input();
 
-		Serial::get() << "[CM=" << c->cmdline() << "] Got " << ds << "\n";
-
 		// map and add can throw; ensure that the state doesn't change if something throws
 		bool newds = ds.sel() == ObjCap::INVALID;
 		if(ds.sel() != ObjCap::INVALID) {
@@ -423,9 +421,6 @@ void ChildManager::Portals::map(capsel_t pid) {
 		// add it to the regions of the child
 		uintptr_t addr = c->reglist().find_free(ds.size());
 		c->reglist().add(ds,addr,ds.perm());
-
-		Serial::get() << "[CM=" << c->cmdline() << "] Mapped DS (";
-		Serial::get() << (newds ? "new" : "join") << ") " << ds << "\n";
 
 		// build answer
 		uf.accept_delegates();

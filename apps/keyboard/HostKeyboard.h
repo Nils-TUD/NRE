@@ -87,6 +87,9 @@ public:
 		  _wheel(false), _scset1(scset == 1), _verbose(verbose) {
 	}
 
+	bool mouse_enabled() const {
+		return _mouse_enabled;
+	}
 	bool read(nul::Keyboard::Data &data);
 	bool read(nul::Mouse::Data &data);
 	void reset();
