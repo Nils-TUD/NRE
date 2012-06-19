@@ -12,9 +12,6 @@
 
 namespace nul {
 
-Screen Screen::_inst;
-char* const Screen::SCREEN = (char* const)ExecEnv::PHYS_START + 0xB9000;
-
 void Screen::write(char c) {
 	if(c == '\0')
 		return;
@@ -25,7 +22,7 @@ void Screen::write(char c) {
 	}
 	move();
 
-	char *video = SCREEN + _row * COLS * 2 + _col * 2;
+	char *video = _screen + _row * COLS * 2 + _col * 2;
 	if(c == '\n') {
 		_row++;
 		_col = 0;
@@ -48,8 +45,8 @@ void Screen::write(char c) {
 
 void Screen::move() {
 	if(_row >= ROWS) {
-		memmove(SCREEN,SCREEN + COLS * 2,(ROWS - 1) * COLS * 2);
-		memset(SCREEN + (ROWS - 1) * COLS * 2,0,COLS * 2);
+		memmove(_screen,_screen + COLS * 2,(ROWS - 1) * COLS * 2);
+		memset(_screen + (ROWS - 1) * COLS * 2,0,COLS * 2);
 		_row--;
 	}
 }

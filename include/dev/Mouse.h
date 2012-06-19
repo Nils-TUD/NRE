@@ -27,10 +27,6 @@
 namespace nul {
 
 class Mouse {
-	enum {
-		DS_SIZE	= ExecEnv::PAGE_SIZE
-	};
-
 public:
 	struct Packet {
 		uint8_t status;
@@ -39,20 +35,28 @@ public:
 		uint8_t z;
 	};
 
-	Mouse() : _con("mouse"), _sess(_con), _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			_consumer(&_ds,true) {
-		_ds.share(_sess);
+private:
+	Mouse();
+};
+
+class MouseSession : public Session {
+	enum {
+		DS_SIZE	= ExecEnv::PAGE_SIZE
+	};
+
+public:
+	MouseSession(Connection &con) : Session(con),
+			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
+		_ds.share(*this);
 	}
 
-	Consumer<Packet> &consumer() {
+	Consumer<Mouse::Packet> &consumer() {
 		return _consumer;
 	}
 
 private:
-	Connection _con;
-	Session _sess;
 	DataSpace _ds;
-	Consumer<Packet> _consumer;
+	Consumer<Mouse::Packet> _consumer;
 };
 
 }

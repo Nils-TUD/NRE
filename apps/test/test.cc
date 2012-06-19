@@ -51,6 +51,7 @@ static void verbose_terminate() {
 	abort();
 }
 
+#if 0
 static void read(void *) {
 	while(1) {
 		Session sess(*con);
@@ -78,6 +79,7 @@ static void write(void *) {
 		pt.call(uf);
 	}
 }
+#endif
 
 int main() {
 	Serial::get().init();
@@ -85,7 +87,8 @@ int main() {
 	std::set_terminate(verbose_terminate);
 
 	{
-		Keyboard kb;
+		Connection con("keyboard");
+		KeyboardSession kb(con);
 		Keyboard::keycode_t kc = 0;
 		while(kc != Keyboard::VK_ESC) {
 			Keyboard::Packet *data = kb.consumer().get();
@@ -96,7 +99,8 @@ int main() {
 	}
 
 	{
-		Mouse ms;
+		Connection con("mouse");
+		MouseSession ms(con);
 		while(1) {
 			Mouse::Packet *data = ms.consumer().get();
 			Serial::get().writef("Got status=%#x (%u,%u,%u)\n",data->status,data->x,data->y,data->z);

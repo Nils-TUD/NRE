@@ -29,26 +29,21 @@ class Screen : public OStream {
 	};
 
 public:
-	static Screen& get() {
-		return _inst;
+	Screen(char *const addr) : OStream(), _screen(addr), _col(), _row() {
 	}
 
 	void clear() {
-		memset(SCREEN,0,ROWS * COLS * 2);
+		memset(_screen,0,ROWS * COLS * 2);
 		_col = _row = 0;
 	}
 
 private:
-	Screen() : OStream(), _col(), _row() {
-	}
-
 	void move();
 	virtual void write(char c);
 
+	char *const _screen;
 	int _col;
 	int _row;
-	static Screen _inst;
-	static char* const SCREEN;
 	static const char COLOR = BLACK << 4 | WHITE;
 };
 

@@ -36,6 +36,7 @@ _start:
 	mov		%rsp, _startup_info			# store pointer to HIP
 	lea		-0x1000(%rsp), %rdx		# UTCB is below HIP
 	mov		$_stack, %rsp				# switch to our stack
+	add		$0x1000, %rsp
 	jmp		2f
 1:
 	mov		%rcx, _startup_info			# store pointer to HIP

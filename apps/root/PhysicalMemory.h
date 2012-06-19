@@ -14,7 +14,10 @@
 #include <mem/RegionManager.h>
 #include <mem/DataSpaceManager.h>
 
-class RootMemory {
+class PhysicalMemory {
+	class RootDataSpace;
+	friend class RootDataSpace;
+
 	class RootDataSpace {
 		enum {
 			MAX_SLOTS = 256
@@ -39,8 +42,8 @@ class RootMemory {
 
 		// we have to provide custom new and delete operators since we can't use dynamic memory for
 		// building dynamic memory :)
-		static void *operator new (size_t size) throw();
-		static void operator delete (void *ptr) throw();
+		static void *operator new(size_t size) throw();
+		static void operator delete(void *ptr) throw();
 
 	private:
 		static void revoke_mem(uintptr_t addr,size_t size);
@@ -54,17 +57,22 @@ class RootMemory {
 public:
 	static void init();
 
-	static nul::RegionManager &regions() {
+	static void add(uintptr_t addr,size_t size);
+	static void remove(uintptr_t addr,size_t size);
+	static void map_all();
+
+	static const nul::RegionManager &regions() {
 		return _mem;
-	}
-	static nul::DataSpaceManager<RootDataSpace> &dataspaces() {
-		return _dsmng;
 	}
 
 	PORTAL static void portal_map(capsel_t);
 	PORTAL static void portal_unmap(capsel_t);
 
 private:
+	static bool can_map(uintptr_t phys,size_t size);
+
+	PhysicalMemory();
+
 	static nul::UserSm *_sm;
 	static nul::RegionManager _mem;
 	static nul::DataSpaceManager<RootDataSpace> _dsmng;

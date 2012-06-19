@@ -7,24 +7,34 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include "mem.h"
+#include "PhysicalMemory.h"
+#include "VirtualMemory.h"
+#include "Hypervisor.h"
 
 using namespace nul;
 
-RootMemory::RootDataSpace RootMemory::RootDataSpace::_slots[MAX_SLOTS];
-UserSm *RootMemory::_sm;
-RegionManager RootMemory::_mem;
-DataSpaceManager<RootMemory::RootDataSpace> RootMemory::_dsmng;
+PhysicalMemory::RootDataSpace PhysicalMemory::RootDataSpace::_slots[MAX_SLOTS];
+UserSm *PhysicalMemory::_sm;
+RegionManager PhysicalMemory::_mem;
+DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng;
 
-RootMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
+PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel() {
+	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
-	_desc.phys(RootMemory::regions().alloc(_desc.size()));
-	_desc.virt(_desc.phys());
+	if(_desc.phys() != 0) {
+		if(!PhysicalMemory::can_map(_desc.phys(),_desc.size()))
+			throw DataSpaceException(E_ARGS_INVALID);
+		_desc.virt(VirtualMemory::alloc(_desc.size()));
+		Hypervisor::allocate_mem(_desc.phys(),_desc.virt(),_desc.size());
+	}
+	else {
+		_desc.phys(PhysicalMemory::_mem.alloc(_desc.size()));
+		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
+	}
 
 	// create a map and unmap-cap
 	CapHolder cap(2,2);
-	// TODO if this throws we might leak one sem and the memory
 	Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
 	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
 
@@ -33,16 +43,21 @@ RootMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	cap.release();
 }
 
-RootMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
+PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
 		: _desc(), _sel(), _unmapsel() {
 	// if we want to join a dataspace that does not exist in the root-task, its always an error
 	throw DataSpaceException(E_NOT_FOUND);
 }
 
-RootMemory::RootDataSpace::~RootDataSpace() {
+PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
-	revoke_mem(_desc.phys(),_desc.size());
-	RootMemory::regions().free(_desc.phys(),_desc.size());
+	revoke_mem(_desc.virt(),_desc.size());
+	if(PhysicalMemory::can_map(_desc.phys(),_desc.size())) {
+		VirtualMemory::free(_desc.virt(),_desc.size());
+		revoke_mem(_desc.phys(),_desc.size());
+	}
+	else
+		PhysicalMemory::_mem.free(_desc.phys(),_desc.size());
 
 	// revoke caps and free selectors
 	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);
@@ -51,7 +66,7 @@ RootMemory::RootDataSpace::~RootDataSpace() {
 	CapSpace::get().free(_unmapsel);
 }
 
-void *RootMemory::RootDataSpace::operator new (size_t) throw() {
+void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {
 	for(size_t i = 0; i < MAX_SLOTS; ++i) {
 		if(_slots[i]._desc.size() == 0)
 			return _slots + i;
@@ -59,12 +74,12 @@ void *RootMemory::RootDataSpace::operator new (size_t) throw() {
 	return 0;
 }
 
-void RootMemory::RootDataSpace::operator delete (void *ptr) throw() {
+void PhysicalMemory::RootDataSpace::operator delete (void *ptr) throw() {
 	RootDataSpace *ds = static_cast<RootDataSpace*>(ptr);
 	ds->_desc.size(0);
 }
 
-void RootMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
+void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
 	size_t count = size >> ExecEnv::PAGE_SHIFT;
 	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
 	while(count > 0) {
@@ -75,11 +90,36 @@ void RootMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
 	}
 }
 
-void RootMemory::init() {
+void PhysicalMemory::init() {
 	_sm = new UserSm();
 }
 
-void RootMemory::portal_map(capsel_t) {
+void PhysicalMemory::add(uintptr_t addr,size_t size) {
+	if(VirtualMemory::alloc_ram(addr,size))
+		_mem.free(addr,size);
+}
+
+void PhysicalMemory::remove(uintptr_t addr,size_t size) {
+	_mem.remove(addr,size);
+}
+
+void PhysicalMemory::map_all() {
+	for(RegionManager::iterator it = _mem.begin(); it != _mem.end(); ++it) {
+		if(it->size)
+			Hypervisor::allocate_mem(it->addr,VirtualMemory::phys_to_virt(it->addr),it->size);
+	}
+}
+
+bool PhysicalMemory::can_map(uintptr_t phys,size_t size) {
+	const Hip &hip = Hip::get();
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+		if(Math::overlapped(phys,size,it->addr,it->size))
+			return false;
+	}
+	return true;
+}
+
+void PhysicalMemory::portal_map(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		capsel_t sel = 0;
@@ -91,7 +131,6 @@ void RootMemory::portal_map(capsel_t) {
 		uf.finish_input();
 
 		{
-			// TODO move the lock up to the RootDataSpace
 			ScopedLock<UserSm> guard(_sm);
 			const RootDataSpace &ds = type == DataSpace::JOIN ? _dsmng.join(desc,sel) : _dsmng.create(desc);
 
@@ -111,7 +150,7 @@ void RootMemory::portal_map(capsel_t) {
 	}
 }
 
-void RootMemory::portal_unmap(capsel_t) {
+void PhysicalMemory::portal_unmap(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		DataSpaceDesc desc;

@@ -29,24 +29,22 @@ namespace nul {
 
 class Session {
 public:
-	Session(Connection &con) : _pts(), _caps(get_portals(con)), _con(con) {
+	Session(Connection &con) : _caps(open(con)), _con(con) {
 	}
-	~Session() {
+	virtual ~Session() {
 		close();
-		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
-			delete _pts[i];
 		CapSpace::get().free(_caps,Hip::MAX_CPUS);
 	}
 
 	Connection &con() {
 		return _con;
 	}
-	Pt &pt(cpu_t cpu) {
-		return *_pts[cpu];
+	capsel_t caps() const {
+		return _caps;
 	}
 
 private:
-	capsel_t get_portals(Connection &con) {
+	capsel_t open(Connection &con) {
 		UtcbFrame uf;
 		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(Hip::MAX_CPUS),Crd::OBJ_ALL));
@@ -57,17 +55,12 @@ private:
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
-
-		for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
-			if(con.available_on(i))
-				_pts[i] = new Pt(caps.get() + i);
-		}
 		return caps.release();
 	}
 
 	void close() {
 		UtcbFrame uf;
-		uf.translate(pt(CPU::current().id).sel());
+		uf.translate(_caps);
 		uf << Service::CLOSE_SESSION;
 		_con.pt(CPU::current().id)->call(uf);
 	}
@@ -75,7 +68,6 @@ private:
 	Session(const Session&);
 	Session& operator=(const Session&);
 
-	Pt *_pts[Hip::MAX_CPUS];
 	capsel_t _caps;
 	Connection &_con;
 };

@@ -43,16 +43,15 @@
 #include <cstring>
 #include <Assert.h>
 
-#include "mem.h"
+#include "PhysicalMemory.h"
+#include "VirtualMemory.h"
+#include "Hypervisor.h"
 
 using namespace nul;
 
 EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
 PORTAL static void portal_get_service(capsel_t);
-PORTAL static void portal_gsi(capsel_t);
-PORTAL static void portal_io(capsel_t);
-PORTAL static void portal_hvmap(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
 static void start_childs();
@@ -61,9 +60,6 @@ static void start_childs();
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 // stack for LocalEc of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
-static Pt *hv_pt = 0;
-static RegionManager io;
-static BitField<Hip::MAX_GSIS> gsis;
 static ChildManager *mng;
 
 // TODO clang!
@@ -90,72 +86,30 @@ void verbose_terminate() {
 	abort();
 }
 
-static void allocate(const CapRange& caps) {
-	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,Crd::MEM_ALL));
-	CapRange cr = caps;
-	size_t count = cr.count();
-	while(count > 0) {
-		uf.clear();
-		if(cr.hotspot()) {
-			// if start and hotspot are different, we have to check whether it fits in the utcb
-			uintptr_t diff = cr.hotspot() ^ cr.start();
-			if(diff) {
-				// the lowest bit that's different defines how many we can map with one Crd.
-				// with bit 0, its 2^0 = 1 at once, with bit 1, 2^1 = 2 and so on.
-				unsigned at_once = Math::bit_scan_forward(diff);
-				if((1 << at_once) < count) {
-					// be carefull that we might have to align it to 1 << at_once first. this takes
-					// at most at_once typed items.
-					size_t min = Math::min<uintptr_t>((uf.freewords() / 2) - at_once,count >> at_once);
-					cr.count(min << at_once);
-				}
-			}
-		}
-
-		uf << cr;
-		hv_pt->call(uf);
-
-		// adjust start and hotspot for the next round
-		cr.start(cr.start() + cr.count());
-		if(cr.hotspot())
-			cr.hotspot(cr.hotspot() + cr.count());
-		count -= cr.count();
-		cr.count(count);
-	}
-}
-
 int main() {
 	const Hip &hip = Hip::get();
-
-	// make all I/O ports available
-	io.free(0,0xFFFF);
 
 	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
 	CPU &cpu = CPU::current();
 	// use the local stack here since we can't map dataspaces yet
 	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack));
-	cpu.map_pt = new Pt(ec,RootMemory::portal_map);
-	cpu.unmap_pt = new Pt(ec,RootMemory::portal_unmap);
-	cpu.gsi_pt = new Pt(ec,portal_gsi);
-	cpu.io_pt = new Pt(ec,portal_io);
+	cpu.map_pt = new Pt(ec,PhysicalMemory::portal_map);
+	cpu.unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
+	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
+	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
 	cpu.get_pt = new Pt(ec,portal_get_service);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.accept_translates();
-	// create the portal for allocating resources from HV for the current cpu
-	hv_pt = new Pt(ec,portal_hvmap);
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
-	RootMemory::init();
 
-	// allocate VGA memory
-	allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Crd::MEM | Crd::RW,ExecEnv::PHYS_START_PAGE + 0xB9));
+	Hypervisor::init();
+	PhysicalMemory::init();
+	VirtualMemory::init();
 
 	Serial::get().init(false);
-	Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
 	// add all available memory
@@ -164,38 +118,21 @@ int main() {
 	Serial::get().writef("Memory:\n");
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
-		if(it->type == Hip_mem::AVAILABLE) {
-			// map it to our physical memory area, but take care that it fits in there
-			uintptr_t start = it->addr >> ExecEnv::PAGE_SHIFT;
-			uintptr_t addr = start + ExecEnv::PHYS_START_PAGE;
-			uintptr_t end = ExecEnv::MOD_START >> ExecEnv::PAGE_SHIFT;
-			size_t pages = Math::blockcount<size_t>(it->size,ExecEnv::PAGE_SIZE);
-			if(addr >= end)
-				continue;
-			if(addr + pages > end)
-				pages = end - addr;
-			RootMemory::regions().free(addr << ExecEnv::PAGE_SHIFT,pages << ExecEnv::PAGE_SHIFT);
-		}
+		// FIXME: why can't we use the memory above 4G?
+		if(it->type == Hip_mem::AVAILABLE && it->addr < 0x100000000)
+			PhysicalMemory::add(it->addr,it->size);
 	}
 
 	// remove all not available memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type != Hip_mem::AVAILABLE) {
-			RootMemory::regions().remove(
-					it->addr + ExecEnv::PHYS_START,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
-		}
+		if(it->type != Hip_mem::AVAILABLE)
+			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
 	}
-	Serial::get() << RootMemory::regions();
 
 	// now allocate the available memory from the hypervisor
-	RegionManager &regs = RootMemory::regions();
-	for(RegionManager::iterator it = regs.begin(); it != regs.end(); ++it) {
-		if(it->size) {
-			uintptr_t start = (it->addr - ExecEnv::PHYS_START) >> ExecEnv::PAGE_SHIFT;
-			allocate(CapRange(start,it->size >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL,
-					it->addr >> ExecEnv::PAGE_SHIFT));
-		}
-	}
+	PhysicalMemory::map_all();
+	Serial::get() << "Virtual memory:\n" << VirtualMemory::regions();
+	Serial::get() << "Physical memory:\n" << PhysicalMemory::regions();
 
 	Serial::get().writef("CPUs:\n");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
@@ -210,10 +147,10 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->id != CPU::current().id) {
 			LocalEc *ec = new LocalEc(it->id);
-			it->map_pt = new Pt(ec,RootMemory::portal_map);
-			it->unmap_pt = new Pt(ec,RootMemory::portal_unmap);
-			it->gsi_pt = new Pt(ec,portal_gsi);
-			it->io_pt = new Pt(ec,portal_io);
+			it->map_pt = new Pt(ec,PhysicalMemory::portal_map);
+			it->unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
+			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
+			it->io_pt = new Pt(ec,Hypervisor::portal_io);
 			it->get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
@@ -225,13 +162,9 @@ int main() {
 	}
 
 	// free the io-ports again to make them usable for the log-service
-	io.free(0x3f8,6);
+	Hypervisor::release_ports(0x3f8,6);
 
 	start_childs();
-
-	/*while(1) {
-		Serial::get().writef("Hi from root\n");
-	}*/
 
 	{
 		Sm sm(0);
@@ -244,31 +177,24 @@ static void start_childs() {
 	mng = new ChildManager();
 	int i = 0;
 	const Hip &hip = Hip::get();
-	uintptr_t start = ExecEnv::MOD_START_PAGE;
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
-			if((start << ExecEnv::PAGE_SHIFT) + it->size > ExecEnv::KERNEL_START)
-				throw Exception(E_CAPACITY);
 			// map the memory of the module
-			allocate(CapRange(it->addr >> ExecEnv::PAGE_SHIFT,it->size >> ExecEnv::PAGE_SHIFT,
-					Crd::MEM_ALL,start));
-			uintptr_t addr = start << ExecEnv::PAGE_SHIFT;
-			start += it->size >> ExecEnv::PAGE_SHIFT;
+			uintptr_t virt = VirtualMemory::alloc(it->size);
+			Hypervisor::allocate_mem(it->addr,virt,it->size);
 
+			// map command-line, if necessary
 			char *aux = 0;
 			if(it->aux) {
 				// the cmdline might cross pages. so map one by one until the cmdline ends
 				bool found_end = false;
-				aux = reinterpret_cast<char*>(
-						(start << ExecEnv::PAGE_SHIFT) + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
+				uintptr_t auxvirt = VirtualMemory::alloc(it->size);
+				aux = reinterpret_cast<char*>(auxvirt + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
 				char *str = aux;
 				for(size_t x = 0; !found_end; ++x) {
-					if(((start + 1) << ExecEnv::PAGE_SHIFT) > ExecEnv::KERNEL_START)
-						throw Exception(E_CAPACITY);
-					allocate(CapRange((it->aux >> ExecEnv::PAGE_SHIFT) + x,1,Crd::MEM | Crd::RW,start));
-					start++;
-					while(reinterpret_cast<uintptr_t>(str) < (start << ExecEnv::PAGE_SHIFT)) {
+					Hypervisor::allocate_mem(it->aux,auxvirt,ExecEnv::PAGE_SIZE);
+					while(reinterpret_cast<uintptr_t>(str) < auxvirt + ExecEnv::PAGE_SIZE) {
 						if(!*str) {
 							found_end = true;
 							break;
@@ -278,8 +204,8 @@ static void start_childs() {
 				}
 			}
 
-			Log::get().writef("Loading module @ %p .. %p\n",addr,addr + it->size);
-			mng->load(addr,it->size,aux);
+			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
+			mng->load(virt,it->size,aux);
 		}
 	}
 }
@@ -300,84 +226,6 @@ static void portal_get_service(capsel_t) {
 		uf.clear();
 		uf << e.code();
 	}
-}
-
-static void portal_gsi(capsel_t) {
-	static UserSm sm;
-	UtcbFrameRef uf;
-	try {
-		uint gsi;
-		Gsi::Op op;
-		uf >> op >> gsi;
-		uf.finish_input();
-		// we can trust the values because it's send from ourself
-		assert(gsi < Hip::MAX_GSIS);
-
-		{
-			ScopedLock<UserSm> guard(&sm);
-			switch(op) {
-				case Gsi::ALLOC:
-					if(gsis.is_set(gsi))
-						throw Exception(E_EXISTS);
-					gsis.set(gsi);
-					break;
-
-				case Gsi::RELEASE:
-					gsis.clear(gsi);
-					break;
-			}
-		}
-
-		if(op == Gsi::ALLOC)
-			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
-		uf << E_SUCCESS;
-	}
-	catch(const Exception& e) {
-		uf.clear();
-		uf << e.code();
-	}
-}
-
-static void portal_io(capsel_t) {
-	static UserSm sm;
-	UtcbFrameRef uf;
-	try {
-		Ports::port_t base;
-		uint count;
-		Ports::Op op;
-		uf >> op >> base >> count;
-		uf.finish_input();
-
-		{
-			ScopedLock<UserSm> guard(&sm);
-			switch(op) {
-				case Ports::ALLOC:
-					io.alloc(base,count);
-					break;
-
-				case Ports::RELEASE:
-					io.free(base,count);
-					// TODO revoke ports
-					break;
-			}
-		}
-
-		if(op == Ports::ALLOC)
-			uf.delegate(CapRange(base,count,Crd::IO_ALL),UtcbFrame::FROM_HV);
-		uf << E_SUCCESS;
-	}
-	catch(const Exception& e) {
-		uf.clear();
-		uf << e.code();
-	}
-}
-
-static void portal_hvmap(capsel_t) {
-	UtcbFrameRef uf;
-	CapRange range;
-	uf >> range;
-	uf.clear();
-	uf.delegate(range,UtcbFrame::FROM_HV);
 }
 
 static void portal_pagefault(capsel_t) {

@@ -35,7 +35,7 @@ private:
 	}
 
 	virtual void write(char c) {
-		Screen::get().write(c);
+		//Screen::get().write(c);
 		Serial::get().write(c);
 	}
 

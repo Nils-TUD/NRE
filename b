@@ -39,6 +39,13 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+mv $build/test.dump $build/test_old.dump
+$build/tools/dump/dump $build/bin/apps/test > $build/test.dump
+if [ "`diff $build/test.dump $build/test_old.dump`" != "" ]; then
+	scons $jobs
+fi
+rm -f $build/test_old.dump
+
 cd $hvdir/build
 # adjust build-flags depending on build-type
 if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then

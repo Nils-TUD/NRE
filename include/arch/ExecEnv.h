@@ -43,12 +43,7 @@ public:
 		PAGE_SHIFT		= 12,
 		PAGE_SIZE		= 1 << PAGE_SHIFT,
 		STACK_SIZE		= PAGE_SIZE,
-		KERNEL_START	= KERNEL_START_ADDR,
-		// TODO actually, its not good to put that here, because its just valid for the root-task
-		PHYS_START		= 0x10000000,
-		PHYS_START_PAGE	= PHYS_START >> PAGE_SHIFT,
-		MOD_START		= MOD_START_ADDR,
-		MOD_START_PAGE	= MOD_START >> PAGE_SHIFT
+		KERNEL_START	= ARCH_KERNEL_START,
 	};
 
 	static inline Pd *get_current_pd() {

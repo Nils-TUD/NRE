@@ -19,6 +19,6 @@
 #pragma once
 
 #define REG(X)				e##X
-#define KERNEL_START_ADDR	0xC0000000
-#define MOD_START_ADDR		0xB0000000
+#define ARCH_REGIONS_END	0x10000000
+#define ARCH_KERNEL_START	0xC0000000
 #define FMT_WORD_LEN		"4"

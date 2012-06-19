@@ -77,11 +77,11 @@ int main() {
 
 	// allocate serial ports and VGA memory
 	Caps::allocate(CapRange(0x3F8,6,Crd::IO_ALL));
-	Caps::allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-			Crd::MEM | Crd::RW,ExecEnv::PHYS_START_PAGE + 0xB9));
+	//Caps::allocate(CapRange(0xB9,Math::blockcount<size_t>(80 * 25 * 2,ExecEnv::PAGE_SIZE),
+	//		Crd::MEM | Crd::RW,ExecEnv::PHYS_START_PAGE + 0xB9));
 
 	Serial::get().init();
-	Screen::get().clear();
+	//Screen::get().clear();
 	std::set_terminate(verbose_terminate);
 
 	for(size_t i = 0; i < sizeof(testcases) / sizeof(testcases[0]); ++i) {

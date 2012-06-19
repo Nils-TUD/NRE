@@ -26,10 +26,6 @@
 namespace nul {
 
 class Keyboard {
-	enum {
-		DS_SIZE = ExecEnv::PAGE_SIZE
-	};
-
 public:
 	typedef uint keycode_t;
 
@@ -40,7 +36,6 @@ public:
 	};
 
 	enum Keys {
-		VK_NOKEY		= 128,
 		VK_ACCENT		= 1,
 		VK_0			= 2,
 		VK_1			= 3,
@@ -170,20 +165,28 @@ public:
 		RWIN			= 1 << 19,
 	};
 
-	Keyboard() : _con("keyboard"), _sess(_con), _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			_consumer(&_ds,true) {
-		_ds.share(_sess);
+private:
+	Keyboard();
+};
+
+class KeyboardSession : public Session {
+	enum {
+		DS_SIZE = ExecEnv::PAGE_SIZE
+	};
+
+public:
+	KeyboardSession(Connection &con) : Session(con),
+			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
+		_ds.share(*this);
 	}
 
-	Consumer<Packet> &consumer() {
+	Consumer<Keyboard::Packet> &consumer() {
 		return _consumer;
 	}
 
 private:
-	Connection _con;
-	Session _sess;
 	DataSpace _ds;
-	Consumer<Packet> _consumer;
+	Consumer<Keyboard::Packet> _consumer;
 };
 
 }
