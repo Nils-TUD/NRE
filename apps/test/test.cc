@@ -26,6 +26,7 @@
 #include <service/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/Serial.h>
+#include <dev/Console.h>
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
 #include <cap/Caps.h>
@@ -66,6 +67,19 @@ static void write(void *) {
 #endif
 
 int main() {
+	Connection conscon("console");
+	ConsoleSession cons(conscon);
+	for(int y = 0; y < 80; y++) {
+		for(int x = 0; x < 25; x++) {
+			Console::Packet pk;
+			pk.x = x;
+			pk.y = y;
+			pk.character = 'A';
+			pk.color = x % 8;
+			cons.producer().produce(pk);
+		}
+	}
+
 	{
 		Connection con("keyboard");
 		KeyboardSession kb(con);

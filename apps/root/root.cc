@@ -69,6 +69,9 @@ static ChildManager *mng;
 // again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
 // what if the client has more than one Ec? I mean, the client is basically dead and we should
 // restart it (the service gets restarted as well).
+// TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
+// a separate library? or even for other things, so that we have a small, general library and some
+// more advanced libs on top of that
 
 int main() {
 	const Hip &hip = Hip::get();
