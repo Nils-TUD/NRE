@@ -15,8 +15,6 @@ namespace nul {
 
 /**
  * Holds all properties of a dataspace, which can be passed around to describe a dataspace.
- *
- * TODO change phys to origin?
  */
 class DataSpaceDesc {
 public:
@@ -37,7 +35,7 @@ public:
 	/**
 	 * Creates an empty descriptor
 	 */
-	DataSpaceDesc() : _virt(), _phys(), _size(), _perm(), _type() {
+	DataSpaceDesc() : _virt(), _origin(), _size(), _perm(), _type() {
 	}
 	/**
 	 * Creates a descriptor from given parameters
@@ -45,15 +43,15 @@ public:
 	 * @param size the size in bytes
 	 * @param type the type of memory
 	 * @param perm the permissions
-	 * @param phys the physical address to request
+	 * @param phys the physical address to request (optionally)
 	 * @param virt the virtual address, which can be used as a hint
 	 */
 	DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _virt(virt), _phys(phys), _size(size), _perm(perm), _type(type) {
+		: _virt(virt), _origin(phys), _size(size), _perm(perm), _type(type) {
 	}
 
 	/**
-	 * @return the virtual address
+	 * The virtual address
 	 */
 	uintptr_t virt() const {
 		return _virt;
@@ -63,17 +61,17 @@ public:
 	}
 
 	/**
-	 * @return the physical address
+	 * The origin of the memory
 	 */
-	uintptr_t phys() const {
-		return _phys;
+	uintptr_t origin() const {
+		return _origin;
 	}
-	void phys(uintptr_t addr) {
-		_phys = addr;
+	void origin(uintptr_t addr) {
+		_origin = addr;
 	}
 
 	/**
-	 * @return the size in bytes
+	 * The size in bytes
 	 */
 	size_t size() const {
 		return _size;
@@ -83,7 +81,7 @@ public:
 	}
 
 	/**
-	 * @return the permissions
+	 * The permissions
 	 */
 	uint perm() const {
 		return _perm;
@@ -101,7 +99,7 @@ public:
 
 private:
 	uintptr_t _virt;
-	uintptr_t _phys;
+	uintptr_t _origin;
 	size_t _size;
 	uint _perm;
 	Type _type;

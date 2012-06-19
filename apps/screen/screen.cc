@@ -68,12 +68,6 @@ private:
 static ScreenService *srv;
 
 int main() {
-	// TODO might be something else than 0x3f8
-	//Caps::allocate(CapRange(0xB9,Math::blockcount(80 * 25 * 2,ExecEnv::PAGE_SIZE),
-	//		Caps::TYPE_MEM | Caps::MEM_RW,ExecEnv::PHYS_START_PAGE + 0xB9));
-
-	//Screen::get().clear();
-	Serial::get().init();
 	Serial::get().writef("I am the screen service!!\n");
 
 	{

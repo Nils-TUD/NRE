@@ -276,6 +276,9 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 
 // TODO code-duplication; we already have that in the Session class
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
+	if(!CPU::current().get_pt)
+		throw ServiceRegistryException(E_NOT_FOUND);
+
 	UtcbFrame uf;
 	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));

@@ -33,23 +33,7 @@
 
 using namespace nul;
 
-EXTERN_C void abort();
-
 static Connection *con;
-
-static void verbose_terminate() {
-	// TODO put that in abort or something?
-	try {
-		throw;
-	}
-	catch(const Exception& e) {
-		Serial::get() << e;
-	}
-	catch(...) {
-		Serial::get() << "Uncatched, unknown exception\n";
-	}
-	abort();
-}
 
 #if 0
 static void read(void *) {
@@ -82,10 +66,6 @@ static void write(void *) {
 #endif
 
 int main() {
-	Serial::get().init();
-
-	std::set_terminate(verbose_terminate);
-
 	{
 		Connection con("keyboard");
 		KeyboardSession kb(con);

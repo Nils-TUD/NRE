@@ -49,9 +49,7 @@
 
 using namespace nul;
 
-EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
-PORTAL static void portal_get_service(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
 static void start_childs();
@@ -72,20 +70,6 @@ static ChildManager *mng;
 // what if the client has more than one Ec? I mean, the client is basically dead and we should
 // restart it (the service gets restarted as well).
 
-void verbose_terminate() {
-	// TODO put that in abort or something?
-	try {
-		throw;
-	}
-	catch(const Exception& e) {
-		Serial::get() << e;
-	}
-	catch(...) {
-		Serial::get() << "Uncatched, unknown exception\n";
-	}
-	abort();
-}
-
 int main() {
 	const Hip &hip = Hip::get();
 
@@ -97,7 +81,6 @@ int main() {
 	cpu.unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
-	cpu.get_pt = new Pt(ec,portal_get_service);
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.accept_translates();
@@ -110,7 +93,6 @@ int main() {
 	VirtualMemory::init();
 
 	Serial::get().init(false);
-	std::set_terminate(verbose_terminate);
 
 	// add all available memory
 	Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
@@ -151,7 +133,6 @@ int main() {
 			it->unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
 			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 			it->io_pt = new Pt(ec,Hypervisor::portal_io);
-			it->get_pt = new Pt(ec,portal_get_service);
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.accept_translates();
@@ -207,24 +188,6 @@ static void start_childs() {
 			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);
 		}
-	}
-}
-
-static void portal_get_service(capsel_t) {
-	UtcbFrameRef uf;
-	try {
-		String name;
-		uf >> name;
-		uf.finish_input();
-
-		const ServiceRegistry::Service* s = mng->get_service(name);
-
-		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,Crd::OBJ_ALL));
-		uf << E_SUCCESS << s->available();
-	}
-	catch(const Exception& e) {
-		uf.clear();
-		uf << e.code();
 	}
 }
 

@@ -25,6 +25,8 @@ UserSm *Hypervisor::_io_sm;
 UserSm *Hypervisor::_gsi_sm;
 
 void Hypervisor::init() {
+	// note that we have to use a different Ec for the mem-portal than for all the other portals
+	// in the root-task, because the map portal uses the mem-portal.
 	LocalEc *ec = new LocalEc(CPU::current().id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(_stack));
 	_io_sm = new UserSm();
 	_gsi_sm = new UserSm();
@@ -66,6 +68,15 @@ void Hypervisor::allocate_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 			cr.hotspot(cr.hotspot() + cr.count());
 		count -= cr.count();
 		cr.count(count);
+	}
+}
+
+void Hypervisor::revoke_io(Ports::port_t base,uint count) {
+	while(count > 0) {
+		uint minshift = Math::minshift(base,count);
+		Syscalls::revoke(Crd(base,minshift,Crd::IO_ALL),false);
+		base += 1 << minshift;
+		count -= 1 << minshift;
 	}
 }
 
@@ -123,7 +134,7 @@ void Hypervisor::portal_io(capsel_t) {
 
 			case Ports::RELEASE:
 				release_ports(base,count);
-				// TODO revoke ports
+				revoke_io(base,count);
 				break;
 		}
 

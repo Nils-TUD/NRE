@@ -108,8 +108,6 @@ static void mousehandler(void*) {
 }
 
 int main() {
-	Serial::get().init();
-
 	hostkb = new HostKeyboard(0x60,1,true);
 	hostkb->reset();
 

@@ -25,6 +25,7 @@ public:
 	static void init();
 
 	static void allocate_mem(uintptr_t phys,uintptr_t virt,size_t size);
+	static void revoke_io(nul::Ports::port_t base,uint count);
 
 	static void allocate_gsi(uint gsi) {
 		nul::ScopedLock<nul::UserSm> guard(_gsi_sm);

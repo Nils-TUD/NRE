@@ -22,17 +22,32 @@
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
+#include <Exception.h>
 #include <CPU.h>
 #include <pthread.h>
 
 using namespace nul;
 
+EXTERN_C void abort();
 EXTERN_C void dlmalloc_init();
 
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
 
 // TODO the setup-stuff is not really nice. I think we need init-priorities or something
+
+static void verbose_terminate() {
+	try {
+		throw;
+	}
+	catch(const Exception& e) {
+		Serial::get() << e;
+	}
+	catch(...) {
+		Serial::get() << "Uncatched, unknown exception\n";
+	}
+	abort();
+}
 
 void _presetup() {
 	static Pd initpd(CapSpace::INIT_PD,true);
@@ -94,4 +109,15 @@ void _setup(bool child) {
 		}
 	}
 	_startup_info.done = true;
+
+	if(child) {
+		try {
+			Serial::get().init();
+		}
+		catch(...) {
+			// ignore it when it fails. this happens for the log-service, which of course can't
+			// connect to itself ;)
+		}
+	}
+	std::set_terminate(verbose_terminate);
 }

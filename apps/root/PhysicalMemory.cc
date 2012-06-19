@@ -22,15 +22,15 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel() {
 	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
-	if(_desc.phys() != 0) {
-		if(!PhysicalMemory::can_map(_desc.phys(),_desc.size()))
+	if(_desc.origin() != 0) {
+		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size()))
 			throw DataSpaceException(E_ARGS_INVALID);
 		_desc.virt(VirtualMemory::alloc(_desc.size()));
-		Hypervisor::allocate_mem(_desc.phys(),_desc.virt(),_desc.size());
+		Hypervisor::allocate_mem(_desc.origin(),_desc.virt(),_desc.size());
 	}
 	else {
-		_desc.phys(PhysicalMemory::_mem.alloc(_desc.size()));
-		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
+		_desc.origin(PhysicalMemory::_mem.alloc(_desc.size()));
+		_desc.virt(VirtualMemory::phys_to_virt(_desc.origin()));
 	}
 
 	// create a map and unmap-cap
@@ -52,12 +52,12 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
 	revoke_mem(_desc.virt(),_desc.size());
-	if(PhysicalMemory::can_map(_desc.phys(),_desc.size())) {
+	if(PhysicalMemory::can_map(_desc.origin(),_desc.size())) {
 		VirtualMemory::free(_desc.virt(),_desc.size());
-		revoke_mem(_desc.phys(),_desc.size());
+		revoke_mem(_desc.origin(),_desc.size());
 	}
 	else
-		PhysicalMemory::_mem.free(_desc.phys(),_desc.size());
+		PhysicalMemory::_mem.free(_desc.origin(),_desc.size());
 
 	// revoke caps and free selectors
 	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);
