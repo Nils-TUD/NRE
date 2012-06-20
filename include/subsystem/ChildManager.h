@@ -73,7 +73,7 @@ public:
 		return _registry;
 	}
 
-	void load(uintptr_t addr,size_t size,const char *cmdline);
+	void load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main = 0);
 
 	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);

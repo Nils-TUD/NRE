@@ -41,7 +41,7 @@ struct TestCase {
 #define WVTEST_PRINT_INFO_BEFORE 0
 
 // Standard WVTEST API
-#define WVSTART(title) Log::get().writef("Testing \"%s\" in %s:%d:\n", title, WvTest::repo_rel_path(__FILE__), __LINE__);
+#define WVSTART(title) Log::get().writef("Testing \"%s\" in %s:%d:\n", title, WvTest::shortpath(__FILE__), __LINE__);
 #define WVPASS(cond)   ({ WvTest __t(__FILE__, __LINE__, #cond);            __t.check(cond); })
 #define WVNOVA(novaerr)({ WvTest __t(__FILE__, __LINE__, #novaerr);         __t.check_novaerr(novaerr); })
 #define WVPASSEQ(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " == " #b);     __t.check_eq((a), (b), true); })
@@ -59,7 +59,7 @@ struct TestCase {
 #define WV(code)    ({ WvTest __t(__FILE__, __LINE__, #code); __t.check(true); code; })
 #define WVSHOW(val) ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show(val); })
 #define WVSHOWHEX(val)  ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show_hex(val); })
-#define WVPRINTF(fmt, ...)  Log::get().writef("! %s:%d " fmt " ok\n", WvTest::repo_rel_path(__FILE__), __LINE__, ##__VA_ARGS__)
+#define WVPRINTF(fmt, ...)  Log::get().writef("! %s:%d " fmt " ok\n", WvTest::shortpath(__FILE__), __LINE__, ##__VA_ARGS__)
 
 class WvTest {
 	const char *file,*condstr;
@@ -89,7 +89,7 @@ class WvTest {
 	}
 
 	void save_info(const char *_file,int _line,const char *_condstr) {
-		file = repo_rel_path(_file);
+		file = _file;
 		condstr = _condstr;
 		line = _line;
 	}
@@ -190,25 +190,19 @@ class WvTest {
 	}
 
 public:
-	static const char *repo_rel_path(const char *filename) {
-		const char wvtest_h[] = __FILE__;
-		const char name_in_repo[] = "michal/include/wvtest.h";
-		size_t rel_idx = sizeof(wvtest_h) - sizeof(name_in_repo);
-
-		const char *p1 = wvtest_h + rel_idx;
-		const char *p2 = name_in_repo;
-		while(*p1 && *p2)
-			if(*p1++ != *p2++) // Unexpected location of this file
-				return filename; // Return absolute path
-
-		for(unsigned i = 0; i < rel_idx; i++)
-			if(filename[i] != wvtest_h[i])
-				rel_idx = 0;
-		// Return repo-relative path if the 'filename' is in repo.
-		return filename + rel_idx;
+	static const char *shortpath(const char *path) {
+		const char *cur = 0;
+		const char *last = path;
+		do {
+			cur = strchr(last,'/');
+			if(cur)
+				last = cur + 1;
+		}
+		while(cur);
+		return last;
 	}
 
-	WvTest(const char *file,int line,const char *condstr) : file(file), condstr(condstr), line(line) {
+	WvTest(const char *file,int line,const char *condstr) : file(shortpath(file)), condstr(condstr), line(line) {
 #if WVTEST_PRINT_INFO_BEFORE
 		// If we are sure that nothing is printed during the "check", we can
 		// print the info here, and the result after the "check" finishes.

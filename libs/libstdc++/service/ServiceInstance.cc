@@ -60,17 +60,10 @@ void ServiceInstance::portal(capsel_t) {
 				uf >> type >> desc;
 				uf.finish_input();
 
-				{
-					// ensure that just one dataspace can be shared with one session
-					SessionData *sess = s->get_session<SessionData>(sid);
-					ScopedLock<UserSm> guard(&sess->sm());
-					if(sess->ds())
-						throw Exception(E_EXISTS);
-
-					ScopedPtr<DataSpace> ds(new DataSpace(desc,dssel));
-					sess->set_ds(ds.get());
-					ds.release();
-				}
+				SessionData *sess = s->get_session<SessionData>(sid);
+				ScopedPtr<DataSpace> ds(new DataSpace(desc,dssel));
+				sess->accept_ds(ds.get());
+				ds.release();
 
 				uf.accept_delegates();
 			}

@@ -72,6 +72,7 @@ static ChildManager *mng;
 // TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
 // a separate library? or even for other things, so that we have a small, general library and some
 // more advanced libs on top of that
+// TODO what about different permissions for dataspaces? i.e. client has R, service has W
 
 int main() {
 	const Hip &hip = Hip::get();
@@ -150,10 +151,8 @@ int main() {
 
 	start_childs();
 
-	{
-		Sm sm(0);
-		sm.down();
-	}
+	Sm sm(0);
+	sm.down();
 	return 0;
 }
 
@@ -166,27 +165,9 @@ static void start_childs() {
 		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
 			uintptr_t virt = VirtualMemory::alloc(it->size);
-			Hypervisor::allocate_mem(it->addr,virt,it->size);
-
+			Hypervisor::map_mem(it->addr,virt,it->size);
 			// map command-line, if necessary
-			char *aux = 0;
-			if(it->aux) {
-				// the cmdline might cross pages. so map one by one until the cmdline ends
-				bool found_end = false;
-				uintptr_t auxvirt = VirtualMemory::alloc(it->size);
-				aux = reinterpret_cast<char*>(auxvirt + (it->aux & (ExecEnv::PAGE_SIZE - 1)));
-				char *str = aux;
-				for(size_t x = 0; !found_end; ++x) {
-					Hypervisor::allocate_mem(it->aux,auxvirt,ExecEnv::PAGE_SIZE);
-					while(reinterpret_cast<uintptr_t>(str) < auxvirt + ExecEnv::PAGE_SIZE) {
-						if(!*str) {
-							found_end = true;
-							break;
-						}
-						str++;
-					}
-				}
-			}
+			char *aux = Hypervisor::map_string(it->aux);
 
 			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);

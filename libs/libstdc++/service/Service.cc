@@ -12,7 +12,7 @@
 namespace nul {
 
 SessionData::SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func)
-	: RCUObject(), _id(id), _sm(), _caps(pts), _objs(), _ds() {
+	: RCUObject(), _id(id), _caps(pts), _objs() {
 	for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
 		LocalEc *ec = s->get_ec(i);
 		if(ec) {

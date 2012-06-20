@@ -14,6 +14,7 @@
 #include <ScopedLock.h>
 
 #include "Hypervisor.h"
+#include "VirtualMemory.h"
 
 using namespace nul;
 
@@ -35,7 +36,7 @@ void Hypervisor::init() {
 	_io.free(0,0xFFFF);
 }
 
-void Hypervisor::allocate_mem(uintptr_t phys,uintptr_t virt,size_t size) {
+void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 	UtcbFrame uf;
 	uf.set_receive_crd(Crd(0,31,Crd::MEM_ALL));
 	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SIZE);
@@ -69,6 +70,30 @@ void Hypervisor::allocate_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 		count -= cr.count();
 		cr.count(count);
 	}
+}
+
+char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
+	if(!phys)
+		return 0;
+
+	// the cmdline might cross pages. so map one by one until the cmdline ends
+	uintptr_t auxvirt = VirtualMemory::alloc(ExecEnv::PAGE_SIZE * max_pages);
+	char *vaddr = reinterpret_cast<char*>(auxvirt + (phys & (ExecEnv::PAGE_SIZE - 1)));
+	char *str = vaddr;
+	phys &= ~(ExecEnv::PAGE_SIZE - 1);
+	for(uint i = 0; i < max_pages; ++i) {
+		map_mem(phys,auxvirt,ExecEnv::PAGE_SIZE);
+		while(reinterpret_cast<uintptr_t>(str) < auxvirt + ExecEnv::PAGE_SIZE) {
+			if(!*str)
+				return vaddr;
+			str++;
+		}
+		phys += ExecEnv::PAGE_SIZE;
+		auxvirt += ExecEnv::PAGE_SIZE;
+	}
+	// ok, limit reached, so terminate it
+	*reinterpret_cast<char*>(auxvirt - 1) = '\0';
+	return vaddr;
 }
 
 void Hypervisor::revoke_io(Ports::port_t base,uint count) {

@@ -66,20 +66,51 @@ static void write(void *) {
 }
 #endif
 
-int main() {
-	Connection conscon("console");
-	ConsoleSession cons(conscon);
-	for(int y = 0; y < 80; y++) {
-		for(int x = 0; x < 25; x++) {
-			Console::Packet pk;
-			pk.x = x;
-			pk.y = y;
-			pk.character = 'A';
-			pk.color = x % 8;
-			cons.producer().produce(pk);
+struct Info {
+	ConsoleSession *sess;
+	int no;
+};
+
+static void reader(void*) {
+	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
+	while(1) {
+		Keyboard::Packet *pk = info->sess->consumer().get();
+		Serial::get().writef("%u: Got sc=%#x kc=%#x, flags=%#x\n",info->no,pk->scancode,pk->keycode,pk->flags);
+		info->sess->consumer().next();
+	}
+}
+
+static void writer(void*) {
+	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
+	while(1) {
+		for(int y = 0; y < 25; y++) {
+			for(int x = 0; x < 80; x++) {
+				Console::Packet pk;
+				pk.x = x;
+				pk.y = y;
+				pk.character = 'A' + info->no;
+				pk.color = x % 8;
+				info->sess->producer().produce(pk);
+			}
 		}
 	}
+}
 
+int main() {
+	for(int i = 0; i < 2; ++i) {
+		Connection *con = new Connection("console");
+		Info *info = new Info();
+		info->sess = new ConsoleSession(*con);
+		info->no = i;
+		Sc *sc1 = new Sc(new GlobalEc(reader,CPU::current().id),Qpd());
+		sc1->ec()->set_tls(Ec::TLS_PARAM,info);
+		sc1->start();
+		Sc *sc2 = new Sc(new GlobalEc(writer,CPU::current().id),Qpd());
+		sc2->ec()->set_tls(Ec::TLS_PARAM,info);
+		sc2->start();
+	}
+
+	/*
 	{
 		Connection con("keyboard");
 		KeyboardSession kb(con);
@@ -101,6 +132,7 @@ int main() {
 			ms.consumer().next();
 		}
 	}
+	*/
 
 	/*
 	{

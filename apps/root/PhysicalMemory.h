@@ -69,7 +69,7 @@ public:
 	PORTAL static void portal_unmap(capsel_t);
 
 private:
-	static bool can_map(uintptr_t phys,size_t size);
+	static bool can_map(uintptr_t phys,size_t size,uint &flags);
 
 	PhysicalMemory();
 

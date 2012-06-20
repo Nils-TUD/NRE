@@ -56,7 +56,7 @@ ChildManager::~ChildManager() {
 	}
 }
 
-void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
+void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
@@ -97,6 +97,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline) {
 		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),
 				0,0,c->_pd,c->_utcb);
 		c->_entry = elf->e_entry;
+		c->_main = main;
 
 		// check load segments and add them to regions
 		for(size_t i = 0; i < elf->e_phnum; i++) {
@@ -196,6 +197,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	#else
 			uf->rdi = (1 << 31) | c->_ec->cpu();
 	#endif
+			uf->rdi = c->_main;
 			uf->rcx = c->hip();
 			uf->rdx = c->utcb();
 			uf->mtd = Mtd::RIP_LEN | Mtd::RSP | Mtd::GPR_ACDB | Mtd::GPR_BSD;
@@ -475,8 +477,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		unsigned error = uf->qual[0];
 		uintptr_t eip = uf->rip;
 
-		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-				c->cmdline(),pfaddr,eip,cpu,error);
+		//Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+		//		c->cmdline(),pfaddr,eip,cpu,error);
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);

@@ -31,9 +31,10 @@ template<class T>
 class KeyboardSessionData : public SessionData {
 public:
 	KeyboardSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _prod() {
+		: SessionData(s,id,caps,func), _prod(), _ds() {
 	}
 	virtual ~KeyboardSessionData() {
+		delete _ds;
 		delete _prod;
 	}
 
@@ -42,13 +43,14 @@ public:
 	}
 
 protected:
-	virtual void set_ds(DataSpace *ds) {
-		SessionData::set_ds(ds);
+	virtual void accept_ds(DataSpace *ds) {
+		_ds = ds;
 		_prod = new Producer<T>(ds,false,false);
 	}
 
 private:
 	Producer<T> *_prod;
+	DataSpace *_ds;
 };
 
 template<class T>

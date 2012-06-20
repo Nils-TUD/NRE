@@ -55,36 +55,27 @@ public:
 			if(_objs[i])
 				delete _objs[i];
 		}
-		delete _ds;
 	}
 
 	size_t id() const {
 		return _id;
 	}
-	UserSm &sm() {
-		return _sm;
-	}
 	capsel_t caps() const {
 		return _caps;
-	}
-	const DataSpace *ds() const {
-		return _ds;
 	}
 
 protected:
 	virtual void invalidate() {
 	}
 
-	virtual void set_ds(DataSpace *ds) {
-		_ds = ds;
+	virtual void accept_ds(DataSpace *) {
+		throw ServiceException(E_ARGS_INVALID);
 	}
 
 private:
 	size_t _id;
-	UserSm _sm;
 	capsel_t _caps;
 	ObjCap *_objs[Hip::MAX_CPUS];
-	DataSpace *_ds;
 };
 
 class Service {
@@ -215,7 +206,7 @@ template<class T>
 class SessionIterator {
 	friend class Service;
 
-	SessionIterator(Service *s,size_t pos = 0) : _s(s), _pos(pos), _last(next()) {
+	SessionIterator(Service *s,ssize_t pos = 0) : _s(s), _pos(pos), _last(next()) {
 	}
 
 public:
@@ -240,6 +231,18 @@ public:
 		operator++();
 		return tmp;
 	}
+	SessionIterator& operator --() {
+		if(_pos > 0) {
+			_pos--;
+			_last = prev();
+		}
+		return *this;
+	}
+	SessionIterator operator --(int) {
+		SessionIterator<T> tmp(*this);
+		operator++();
+		return tmp;
+	}
 	bool operator ==(const SessionIterator<T>& rhs) {
 		return _pos == rhs._pos;
 	}
@@ -257,9 +260,18 @@ private:
 		}
 		return 0;
 	}
+	T *prev() {
+		while(_pos >= 0) {
+			T *t = static_cast<T*>(rcu_dereference(_s->_sessions[_pos]));
+			if(t)
+				return t;
+			_pos--;
+		}
+		return 0;
+	}
 
 	Service* _s;
-	size_t _pos;
+	ssize_t _pos;
 	T *_last;
 };
 

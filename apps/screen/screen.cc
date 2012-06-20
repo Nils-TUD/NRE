@@ -31,20 +31,28 @@ PORTAL static void portal_write(capsel_t);
 class ScreenSessionData : public SessionData {
 public:
 	ScreenSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _prod() {
+		: SessionData(s,id,caps,func), _prod(), _ds() {
+	}
+	virtual ~ScreenSessionData() {
+		delete _ds;
+		delete _prod;
 	}
 
+	DataSpace *ds() {
+		return _ds;
+	}
 	Producer<int> *prod() {
 		return _prod;
 	}
 
-	virtual void set_ds(DataSpace *ds) {
-		SessionData::set_ds(ds);
+	virtual void accept_ds(DataSpace *ds) {
+		_ds = ds;
 		_prod = new Producer<int>(ds);
 	}
 
 private:
 	Producer<int> *_prod;
+	DataSpace *_ds;
 };
 
 class ScreenService : public Service {

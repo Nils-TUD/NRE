@@ -55,7 +55,6 @@ public:
 	 */
 	const DS &create(const DataSpaceDesc& desc) {
 		Slot *slot = 0;
-		// TODO phys
 		slot = find_free();
 		slot->ds = new DS(desc);
 		slot->refs = 1;

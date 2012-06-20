@@ -128,6 +128,14 @@ int strcmp(const char *str1,const char *str2) {
 	return 1;
 }
 
+char *strchr(const char *str,int ch) {
+	while(*str) {
+		if(*str++ == ch)
+			return (char*)(str - 1);
+	}
+	return 0;
+}
+
 char *strstr(const char *str1,const char *str2) {
 	char *res = 0;
 	char *sub;

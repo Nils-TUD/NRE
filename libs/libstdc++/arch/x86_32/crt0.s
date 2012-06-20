@@ -56,9 +56,23 @@ _start:
 	push	%ebx						# 0 for root, 1 otherwise
 	call	_setup
 	add		$4, %esp
-	# finally, call main
-	call	main
 
+	# test whether we're root
+	test	%ebx, %ebx
+	jnz		1f
+	# yes, so call main
+	call	main
+1:
+	# check whether we should call a different function
+	test	%edi,%edi
+	jnz		2f
+	call	main
+	jmp		3f
+2:
+	call	*%edi
+
+3:
+	# exit
 	push	%eax
 	call	exit
 	# just to be sure

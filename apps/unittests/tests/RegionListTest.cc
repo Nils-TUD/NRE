@@ -17,6 +17,7 @@
  */
 
 #include <subsystem/ChildMemory.h>
+
 #include "RegionListTest.h"
 
 using namespace nul;

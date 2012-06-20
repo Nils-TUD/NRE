@@ -94,5 +94,9 @@ case "$1" in
 		BUILD_DIR="$PWD/$build" $build/tools/debug ./test $build/bin/apps/${1:4}
 		kill `pgrep qemu`
 		;;
+	dbgt=*)
+		BUILD_DIR="$PWD/$build" $build/tools/debug ./unittests $build/bin/apps/${1:5}
+		kill `pgrep qemu`
+		;;
 esac
 

@@ -84,7 +84,7 @@ public:
 
 private:
 	Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
-			_pts(), _ptcount(), _regs(), _io(), _entry(), _stack(), _utcb(), _hip(), _gsis(),
+			_pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(), _gsis(),
 			_gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
 	}
 	~Child() {
@@ -145,6 +145,7 @@ private:
 	ChildMemory _regs;
 	RegionManager _io;
 	uintptr_t _entry;
+	uintptr_t _main;
 	uintptr_t _stack;
 	uintptr_t _utcb;
 	uintptr_t _hip;

@@ -22,11 +22,13 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel() {
 	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
+	uint flags = _desc.perm();
 	if(_desc.origin() != 0) {
-		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size()))
+		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags))
 			throw DataSpaceException(E_ARGS_INVALID);
+		_desc.perm(flags);
 		_desc.virt(VirtualMemory::alloc(_desc.size()));
-		Hypervisor::allocate_mem(_desc.origin(),_desc.virt(),_desc.size());
+		Hypervisor::map_mem(_desc.origin(),_desc.virt(),_desc.size());
 	}
 	else {
 		_desc.origin(PhysicalMemory::_mem.alloc(_desc.size()));
@@ -52,7 +54,8 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
 	revoke_mem(_desc.virt(),_desc.size());
-	if(PhysicalMemory::can_map(_desc.origin(),_desc.size())) {
+	uint flags = _desc.perm();
+	if(PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags)) {
 		VirtualMemory::free(_desc.virt(),_desc.size());
 		revoke_mem(_desc.origin(),_desc.size());
 	}
@@ -106,12 +109,22 @@ void PhysicalMemory::remove(uintptr_t addr,size_t size) {
 void PhysicalMemory::map_all() {
 	for(RegionManager::iterator it = _mem.begin(); it != _mem.end(); ++it) {
 		if(it->size)
-			Hypervisor::allocate_mem(it->addr,VirtualMemory::phys_to_virt(it->addr),it->size);
+			Hypervisor::map_mem(it->addr,VirtualMemory::phys_to_virt(it->addr),it->size);
 	}
 }
 
-bool PhysicalMemory::can_map(uintptr_t phys,size_t size) {
+bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	const Hip &hip = Hip::get();
+	// check if its a module
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+		if(it->type == Hip_mem::MB_MODULE && phys >= it->addr &&
+				phys + size <= Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE)) {
+			// don't give the user write-access here
+			flags = DataSpaceDesc::R;
+			return true;
+		}
+	}
+	// check if the child wants to request none-device-memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		if(Math::overlapped(phys,size,it->addr,it->size))
 			return false;

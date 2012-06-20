@@ -19,10 +19,11 @@ class LogSessionData : public SessionData {
 public:
 	LogSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,id,caps,func), _bufpos(0), _buf(),
-		  _ec(receiver,next_cpu()), _sc(), _cons() {
+		  _ec(receiver,next_cpu()), _sc(), _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
+		delete _ds;
 		delete _cons;
 		delete _sc;
 	}
@@ -37,8 +38,11 @@ public:
 	}
 
 	bool put(char c) {
-		if(_bufpos < sizeof(_buf))
+		if(_bufpos < sizeof(_buf) - 1)
 			_buf[_bufpos++] = c;
+		// explicit newline
+		if(_bufpos == sizeof(_buf) - 1)
+			_buf[_bufpos++] = '\n';
 		return c == '\n' || _bufpos == sizeof(_buf);
 	}
 	void flush() {
@@ -52,8 +56,8 @@ public:
 	}
 
 protected:
-	virtual void set_ds(DataSpace *ds) {
-		SessionData::set_ds(ds);
+	virtual void accept_ds(DataSpace *ds) {
+		_ds = ds;
 		_cons = new Consumer<char>(ds);
 		_sc = new Sc(&_ec,Qpd());
 		_sc->start();
@@ -71,10 +75,11 @@ private:
 	static void receiver(void *);
 
 	size_t _bufpos;
-	char _buf[80];
+	char _buf[80 + 1];
 	GlobalEc _ec;
 	Sc *_sc;
 	Consumer<char> *_cons;
+	DataSpace *_ds;
 	static const char *_colors[];
 	static CPU::iterator _cpu_it;
 };

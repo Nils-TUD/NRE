@@ -7,11 +7,11 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include "VGA.h"
+#include "HostVGA.h"
 
 using namespace nul;
 
-void VGA::put(const nul::Console::Packet &pk) {
+void HostVGA::put(const nul::Console::Packet &pk) {
 	if(pk.x < COLS && pk.y < ROWS) {
 		char *screen = reinterpret_cast<char*>(_ds.virt()) + _page * ExecEnv::PAGE_SIZE;
 		char *pos = screen + pk.y * COLS * 2 + pk.x * 2;
