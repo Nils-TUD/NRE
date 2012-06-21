@@ -35,7 +35,7 @@ class ChildMemory {
 
 	enum {
 		MAX_REGIONS		= 128,
-		MAX_DS			= 32
+		MAX_DS			= 64
 	};
 
 	struct DS {

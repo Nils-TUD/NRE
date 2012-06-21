@@ -52,8 +52,8 @@ static void test_nesting() {
 
 	UtcbFrame uf;
 	uf << 4 << 1 << 2;
-	uf.delegate(CapRange(12,16,Crd::IO_ALL,10));
-	uf.delegate(CapRange(1,2,Crd::MEM_ALL,2),UtcbFrame::NONE);
+	uf.delegate(10);
+	uf.delegate(29);
 
 	{
 		UtcbFrame uf1;

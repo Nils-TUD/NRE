@@ -57,7 +57,7 @@ private:
 	void skip_non_numeric() {
 		if(_last == '\0')
 			_last = read();
-		while(!(_last >= '0' && _last <= '9'))
+		while(!(_last == '-' || (_last >= '0' && _last <= '9')))
 			_last = read();
 	}
 

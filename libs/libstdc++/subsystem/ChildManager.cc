@@ -493,7 +493,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 			c->reglist().add(ds.desc(),addr,ds.perm(),ds.unmapsel());
 		}
 		catch(...) {
-			cm->_dsm.release(desc,ds.sel());
+			cm->_dsm.release(desc,ds.unmapsel());
 			throw;
 		}
 
@@ -572,14 +572,14 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline().str(),pfaddr,eip,cpu,error);
 			//Serial::get() << c->reglist();
-			Serial::get().writef("Unable to resolve fault; killing Ec\n");
+			/*Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
 			addr = addrs;
 			while(*addr != 0) {
 				Serial::get().writef("\t%p\n",*addr);
 				addr++;
-			}
+			}*/
 		}
 		else if(!(flags & ChildMemory::M)) {
 			uint perms = flags & ChildMemory::RWX;

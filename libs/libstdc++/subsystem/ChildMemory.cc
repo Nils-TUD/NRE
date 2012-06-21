@@ -22,6 +22,7 @@
 namespace nul {
 
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
+	os << "Regions:\n";
 	for(size_t i = 0; i < ChildMemory::MAX_REGIONS; ++i) {
 		const ChildMemory::Region *r = cm._regs + i;
 		if(r->size > 0) {
@@ -34,6 +35,14 @@ OStream &operator<<(OStream &os,const ChildMemory &cm) {
 					(r->flags & ChildMemory::M) ? 'm' : '-',
 					r->src
 			);
+		}
+	}
+	os << "DataSpaces:\n";
+	for(size_t i = 0; i < ChildMemory::MAX_DS; ++i) {
+		if(cm._ds[i].unmapsel != 0) {
+			const ChildMemory::DS *ds = cm._ds + i;
+			os.writef("\t%u: %p .. %p\n",
+					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.virt() + ds->desc.size());
 		}
 	}
 	return os;
