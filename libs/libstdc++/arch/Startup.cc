@@ -98,6 +98,7 @@ void _setup(bool child) {
 				cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
 				cpu.unmap_pt = new Pt(off + CapSpace::SRV_UNMAP);
 				cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
+				cpu.unreg_pt = new Pt(off + CapSpace::SRV_UNREG);
 				cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
 				cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
 				cpu.io_pt = new Pt(off + CapSpace::SRV_IO);

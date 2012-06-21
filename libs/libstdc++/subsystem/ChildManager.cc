@@ -54,6 +54,77 @@ ChildManager::~ChildManager() {
 		delete _ecs[i];
 		delete _regecs[i];
 	}
+	CapSpace::get().free(MAX_CHILDS * per_child_caps());
+}
+
+void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
+	/*
+	 * Initial stack:
+	 * +------------------+  <- top
+	 * |     arguments    |
+	 * |        ...       |
+	 * +------------------+
+	 * |         0        |
+	 * +------------------+
+	 * |   argv[argc-1]   |
+	 * +------------------+
+	 * |       ...        |
+	 * +------------------+
+	 * |     argv[0]      | <--\
+	 * +------------------+    |
+	 * |       argv       | ---/
+	 * +------------------+
+	 * |       argc       |
+	 * +------------------+
+	 */
+
+	// first, simply copy the command-line to the stack
+	const String &cmdline = c->cmdline();
+	size_t len = Math::min<size_t>(MAX_CMDLINE_LEN,cmdline.length());
+	char *bottom = reinterpret_cast<char*>(sp - Math::round_up(len + 1,sizeof(word_t)));
+	memcpy(bottom,cmdline.str(),len + 1);
+
+	// count number of arguments
+	size_t i = 0,argc = 0;
+	char *str = bottom;
+	while(*str) {
+		if(*str == ' ' && i > 0)
+			argc++;
+		else if(*str != ' ')
+			i++;
+		str++;
+	}
+	if(i > 0)
+		argc++;
+
+	word_t *ptrs = reinterpret_cast<word_t*>(bottom - sizeof(word_t) * (argc + 1));
+	// store argv and argc
+	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::PAGE_SIZE - 1));
+	*(ptrs - 2) = argc;
+	// store stackpointer for user
+	sp = csp + (reinterpret_cast<uintptr_t>(ptrs - 2) & (ExecEnv::PAGE_SIZE - 1));
+
+	// now, walk through it, replace ' ' by '\0' and store pointers to the individual arguments
+	str = bottom;
+	i = 0;
+	char *begin = bottom;
+	while(*str) {
+		if(*str == ' ' && i > 0) {
+			*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+			*str = '\0';
+			i = 0;
+		}
+		else if(*str != ' ') {
+			if(i == 0)
+				begin = str;
+			i++;
+		}
+		str++;
+	}
+	if(i > 0)
+		*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+	// terminate
+	*ptrs++ = 0;
 }
 
 void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main) {
@@ -142,7 +213,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.sel());
 		}
 
-		Serial::get().writef("Starting client '%s'...\n",c->cmdline());
+		Serial::get() << "Starting client '" << c->cmdline() << "'...\n";
 		Serial::get() << *c << "\n";
 
 		// start child; we have to put the child into the list before that
@@ -192,7 +263,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 		}
 		else {
 			uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
-			uf->rsp = c->stack() + (uf->rsp & (ExecEnv::PAGE_SIZE - 1));
+			prepare_stack(c,uf->rsp,c->stack());
 			// the bit indicates that its not the root-task
 			// TODO not nice
 	#ifdef __i386__
@@ -200,7 +271,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	#else
 			uf->rdi = (1 << 31) | c->_ec->cpu();
 	#endif
-			uf->rdi = c->_main;
+			uf->rsi = c->_main;
 			uf->rcx = c->hip();
 			uf->rdx = c->utcb();
 			uf->mtd = Mtd::RIP_LEN | Mtd::RSP | Mtd::GPR_ACDB | Mtd::GPR_BSD;
@@ -261,7 +332,6 @@ void ChildManager::Portals::reg(capsel_t pid) {
 void ChildManager::Portals::unreg(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
 	UtcbFrameRef uf;
-	// TODO doesn't work; we need to make sure that only the owner of the service can use that
 	try {
 		Child *c = cm->get_child(pid);
 		String name;
@@ -439,6 +509,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);
+		Serial::get() << e;
 		uf.clear();
 		uf << e.code();
 	}
@@ -499,7 +570,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		if(kill) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-					c->cmdline(),pfaddr,eip,cpu,error);
+					c->cmdline().str(),pfaddr,eip,cpu,error);
 			//Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
@@ -525,7 +596,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		}
 		else {
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-					c->cmdline(),pfaddr,eip,cpu,error);
+					c->cmdline().str(),pfaddr,eip,cpu,error);
 			Serial::get() << "Page already mapped. See regionlist:\n";
 			Serial::get() << c->reglist();
 		}

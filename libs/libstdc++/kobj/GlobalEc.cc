@@ -21,7 +21,7 @@
 
 namespace nul {
 
-/*GlobalEc GlobalEc::_initial(
+/* TODO GlobalEc GlobalEc::_initial(
 	_startup_info.utcb,Hip::get().cfg_exc + 1,_startup_info.cpu,Pd::initial()
 );*/
 

@@ -25,9 +25,9 @@ const TestCase testcases[] = {
 	catchex,
 	delegateperf,
 	utcbtest,
-	regionlist,
-	sharedmem,*/
-	dstest
+	regionlist,*/
+	//dstest,
+	sharedmem,
 };
 
 int main() {

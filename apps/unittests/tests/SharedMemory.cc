@@ -14,6 +14,7 @@
 #include <service/Producer.h>
 #include <service/Connection.h>
 #include <service/Session.h>
+#include <stream/IStringStream.h>
 #include <Hip.h>
 #include <CPU.h>
 
@@ -24,7 +25,7 @@ using namespace nul::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,
-	ITEM_COUNT	= 1000000,
+	ITEM_COUNT	= 10000000,
 	WORD_COUNT	= 1,
 };
 
@@ -118,22 +119,28 @@ void ShmSessionData::receiver(void*) {
 	WVPASSEQ(count,static_cast<size_t>(ITEM_COUNT));
 }
 
-static void shm_service() {
+static void shm_service(int argc,char *argv[]) {
+	for(int i = 0; i < argc; ++i)
+		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
+
 	srv = new ShmService();
 	srv->provide_on(CPU::current().id);
 	srv->reg();
 	srv->wait();
+	srv->unreg();
 }
 
-static void shm_client() {
+static void shm_client(int argc,char *argv[]) {
+	assert(argc == 2);
+	size_t ds_size = IStringStream::read_from<size_t>(argv[1]);
 	Connection con("shm");
 	Session sess(con);
-	DataSpace ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
+	DataSpace ds(ds_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 	Producer<Item> prod(&ds,true,true);
 	ds.share(sess);
-	uint64_t start = Util::tsc();
 	Item i;
-	for(word_t x = 0; x < ITEM_COUNT; ++x)
+	uint64_t start = Util::tsc();
+	for(uint x = 0; x < ITEM_COUNT; ++x)
 		prod.produce(i);
 	uint64_t end = Util::tsc();
 	uint64_t total = end - start;
@@ -155,13 +162,19 @@ static Hip::mem_iterator get_self() {
 }
 
 static void test_shm() {
-	ChildManager *mng = new ChildManager();
-	Hip::mem_iterator self = get_self();
-	// map the memory of the module
-	DataSpace *ds = new DataSpace(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
-	mng->load(ds->virt(),self->size,"shm_service provides=shm",
-			reinterpret_cast<uintptr_t>(shm_service));
-	mng->load(ds->virt(),self->size,"shm_client",
-			reinterpret_cast<uintptr_t>(shm_client));
-	mng->wait_for_all();
+	char cmdline[64];
+	size_t ds_sizes[] = {ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE * 2,ExecEnv::PAGE_SIZE * 4};
+	for(size_t i = 0; i < sizeof(ds_sizes) / sizeof(ds_sizes[0]); ++i) {
+		ChildManager *mng = new ChildManager();
+		Hip::mem_iterator self = get_self();
+		// map the memory of the module
+		DataSpace *ds = new DataSpace(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
+		OStringStream os(cmdline,sizeof(cmdline));
+		os << "shm_client " << ds_sizes[i];
+		mng->load(ds->virt(),self->size,"shm_service provides=shm",reinterpret_cast<uintptr_t>(shm_service));
+		mng->load(ds->virt(),self->size,cmdline,reinterpret_cast<uintptr_t>(shm_client));
+		mng->wait_for_all();
+		delete ds;
+		delete mng;
+	}
 }

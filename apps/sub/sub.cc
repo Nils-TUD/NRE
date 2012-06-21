@@ -27,11 +27,9 @@ static char prog[] = {
 };
 
 int main() {
-	// don't put it on the stack :)
+	// don't put it on the stack since its too large :)
 	ChildManager *cm = new ChildManager();
 	cm->load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test");
-
-	Sm sm(0);
-	sm.down();
+	cm->wait_for_all();
 	return 0;
 }

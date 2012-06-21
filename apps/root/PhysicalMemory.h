@@ -77,3 +77,9 @@ private:
 	static nul::RegionManager _mem;
 	static nul::DataSpaceManager<RootDataSpace> _dsmng;
 };
+
+static inline nul::OStream &operator<<(nul::OStream &os,const PhysicalMemory::RootDataSpace &ds) {
+	os.writef("RootDataSpace[sel=%#x, umsel=%#x]: ",ds.sel(),ds.unmapsel());
+	os << ds.desc();
+	return os;
+}

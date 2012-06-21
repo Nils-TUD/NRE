@@ -62,7 +62,8 @@ class ChildManager {
 
 	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
 	enum {
-		MAX_CHILDS		= 32
+		MAX_CHILDS		= 32,
+		MAX_CMDLINE_LEN	= 256
 	};
 
 public:
@@ -144,6 +145,7 @@ private:
 	static inline size_t per_child_caps() {
 		return Math::next_pow2(Hip::get().service_caps() * _cpu_count);
 	}
+	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
 
 	ChildManager(const ChildManager&);
 	ChildManager& operator=(const ChildManager&);

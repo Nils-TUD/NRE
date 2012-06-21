@@ -26,6 +26,17 @@
 .extern _presetup
 .extern _init
 
+# initial state for root:
+#   rdi: cpu
+#   rsp: pointer to Hip
+
+# initial state for non-root:
+#   rdi: (1 << 31) | cpu
+#   rsp: stack-pointer
+#   rcx: pointer to Hip
+#   rdx: pointer to Utcb
+#   rsi: 0 to call main, otherwise the address of the function to call
+
 _start:
 	mov		%rdi, %rbx
 	and		$0x7FFFFFFF, %rdi			# remove bit
@@ -37,6 +48,7 @@ _start:
 	lea		-0x1000(%rsp), %rdx		# UTCB is below HIP
 	mov		$_stack, %rsp				# switch to our stack
 	add		$0x1000, %rsp
+	sub		$16, %rsp					# leave space for Ec and Pd
 	jmp		2f
 1:
 	mov		%rcx, _startup_info			# store pointer to HIP
@@ -46,7 +58,7 @@ _start:
 	sub		$0x1000,%rcx
 	mov		%rcx, _startup_info + 16	# store stack-begin
 	mov		%rdi, _startup_info + 24	# store cpu
-	sub		$16, %rsp					# leave space for Ec and Pd
+	push	%rsi						# save rsi for later usage
 
 	# call early setup (current ec and pd)
 	call	_presetup
@@ -56,9 +68,26 @@ _start:
 	shr		$31, %rbx
 	mov		%rbx, %rdi					# 0 for root, 1 otherwise
 	call	_setup
-	# finally, call main
+	
+	# test whether we're root
+	test	%rbx, %rbx
+	jnz		1f
+	# yes, so call main
+	add		$8, %rsp
 	call	main
+1:
+	# check whether we should call a different function
+	pop		%rax
+	test	%rax, %rax
+	mov		(%rsp),%rdi				# argc
+	mov		8(%rsp),%rsi				# argv
+	jnz		2f
+	call	main
+	jmp		3f
+2:
+	call	*%rax
 
+3:
 	mov		%rax, %rdi
 	call	exit
 	# just to be sure

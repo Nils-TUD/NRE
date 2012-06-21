@@ -42,7 +42,7 @@ public:
 			: _child(child), _name(name), _pts(pts), _available(available) {
 		}
 		~Service() {
-			// TODO ?
+			CapSpace::get().free(_pts,Hip::MAX_CPUS);
 		}
 
 		Child *child() const {
@@ -82,10 +82,10 @@ public:
 	void unreg(Child *child,const String &name) {
 		size_t i;
 		Service *s = search(name,&i);
-		if(s && s->child() == child) {
-			delete _srvs[i];
-			_srvs[i] = 0;
-		}
+		if(!s || s->child() != child)
+			throw ServiceRegistryException(E_NOT_FOUND);
+		delete _srvs[i];
+		_srvs[i] = 0;
 	}
 	const Service* find(const String &name) const {
 		return search(name);

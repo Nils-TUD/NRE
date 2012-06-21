@@ -18,12 +18,6 @@ UserSm *PhysicalMemory::_sm;
 RegionManager PhysicalMemory::_mem;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng;
 
-static OStream &operator<<(OStream &os,const PhysicalMemory::RootDataSpace &ds) {
-	os.writef("RootDataSpace[sel=%#x, umsel=%#x]: ",ds.sel(),ds.unmapsel());
-	os << ds.desc();
-	return os;
-}
-
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel() {
 	// TODO we leak resources here if something throws

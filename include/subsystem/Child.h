@@ -45,7 +45,7 @@ class Child {
 	friend OStream &operator<<(OStream &os,const Child &c);
 
 public:
-	const char *cmdline() const {
+	const String &cmdline() const {
 		return _cmdline;
 	}
 	unsigned refs() const {
@@ -134,7 +134,7 @@ private:
 	Child(const Child&);
 	Child& operator=(const Child&);
 
-	const char *_cmdline;
+	String _cmdline;
 	unsigned _refs;
 	bool _started;
 	Pd *_pd;

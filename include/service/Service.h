@@ -150,6 +150,15 @@ public:
 		if(res != E_SUCCESS)
 			throw ServiceException(res);
 	}
+	void unreg() {
+		UtcbFrame uf;
+		uf << String(_name);
+		CPU::current().unreg_pt->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw ServiceException(res);
+	}
 
 	// TODO wrong place?
 	void wait() {
