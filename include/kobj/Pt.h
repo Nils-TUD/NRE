@@ -31,12 +31,12 @@ class Pt : public ObjCap {
 public:
 	typedef ExecEnv::portal_func portal_func;
 
-	Pt(capsel_t pt) : ObjCap(pt,KEEP_CAP_BIT | KEEP_SEL_BIT) {
+	explicit Pt(capsel_t pt) : ObjCap(pt,KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
-	Pt(LocalEc *ec,capsel_t pt,portal_func func,Mtd mtd = Mtd()) : ObjCap(pt,KEEP_SEL_BIT) {
+	explicit Pt(LocalEc *ec,capsel_t pt,portal_func func,Mtd mtd = Mtd()) : ObjCap(pt,KEEP_SEL_BIT) {
 		Syscalls::create_pt(pt,ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 	}
-	Pt(LocalEc *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
+	explicit Pt(LocalEc *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
 		CapHolder pt;
 		Syscalls::create_pt(pt.get(),ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 		sel(pt.release());

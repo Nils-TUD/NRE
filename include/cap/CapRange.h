@@ -25,9 +25,9 @@ namespace nul {
 
 class CapRange {
 public:
-	CapRange() : _start(), _count(), _attr(), _hotspot() {
+	explicit CapRange() : _start(), _count(), _attr(), _hotspot() {
 	}
-	CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0)
+	explicit CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0)
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
 	}
 

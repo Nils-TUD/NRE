@@ -45,7 +45,7 @@ class MouseSession : public Session {
 	};
 
 public:
-	MouseSession(Connection &con) : Session(con),
+	explicit MouseSession(Connection &con) : Session(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
 		_ds.share(*this);
 	}

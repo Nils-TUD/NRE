@@ -115,7 +115,7 @@ class RCU;
  */
 class RCULock {
 public:
-	RCULock() {
+	explicit RCULock() {
 	}
 
 	void down() {
@@ -156,7 +156,7 @@ class RCUObject {
 	};
 
 public:
-	RCUObject() : _state(VALID), _next(0) {
+	explicit RCUObject() : _state(VALID), _next(0) {
 	}
 	virtual ~RCUObject() {
 	}

@@ -175,7 +175,7 @@ class KeyboardSession : public Session {
 	};
 
 public:
-	KeyboardSession(Connection &con) : Session(con),
+	explicit KeyboardSession(Connection &con) : Session(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
 		_ds.share(*this);
 	}

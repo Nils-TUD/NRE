@@ -38,7 +38,7 @@ class ServiceRegistry {
 public:
 	class Service {
 	public:
-		Service(Child *child,const String &name,capsel_t pts,const BitField<Hip::MAX_CPUS> &available)
+		explicit Service(Child *child,const String &name,capsel_t pts,const BitField<Hip::MAX_CPUS> &available)
 			: _child(child), _name(name), _pts(pts), _available(available) {
 		}
 		~Service() {
@@ -65,7 +65,7 @@ public:
 		BitField<Hip::MAX_CPUS> _available;
 	};
 
-	ServiceRegistry() : _srvs() {
+	explicit ServiceRegistry() : _srvs() {
 	}
 
 	const Service* reg(const Service& s) {

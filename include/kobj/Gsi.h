@@ -25,7 +25,7 @@ public:
 		RELEASE
 	};
 
-	Gsi(uint gsi) : Sm(alloc(gsi),true), _gsi(gsi) {
+	explicit Gsi(uint gsi) : Sm(alloc(gsi),true), _gsi(gsi) {
 		// neither keep the cap nor the selector
 		set_flags(0);
 	}

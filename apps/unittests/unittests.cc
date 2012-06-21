@@ -15,6 +15,7 @@
 #include "tests/DelegatePerf.h"
 #include "tests/CatchEx.h"
 #include "tests/SharedMemory.h"
+#include "tests/DataSpaceTest.h"
 
 using namespace nul;
 using namespace nul::test;
@@ -24,8 +25,9 @@ const TestCase testcases[] = {
 	catchex,
 	delegateperf,
 	utcbtest,
-	regionlist,*/
-	sharedmem
+	regionlist,
+	sharedmem,*/
+	dstest
 };
 
 int main() {

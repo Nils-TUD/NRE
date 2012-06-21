@@ -29,7 +29,7 @@ class Service;
 
 class ServiceInstance {
 public:
-	ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
+	explicit ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
 
 	cpu_t cpu() const {
 		return _ec.cpu();

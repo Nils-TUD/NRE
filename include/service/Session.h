@@ -29,7 +29,7 @@ namespace nul {
 
 class Session {
 public:
-	Session(Connection &con) : _caps(open(con)), _con(con) {
+	explicit Session(Connection &con) : _caps(open(con)), _con(con) {
 	}
 	virtual ~Session() {
 		close();

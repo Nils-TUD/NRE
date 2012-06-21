@@ -36,7 +36,7 @@ class ConsoleSession : public Session {
 	};
 
 public:
-	ConsoleSession(Connection &con) : Session(con),
+	explicit ConsoleSession(Connection &con) : Session(con),
 			_in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			_out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			_consumer(&_in_ds,true), _producer(&_out_ds,true,true) {

@@ -29,7 +29,7 @@ class Screen : public OStream {
 	};
 
 public:
-	Screen(char *const addr) : OStream(), _screen(addr), _col(), _row() {
+	explicit Screen(char *const addr) : OStream(), _screen(addr), _col(), _row() {
 	}
 
 	void clear() {

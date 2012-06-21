@@ -24,7 +24,7 @@ using namespace nul::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,
-	ITEM_COUNT	= 10000000,
+	ITEM_COUNT	= 1000000,
 	WORD_COUNT	= 1,
 };
 
@@ -53,10 +53,7 @@ public:
 		delete _sc;
 	}
 
-	virtual void invalidate() {
-		if(_cons)
-			_cons->stop();
-	}
+	virtual void invalidate();
 
 	Consumer<Item> *cons() {
 		return _cons;
@@ -81,34 +78,43 @@ private:
 
 class ShmService : public Service {
 public:
-	ShmService() : Service("shm") {
+	ShmService() : Service("shm"), _sm(0) {
+	}
+
+	void wait() {
+		_sm.down();
+	}
+	void notify() {
+		_sm.up();
 	}
 
 private:
 	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 		return new ShmSessionData(this,id,caps,func);
 	}
+
+	Sm _sm;
 };
+
+void ShmSessionData::invalidate() {
+	srv->notify();
+	if(_cons)
+		_cons->stop();
+}
 
 void ShmSessionData::receiver(void*) {
 	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
+	ScopedLock<RCULock> guard(&RCU::lock());
+	ShmSessionData *sess = srv->get_session<ShmSessionData>(caps);
+	Consumer<Item> *cons = sess->cons();
 	size_t count = 0;
-	try {
-		while(1) {
-			ScopedLock<RCULock> guard(&RCU::lock());
-			ShmSessionData *sess = srv->get_session<ShmSessionData>(caps);
-			Consumer<Item> *cons = sess->cons();
-			Item *w = cons->get();
-			if(w == 0)
-				break;
-			count++;
-			cons->next();
-		}
+	while(1) {
+		Item *w = cons->get();
+		if(w == 0)
+			break;
+		count++;
+		cons->next();
 	}
-	catch(...) {
-		// ignore
-	}
-	// TODO actually this might fail
 	WVPASSEQ(count,static_cast<size_t>(ITEM_COUNT));
 }
 
@@ -157,6 +163,5 @@ static void test_shm() {
 			reinterpret_cast<uintptr_t>(shm_service));
 	mng->load(ds->virt(),self->size,"shm_client",
 			reinterpret_cast<uintptr_t>(shm_client));
-	Sm sm(0);
-	sm.down();
+	mng->wait_for_all();
 }

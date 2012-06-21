@@ -82,7 +82,7 @@ public:
 		uint8_t ext1;
 	};
 
-	HostKeyboard(nul::Ports::port_t base = 0x60,int scset = 2,bool mouse = false,bool verbose = false)
+	explicit HostKeyboard(nul::Ports::port_t base = 0x60,int scset = 2,bool mouse = false,bool verbose = false)
 		: _port_ctrl(base + 4,1), _port_data(base,1), _flags(0), _mousestate(), _mouse_enabled(mouse),
 		  _wheel(false), _scset1(scset == 1), _verbose(verbose) {
 	}

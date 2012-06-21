@@ -49,7 +49,7 @@ class RegionManager {
 public:
 	typedef const Region *iterator;
 
-	RegionManager() : _regs() {
+	explicit RegionManager() : _regs() {
 	}
 
 	iterator begin() const {

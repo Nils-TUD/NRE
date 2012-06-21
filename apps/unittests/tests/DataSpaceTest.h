@@ -18,40 +18,6 @@
 
 #pragma once
 
-namespace nul {
+#include <Test.h>
 
-template<class T>
-class ListIterator {
-public:
-	explicit ListIterator(T *n = 0) : _n(n) {
-	}
-	~ListIterator() {
-	}
-
-	T& operator *() const {
-		return *_n;
-	}
-	T *operator ->() const {
-		return &operator *();
-	}
-	ListIterator<T>& operator ++() {
-		_n = _n->next();
-		return *this;
-	}
-	ListIterator<T> operator ++(int) {
-		ListIterator<T> tmp(*this);
-		operator++();
-		return tmp;
-	}
-	bool operator ==(const ListIterator<T>& rhs) {
-		return _n == rhs._n;
-	}
-	bool operator !=(const ListIterator<T>& rhs) {
-		return _n != rhs._n;
-	}
-
-private:
-	T *_n;
-};
-
-}
+extern const nul::test::TestCase dstest;

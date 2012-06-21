@@ -60,7 +60,7 @@ public:
 		RWX	= R | W | X,
 	};
 
-	ChildMemory() : _regs(), _ds() {
+	explicit ChildMemory() : _regs(), _ds() {
 	}
 
 	size_t regcount() const {

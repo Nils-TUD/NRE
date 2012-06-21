@@ -25,7 +25,7 @@ namespace nul {
 class Desc {
 	word_t _value;
 protected:
-	Desc(word_t v) : _value(v) {
+	explicit Desc(word_t v) : _value(v) {
 	}
 public:
 	word_t value() const {
@@ -137,7 +137,7 @@ public:
 		ALL			= (~0U >> 12) & ~CTRL
 	};
 
-	Mtd(word_t flags = 0) : Desc(flags) {
+	explicit Mtd(word_t flags = 0) : Desc(flags) {
 	}
 };
 
@@ -170,7 +170,7 @@ class Qpd: public Desc {
 	};
 
 public:
-	Qpd(uint prio = DEFAULT_PRIORITY,uint quantum = DEFAULT_QUANTUM) :
+	explicit Qpd(uint prio = DEFAULT_PRIORITY,uint quantum = DEFAULT_QUANTUM) :
 			Desc((quantum << 12) | prio) {
 	}
 

@@ -42,7 +42,7 @@ public:
 	}
 
 protected:
-	ObjCap(capsel_t sel = INVALID,uint flags = 0) : _sel(sel | flags) {
+	explicit ObjCap(capsel_t sel = INVALID,uint flags = 0) : _sel(sel | flags) {
 	}
 	void sel(capsel_t sel) {
 		_sel = (_sel & KEEP_BITS) | sel;

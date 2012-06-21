@@ -22,7 +22,7 @@ class HostVGA {
 	};
 
 public:
-	HostVGA() : _page(1), _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RW,VGA_MEM) {
+	explicit HostVGA() : _page(1), _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RW,VGA_MEM) {
 	}
 
 	void put(const nul::Console::Packet &pk);

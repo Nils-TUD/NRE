@@ -27,12 +27,12 @@ namespace nul {
 class Sm : public ObjCap {
 public:
 	// TODO get rid of the bool
-	Sm(capsel_t cap,bool) : ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT) {
+	explicit Sm(capsel_t cap,bool) : ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
-	Sm(capsel_t cap,uint initial,Pd *pd = Pd::current()) : ObjCap(cap,KEEP_SEL_BIT) {
+	explicit Sm(capsel_t cap,uint initial,Pd *pd = Pd::current()) : ObjCap(cap,KEEP_SEL_BIT) {
 		Syscalls::create_sm(cap,initial,pd->sel());
 	}
-	Sm(uint initial,Pd *pd = Pd::current());
+	explicit Sm(uint initial,Pd *pd = Pd::current());
 	virtual ~Sm() {
 	}
 

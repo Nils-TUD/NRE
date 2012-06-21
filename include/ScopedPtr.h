@@ -14,7 +14,7 @@ namespace nul {
 template<class T>
 class ScopedPtr {
 public:
-	ScopedPtr(T *obj)
+	explicit ScopedPtr(T *obj)
 		: _obj(obj) {
 	}
 	~ScopedPtr() {

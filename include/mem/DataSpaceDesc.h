@@ -10,6 +10,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <stream/OStream.h>
 
 namespace nul {
 
@@ -35,7 +36,7 @@ public:
 	/**
 	 * Creates an empty descriptor
 	 */
-	DataSpaceDesc() : _virt(), _origin(), _size(), _perm(), _type() {
+	explicit DataSpaceDesc() : _virt(), _origin(), _size(), _perm(), _type() {
 	}
 	/**
 	 * Creates a descriptor from given parameters
@@ -46,7 +47,7 @@ public:
 	 * @param phys the physical address to request (optionally)
 	 * @param virt the virtual address, which can be used as a hint
 	 */
-	DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
+	explicit DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
 		: _virt(virt), _origin(phys), _size(size), _perm(perm), _type(type) {
 	}
 
@@ -104,5 +105,11 @@ private:
 	uint _perm;
 	Type _type;
 };
+
+static inline OStream &operator<<(OStream &os,const DataSpaceDesc &desc) {
+	os.writef("virt=%p size=%zu origin=%p perm=%#x, type=%u",
+			desc.virt(),desc.size(),desc.origin(),desc.perm(),desc.type());
+	return os;
+}
 
 }

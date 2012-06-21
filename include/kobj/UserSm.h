@@ -23,7 +23,7 @@ namespace nul {
  */
 class UserSm {
 public:
-	UserSm() : _sem(0), _value(1) {
+	explicit UserSm() : _sem(0), _value(1) {
 	}
 
 	void down() {

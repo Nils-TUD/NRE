@@ -27,7 +27,7 @@ class Consumer {
 	};
 
 public:
-	Consumer(DataSpace *ds,bool init = false)
+	explicit Consumer(DataSpace *ds,bool init = false)
 		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
 		  _max((ds->size() - sizeof(Interface)) / sizeof(T)),
 		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _stop(false) {
@@ -43,6 +43,9 @@ public:
 		_sm.up();
 	}
 
+	bool has_data() const {
+		return _if->rpos != _if->wpos;
+	}
 	T *get() {
 		while(_if->rpos == _if->wpos) {
 			if(_stop)

@@ -66,7 +66,7 @@ class ChildManager {
 	};
 
 public:
-	ChildManager();
+	explicit ChildManager();
 	~ChildManager();
 
 	ServiceRegistry &registry() {
@@ -74,6 +74,11 @@ public:
 	}
 
 	void load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main = 0);
+
+	void wait_for_all() {
+		while(_child_count > 0)
+			_diesm.zero();
+	}
 
 	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
@@ -99,6 +104,14 @@ public:
 	}
 
 private:
+	size_t free_slot() const {
+		for(size_t i = 0; i < MAX_CHILDS; ++i) {
+			if(_childs[i] == 0)
+				return i;
+		}
+		return MAX_CHILDS;
+	}
+
 	cpu_t get_cpu(capsel_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
@@ -114,12 +127,16 @@ private:
 		Child *c = _childs[i];
 		c->decrease_refs();
 		if(c->refs() == 0) {
+			Serial::get() << "Destroying child '" << c->cmdline() << "'\n";
 			// note that we're safe here because we only get here if there is only one Ec left and
 			// this one has just caused a fault. thus, there can't be somebody else using this
 			// client instance
 			_childs[i] = 0;
 			_registry.remove(c);
 			delete c;
+			_child_count--;
+			Sync::memory_barrier();
+			_diesm.up();
 		}
 	}
 	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
@@ -131,13 +148,14 @@ private:
 	ChildManager(const ChildManager&);
 	ChildManager& operator=(const ChildManager&);
 
-	size_t _child;
+	size_t _child_count;
 	Child *_childs[MAX_CHILDS];
 	capsel_t _portal_caps;
 	DataSpaceManager<DataSpace> _dsm;
 	ServiceRegistry _registry;
 	UserSm _sm;
 	Sm _regsm;
+	Sm _diesm;
 	// we need different Ecs to be able to receive a different number of caps
 	LocalEc *_ecs[Hip::MAX_CPUS];
 	LocalEc *_regecs[Hip::MAX_CPUS];

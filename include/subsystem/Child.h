@@ -83,7 +83,7 @@ public:
 	}
 
 private:
-	Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
+	explicit Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
 			_pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(), _gsis(),
 			_gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
 	}

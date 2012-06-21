@@ -15,6 +15,7 @@
 #include <mem/DataSpaceManager.h>
 
 class PhysicalMemory {
+public:
 	class RootDataSpace;
 	friend class RootDataSpace;
 
@@ -54,7 +55,6 @@ class PhysicalMemory {
 		static RootDataSpace _slots[MAX_SLOTS];
 	};
 
-public:
 	static void init();
 
 	static void add(uintptr_t addr,size_t size);

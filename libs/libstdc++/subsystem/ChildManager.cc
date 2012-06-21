@@ -28,9 +28,9 @@ namespace nul {
 
 size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
-ChildManager::ChildManager() : _child(), _childs(),
+ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _regsm(0), _ecs(), _regecs() {
+		_dsm(), _registry(), _sm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
@@ -69,9 +69,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 
 	// create child
 	Child *c = new Child(cmdline);
+	size_t idx = free_slot();
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		capsel_t pts = _portal_caps + _child * per_child_caps();
+		capsel_t pts = _portal_caps + idx * per_child_caps();
 		c->_ptcount = _cpu_count * Portals::COUNT;
 		c->_pts = new Pt*[c->_ptcount];
 		for(cpu_t cpu = 0; cpu < _cpu_count; ++cpu) {
@@ -81,14 +82,14 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 					Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
 			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
 					Mtd(Mtd::RSP));
-			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,0);
-			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,0);
-			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,0);
-			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::get_service,0);
-			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,0);
-			c->_pts[idx + 7] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,0);
-			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,0);
-			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,0);
+			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,Mtd(0));
+			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,Mtd(0));
+			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,Mtd(0));
+			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::get_service,Mtd(0));
+			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
+			c->_pts[idx + 7] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
+			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_MAP,Portals::map,Mtd(0));
+			c->_pts[idx + 9] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNMAP,Portals::unmap,Mtd(0));
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
@@ -145,15 +146,17 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		Serial::get() << *c << "\n";
 
 		// start child; we have to put the child into the list before that
-		_childs[_child++] = c;
+		_childs[idx] = c;
 		c->_sc = new Sc(c->_ec,Qpd(),c->_pd);
 		c->_sc->start();
 	}
 	catch(...) {
 		delete c;
-		_childs[--_child] = 0;
+		_childs[idx] = 0;
 		throw;
 	}
+
+	_child_count++;
 
 	// TODO well, we should make this more general
 	const char *provides = strstr(cmdline,"provides=");
@@ -417,7 +420,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 		uintptr_t addr = 0;
 		try {
 			addr = c->reglist().find_free(ds.size());
-			c->reglist().add(ds.desc(),addr,ds.perm(),ds.sel());
+			c->reglist().add(ds.desc(),addr,ds.perm(),ds.unmapsel());
 		}
 		catch(...) {
 			cm->_dsm.release(desc,ds.sel());
@@ -497,7 +500,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline(),pfaddr,eip,cpu,error);
-			Serial::get() << c->reglist();
+			//Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
@@ -519,6 +522,12 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this
 			// one to notify the parent that he should map it?
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
+		}
+		else {
+			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+					c->cmdline(),pfaddr,eip,cpu,error);
+			Serial::get() << "Page already mapped. See regionlist:\n";
+			Serial::get() << c->reglist();
 		}
 	}
 	catch(...) {

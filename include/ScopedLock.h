@@ -14,7 +14,7 @@ namespace nul {
 template<class T>
 class ScopedLock {
 public:
-	ScopedLock(T *lock)
+	explicit ScopedLock(T *lock)
 		: _lock(lock) {
 		_lock->down();
 	}

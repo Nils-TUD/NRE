@@ -21,7 +21,6 @@
 #include <arch/Types.h>
 #include <kobj/ObjCap.h>
 #include <mem/DataSpaceDesc.h>
-#include <stream/OStream.h>
 #include <Exception.h>
 
 namespace nul {
@@ -67,7 +66,7 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	DataSpace(size_t size,DataSpaceDesc::Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
+	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
 		: _desc(size,type,perm,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
 		create();
 	}
@@ -76,7 +75,7 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	DataSpace(const DataSpaceDesc &desc) : _desc(desc), _sel(ObjCap::INVALID),
+	explicit DataSpace(const DataSpaceDesc &desc) : _desc(desc), _sel(ObjCap::INVALID),
 			_unmapsel(ObjCap::INVALID) {
 		create();
 	}
@@ -85,7 +84,7 @@ public:
 	 *
 	 * @throws DataSpaceException if the attachment failed
 	 */
-	DataSpace(const DataSpaceDesc &desc,capsel_t sel) : _desc(desc), _sel(sel),
+	explicit DataSpace(const DataSpaceDesc &desc,capsel_t sel) : _desc(desc), _sel(sel),
 			_unmapsel(ObjCap::INVALID) {
 		join();
 	}
@@ -161,8 +160,8 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os,const DataSpace &ds) {
-	os.writef("DataSpace[%p..%p (%zu)]: perm=%#x, type=%u, sel=%#x, umsel=%#x",
-			ds.virt(),ds.virt() + ds.size() - 1,ds.size(),ds.perm(),ds.type(),ds.sel(),ds.unmapsel());
+	os.writef("DataSpace[sel=%#x, umsel=%#x]: ",ds.sel(),ds.unmapsel());
+	os << ds.desc();
 	return os;
 }
 

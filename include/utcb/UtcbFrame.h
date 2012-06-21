@@ -64,7 +64,7 @@ private:
 			TYPE_DEL		= 1,
 		};
 
-		TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
+		explicit TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
 		}
 
 		Crd crd() const {
@@ -81,13 +81,13 @@ private:
 
 	class XltItem : public TypedItem {
 	public:
-		XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
+		explicit XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
 		}
 	};
 
 	class DelItem : public TypedItem {
 	public:
-		DelItem(Crd crd,unsigned flags,word_t hotspot = 0)
+		explicit DelItem(Crd crd,unsigned flags,word_t hotspot = 0)
 			: TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
 		}
 	};
@@ -113,10 +113,10 @@ private:
 			throw UtcbException(E_UTCB_TYPED);
 	}
 
-	UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _upos(), _tpos() {
+	explicit UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _upos(), _tpos() {
 	}
 public:
-	UtcbFrameRef(Utcb *utcb = Ec::current()->utcb()) : _utcb(utcb), _top(get_top(_utcb,_utcb->top)), _upos(), _tpos() {
+	explicit UtcbFrameRef(Utcb *utcb = Ec::current()->utcb()) : _utcb(utcb), _top(get_top(_utcb,_utcb->top)), _upos(), _tpos() {
 		_utcb = get_frame(_utcb,_utcb->bottom);
 	}
 	virtual ~UtcbFrameRef() {
@@ -285,7 +285,7 @@ protected:
 
 class UtcbFrame : public UtcbFrameRef {
 public:
-	UtcbFrame() : UtcbFrameRef() {
+	explicit UtcbFrame() : UtcbFrameRef() {
 		_utcb = _utcb->push(_top);
 	}
 	virtual ~UtcbFrame() {
@@ -295,7 +295,7 @@ public:
 
 class UtcbExcFrameRef : public UtcbFrameRef {
 public:
-	UtcbExcFrameRef() : UtcbFrameRef() {
+	explicit UtcbExcFrameRef() : UtcbFrameRef() {
 	}
 	~UtcbExcFrameRef() {
 	}

@@ -17,13 +17,13 @@ namespace nul {
 
 class String {
 public:
-	String() : _str(0), _len() {
+	explicit String() : _str(0), _len() {
 	}
-	String(const char *str,size_t len = static_cast<size_t>(-1))
+	explicit String(const char *str,size_t len = static_cast<size_t>(-1))
 		: _str(), _len() {
 		init(str,len);
 	}
-	String(const String& s)
+	explicit String(const String& s)
 		: _str(), _len() {
 		init(s._str,s._len);
 	}

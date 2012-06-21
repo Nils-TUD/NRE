@@ -40,7 +40,7 @@ class DataSpaceManager {
 	};
 
 public:
-	DataSpaceManager() : _slots() {
+	explicit DataSpaceManager() : _slots() {
 	}
 	virtual ~DataSpaceManager() {
 	}
@@ -129,7 +129,7 @@ static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng) {
 	os << "DataSpaces:\n";
 	for(size_t i = 0; i < DataSpaceManager<DS>::MAX_SLOTS; ++i) {
 		if(mng._slots[i].refs)
-			os << "\tSlot " << i << ":" << *(mng._slots[i].ds) << "\n";
+			os << "\tSlot " << i << ":" << *(mng._slots[i].ds) << " (" << mng._slots[i].refs << " refs)\n";
 	}
 	return os;
 }

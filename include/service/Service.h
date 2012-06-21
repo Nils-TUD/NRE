@@ -49,7 +49,7 @@ class SessionData : public RCUObject {
 	friend class ServiceInstance;
 
 public:
-	SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func);
+	explicit SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func);
 	virtual ~SessionData() {
 		for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
 			if(_objs[i])
@@ -94,7 +94,7 @@ public:
 		MAX_SESSIONS		= 32
 	};
 
-	Service(const char *name,Pt::portal_func portal = 0)
+	explicit Service(const char *name,Pt::portal_func portal = 0)
 		: _regcaps(CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS)),
 		  _caps(CapSpace::get().allocate(MAX_SESSIONS * Hip::MAX_CPUS,MAX_SESSIONS * Hip::MAX_CPUS)),
 		  _sm(), _name(name), _func(portal), _insts(), _reg_cpus(), _sessions() {
@@ -206,7 +206,7 @@ template<class T>
 class SessionIterator {
 	friend class Service;
 
-	SessionIterator(Service *s,ssize_t pos = 0) : _s(s), _pos(pos), _last(next()) {
+	explicit SessionIterator(Service *s,ssize_t pos = 0) : _s(s), _pos(pos), _last(next()) {
 	}
 
 public:

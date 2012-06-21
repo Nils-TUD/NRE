@@ -202,7 +202,7 @@ public:
 		return last;
 	}
 
-	WvTest(const char *file,int line,const char *condstr) : file(shortpath(file)), condstr(condstr), line(line) {
+	explicit WvTest(const char *file,int line,const char *condstr) : file(shortpath(file)), condstr(condstr), line(line) {
 #if WVTEST_PRINT_INFO_BEFORE
 		// If we are sure that nothing is printed during the "check", we can
 		// print the info here, and the result after the "check" finishes.

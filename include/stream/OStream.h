@@ -38,7 +38,7 @@ class OStream {
 	};
 
 public:
-	OStream() {
+	explicit OStream() {
 	}
 	virtual ~OStream() {
 	}

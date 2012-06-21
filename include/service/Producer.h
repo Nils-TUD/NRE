@@ -18,7 +18,7 @@ namespace nul {
 template<typename T>
 class Producer {
 public:
-	Producer(DataSpace *ds,bool block = true,bool init = true)
+	explicit Producer(DataSpace *ds,bool block = true,bool init = true)
 		: _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
 		  _max((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T)),
 		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _block(block) {
