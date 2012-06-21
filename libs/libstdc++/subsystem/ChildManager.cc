@@ -200,9 +200,13 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.sel());
 		}
 
-		// he needs a stack
-		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(c->stack(),ExecEnv::STACK_SIZE,c->_ec->stack(),ChildMemory::RW);
+		// he needs a stack; use guards around it
+		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE + ExecEnv::PAGE_SIZE * 2);
+		c->reglist().add(c->stack(),ExecEnv::PAGE_SIZE,0,0);
+		c->reglist().add(c->stack() + ExecEnv::PAGE_SIZE,ExecEnv::STACK_SIZE,c->_ec->stack(),ChildMemory::RW);
+		c->reglist().add(c->stack() + ExecEnv::PAGE_SIZE * 2,ExecEnv::PAGE_SIZE,0,0);
+		c->_stack += ExecEnv::PAGE_SIZE;
+
 		// and a HIP
 		{
 			const DataSpace &ds = _dsm.create(
@@ -489,8 +493,12 @@ void ChildManager::Portals::map(capsel_t pid) {
 		// add it to the regions of the child
 		uintptr_t addr = 0;
 		try {
-			addr = c->reglist().find_free(ds.size());
-			c->reglist().add(ds.desc(),addr,ds.perm(),ds.unmapsel());
+			// use guard-pages around the dataspace
+			addr = c->reglist().find_free(ds.size() + ExecEnv::PAGE_SIZE * 2);
+			c->reglist().add(addr,ExecEnv::PAGE_SIZE,0,0);
+			c->reglist().add(ds.desc(),addr + ExecEnv::PAGE_SIZE,ds.perm(),ds.unmapsel());
+			c->reglist().add(addr + ExecEnv::PAGE_SIZE + ds.size(),ExecEnv::PAGE_SIZE,0,0);
+			addr += ExecEnv::PAGE_SIZE;
 		}
 		catch(...) {
 			cm->_dsm.release(desc,ds.unmapsel());
@@ -509,7 +517,6 @@ void ChildManager::Portals::map(capsel_t pid) {
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);
-		Serial::get() << e;
 		uf.clear();
 		uf << e.code();
 	}
@@ -530,7 +537,9 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 
 		// destroy (decrease refs) the ds
 		cm->_dsm.release(desc,sel);
-		c->reglist().remove(sel);
+		DataSpaceDesc childdesc = c->reglist().remove(sel);
+		c->reglist().remove(childdesc.virt() - ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE);
+		c->reglist().remove(childdesc.virt() + childdesc.size(),ExecEnv::PAGE_SIZE);
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);
@@ -552,7 +561,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		uintptr_t eip = uf->rip;
 
 		//Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-		//		c->cmdline(),pfaddr,eip,cpu,error);
+		//		c->cmdline().str(),pfaddr,eip,cpu,error);
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
@@ -572,14 +581,14 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline().str(),pfaddr,eip,cpu,error);
 			//Serial::get() << c->reglist();
-			/*Serial::get().writef("Unable to resolve fault; killing Ec\n");
+			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
 			addr = addrs;
 			while(*addr != 0) {
 				Serial::get().writef("\t%p\n",*addr);
 				addr++;
-			}*/
+			}
 		}
 		else if(!(flags & ChildMemory::M)) {
 			uint perms = flags & ChildMemory::RWX;

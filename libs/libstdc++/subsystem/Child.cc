@@ -24,7 +24,7 @@ namespace nul {
 OStream &operator<<(OStream &os,const Child &c) {
 	os << "Child[cmdline='" << c.cmdline() << "', refs=" << c.refs() << ", entry=" << c.entry() << "]:\n";
 	os << "\tGSIs: " << c.gsis() << "\n";
-	os << "\tRegions:\n" << c.reglist();
+	os << c.reglist();
 	os << "\tPorts:\n" << c.io();
 	os << "\n";
 	return os;

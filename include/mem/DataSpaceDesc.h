@@ -97,6 +97,9 @@ public:
 	Type type() const {
 		return _type;
 	}
+	void type(Type type) {
+		_type = type;
+	}
 
 private:
 	uintptr_t _virt;

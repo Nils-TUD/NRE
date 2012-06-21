@@ -22,12 +22,12 @@
 namespace nul {
 
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
-	os << "Regions:\n";
+	os << "\tRegions:\n";
 	for(size_t i = 0; i < ChildMemory::MAX_REGIONS; ++i) {
 		const ChildMemory::Region *r = cm._regs + i;
 		if(r->size > 0) {
 			os.writef(
-				"\t%zu: %p .. %p (%zu bytes) : %c%c%c%c, src=%p\n",i,r->begin,
+				"\t\t%zu: %p .. %p (%zu bytes) : %c%c%c%c, src=%p\n",i,r->begin,
 					r->begin + r->size,r->size,
 					(r->flags & ChildMemory::R) ? 'r' : '-',
 					(r->flags & ChildMemory::W) ? 'w' : '-',
@@ -37,12 +37,12 @@ OStream &operator<<(OStream &os,const ChildMemory &cm) {
 			);
 		}
 	}
-	os << "DataSpaces:\n";
+	os << "\tDataSpaces:\n";
 	for(size_t i = 0; i < ChildMemory::MAX_DS; ++i) {
 		if(cm._ds[i].unmapsel != 0) {
 			const ChildMemory::DS *ds = cm._ds + i;
-			os.writef("\t%u: %p .. %p\n",
-					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.virt() + ds->desc.size());
+			os.writef("\t\t%u: %p .. %p\n",
+					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.size());
 		}
 	}
 	return os;

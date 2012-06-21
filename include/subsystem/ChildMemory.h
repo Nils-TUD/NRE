@@ -34,7 +34,7 @@ class ChildMemory {
 	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
 
 	enum {
-		MAX_REGIONS		= 128,
+		MAX_REGIONS		= 256,
 		MAX_DS			= 64
 	};
 
@@ -122,12 +122,12 @@ public:
 		throw ChildMemoryException(E_CAPACITY);
 	}
 
-	void remove(capsel_t ds) {
+	DataSpaceDesc remove(capsel_t ds) {
 		for(size_t i = 0; i < MAX_DS; ++i) {
 			if(_ds[i].unmapsel == ds) {
 				_ds[i].unmapsel = 0;
 				remove(_ds[i].desc.virt(),_ds[i].desc.size());
-				return;
+				return _ds[i].desc;
 			}
 		}
 		throw ChildMemoryException(E_NOT_FOUND);
