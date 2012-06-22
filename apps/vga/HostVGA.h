@@ -10,24 +10,40 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
+#include <kobj/Ports.h>
 #include <mem/DataSpace.h>
 #include <dev/Console.h>
 
 class HostVGA {
+	enum Register {
+		START_ADDR_HI	= 0xc,
+		START_ADDR_LO	= 0xd
+	};
 	enum {
+		PAGE_COUNT		= 8,
 		VGA_MEM			= 0xb8000,
-		VGA_MEM_SIZE	= nul::ExecEnv::PAGE_SIZE * 8,
+		VGA_MEM_SIZE	= nul::ExecEnv::PAGE_SIZE * PAGE_COUNT,
 		COLS			= 80,
 		ROWS			= 25,
 	};
 
 public:
-	explicit HostVGA() : _page(1), _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RW,VGA_MEM) {
+	explicit HostVGA()
+			: _ports(0x3d4,2), _page(0),
+			  _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::LOCKED,nul::DataSpaceDesc::RW,VGA_MEM) {
 	}
 
-	void put(const nul::Console::Packet &pk);
+	void paint(const nul::Screen::Packet &pk);
+	void scroll();
+	void set_page(uint page);
 
 private:
-	int _page;
+	void write(Register reg,uint8_t val) {
+		_ports.out<uint8_t>(reg,0);
+		_ports.out<uint8_t>(val,1);
+	}
+
+	nul::Ports _ports;
+	uint _page;
 	nul::DataSpace _ds;
 };

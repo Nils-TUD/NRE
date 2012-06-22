@@ -6,6 +6,7 @@ bin/apps/hypervisor spinner serial
 bin/apps/root
 bin/apps/log provides=log
 bin/apps/keyboard provides=keyboard
+bin/apps/vga provides=screen
 bin/apps/console provides=console
 #bin/apps/screen provides=screen
 bin/apps/test

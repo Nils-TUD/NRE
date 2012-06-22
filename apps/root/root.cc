@@ -29,8 +29,6 @@
 #include <subsystem/ChildMemory.h>
 #include <mem/RegionManager.h>
 #include <mem/DataSpace.h>
-#include <stream/Log.h>
-#include <stream/Screen.h>
 #include <subsystem/ChildManager.h>
 #include <cap/Caps.h>
 #include <Syscalls.h>
@@ -64,7 +62,6 @@ static ChildManager *mng;
 // TODO KObjects reference-counted? copying, ...
 // TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
 // TODO what about resource-release when terminating entire subsystems?
-// TODO it would be a good idea to protect us from stack over- or underflow
 // TODO when a service dies, the client will notice it as soon as it tries to access the service
 // again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
 // what if the client has more than one Ec? I mean, the client is basically dead and we should

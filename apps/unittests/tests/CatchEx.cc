@@ -63,8 +63,8 @@ static void test_catchex() {
 	avg = avg / tries;
 	WVPERF(avg,"cycles");
 	WVPASSEQ(sum,tries);
-	Log::get().writef("sum: %u\n",sum);
-	Log::get().writef("avg: %Lu\n",avg);
-	Log::get().writef("min: %Lu\n",min);
-	Log::get().writef("max: %Lu\n",max);
+	WVPRINTF("sum: %u\n",sum);
+	WVPRINTF("avg: %Lu\n",avg);
+	WVPRINTF("min: %Lu\n",min);
+	WVPRINTF("max: %Lu\n",max);
 }

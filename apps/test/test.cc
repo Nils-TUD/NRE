@@ -25,7 +25,7 @@
 #include <service/Session.h>
 #include <service/Consumer.h>
 #include <stream/OStringStream.h>
-#include <stream/Serial.h>
+#include <stream/ConsoleView.h>
 #include <dev/Console.h>
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
@@ -74,8 +74,8 @@ struct Info {
 static void reader(void*) {
 	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
 	while(1) {
-		Keyboard::Packet *pk = info->sess->consumer().get();
-		Serial::get().writef("%u: Got sc=%#x kc=%#x, flags=%#x\n",info->no,pk->scancode,pk->keycode,pk->flags);
+		Console::ReceivePacket *pk = info->sess->consumer().get();
+		Serial::get().writef("%u: Got c=%#x kc=%#x, flags=%#x\n",info->no,pk->character,pk->keycode,pk->flags);
 		info->sess->consumer().next();
 	}
 }
@@ -85,7 +85,7 @@ static void writer(void*) {
 	while(1) {
 		for(int y = 0; y < 25; y++) {
 			for(int x = 0; x < 80; x++) {
-				Console::Packet pk;
+				Console::SendPacket pk;
 				pk.x = x;
 				pk.y = y;
 				pk.character = 'A' + info->no;
@@ -96,7 +96,42 @@ static void writer(void*) {
 	}
 }
 
+static UserSm *sm;
+static Connection *console;
+static ConsoleSession *sess;
+
+static void view0(void*) {
+	ConsoleView view(*sess,0);
+	int i = 0,c;
+	while(1) {
+		ScopedLock<UserSm> guard(sm);
+		view << "Huhu, from view 0: " << i << "\n";
+		i++;
+		//io.read();
+	}
+}
+
+static void view1(void*) {
+	ConsoleView view(*sess,1);
+	int i = 0,c;
+	while(1) {
+		ScopedLock<UserSm> guard(sm);
+		view << "Huhu, from view 1: " << i << "\n";
+		i++;
+		//io.read();
+	}
+}
+
 int main() {
+	console = new Connection("console");
+	sess = new ConsoleSession(*console);
+	sm = new UserSm();
+	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
+	sc1->start();
+	Sc *sc2 = new Sc(new GlobalEc(view1,0),Qpd());
+	sc2->start();
+
+	/*
 	for(int i = 0; i < 2; ++i) {
 		Connection *con = new Connection("console");
 		Info *info = new Info();
@@ -109,6 +144,7 @@ int main() {
 		sc2->ec()->set_tls(Ec::TLS_PARAM,info);
 		sc2->start();
 	}
+	*/
 
 	/*
 	{

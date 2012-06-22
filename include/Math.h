@@ -55,9 +55,10 @@ public:
 	/**
 	 * @return whether the ranges [<b1>..<b1>+<s1>) and [<b2>..<b2>+<s2>) overlap somewhere.
 	 */
-	static inline bool overlapped(uintptr_t b1,size_t s1,uintptr_t b2,size_t s2) {
-		uintptr_t e1 = b1 + s1;
-		uintptr_t e2 = b2 + s2;
+	static inline bool overlapped(uint64_t b1,size_t s1,uint64_t b2,size_t s2) {
+		// note that we use 64-bit address here to support the Hip-memory-entries
+		uint64_t e1 = b1 + s1;
+		uint64_t e2 = b2 + s2;
 		return (b1 >= b2 && b1 < e2) ||			// start in range
 				(e1 > b2 && e1 <= e2) ||		// end in range
 				(b1 < b2 && e1 > e2);			// completely overlapped

@@ -19,7 +19,7 @@
 #pragma once
 
 #include <stream/OStringStream.h>
-#include <stream/Log.h>
+#include <stream/Serial.h>
 #include <utcb/UtcbFrame.h>
 #include <Errors.h>
 
@@ -41,7 +41,7 @@ struct TestCase {
 #define WVTEST_PRINT_INFO_BEFORE 0
 
 // Standard WVTEST API
-#define WVSTART(title) Log::get().writef("Testing \"%s\" in %s:%d:\n", title, WvTest::shortpath(__FILE__), __LINE__);
+#define WVSTART(title) Serial::get().writef("Testing \"%s\" in %s:%d:\n", title, WvTest::shortpath(__FILE__), __LINE__);
 #define WVPASS(cond)   ({ WvTest __t(__FILE__, __LINE__, #cond);            __t.check(cond); })
 #define WVNOVA(novaerr)({ WvTest __t(__FILE__, __LINE__, #novaerr);         __t.check_novaerr(novaerr); })
 #define WVPASSEQ(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " == " #b);     __t.check_eq((a), (b), true); })
@@ -59,7 +59,7 @@ struct TestCase {
 #define WV(code)    ({ WvTest __t(__FILE__, __LINE__, #code); __t.check(true); code; })
 #define WVSHOW(val) ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show(val); })
 #define WVSHOWHEX(val)  ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show_hex(val); })
-#define WVPRINTF(fmt, ...)  Log::get().writef("! %s:%d " fmt " ok\n", WvTest::shortpath(__FILE__), __LINE__, ##__VA_ARGS__)
+#define WVPRINTF(fmt, ...)  Serial::get().writef("! %s:%d " fmt " ok\n", WvTest::shortpath(__FILE__), __LINE__, ##__VA_ARGS__)
 
 class WvTest {
 	const char *file,*condstr;
@@ -96,36 +96,36 @@ class WvTest {
 
 #if WVTEST_PRINT_INFO_BEFORE
 	void print_info()
-	{	Log::get().writef("! %s:%d %s ", file, line, condstr);}
+	{	Serial::get().writef("! %s:%d %s ", file, line, condstr);}
 
 	template <typename T>
 	void print_result(T result, const char* suffix="", const char *sb="", const char *se="")
-	{	Log::get().writef("%s%s%s %s\n", sb, suffix, se, resultstr(result));}
+	{	Serial::get().writef("%s%s%s %s\n", sb, suffix, se, resultstr(result));}
 #else
 	template<typename T>
 	void print_result(T result,const char* suffix = "",const char *sb = "",const char *se = "") {
-		Log::get().writef("! %s:%d %s %s%s%s %s\n",file,line,condstr,sb,suffix,se,resultstr(result));
+		Serial::get().writef("! %s:%d %s %s%s%s %s\n",file,line,condstr,sb,suffix,se,resultstr(result));
 	}
 #endif
 
 	static void print_failed_cmp(const char *op,const char *a,const char *b) {
-		Log::get().writef("wvtest comparison '%s' %s '%s' FAILED\n",a,op,b);
+		Serial::get().writef("wvtest comparison '%s' %s '%s' FAILED\n",a,op,b);
 	}
 
 	static void print_failed_cmp(const char *op,unsigned a,unsigned b) {
-		Log::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n",a,a,op,b,b);
+		Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n",a,a,op,b,b);
 	}
 
 	static void print_failed_cmp(const char *op,ulong a,ulong b) {
-		Log::get().writef("wvtest comparison %ld == 0x%lx %s %ld == 0x%lx FAILED\n",a,a,op,b,b);
+		Serial::get().writef("wvtest comparison %ld == 0x%lx %s %ld == 0x%lx FAILED\n",a,a,op,b,b);
 	}
 
 	static void print_failed_cmp(const char *op,ullong a,ullong b) {
-		Log::get().writef("wvtest comparison %Ld == 0x%Lx %s %Ld == 0x%Lx FAILED\n",a,a,op,b,b);
+		Serial::get().writef("wvtest comparison %Ld == 0x%Lx %s %Ld == 0x%Lx FAILED\n",a,a,op,b,b);
 	}
 
 	static void print_failed_cmp(const char *op,int a,int b) {
-		Log::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n",a,a,op,b,b);
+		Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n",a,a,op,b,b);
 	}
 
 	static void stringify(char *buf,unsigned size,ullong val) {

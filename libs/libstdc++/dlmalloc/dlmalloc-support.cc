@@ -3,7 +3,7 @@
 #include <cap/CapSpace.h>
 #include <mem/DataSpace.h>
 #include <kobj/Pd.h>
-#include <stream/Log.h>
+#include <stream/Serial.h>
 #include <cstring>
 #include <Syscalls.h>
 #include <Atomic.h>
@@ -69,7 +69,7 @@ void *mmap(void *,size_t size,int prot,int,int,off_t) {
 }
 
 int munmap(void *start,size_t size) {
-	Log::get().writef("Leaking memory at %p+%zx\n",start,size);
+	Serial::get().writef("Leaking memory at %p+%zx\n",start,size);
 	return 0;
 }
 

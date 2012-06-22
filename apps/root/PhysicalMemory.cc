@@ -115,6 +115,9 @@ void PhysicalMemory::map_all() {
 
 bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	const Hip &hip = Hip::get();
+	// check for overflow
+	if(phys + size < phys)
+		return false;
 	// check if its a module
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		if(it->type == Hip_mem::MB_MODULE && phys >= it->addr &&

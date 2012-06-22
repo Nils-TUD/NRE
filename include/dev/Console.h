@@ -14,18 +14,39 @@
 #include <service/Connection.h>
 #include <service/Producer.h>
 #include <service/Consumer.h>
+#include <stream/IStream.h>
+#include <stream/OStream.h>
 #include <dev/Keyboard.h>
+#include <dev/Screen.h>
 #include <mem/DataSpace.h>
 
 namespace nul {
 
 class Console {
 public:
-	struct Packet {
+	enum {
+		COLS	= Screen::COLS,
+		ROWS	= Screen::ROWS,
+	};
+
+	enum Command {
+		WRITE,
+		SCROLL
+	};
+
+	struct SendPacket {
+		Command cmd;
+		uint8_t view;
 		uint8_t x;
 		uint8_t y;
 		uint8_t character;
 		uint8_t color;
+	};
+
+	struct ReceivePacket {
+		uint8_t keycode;
+		uint8_t flags;
+		char character;
 	};
 };
 
@@ -44,18 +65,18 @@ public:
 		_out_ds.share(*this);
 	}
 
-	Consumer<Keyboard::Packet> &consumer() {
+	Consumer<Console::ReceivePacket> &consumer() {
 		return _consumer;
 	}
-	Producer<Console::Packet> &producer() {
+	Producer<Console::SendPacket> &producer() {
 		return _producer;
 	}
 
 private:
 	DataSpace _in_ds;
 	DataSpace _out_ds;
-	Consumer<Keyboard::Packet> _consumer;
-	Producer<Console::Packet> _producer;
+	Consumer<Console::ReceivePacket> _consumer;
+	Producer<Console::SendPacket> _producer;
 };
 
 }
