@@ -602,7 +602,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 					c->cmdline().str(),pfaddr,eip,cpu,error);
-			Serial::get() << c->reglist();
+			//Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");

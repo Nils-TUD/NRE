@@ -39,8 +39,10 @@ public:
 
 private:
 	virtual void write(char c) {
-		if(_pos < _max)
+		if(_pos < _max - 1) {
 			_dst[_pos++] = c;
+			_dst[_pos] = '\0';
+		}
 	}
 
 	char *_dst;
