@@ -16,10 +16,14 @@
 using namespace nul;
 
 class LogSessionData : public SessionData {
+	enum {
+		MAX_LINE_LEN	= 100
+	};
+
 public:
 	LogSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,id,caps,func), _bufpos(0), _buf(),
-		  _ec(receiver,next_cpu()), _sc(), _cons(), _ds() {
+		  _ec(receiver,next_cpu()), _sc(), _cons(), _ds(), _sm() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
@@ -46,8 +50,7 @@ public:
 		return c == '\n' || _bufpos == sizeof(_buf);
 	}
 	void flush() {
-		static UserSm sm;
-		ScopedLock<UserSm> guard(&sm);
+		ScopedLock<UserSm> guard(&_sm);
 		Serial::get() << "\e[0;" << _colors[id() % 8] << "m[" << id() << "] ";
 		for(size_t i = 0; i < _bufpos; ++i)
 			Serial::get() << _buf[i];
@@ -57,6 +60,9 @@ public:
 
 protected:
 	virtual void accept_ds(DataSpace *ds) {
+		ScopedLock<UserSm> guard(&_sm);
+		if(_ds != 0)
+			throw Exception(E_EXISTS);
 		_ds = ds;
 		_cons = new Consumer<char>(ds);
 		_sc = new Sc(&_ec,Qpd());
@@ -75,11 +81,12 @@ private:
 	static void receiver(void *);
 
 	size_t _bufpos;
-	char _buf[80 + 1];
+	char _buf[MAX_LINE_LEN + 1];
 	GlobalEc _ec;
 	Sc *_sc;
 	Consumer<char> *_cons;
 	DataSpace *_ds;
+	UserSm _sm;
 	static const char *_colors[];
 	static CPU::iterator _cpu_it;
 };
@@ -104,13 +111,13 @@ static LogService *log;
 
 void LogSessionData::receiver(void *) {
 	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
+	ScopedLock<RCULock> guard(&RCU::lock());
+	LogSessionData *sess = log->get_session<LogSessionData>(caps);
+	Consumer<char> *cons = sess->cons();
 	while(1) {
-		ScopedLock<RCULock> guard(&RCU::lock());
-		LogSessionData *sess = log->get_session<LogSessionData>(caps);
-		Consumer<char> *cons = sess->cons();
 		char *c = cons->get();
 		if(c == 0)
-			return;
+			break;
 		if(sess->put(*c))
 			sess->flush();
 		cons->next();
