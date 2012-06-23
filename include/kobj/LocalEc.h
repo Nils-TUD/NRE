@@ -28,8 +28,8 @@ namespace nul {
 
 class LocalEc : public Ec {
 public:
-	explicit LocalEc(cpu_t cpu,capsel_t event_base = INVALID,uintptr_t stackaddr = 0)
-			: Ec(cpu,event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,INVALID,0,stackaddr) {
+	explicit LocalEc(cpu_t cpu,capsel_t event_base = INVALID,uintptr_t stackaddr = 0,uintptr_t utcb = 0)
+			: Ec(cpu,event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,INVALID,stackaddr,utcb) {
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,0,
 				reinterpret_cast<uintptr_t>(portal_reply_landing_spot),stack()));

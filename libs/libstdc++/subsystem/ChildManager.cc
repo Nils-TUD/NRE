@@ -139,7 +139,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		throw ElfException(E_ELF_SIG);
 
 	// create child
-	Child *c = new Child(cmdline);
+	Child *c = new Child(this,cmdline);
 	size_t idx = free_slot();
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
@@ -164,10 +164,6 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
-		// TODO wrong place
-		c->_utcb = 0x7FFFF000;
-		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),
-				0,0,c->_pd,c->_utcb);
 		c->_entry = elf->e_entry;
 		c->_main = main;
 
@@ -199,6 +195,12 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
 			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.sel());
 		}
+
+		// utcb
+		c->_utcb = c->reglist().find_free(Utcb::SIZE);
+		// just reserve the virtual memory with no permissions; it will not be requested
+		c->reglist().add(c->_utcb,Utcb::SIZE,0,0);
+		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->_pd,c->_utcb);
 
 		// he needs a stack; use guards around it
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE + ExecEnv::PAGE_SIZE * 2);
@@ -481,7 +483,6 @@ void ChildManager::Portals::io(capsel_t pid) {
 
 void ChildManager::Portals::map(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
-	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
 		capsel_t sel = 0;
@@ -493,34 +494,42 @@ void ChildManager::Portals::map(capsel_t pid) {
 			sel = uf.get_translated(0).cap();
 		uf.finish_input();
 
-		// create it or attach to the existing dataspace
-		const DataSpace &ds = type == DataSpace::JOIN ? cm->_dsm.join(desc,sel) : cm->_dsm.create(desc);
-
-		// add it to the regions of the child
+		ScopedLock<UserSm> guard(&c->_sm);
 		uintptr_t addr = 0;
-		try {
-			// use guard-pages around the dataspace
-			addr = c->reglist().find_free(ds.size() + ExecEnv::PAGE_SIZE * 2);
-			c->reglist().add(addr,ExecEnv::PAGE_SIZE,0,0);
-			c->reglist().add(ds.desc(),addr + ExecEnv::PAGE_SIZE,ds.perm(),ds.unmapsel());
-			c->reglist().add(addr + ExecEnv::PAGE_SIZE + ds.size(),ExecEnv::PAGE_SIZE,0,0);
-			addr += ExecEnv::PAGE_SIZE;
-		}
-		catch(...) {
-			cm->_dsm.release(desc,ds.unmapsel());
-			throw;
-		}
-
-		// build answer
-		if(type == DataSpace::CREATE) {
-			uf.delegate(ds.sel(),0);
-			uf.delegate(ds.unmapsel(),1);
+		if(desc.type() == DataSpaceDesc::VIRTUAL) {
+			addr = c->reglist().find_free(desc.size());
+			c->reglist().add(addr,desc.size(),desc.perm(),0);
+			uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
 		}
 		else {
-			uf.accept_delegates();
-			uf.delegate(ds.unmapsel());
+			// create it or attach to the existing dataspace
+			const DataSpace &ds = type == DataSpace::JOIN ? cm->_dsm.join(desc,sel) : cm->_dsm.create(desc);
+
+			// add it to the regions of the child
+			try {
+				// use guard-pages around the dataspace
+				addr = c->reglist().find_free(ds.size() + ExecEnv::PAGE_SIZE * 2);
+				c->reglist().add(addr,ExecEnv::PAGE_SIZE,0,0);
+				c->reglist().add(ds.desc(),addr + ExecEnv::PAGE_SIZE,ds.perm(),ds.unmapsel());
+				c->reglist().add(addr + ExecEnv::PAGE_SIZE + ds.size(),ExecEnv::PAGE_SIZE,0,0);
+				addr += ExecEnv::PAGE_SIZE;
+			}
+			catch(...) {
+				cm->_dsm.release(desc,ds.unmapsel());
+				throw;
+			}
+
+			// build answer
+			if(type == DataSpace::CREATE) {
+				uf.delegate(ds.sel(),0);
+				uf.delegate(ds.unmapsel(),1);
+			}
+			else {
+				uf.accept_delegates();
+				uf.delegate(ds.unmapsel());
+			}
+			uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.virt(),addr);
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.virt(),addr);
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);
@@ -531,22 +540,28 @@ void ChildManager::Portals::map(capsel_t pid) {
 
 void ChildManager::Portals::unmap(capsel_t pid) {
 	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
-	ScopedLock<UserSm> guard(&cm->_sm);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
 		// we can't trust the dataspace properties, except unmapsel
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
-		capsel_t sel = uf.get_translated(0).cap();
+		capsel_t sel = 0;
 		uf >> type >> desc;
+		if(desc.type() != DataSpaceDesc::VIRTUAL)
+			sel = uf.get_translated(0).cap();
 		uf.finish_input();
 
-		// destroy (decrease refs) the ds
-		cm->_dsm.release(desc,sel);
-		DataSpaceDesc childdesc = c->reglist().remove(sel);
-		c->reglist().remove(childdesc.virt() - ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE);
-		c->reglist().remove(childdesc.virt() + childdesc.size(),ExecEnv::PAGE_SIZE);
+		ScopedLock<UserSm> guard(&c->_sm);
+		if(desc.type() == DataSpaceDesc::VIRTUAL)
+			c->reglist().remove(desc.virt(),desc.size());
+		else {
+			// destroy (decrease refs) the ds
+			cm->_dsm.release(desc,sel);
+			DataSpaceDesc childdesc = c->reglist().remove(sel);
+			c->reglist().remove(childdesc.virt() - ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE);
+			c->reglist().remove(childdesc.virt() + childdesc.size(),ExecEnv::PAGE_SIZE);
+		}
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);

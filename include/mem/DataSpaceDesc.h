@@ -20,7 +20,12 @@ namespace nul {
 class DataSpaceDesc {
 public:
 	enum Type {
+		// the mapping is not backed by any file
 		ANONYMOUS,
+		// the mapping is not backed by memory at all. i.e. it's just a piece of virtual memory
+		// that has been reserved.
+		VIRTUAL,
+		// will never be swapped out
 		LOCKED
 	};
 	enum Perm {

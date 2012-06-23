@@ -24,7 +24,7 @@ namespace nul {
 
 void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	CapHolder ch;
-	Syscalls::create_ec(ch.get(),_utcb,sp,_cpu,_event_base,type,pd->sel());
+	Syscalls::create_ec(ch.get(),utcb(),sp,_cpu,_event_base,type,pd->sel());
 	if(pd == Pd::current())
 		RCU::announce(this);
 	sel(ch.release());
@@ -32,8 +32,5 @@ void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
 
 // slot 0 is reserved
 size_t Ec::_tls_idx = 1;
-// TODO arch-dependent; note that this assumes that these addresses are not already occupied by e.g.
-// the utcb selected by the parent at startup
-uintptr_t Ec::_utcb_addr = 0x7FFFE000;
 
 }

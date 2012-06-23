@@ -14,7 +14,6 @@
 using namespace nul;
 
 PhysicalMemory::RootDataSpace PhysicalMemory::RootDataSpace::_slots[MAX_SLOTS];
-UserSm *PhysicalMemory::_sm;
 RegionManager PhysicalMemory::_mem;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng;
 
@@ -94,7 +93,6 @@ void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
 }
 
 void PhysicalMemory::init() {
-	_sm = new UserSm();
 }
 
 void PhysicalMemory::add(uintptr_t addr,size_t size) {
@@ -146,8 +144,11 @@ void PhysicalMemory::portal_map(capsel_t) {
 			sel = uf.get_translated(0).cap();
 		uf.finish_input();
 
-		{
-			ScopedLock<UserSm> guard(_sm);
+		if(desc.type() == DataSpaceDesc::VIRTUAL) {
+			uintptr_t addr = VirtualMemory::alloc(desc.size());
+			uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+		}
+		else {
 			const RootDataSpace &ds = type == DataSpace::JOIN ? _dsmng.join(desc,sel) : _dsmng.create(desc);
 
 			if(type == DataSpace::CREATE) {
@@ -175,10 +176,10 @@ void PhysicalMemory::portal_unmap(capsel_t) {
 		uf >> type >> desc;
 		uf.finish_input();
 
-		{
-			ScopedLock<UserSm> guard(_sm);
+		if(desc.type() == DataSpaceDesc::VIRTUAL)
+			VirtualMemory::free(desc.virt(),desc.size());
+		else
 			_dsmng.release(desc,sel);
-		}
 	}
 	catch(...) {
 		// ignore

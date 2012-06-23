@@ -73,7 +73,6 @@ private:
 
 	PhysicalMemory();
 
-	static nul::UserSm *_sm;
 	static nul::RegionManager _mem;
 	static nul::DataSpaceManager<RootDataSpace> _dsmng;
 };

@@ -58,6 +58,8 @@ public:
 	 * Creates a new dataspace with given properties and assigns the received capability selectors
 	 * to <sel> and <unmapsel>, if not zero. This function is only intended for the malloc-backend,
 	 * which can't use dynamic memory.
+	 *
+	 * @throws DataSpaceException if the creation failed
 	 */
 	static void create(DataSpaceDesc &desc,capsel_t *sel = 0,capsel_t *unmapsel = 0);
 

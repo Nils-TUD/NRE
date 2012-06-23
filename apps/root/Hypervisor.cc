@@ -28,7 +28,9 @@ UserSm *Hypervisor::_gsi_sm;
 void Hypervisor::init() {
 	// note that we have to use a different Ec for the mem-portal than for all the other portals
 	// in the root-task, because the map portal uses the mem-portal.
-	LocalEc *ec = new LocalEc(CPU::current().id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(_stack));
+	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
+	LocalEc *ec = new LocalEc(CPU::current().id,ObjCap::INVALID,
+			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
 	_io_sm = new UserSm();
 	_gsi_sm = new UserSm();
 	_mem_pt = new Pt(ec,portal_mem);

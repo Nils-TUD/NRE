@@ -10,6 +10,7 @@
 #pragma once
 
 #include <mem/DataSpace.h>
+#include <kobj/UserSm.h>
 #include <Exception.h>
 
 namespace nul {
@@ -40,7 +41,7 @@ class DataSpaceManager {
 	};
 
 public:
-	explicit DataSpaceManager() : _slots() {
+	explicit DataSpaceManager() : _sm(), _slots() {
 	}
 	virtual ~DataSpaceManager() {
 	}
@@ -54,6 +55,7 @@ public:
 	 * @throws DataSpaceException if there are no free slots anymore
 	 */
 	const DS &create(const DataSpaceDesc& desc) {
+		ScopedLock<UserSm> guard(&_sm);
 		Slot *slot = 0;
 		slot = find_free();
 		slot->ds = new DS(desc);
@@ -72,6 +74,7 @@ public:
 	 * @throws DataSpaceException if there are no free slots anymore
 	 */
 	const DS &join(const DataSpaceDesc &desc,capsel_t sel) {
+		ScopedLock<UserSm> guard(&_sm);
 		Slot *slot = find(sel);
 		if(!slot) {
 			slot = find_free();
@@ -92,6 +95,7 @@ public:
 	 * @throws DataSpaceException if the dataspace was not found
 	 */
 	void release(DataSpaceDesc &desc,capsel_t sel) {
+		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs && _slots[i].ds->unmapsel() == sel) {
 				if(--_slots[i].refs == 0) {
@@ -121,6 +125,7 @@ private:
 		throw DataSpaceException(E_CAPACITY);
 	}
 
+	UserSm _sm;
 	Slot _slots[MAX_SLOTS];
 };
 

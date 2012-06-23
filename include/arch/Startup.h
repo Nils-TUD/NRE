@@ -32,7 +32,7 @@ class Hip;
 
 struct StartupInfo {
 	Hip *hip;
-	Utcb *utcb;
+	uintptr_t utcb;
 	uintptr_t stack;
 	word_t cpu;
 	word_t done;

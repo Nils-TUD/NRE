@@ -38,10 +38,6 @@ class ChildMemory {
 		MAX_DS			= 64
 	};
 
-	struct DS {
-		DataSpaceDesc desc;
-		capsel_t unmapsel;
-	};
 	struct Region {
 		uintptr_t src;
 		uintptr_t begin;
@@ -50,6 +46,13 @@ class ChildMemory {
 	};
 
 public:
+	struct DS {
+		DataSpaceDesc desc;
+		capsel_t unmapsel;
+	};
+
+	typedef const DS *ds_iterator;
+
 	enum Perm {
 		R	= DataSpaceDesc::R,
 		W	= DataSpaceDesc::W,
@@ -61,6 +64,13 @@ public:
 	};
 
 	explicit ChildMemory() : _regs(), _ds() {
+	}
+
+	ds_iterator ds_begin() const {
+		return _ds;
+	}
+	ds_iterator ds_end() const {
+		return _ds + MAX_DS;
 	}
 
 	size_t regcount() const {

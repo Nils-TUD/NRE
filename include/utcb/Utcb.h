@@ -39,8 +39,13 @@ class Utcb : public UtcbHead {
 	friend 	OStream &operator<<(OStream &os,const Utcb &utcb);
 	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
+public:
 	enum {
-		SIZE		= ExecEnv::PAGE_SIZE,
+		SIZE		= ExecEnv::PAGE_SIZE
+	};
+
+private:
+	enum {
 		WORDS		= SIZE / sizeof(word_t),
 		MAX_TOP		= (SIZE / (4 * sizeof(word_t))) - 1,
 		MAX_BOTTOM	= (SIZE / (2 * sizeof(word_t))) - 1,

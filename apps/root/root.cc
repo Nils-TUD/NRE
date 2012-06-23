@@ -73,10 +73,15 @@ static ChildManager *mng;
 int main() {
 	const Hip &hip = Hip::get();
 
+	PhysicalMemory::init();
+	VirtualMemory::init();
+	Hypervisor::init();
+
 	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
 	CPU &cpu = CPU::current();
+	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	// use the local stack here since we can't map dataspaces yet
-	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack));
+	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
 	cpu.map_pt = new Pt(ec,PhysicalMemory::portal_map);
 	cpu.unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
@@ -87,10 +92,6 @@ int main() {
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
-
-	Hypervisor::init();
-	PhysicalMemory::init();
-	VirtualMemory::init();
 
 	Serial::get().init(false);
 

@@ -52,24 +52,20 @@ public:
 	}
 
 protected:
-	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,Utcb *utcb = 0,uintptr_t stack = 0)
-			: ObjCap(cap), _next(0), _rcu_counter(0), _utcb(utcb),
+	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t utcb = 0)
+			: ObjCap(cap), _next(0), _rcu_counter(0),
+			  _utcb(utcb == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
+			  _utcb_addr(utcb == 0 ? _utcb->virt() : utcb),
 			  _stack(stack == 0 ? new DataSpace(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW) : 0),
-			  _stack_addr(stack == 0 ? _stack->virt() : stack), _event_base(event_base), _cpu(cpu), _tls() {
-		if(!_utcb) {
-			// TODO
-			static UserSm sm;
-			ScopedLock<UserSm> guard(&sm);
-			_utcb = reinterpret_cast<Utcb*>(_utcb_addr);
-			_utcb_addr -= 0x1000;
-		}
+			  _stack_addr(stack == 0 ? _stack->virt() : stack),
+			  _event_base(event_base), _cpu(cpu), _tls() {
 	}
 	void create(Pd *pd,Syscalls::ECType type,void *sp);
 
 public:
 	virtual ~Ec() {
 		delete _stack;
-		// TODO utcb
+		delete _utcb;
 	}
 
 	void recall() {
@@ -83,7 +79,7 @@ public:
 		return _event_base;
 	}
 	Utcb *utcb() {
-		return _utcb;
+		return reinterpret_cast<Utcb*>(_utcb_addr);
 	}
 	cpu_t cpu() const {
 		return _cpu;
@@ -111,17 +107,14 @@ private:
 
 	Ec *_next;
 	uint32_t _rcu_counter;
-	Utcb *_utcb;
+	DataSpace *_utcb;
+	uintptr_t _utcb_addr;
 	DataSpace *_stack;
 	uintptr_t _stack_addr;
 	capsel_t _event_base;
 	cpu_t _cpu;
 	void *_tls[TLS_SIZE];
 	static size_t _tls_idx;
-
-	// TODO
-protected:
-	static uintptr_t _utcb_addr;
 };
 
 }

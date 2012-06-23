@@ -22,6 +22,9 @@ SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::por
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
 	if(_active == sessions_end())
 		_active = sessions_begin();
+	if(_active == sessions_end())
+		return false;
+
 	switch(pk.keycode) {
 		case Keyboard::VK_LEFT:
 			if(~pk.flags & Keyboard::RELEASE) {

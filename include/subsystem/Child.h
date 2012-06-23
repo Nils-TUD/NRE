@@ -83,9 +83,10 @@ public:
 	}
 
 private:
-	explicit Child(const char *cmdline) : _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(),
-			_pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(), _gsis(),
-			_gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
+	explicit Child(ChildManager *cm,const char *cmdline)
+			: _cm(cm), _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(), _pts(),
+			  _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(), _gsis(),
+			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
 	}
 	~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
@@ -134,6 +135,7 @@ private:
 	Child(const Child&);
 	Child& operator=(const Child&);
 
+	ChildManager *_cm;
 	String _cmdline;
 	unsigned _refs;
 	bool _started;

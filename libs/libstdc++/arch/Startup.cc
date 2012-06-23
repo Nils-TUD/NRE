@@ -104,6 +104,8 @@ void _setup(bool child) {
 				cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
 				if(cpu.id == CPU::current().id) {
 					// switch to dlmalloc, since we have created its dependencies now
+					// note: by doing it here, the startup-heap-size does not depend on the number
+					// of CPUs
 					dlmalloc_init();
 				}
 			}
