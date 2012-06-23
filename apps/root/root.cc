@@ -60,7 +60,6 @@ static ChildManager *mng;
 
 // TODO clang!
 // TODO KObjects reference-counted? copying, ...
-// TODO the gcc_except_table aligns to 2MiB in the binary, so that they get > 2MiB large!?
 // TODO what about resource-release when terminating entire subsystems?
 // TODO when a service dies, the client will notice it as soon as it tries to access the service
 // again. then it will throw an exception and call abort(). this in turn will kill this Ec. but

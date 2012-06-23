@@ -19,7 +19,9 @@ hostenv = Environment(
 )
 env = Environment(
 	CXXFLAGS = '-Wall -Wextra -ansi',
-	LINKFLAGS = '-Wl,--no-undefined -static -Wl,-static -static-libgcc',
+	# without "-z max-page-size=0x1000" ld produces really large binaries for x86_64, because it
+	# aligns to 2MiB (not only in virtual memory, but also in the binary)
+	LINKFLAGS = '-Wl,--no-undefined -static -Wl,-static -static-libgcc -Wl,-z,max-page-size=0x1000',
 	ENV = {'PATH' : crossdir + "/bin:" + os.environ['PATH']},
 	CPPPATH = '#include',
 	CXX = cross + '-g++',
@@ -37,8 +39,8 @@ if btype == 'debug':
 else:
 	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
 	# disable stacktraces later, so that we don't need the framepointer.
-	env.Append(CXXFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
-	env.Append(CFLAGS = ' -g -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
+	env.Append(CXXFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
+	env.Append(CFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 
@@ -53,6 +55,7 @@ if int(verbose) == 0:
 
 env.Append(
 	ARCH = target,
+	ROOTDIR = '#',
 	BUILDDIR = '#' + builddir,
 	BINARYDIR = '#' + builddir + '/bin/apps',
 	LIBPATH = '#' + builddir + '/bin/lib',

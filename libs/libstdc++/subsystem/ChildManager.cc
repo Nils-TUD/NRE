@@ -402,28 +402,31 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		uf >> op >> gsi;
 		uf.finish_input();
 
-		if(gsi >= Hip::MAX_GSIS)
-			throw Exception(E_ARGS_INVALID);
-		// make sure that just the owner can release it
-		if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
-			throw Exception(E_ARGS_INVALID);
-
+		ScopedLock<UserSm> guard(&c->_sm);
 		{
-			UtcbFrame puf;
+			if(gsi >= Hip::MAX_GSIS)
+				throw Exception(E_ARGS_INVALID);
+			// make sure that just the owner can release it
+			if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
+				throw Exception(E_ARGS_INVALID);
+
+			{
+				UtcbFrame puf;
+				if(op == Gsi::ALLOC)
+					puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,Crd::OBJ_ALL));
+				puf << op << gsi;
+				CPU::current().gsi_pt->call(puf);
+				ErrorCode res;
+				puf >> res;
+				if(res != E_SUCCESS)
+					throw Exception(res);
+
+				c->gsis().set(gsi,op == Gsi::ALLOC);
+			}
+
 			if(op == Gsi::ALLOC)
-				puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,Crd::OBJ_ALL));
-			puf << op << gsi;
-			CPU::current().gsi_pt->call(puf);
-			ErrorCode res;
-			puf >> res;
-			if(res != E_SUCCESS)
-				throw Exception(res);
-
-			c->gsis().set(gsi,op == Gsi::ALLOC);
+				uf.delegate(c->_gsi_caps + gsi);
 		}
-
-		if(op == Gsi::ALLOC)
-			uf.delegate(c->_gsi_caps + gsi);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -444,25 +447,28 @@ void ChildManager::Portals::io(capsel_t pid) {
 		uf >> op >> base >> count;
 		uf.finish_input();
 
-		// alloc() makes sure that nobody can free something from other childs.
-		if(op == Ports::RELEASE)
-			c->io().alloc(base,count);
-
+		ScopedLock<UserSm> guard(&c->_sm);
 		{
-			UtcbFrame puf;
-			if(op == Ports::ALLOC)
-				puf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
-			puf << op << base << count;
-			CPU::current().io_pt->call(puf);
-			ErrorCode res;
-			puf >> res;
-			if(res != E_SUCCESS)
-				throw Exception(res);
-		}
+			// alloc() makes sure that nobody can free something from other childs.
+			if(op == Ports::RELEASE)
+				c->io().alloc(base,count);
 
-		if(op == Ports::ALLOC) {
-			c->io().free(base,count);
-			uf.delegate(CapRange(base,count,Crd::IO_ALL));
+			{
+				UtcbFrame puf;
+				if(op == Ports::ALLOC)
+					puf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
+				puf << op << base << count;
+				CPU::current().io_pt->call(puf);
+				ErrorCode res;
+				puf >> res;
+				if(res != E_SUCCESS)
+					throw Exception(res);
+			}
+
+			if(op == Ports::ALLOC) {
+				c->io().free(base,count);
+				uf.delegate(CapRange(base,count,Crd::IO_ALL));
+			}
 		}
 		uf << E_SUCCESS;
 	}
@@ -506,13 +512,14 @@ void ChildManager::Portals::map(capsel_t pid) {
 		}
 
 		// build answer
-		uf.accept_delegates();
 		if(type == DataSpace::CREATE) {
 			uf.delegate(ds.sel(),0);
 			uf.delegate(ds.unmapsel(),1);
 		}
-		else
+		else {
+			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
+		}
 		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.virt(),addr);
 	}
 	catch(const Exception& e) {

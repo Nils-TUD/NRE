@@ -2,6 +2,7 @@
 
 # config
 jobs="-j8"
+opts=""
 hvdir="../nova-intel"
 loader="../morbo/tftp/farnsworth"
 
@@ -33,8 +34,12 @@ fi
 
 echo "Building for $NOVA_TARGET in $NOVA_BUILD mode..."
 
+if [ ! -f $build/test.dump ]; then
+	echo "" > $build/test.dump
+fi
+
 # build userland
-scons $jobs
+scons $jobs $opts
 if [ $? -ne 0 ]; then
 	exit 1
 fi
@@ -42,7 +47,7 @@ fi
 mv $build/test.dump $build/test_old.dump
 $build/tools/dump/dump $build/bin/apps/test > $build/test.dump
 if [ "`diff $build/test.dump $build/test_old.dump`" != "" ]; then
-	scons $jobs
+	scons $jobs $opts
 fi
 rm -f $build/test_old.dump
 
