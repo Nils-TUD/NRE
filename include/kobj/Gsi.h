@@ -18,6 +18,11 @@
 
 namespace nul {
 
+/**
+ * Represents a global system interrupt. Creation of a GSI allocates it from the parent and
+ * destruction release it again. By doing a down() or zero() on this object you can wait for
+ * the interrupt.
+ */
 class Gsi : public Sm {
 public:
 	enum Op {
@@ -25,14 +30,25 @@ public:
 		RELEASE
 	};
 
+	/**
+	 * Allocates the given GSI from the parent
+	 *
+	 * @param gsi the GSI
+	 */
 	explicit Gsi(uint gsi) : Sm(alloc(gsi),true), _gsi(gsi) {
 		// neither keep the cap nor the selector
 		set_flags(0);
 	}
+	/**
+	 * Releases the GSI
+	 */
 	virtual ~Gsi() {
 		release();
 	}
 
+	/**
+	 * @return the GSI
+	 */
 	uint gsi() const {
 		return _gsi;
 	}

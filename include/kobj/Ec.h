@@ -33,6 +33,12 @@ namespace nul {
 class RCU;
 class RCULock;
 
+/**
+ * Represents an execution context. This class can't be used directly. To create an Ec, use LocalEc
+ * or GlobalEc. Note that each Ec contains a few slots for thread local storage (TLS). The index
+ * Ec::TLS_PARAM is always available, e.g. to pass a parameter to an Ec. You may create additional
+ * ones by Ec::create_tls().
+ */
 class Ec : public ObjCap {
 	friend class RCU;
 	friend class RCULock;
@@ -47,11 +53,23 @@ public:
 		TLS_PARAM	= 0
 	};
 
+	/**
+	 * @return the current execution context
+	 */
 	static Ec *current() {
 		return ExecEnv::get_current_ec();
 	}
 
 protected:
+	/**
+	 * Constructor
+	 *
+	 * @param cpu the cpu to bind the Ec to
+	 * @param event_base the offset for the event-portals
+	 * @param cap the capability (INVALID if a new one should be used)
+	 * @param stack the stack address (0 = create one automatically)
+	 * @param utcb the utcb address (0 = create one automatically)
+	 */
 	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t utcb = 0)
 			: ObjCap(cap), _next(0), _rcu_counter(0),
 			  _utcb(utcb == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
@@ -60,41 +78,79 @@ protected:
 			  _stack_addr(stack == 0 ? _stack->virt() : stack),
 			  _event_base(event_base), _cpu(cpu), _tls() {
 	}
+	/**
+	 * The actual creation of the Ec.
+	 *
+	 * @param pd the protection domain the Ec should run in
+	 * @param type the type of Ec
+	 * @param sp the stack-pointer
+	 */
 	void create(Pd *pd,Syscalls::ECType type,void *sp);
 
 public:
+	/**
+	 * Destructor
+	 */
 	virtual ~Ec() {
 		delete _stack;
 		delete _utcb;
 	}
 
+	/**
+	 * Let's this Ec perform a recall
+	 */
 	void recall() {
 		Syscalls::ec_ctrl(sel(),Syscalls::RECALL);
 	}
 
-	uintptr_t stack() const {
-		return _stack_addr;
-	}
-	capsel_t event_base() const {
-		return _event_base;
-	}
-	Utcb *utcb() {
-		return reinterpret_cast<Utcb*>(_utcb_addr);
-	}
+	/**
+	 * @return the cpu
+	 */
 	cpu_t cpu() const {
 		return _cpu;
 	}
+	/**
+	 * @return the event-base
+	 */
+	capsel_t event_base() const {
+		return _event_base;
+	}
+	/**
+	 * @return the stack-address
+	 */
+	uintptr_t stack() const {
+		return _stack_addr;
+	}
+	/**
+	 * @return the utcb
+	 */
+	Utcb *utcb() {
+		return reinterpret_cast<Utcb*>(_utcb_addr);
+	}
 
+	/**
+	 * Creates a new TLS slot for all Ecs
+	 *
+	 * @return the TLS index
+	 */
 	size_t create_tls() {
 		size_t next = Atomic::xadd(&_tls_idx,+1);
 		assert(next < TLS_SIZE);
 		return next;
 	}
+	/**
+	 * @param idx the TLS index
+	 * @return the value at given index
+	 */
 	template<typename T>
 	T get_tls(size_t idx) const {
 		assert(idx < TLS_SIZE);
 		return reinterpret_cast<T>(_tls[idx]);
 	}
+	/**
+	 * @param idx the TLS index
+	 * @param val the new value
+	 */
 	template<typename T>
 	void set_tls(size_t idx,T val) {
 		assert(idx < TLS_SIZE);

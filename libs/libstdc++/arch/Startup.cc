@@ -50,7 +50,7 @@ static void verbose_terminate() {
 }
 
 void _presetup() {
-	static Pd initpd(CapSpace::INIT_PD,true);
+	static Pd initpd(CapSpace::INIT_PD);
 	static GlobalEc initec(_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,
 			&initpd,_startup_info.stack);
 	// force the linker to include the pthread object-file. FIXME why is this necessary??

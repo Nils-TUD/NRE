@@ -26,6 +26,9 @@
 
 namespace nul {
 
+/**
+ * Represents I/O ports that are allocated from the parent and released again on destruction.
+ */
 class Ports {
 public:
 	typedef uint port_t;
@@ -35,6 +38,13 @@ public:
 		RELEASE
 	};
 
+	/**
+	 * Allocates the given port range from the parent.
+	 *
+	 * @param base the beginning of the port range
+	 * @param count the number of ports
+	 * @throws Exception if failed (e.g. ports already allocated)
+	 */
 	explicit Ports(port_t base,uint count) : _base(base), _count(count) {
 		UtcbFrame uf;
 		CapHolder cap;
@@ -46,19 +56,34 @@ public:
 		if(res != E_SUCCESS)
 			throw Exception(res);
 	}
+	/**
+	 * Releases the ports again
+	 */
 	~Ports() {
 		UtcbFrame uf;
 		uf << RELEASE << _base << _count;
 		CPU::current().io_pt->call(uf);
 	}
 
+	/**
+	 * @return the base of the port-range
+	 */
 	port_t base() const {
 		return _base;
 	}
+	/**
+	 * @return the number of ports
+	 */
 	uint count() const {
 		return _count;
 	}
 
+	/**
+	 * Reads a value from port base()+<offset>.
+	 *
+	 * @param offset the offset within the port-range
+	 * @return the value
+	 */
 	template<typename T>
 	inline T in(port_t offset = 0) {
 		assert(offset < _count);
@@ -67,6 +92,12 @@ public:
 		return val;
 	}
 
+	/**
+	 * Writes <val> to port base()+<offset>
+	 *
+	 * @param val the value to write
+	 * @param offset the offset within the port-range
+	 */
     template<typename T>
 	inline void out(T val,port_t offset = 0) {
 		assert(offset < _count);

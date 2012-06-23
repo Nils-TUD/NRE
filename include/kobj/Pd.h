@@ -24,14 +24,32 @@
 
 namespace nul {
 
+/**
+ * Represents a protection domain
+ */
 class Pd : public ObjCap {
 	friend void ::_presetup();
 
-	explicit Pd(capsel_t cap,bool) : ObjCap(cap) {
+	/**
+	 * Creates protection-domain object for the current Pd
+	 *
+	 * @param cap the capability-selector
+	 */
+	explicit Pd(capsel_t cap) : ObjCap(cap) {
 	}
 
 public:
+	/**
+	 * @return the current protection domain
+	 */
 	static Pd *current();
+
+	/**
+	 * Creates a new protection domain
+	 *
+	 * @param crd the capabilities to pass to the new Pd
+	 * @param pd the protection-domain to create the new Pd in
+	 */
 	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current());
 
 private:

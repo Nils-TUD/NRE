@@ -17,19 +17,30 @@ namespace nul {
 
 /**
  * A user semaphore optimized for the case where we do not block.
- * This semaphore implementation breaks when threads blocking on the
- * associated kernel semaphore can be canceled, because the kernel
- * semaphore and the shared counter might then be out-of-sync.
  */
 class UserSm {
 public:
-	explicit UserSm() : _sem(0), _value(1) {
+	/**
+	 * Creates a user semaphore.
+	 *
+	 * @param initial the initial value for the semaphore (default 1)
+	 */
+	explicit UserSm(uint initial = 1) : _sem(0), _value(initial) {
 	}
 
+	/**
+	 * Performs a down on this semaphore. That is, if the value is zero, it blocks on the associated
+	 * kernel semaphore. If not, it decreases the value.
+	 */
 	void down() {
 		if(Atomic::xadd(&_value,-1) <= 0)
 			_sem.down();
 	}
+
+	/**
+	 * Performs an up on this semaphore. That is, it increases the value and if necessary, it
+	 * unblocks a waiting Ec that blocked on the associated kernel semaphore.
+	 */
 	void up() {
 		if(Atomic::xadd(&_value,+1) < 0)
 			_sem.up();

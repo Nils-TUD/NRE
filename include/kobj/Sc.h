@@ -26,25 +26,47 @@
 
 namespace nul {
 
+/**
+ * Represents a scheduling context. A Sc can be bound to a GlobalEc to run it with a specified
+ * priority and time quantum.
+ */
 class Sc : public ObjCap {
 public:
+	/**
+	 * Creates a new Sc that is bound to the given GlobalEc. Note that it does NOT start it. Please
+	 * call start() afterwards.
+	 *
+	 * @param ec the GlobalEc to bind it to
+	 * @param qpd the quantum-priority descriptor for the Sc
+	 * @param pd the pd to create it in
+	 */
 	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : ObjCap(), _ec(ec), _qpd(qpd), _pd(pd) {
 		// don't create the Sc here, because then we have no chance to store the created object
 		// somewhere to make it accessible for the just started Ec
 	}
-	virtual ~Sc() {
-	}
 
+	/**
+	 * @return the ec it is bound to
+	 */
 	GlobalEc *ec() {
 		return _ec;
 	}
+	/**
+	 * @return the quantum-priority descriptor
+	 */
 	Qpd qpd() const {
 		return _qpd;
 	}
+	/**
+	 * @return the protection-domain it belongs to
+	 */
 	Pd *pd() {
 		return _pd;
 	}
 
+	/**
+	 * Starts the Sc, i.e. the attached GlobalEc.
+	 */
 	void start() {
 		CapHolder ch;
 		// in this case we should assign the selector before it has been successfully created
