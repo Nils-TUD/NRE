@@ -19,13 +19,13 @@
 #pragma once
 
 #include <arch/ExecEnv.h>
-#include <cap/CapHolder.h>
 #include <mem/DataSpace.h>
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <kobj/UserSm.h>
 #include <utcb/Utcb.h>
 #include <ScopedLock.h>
+#include <ScopedCapSels.h>
 #include <Syscalls.h>
 
 namespace nul {

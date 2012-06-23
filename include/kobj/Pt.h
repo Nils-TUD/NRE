@@ -66,7 +66,7 @@ public:
 	 * 	kernel pass to the portal
 	 */
 	explicit Pt(LocalEc *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
-		CapHolder pt;
+		ScopedCapSels pt;
 		Syscalls::create_pt(pt.get(),ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 		sel(pt.release());
 	}

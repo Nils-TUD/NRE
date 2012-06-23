@@ -20,12 +20,13 @@
 
 namespace nul {
 
+/**
+ * Generic iterator for a singly linked list. Expects the list node class to have a next() method.
+ */
 template<class T>
 class ListIterator {
 public:
 	explicit ListIterator(T *n = 0) : _n(n) {
-	}
-	~ListIterator() {
 	}
 
 	T& operator *() const {

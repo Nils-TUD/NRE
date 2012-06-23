@@ -11,13 +11,26 @@
 
 namespace nul {
 
+/**
+ * RAII class for locks. Assumes that the used class template has the method down() to acquire
+ * the lock and up() to release it.
+ */
 template<class T>
 class ScopedLock {
 public:
+	/**
+	 * Constructor. Acquires the lock.
+	 *
+	 * @param lock the pointer to the lock-object
+	 */
 	explicit ScopedLock(T *lock)
 		: _lock(lock) {
 		_lock->down();
 	}
+
+	/**
+	 * Destructor. Releases the lock
+	 */
 	~ScopedLock() {
 		_lock->up();
 	}

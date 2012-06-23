@@ -8,12 +8,12 @@
  */
 
 #include <kobj/Sm.h>
-#include <cap/CapHolder.h>
+#include <ScopedCapSels.h>
 
 namespace nul {
 
 Sm::Sm(unsigned initial,Pd *pd) : ObjCap() {
-	CapHolder ch;
+	ScopedCapSels ch;
 	Syscalls::create_sm(ch.get(),initial,pd->sel());
 	sel(ch.release());
 }

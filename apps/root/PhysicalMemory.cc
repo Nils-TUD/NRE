@@ -35,7 +35,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	}
 
 	// create a map and unmap-cap
-	CapHolder cap(2,2);
+	ScopedCapSels cap(2,2);
 	Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
 	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
 
@@ -141,7 +141,7 @@ void PhysicalMemory::portal_map(capsel_t) {
 		DataSpace::RequestType type;
 		uf >> type >> desc;
 		if(type == DataSpace::JOIN)
-			sel = uf.get_translated(0).cap();
+			sel = uf.get_translated(0).offset();
 		uf.finish_input();
 
 		if(desc.type() == DataSpaceDesc::VIRTUAL) {
@@ -172,7 +172,7 @@ void PhysicalMemory::portal_unmap(capsel_t) {
 	try {
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
-		capsel_t sel = uf.get_translated(0).cap();
+		capsel_t sel = uf.get_translated(0).offset();
 		uf >> type >> desc;
 		uf.finish_input();
 

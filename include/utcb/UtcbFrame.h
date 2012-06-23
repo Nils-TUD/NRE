@@ -217,14 +217,14 @@ public:
 	Crd get_translated(uint order = 0) {
 		TypedItem ti;
 		get_typed(ti);
-		if(ti.crd().cap() == 0 || (ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
+		if(ti.crd().offset() == 0 || (ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
 			throw UtcbException(E_ARGS_INVALID);
 		return ti.crd();
 	}
 	Crd get_delegated(uint order = 0) {
 		TypedItem ti;
 		get_typed(ti);
-		if(ti.crd().cap() == 0 || !(ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
+		if(ti.crd().offset() == 0 || !(ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
 			throw UtcbException(E_ARGS_INVALID);
 		return ti.crd();
 	}

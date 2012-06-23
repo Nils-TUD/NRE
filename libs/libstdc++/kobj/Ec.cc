@@ -23,7 +23,7 @@
 namespace nul {
 
 void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
-	CapHolder ch;
+	ScopedCapSels ch;
 	Syscalls::create_ec(ch.get(),utcb(),sp,_cpu,_event_base,type,pd->sel());
 	if(pd == Pd::current())
 		RCU::announce(this);

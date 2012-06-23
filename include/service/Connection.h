@@ -41,7 +41,7 @@ private:
 	capsel_t connect(const char *service) {
 		// TODO we need a function to receive caps, right?
 		UtcbFrame uf;
-		CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
+		ScopedCapSels caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(Hip::MAX_CPUS),Crd::OBJ_ALL));
 		uf << String(service);
 		CPU::current().get_pt->call(uf);

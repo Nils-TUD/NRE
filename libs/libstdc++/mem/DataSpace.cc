@@ -8,13 +8,13 @@
  */
 
 #include <mem/DataSpace.h>
-#include <cap/CapHolder.h>
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <service/Session.h>
 #include <service/Service.h>
 #include <stream/Serial.h>
+#include <ScopedCapSels.h>
 #include <Syscalls.h>
 #include <CPU.h>
 
@@ -30,7 +30,7 @@ void DataSpace::handle_response(UtcbFrameRef& uf) {
 void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	UtcbFrame uf;
 	// prepare for receiving map and unmap-cap
-	CapHolder caps(2,2);
+	ScopedCapSels caps(2,2);
 	uf.set_receive_crd(Crd(caps.get(),1,Crd::OBJ_ALL));
 	uf << CREATE << desc;
 	CPU::current().map_pt->call(uf);
@@ -66,7 +66,7 @@ void DataSpace::join() {
 	UtcbFrame uf;
 
 	// prepare for receiving unmap-cap
-	CapHolder umcap;
+	ScopedCapSels umcap;
 	uf.set_receive_crd(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN << _desc;

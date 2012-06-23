@@ -26,15 +26,22 @@ namespace nul {
 class Hip_cpu;
 class Hip_mem;
 
+/**
+ * Hypervisor information page
+ */
 class Hip {
 public:
+	typedef const Hip_mem* mem_iterator;
+	typedef const Hip_cpu* cpu_iterator;
+
 	enum {
 		MAX_CPUS	= 64,	// has to be a power of 2
 		MAX_GSIS	= 64
 	};
-	typedef const Hip_mem* mem_iterator;
-	typedef const Hip_cpu* cpu_iterator;
 
+	/**
+	 * @return the Hip
+	 */
 	static const Hip &get() {
 		return *_startup_info.hip;
 	}
@@ -72,37 +79,67 @@ public:
 		return service_caps() * MAX_CPUS;
 	}
 
+	/**
+	 * @return true if Intel VMX is supported
+	 */
 	bool has_vmx() const {
 		return api_flg & (1 << 1);
 	}
+	/**
+	 * @return true if AMD SVM is supported
+	 */
 	bool has_svm() const {
 		return api_flg & (1 << 2);
 	}
 
+	/**
+	 * @return the number of memory items
+	 */
 	size_t mem_count() const {
 		return (length - mem_offs) / mem_size;
 	}
 
+	/**
+	 * @return the number of CPU items (NOT online CPUs)
+	 */
 	size_t cpu_count() const {
 		return (mem_offs - cpu_offs) / cpu_size;
 	}
+	/**
+	 * @return the number of online CPUs
+	 */
 	size_t cpu_online_count() const;
 
+	/**
+	 * @return beginning of memory items
+	 */
 	mem_iterator mem_begin() const {
 		return reinterpret_cast<mem_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
+	/**
+	 * @return end of memory items
+	 */
 	mem_iterator mem_end() const {
 		return reinterpret_cast<mem_iterator>(reinterpret_cast<const char*>(this) + length);
 	}
 
+	/**
+	 * @return beginning of CPU items
+	 */
 	cpu_iterator cpu_begin() const {
 		return reinterpret_cast<cpu_iterator>(reinterpret_cast<const char*>(this) + cpu_offs);
 	}
+	/**
+	 * @return end of CPU items
+	 */
 	cpu_iterator cpu_end() const {
 		return reinterpret_cast<cpu_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
 };
 
+/**
+ * CPU item in the Hip
+ */
 class Hip_cpu {
 public:
 	uint8_t flags;
@@ -113,14 +150,23 @@ private:
 	uint32_t reserved;
 
 public:
+	/**
+	 * @return the id of this CPU (0 .. n-1 in the order they appear in the Hip)
+	 */
 	cpu_t id() const {
 		return this - Hip::get().cpu_begin();
 	}
+	/**
+	 * @return true if this CPU is online
+	 */
 	bool enabled() const {
 		return (flags & 1) != 0;
 	}
 };
 
+/**
+ * Memory item in the Hip
+ */
 class Hip_mem {
 public:
 	enum {

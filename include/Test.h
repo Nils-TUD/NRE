@@ -2,6 +2,8 @@
  * TODO comment me
  *
  * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Copyright (C) 2011, 2012 Michal Sojka <sojka@os.inf.tu-dresden.de>
+ * Copyright (C) 1997-2009 Net Integration Technologies, Inc.
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
  * This file is part of NUL.
@@ -27,10 +29,6 @@ namespace nul {
 namespace test {
 
 typedef void (*test_func)();
-enum {
-	MAX_FUNCS = 32
-};
-
 struct TestCase {
 	const char *name;
 	test_func func;
@@ -145,28 +143,8 @@ class WvTest {
 	}
 
 	static void stringify(char *buf,unsigned size,Crd crd) {
-		switch(crd.value() & 0x3) {
-			case 0:
-				OStringStream::format(buf,size,"CRD(0)");
-				return;
-			case Crd::MEM: {
-				char r = crd.value() & 0x04 ? 'r' : '-';
-				char w = crd.value() & 0x08 ? 'w' : '-';
-				char x = crd.value() & 0x10 ? 'x' : '-';
-				OStringStream::format(
-					buf,size,"CRD(mem, 0x%x+0x%x, %c%c%c)",crd.base(),1 << (crd.order() + ExecEnv::PAGE_SHIFT),r,w,x
-				);
-				return;
-			}
-			case Crd::IO:
-				OStringStream::format(buf,size,"CRD(io, 0x%x, 2^%d)",crd.base(),crd.order());
-				return;
-			case Crd::OBJ:
-				OStringStream::format(
-					buf,size,"CRD(obj, 0x%x, 2^%d, 0x%x)",crd.cap(),crd.order(),crd.value() >> 2 & 0x1f
-				);
-				return;
-		}
+		OStringStream os(buf,size);
+		os << crd;
 	}
 
 	static void stringifyx(char *buf,unsigned size,ullong val) {

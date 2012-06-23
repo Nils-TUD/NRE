@@ -19,7 +19,7 @@
 #pragma once
 
 #include <utcb/UtcbFrame.h>
-#include <cap/CapHolder.h>
+#include <ScopedCapSels.h>
 #include <kobj/Pt.h>
 #include <CPU.h>
 #include <Util.h>
@@ -47,7 +47,7 @@ public:
 	 */
 	explicit Ports(port_t base,uint count) : _base(base), _count(count) {
 		UtcbFrame uf;
-		CapHolder cap;
+		ScopedCapSels cap;
 		uf.set_receive_crd(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
 		uf << ALLOC << _base << _count;
 		CPU::current().io_pt->call(uf);

@@ -23,6 +23,9 @@
 
 namespace nul {
 
+/**
+ * The architecture independent API for performing system calls.
+ */
 class Syscalls {
 	enum {
 		FLAG0	= 1 << 4,
@@ -38,9 +41,9 @@ class Syscalls {
 		CREATE_SM,
 		REVOKE,
 		LOOKUP,
-		EC_CTL,
-		SC_CTL,
-		SM_CTL,
+		EC_CTRL,
+		SC_CTRL,
+		SM_CTRL,
 		ASSIGN_PCI,
 		ASSIGN_GSI,
 		CREATE_EC_GLOBAL = CREATE_EC | FLAG0,
@@ -48,56 +51,145 @@ class Syscalls {
 	};
 
 public:
+	/**
+	 * Types of Ecs. Global means that you can bind a Sc to it. Local Ecs are used for portals
+	 */
 	enum ECType {
 		EC_GLOBAL,
 		EC_LOCAL
 	};
+	/**
+	 * Ec operations
+	 */
 	enum EcOp {
 		RECALL	= 0
 	};
+	/**
+	 * Sm operations
+	 */
 	enum SmOp {
 		SM_UP	= 0,
 		SM_DOWN = FLAG0,
 		SM_ZERO	= FLAG0 | FLAG1
 	};
 
+	/**
+	 * Calls the given portal
+	 *
+	 * @param pt the portal capability selector
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void call(capsel_t pt) {
 		SyscallABI::syscall(pt << 8 | IPC_CALL);
 	}
 
-	static inline void create_ec(capsel_t ec,void *utcb,void *esp,cpu_t cpunr,unsigned excpt_base,
+	/**
+	 * Creates a new Ec.
+	 *
+	 * @param ec the capability selector to use for the Ec
+	 * @param utcb the address of the utcb to use
+	 * @param sp the initial stack pointer
+	 * @param cpunr the CPU to bind the Ec to
+	 * @param event_base the event base for the Ec
+	 * @param type the type of Ec (global or local)
+	 * @param dstpd the Pd in which the Ec should be created
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
+	static inline void create_ec(capsel_t ec,void *utcb,void *sp,cpu_t cpunr,unsigned event_base,
 			ECType type,capsel_t dstpd) {
 		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
 		        reinterpret_cast<word_t>(utcb) | cpunr,
-		        reinterpret_cast<word_t>(esp),
-		        excpt_base);
+		        reinterpret_cast<word_t>(sp),
+		        event_base);
 	}
 
+	/**
+	 * Creates a new Sc.
+	 *
+	 * @param sc the capability selector to use for the Sc
+	 * @param ec the Ec to bind the Sc to
+	 * @param qpd the quantum and period for the Sc
+	 * @param dstpd the Pd in which the Sc should be created
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void create_sc(capsel_t sc,capsel_t ec,Qpd qpd,capsel_t dstpd) {
 		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value());
 	}
 
-	static inline void create_pt(capsel_t pt,capsel_t ec,uintptr_t eip,Mtd mtd,capsel_t dstpd) {
-		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd.value(),eip);
+	/**
+	 * Creates a new Pt.
+	 *
+	 * @param pt the capability selector to use for the Pt
+	 * @param ec the Ec to bind the Pt to
+	 * @param addr the address of the portal
+	 * @param mtd the message-transfer descriptor
+	 * @param dstpd the Pd in which the Sc should be created
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
+	static inline void create_pt(capsel_t pt,capsel_t ec,uintptr_t addr,Mtd mtd,capsel_t dstpd) {
+		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd.value(),addr);
 	}
 
+	/**
+	 * Creates a new Pd.
+	 *
+	 * @param pd the capability selector to use for the Pd
+	 * @param pt_crd the initial capabilities to pass to the Pd
+	 * @param dstpd the Pd in which the Pd should be created
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void create_pd(capsel_t pd,Crd pt_crd,capsel_t dstpd) {
 		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value());
 	}
 
+	/**
+	 * Creates a new Sm.
+	 *
+	 * @param sm the capability selector to use for the Sm
+	 * @param initial the initial value of the Sm
+	 * @param dstpd the Pd in which the Pd should be created
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void create_sm(capsel_t sm,unsigned initial,capsel_t dstpd) {
 		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial);
 	}
 
+	/**
+	 * Controls the given Ec.
+	 *
+	 * @param ec the capability selector for the Ec
+	 * @param op the operation (currently only RECALL)
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void ec_ctrl(capsel_t ec,EcOp op) {
-		SyscallABI::syscall(ec << 8 | EC_CTL | op);
+		SyscallABI::syscall(ec << 8 | EC_CTRL | op);
 	}
 
+	/**
+	 * Controls the given Sm.
+	 *
+	 * @param sm the capability selector for the Sm
+	 * @param op the operation (DOWN, ZERO or UP)
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void sm_ctrl(capsel_t sm,SmOp op) {
-		SyscallABI::syscall(sm << 8 | SM_CTL | op);
+		SyscallABI::syscall(sm << 8 | SM_CTRL | op);
 	}
 
-	static inline void assign_gsi(capsel_t sm,cpu_t cpu,void *pci_cfg_mem = 0,uint64_t *msi_address = 0,word_t *msi_value = 0) {
+	/**
+	 * Routes the GSI, specified by <sm>, to the given CPU, where it will be signaled on the
+	 * corresponding interrupt semaphore.
+	 *
+	 * @param sm the GSI to assign
+	 * @param cpu the CPU to which the GSI should be routed
+	 * @param pci_cfg_mem for GSIs delivered as MSI, this must refer to the memory-mapped PCI
+	 * 	configuration space of the device that generates the interrupt.
+	 * @param msi_address will be set to the address of the MSI
+	 * @param msi_value will be set to the value of the MSI
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
+	static inline void assign_gsi(capsel_t sm,cpu_t cpu,void *pci_cfg_mem = 0,
+			uint64_t *msi_address = 0,word_t *msi_value = 0) {
 		word_t out1,out2;
 		SyscallABI::syscall(sm << 8 | ASSIGN_GSI,reinterpret_cast<word_t>(pci_cfg_mem),cpu,0,0,out1,out2);
 		if(msi_address)
@@ -106,6 +198,13 @@ public:
 			*msi_value = out2;
 	}
 
+	/**
+	 * Revokes the capability range described by the given Crd.
+	 *
+	 * @param crd the capability range to revoke
+	 * @param myself true if the caps should be revoked from yourself as well (not only from childs)
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
 	static inline void revoke(Crd crd,bool myself) {
 		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value());
 	}

@@ -12,7 +12,7 @@
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <cap/CapHolder.h>
+#include <ScopedCapSels.h>
 #include <Syscalls.h>
 #include <CPU.h>
 
@@ -56,7 +56,7 @@ public:
 private:
 	capsel_t alloc(uint gsi) {
 		UtcbFrame uf;
-		CapHolder cap;
+		ScopedCapSels cap;
 		uf.set_receive_crd(Crd(cap.get(),0,Crd::OBJ_ALL));
 		uf << ALLOC << gsi;
 		CPU::current().gsi_pt->call(uf);

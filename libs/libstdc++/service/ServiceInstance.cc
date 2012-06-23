@@ -53,8 +53,8 @@ void ServiceInstance::portal(capsel_t) {
 
 			case Service::SHARE_DATASPACE: {
 				// the translated cap of the client identifies his session
-				capsel_t sid = uf.get_translated().cap();
-				capsel_t dssel = uf.get_delegated(0).cap();
+				capsel_t sid = uf.get_translated().offset();
+				capsel_t dssel = uf.get_delegated(0).offset();
 				DataSpaceDesc desc;
 				DataSpace::RequestType type;
 				uf >> type >> desc;
@@ -70,7 +70,7 @@ void ServiceInstance::portal(capsel_t) {
 			break;
 
 			case Service::CLOSE_SESSION: {
-				capsel_t sid = uf.get_translated().cap();
+				capsel_t sid = uf.get_translated().offset();
 				uf.finish_input();
 
 				s->destroy_session(sid);

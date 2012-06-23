@@ -19,7 +19,7 @@
 #include <arch/ExecEnv.h>
 #include <kobj/Pd.h>
 #include <kobj/Ec.h>
-#include <cap/CapHolder.h>
+#include <ScopedCapSels.h>
 
 namespace nul {
 
@@ -28,7 +28,7 @@ Pd *Pd::current() {
 }
 
 Pd::Pd(Crd crd,Pd *pd) : ObjCap() {
-	CapHolder ch;
+	ScopedCapSels ch;
 	Syscalls::create_pd(ch.get(),crd,pd->sel());
 	sel(ch.release());
 }

@@ -21,7 +21,7 @@
 #include <kobj/ObjCap.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Pd.h>
-#include <cap/CapHolder.h>
+#include <ScopedCapSels.h>
 #include <Syscalls.h>
 
 namespace nul {
@@ -68,7 +68,7 @@ public:
 	 * Starts the Sc, i.e. the attached GlobalEc.
 	 */
 	void start() {
-		CapHolder ch;
+		ScopedCapSels ch;
 		// in this case we should assign the selector before it has been successfully created
 		// because the Sc starts immediatly. therefore, it should be completely initialized before
 		// its started.

@@ -22,6 +22,9 @@
 
 namespace nul {
 
+/**
+ * Base class for all decriptors. Note that we don't support polymorphism here.
+ */
 class Desc {
 	word_t _value;
 protected:
@@ -80,18 +83,16 @@ public:
         OBJ_ALL		= OBJ | (0x1F << 2)
 	};
 
+	word_t offset() const {
+		return value() >> 12;
+	}
 	uint order() const {
 		return ((value() >> 7) & 0x1f);
-	}
-	word_t base() const {
-		return value() & ~0xfff;
 	}
 	uint attr() const {
 		return value() & 0x1f;
 	}
-	word_t cap() const {
-		return value() >> 12;
-	}
+
 	explicit Crd(word_t offset,uint order,uint attr) :
 			Desc((offset << 12) | (order << 7) | attr) {
 	}
@@ -103,7 +104,7 @@ public:
 static inline OStream &operator<<(OStream &os,const Crd &crd) {
 	static const char *types[] = {"NULL","MEM","IO","OBJ"};
 	os.writef("Crd[type=%s offset=%#x order=%#x attr=%#x]",types[crd.attr() & 0x3],
-			crd.cap(),crd.order(),crd.attr());
+			crd.offset(),crd.order(),crd.attr());
 	return os;
 }
 

@@ -65,6 +65,10 @@ namespace std {
 
 namespace nul {
 
+/**
+ * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and
+ * have optionally a message (string).
+ */
 class Exception {
 	enum {
 		MAX_TRACE_DEPTH = 16
@@ -74,6 +78,12 @@ public:
 	typedef const uintptr_t *backtrace_iterator;
 
 public:
+	/**
+	 * Constructor
+	 *
+	 * @param code the error-code
+	 * @param msg optionally, a message describing the error
+	 */
 	explicit Exception(ErrorCode code,const char *msg = 0) throw()
 		: _code(code), _msg(msg), _backtrace(), _count() {
 		_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
@@ -81,22 +91,43 @@ public:
 	virtual ~Exception() throw() {
 	}
 
+	/**
+	 * @return the error message (may be 0)
+	 */
 	const char *msg() const {
 		return _msg;
 	}
+	/**
+	 * @return the error-code as a string
+	 */
 	const char *name() const {
 		return to_string(_code);
 	}
+	/**
+	 * @return the error-code
+	 */
 	ErrorCode code() const {
 		return _code;
 	}
+
+	/**
+	 * @return beginning of the backtrace
+	 */
 	backtrace_iterator backtrace_begin() const {
 		return _backtrace;
 	}
+	/**
+	 * @return end of the backtrace
+	 */
 	backtrace_iterator backtrace_end() const {
 		return _backtrace + _count;
 	}
 
+	/**
+	 * Writes this exception to the given stream. May be overwritten by subclasses.
+	 *
+	 * @param os the stream
+	 */
 	virtual void write(OStream &os) const {
 		os << "Exception: " << name() << " (" << code() << ")";
 		if(msg())
@@ -106,6 +137,11 @@ public:
 	}
 
 protected:
+	/**
+	 * Convenience method to write the backtrace to the given stream
+	 *
+	 * @param os the stream
+	 */
 	void write_backtrace(OStream &os) const {
 		os.writef("Backtrace:\n");
 		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)

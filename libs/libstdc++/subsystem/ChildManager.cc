@@ -318,7 +318,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		String name;
 		BitField<Hip::MAX_CPUS> available;
-		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).cap();
+		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).offset();
 		uf >> name;
 		uf >> available;
 		uf.finish_input();
@@ -361,7 +361,7 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 		throw ServiceRegistryException(E_NOT_FOUND);
 
 	UtcbFrame uf;
-	CapHolder caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
+	ScopedCapSels caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
 	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
@@ -491,7 +491,7 @@ void ChildManager::Portals::map(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		uf >> type >> desc;
 		if(type == DataSpace::JOIN)
-			sel = uf.get_translated(0).cap();
+			sel = uf.get_translated(0).offset();
 		uf.finish_input();
 
 		ScopedLock<UserSm> guard(&c->_sm);
@@ -549,7 +549,7 @@ void ChildManager::Portals::unmap(capsel_t pid) {
 		capsel_t sel = 0;
 		uf >> type >> desc;
 		if(desc.type() != DataSpaceDesc::VIRTUAL)
-			sel = uf.get_translated(0).cap();
+			sel = uf.get_translated(0).offset();
 		uf.finish_input();
 
 		ScopedLock<UserSm> guard(&c->_sm);

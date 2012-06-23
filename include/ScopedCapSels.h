@@ -22,26 +22,51 @@
 
 namespace nul {
 
-class CapHolder {
+/**
+ * Allows RAII semantics for capability selectors. The construction of ScopedCapSels reserves the
+ * specified amount of cap selectors and as soon as you don't explicitly release them (release()),
+ * they are free'd in the destructor.
+ */
+class ScopedCapSels {
 public:
-	explicit CapHolder(unsigned count = 1,unsigned align = 1)
+	/**
+	 * Constructor. Allocates <count> capability selectors, aligned by <align>.
+	 *
+	 * @param count the number of cap selectors
+	 * @param align the alignment
+	 */
+	explicit ScopedCapSels(unsigned count = 1,unsigned align = 1)
 		: _cap(CapSpace::get().allocate(count,align)), _count(count), _owned(true) {
 	}
-	~CapHolder() {
+	/**
+	 * Destructor. Free's the cap selectors, as soon as you haven't called release().
+	 */
+	~ScopedCapSels() {
 		if(_owned)
 			CapSpace::get().free(_cap,_count);
 	}
+
+	/**
+	 * @return the beginning of the allocated selector range
+	 */
 	capsel_t get() const {
 		return _cap;
 	}
+
+	/**
+	 * Specifies that the capability selectors are in use now and should not be free'd when
+	 * destructing this object
+	 *
+	 * @return the beginning of the allocated selector range
+	 */
 	capsel_t release() {
 		_owned = false;
 		return _cap;
 	}
 
 private:
-	CapHolder(const CapHolder&);
-	CapHolder& operator=(const CapHolder&);
+	ScopedCapSels(const ScopedCapSels&);
+	ScopedCapSels& operator=(const ScopedCapSels&);
 
 private:
 	capsel_t _cap;
