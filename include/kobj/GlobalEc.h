@@ -39,7 +39,7 @@ class Utcb;
  * that you always have to bind a Sc to a GlobalEc to finally start it.
  */
 class GlobalEc : public Ec {
-	friend void ::_presetup();
+	friend void ::_post_init();
 
 	/**
 	 * Creates the startup GlobalEc
@@ -86,6 +86,9 @@ public:
 		create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,
 				reinterpret_cast<uintptr_t>(ec_landing_spot),stack()));
 	}
+
+private:
+	static GlobalEc _cur;
 };
 
 }

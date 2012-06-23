@@ -83,7 +83,7 @@ private:
 };
 
 CPU::iterator VGASessionData::_cpu_it;
-static HostVGA *vga;
+static HostVGA vga;
 static VGAService *srv;
 
 void VGASessionData::receiver(void *) {
@@ -97,13 +97,13 @@ void VGASessionData::receiver(void *) {
 			return;
 		switch(pk->cmd) {
 			case Screen::PAINT:
-				vga->paint(*pk);
+				vga.paint(*pk);
 				break;
 			case Screen::SCROLL:
-				vga->scroll();
+				vga.scroll();
 				break;
 			case Screen::SETVIEW:
-				vga->set_page(pk->view);
+				vga.set_page(pk->view);
 				break;
 		}
 		cons->next();
@@ -111,7 +111,6 @@ void VGASessionData::receiver(void *) {
 }
 
 int main() {
-	vga = new HostVGA();
 	srv = new VGAService("screen");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		srv->provide_on(it->id);

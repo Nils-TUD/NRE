@@ -55,8 +55,6 @@ public:
 		static RootDataSpace _slots[MAX_SLOTS];
 	};
 
-	static void init();
-
 	static void add(uintptr_t addr,size_t size);
 	static void remove(uintptr_t addr,size_t size);
 	static void map_all();

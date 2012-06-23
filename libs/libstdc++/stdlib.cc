@@ -19,6 +19,7 @@
 #include <cstdlib>
 
 void abort() {
+	// TODO we have to call destructors
 	*(char*)0 = 4;
 }
 

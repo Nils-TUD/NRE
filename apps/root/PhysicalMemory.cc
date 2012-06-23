@@ -13,9 +13,9 @@
 
 using namespace nul;
 
-PhysicalMemory::RootDataSpace PhysicalMemory::RootDataSpace::_slots[MAX_SLOTS];
-RegionManager PhysicalMemory::_mem;
-DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng;
+PhysicalMemory::RootDataSpace PhysicalMemory::RootDataSpace::_slots[MAX_SLOTS] INIT_PRIO_PMEM;
+RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
+DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
 
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel() {
@@ -90,9 +90,6 @@ void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
 		start += 1 << minshift;
 		count -= 1 << minshift;
 	}
-}
-
-void PhysicalMemory::init() {
 }
 
 void PhysicalMemory::add(uintptr_t addr,size_t size) {

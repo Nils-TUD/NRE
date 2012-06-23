@@ -7,10 +7,11 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
+#include <arch/Startup.h>
 #include <cap/CapSpace.h>
 
 namespace nul {
 
-CapSpace CapSpace::_inst;
+CapSpace CapSpace::_inst INIT_PRIO_CAPSPACE;
 
 }

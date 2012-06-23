@@ -179,7 +179,7 @@ public:
 	 * Adds the given Ec to the list of known Ecs. Will be called by the Ec class automatically.
 	 */
 	static void announce(Ec *ec) {
-		ScopedLock<UserSm> guard(_sm);
+		ScopedLock<UserSm> guard(&_sm);
 		ec->_next = _ecs;
 		_ecs = ec;
 		_ec_count++;
@@ -192,7 +192,7 @@ public:
 	 * delete them.
 	 */
 	static void invalidate(RCUObject *o) {
-		ScopedLock<UserSm> guard(_sm);
+		ScopedLock<UserSm> guard(&_sm);
 		o->_state = RCUObject::INVALID;
 		o->_next = _objs;
 		_objs = o;
@@ -213,7 +213,7 @@ public:
 	 * If you set force to true, the method uses busy-waiting until all objects can be deleted.
 	 */
 	static void gc(bool force) {
-		ScopedLock<UserSm> guard(_sm);
+		ScopedLock<UserSm> guard(&_sm);
 		if(!_objs)
 			return;
 
@@ -235,13 +235,6 @@ public:
 	 */
 	static RCULock &lock() {
 		return _lock;
-	}
-
-	/**
-	 * Just called by the initialization system
-	 */
-	static void init() {
-		_sm = new UserSm();
 	}
 
 private:
@@ -312,7 +305,7 @@ private:
 	static Ec *_ecs;
 	static size_t _ec_count;
 	static RCUObject *_objs;
-	static UserSm *_sm;
+	static UserSm _sm;
 	static RCULock _lock;
 };
 

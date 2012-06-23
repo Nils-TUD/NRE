@@ -13,12 +13,12 @@ using namespace nul;
 
 extern void *edata;
 
-RegionManager VirtualMemory::_regs;
-UserSm *VirtualMemory::_sm;
+RegionManager VirtualMemory::_regs INIT_PRIO_VMEM;
+UserSm VirtualMemory::_sm INIT_PRIO_VMEM;
+VirtualMemory VirtualMemory::_init INIT_PRIO_VMEM;
 
-void VirtualMemory::init() {
+VirtualMemory::VirtualMemory() {
 	uintptr_t begin = Math::round_up<uintptr_t>(reinterpret_cast<uintptr_t>(&edata),ExecEnv::PAGE_SIZE);
 	_regs.free(begin,RAM_BEGIN - begin);
-	_sm = new UserSm();
 }
 

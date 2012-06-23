@@ -20,8 +20,6 @@ class VirtualMemory {
 	};
 
 public:
-	static void init();
-
 	static uintptr_t alloc_ram(uintptr_t phys,size_t &size) {
 		size = nul::Math::round_up<size_t>(size,nul::ExecEnv::PAGE_SIZE);
 		if(RAM_BEGIN + phys >= RAM_END)
@@ -38,11 +36,11 @@ public:
 	}
 
 	static uintptr_t alloc(size_t size) {
-		nul::ScopedLock<nul::UserSm> guard(_sm);
+		nul::ScopedLock<nul::UserSm> guard(&_sm);
 		return _regs.alloc(nul::Math::round_up<size_t>(size,nul::ExecEnv::PAGE_SIZE));
 	}
 	static void free(uintptr_t addr,size_t size) {
-		nul::ScopedLock<nul::UserSm> guard(_sm);
+		nul::ScopedLock<nul::UserSm> guard(&_sm);
 		_regs.free(addr,nul::Math::round_up<size_t>(size,nul::ExecEnv::PAGE_SIZE));
 	}
 
@@ -54,5 +52,6 @@ private:
 	VirtualMemory();
 
 	static nul::RegionManager _regs;
-	static nul::UserSm *_sm;
+	static nul::UserSm _sm;
+	static VirtualMemory _init;
 };

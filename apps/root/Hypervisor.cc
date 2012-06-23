@@ -20,19 +20,18 @@ using namespace nul;
 
 uchar Hypervisor::_stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 Pt *Hypervisor::_mem_pt;
-RegionManager Hypervisor::_io;
-BitField<Hip::MAX_GSIS> Hypervisor::_gsis;
-UserSm *Hypervisor::_io_sm;
-UserSm *Hypervisor::_gsi_sm;
+RegionManager Hypervisor::_io INIT_PRIO_HV;
+BitField<Hip::MAX_GSIS> Hypervisor::_gsis INIT_PRIO_HV;
+UserSm Hypervisor::_io_sm INIT_PRIO_HV;
+UserSm Hypervisor::_gsi_sm INIT_PRIO_HV;
+Hypervisor Hypervisor::_init INIT_PRIO_HV;
 
-void Hypervisor::init() {
+Hypervisor::Hypervisor() {
 	// note that we have to use a different Ec for the mem-portal than for all the other portals
 	// in the root-task, because the map portal uses the mem-portal.
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	LocalEc *ec = new LocalEc(CPU::current().id,ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
-	_io_sm = new UserSm();
-	_gsi_sm = new UserSm();
 	_mem_pt = new Pt(ec,portal_mem);
 	// make all I/O ports available
 	_io.free(0,0xFFFF);

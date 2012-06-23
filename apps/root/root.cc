@@ -16,28 +16,15 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/Elf.h>
-#include <kobj/GlobalEc.h>
 #include <kobj/LocalEc.h>
-#include <kobj/Sc.h>
-#include <kobj/Sm.h>
 #include <kobj/Pt.h>
-#include <kobj/Gsi.h>
-#include <kobj/Ports.h>
 #include <utcb/UtcbFrame.h>
-#include <utcb/Utcb.h>
-#include <subsystem/ChildMemory.h>
-#include <mem/RegionManager.h>
-#include <mem/DataSpace.h>
 #include <subsystem/ChildManager.h>
-#include <cap/Caps.h>
-#include <Syscalls.h>
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
 #include <Math.h>
 #include <Exception.h>
-#include <BitField.h>
 #include <cstring>
 #include <Assert.h>
 
@@ -47,10 +34,17 @@
 
 using namespace nul;
 
+class CPU0Init {
+	CPU0Init();
+	static CPU0Init init;
+};
+
 EXTERN_C void dlmalloc_init();
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
 static void start_childs();
+
+CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 
 // stack for initial Ec (overwrites the weak-symbol defined in Startup.cc)
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
@@ -58,25 +52,7 @@ uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static ChildManager *mng;
 
-// TODO clang!
-// TODO KObjects reference-counted? copying, ...
-// TODO what about resource-release when terminating entire subsystems?
-// TODO when a service dies, the client will notice it as soon as it tries to access the service
-// again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
-// what if the client has more than one Ec? I mean, the client is basically dead and we should
-// restart it (the service gets restarted as well).
-// TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
-// a separate library? or even for other things, so that we have a small, general library and some
-// more advanced libs on top of that
-// TODO what about different permissions for dataspaces? i.e. client has R, service has W
-
-int main() {
-	const Hip &hip = Hip::get();
-
-	PhysicalMemory::init();
-	VirtualMemory::init();
-	Hypervisor::init();
-
+CPU0Init::CPU0Init() {
 	// just init the current CPU to prevent that the startup-heap-size depends on the number of CPUs
 	CPU &cpu = CPU::current();
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
@@ -92,8 +68,22 @@ int main() {
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+}
 
-	Serial::get().init(false);
+// TODO clang!
+// TODO KObjects reference-counted? copying, ...
+// TODO what about resource-release when terminating entire subsystems?
+// TODO when a service dies, the client will notice it as soon as it tries to access the service
+// again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
+// what if the client has more than one Ec? I mean, the client is basically dead and we should
+// restart it (the service gets restarted as well).
+// TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
+// a separate library? or even for other things, so that we have a small, general library and some
+// more advanced libs on top of that
+// TODO what about different permissions for dataspaces? i.e. client has R, service has W
+
+int main() {
+	const Hip &hip = Hip::get();
 
 	// add all available memory
 	Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",

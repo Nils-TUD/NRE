@@ -22,8 +22,7 @@
 .global _start
 .extern main
 .extern exit
-.extern _setup
-.extern _presetup
+.extern _post_init
 .extern _init
 
 # initial state for root:
@@ -51,6 +50,7 @@ _start:
 	jmp		2f
 1:
 	mov		%ecx, _startup_info			# store pointer to HIP
+	movl	$1, _startup_info + 20		# store that we're a child
 2:
 	mov		%edx, _startup_info + 4 	# store pointer to UTCB
 	mov		%esp,%ecx
@@ -58,15 +58,9 @@ _start:
 	mov		%ecx, _startup_info + 8		# store stack-begin
 	mov		%eax, _startup_info + 12	# store cpu
 
-	# call early setup (current ec and pd)
-	call	_presetup
 	# call function in .init-section
 	call	_init
-	# other init stuff
-	shr		$31, %ebx
-	push	%ebx						# 0 for root, 1 otherwise
-	call	_setup
-	add		$4, %esp
+	call	_post_init
 
 	# test whether we're root
 	test	%ebx, %ebx
@@ -98,3 +92,4 @@ _startup_info:
 	.long	0	# stack
 	.long	0	# cpu
 	.long	0	# inited
+	.long	0	# child

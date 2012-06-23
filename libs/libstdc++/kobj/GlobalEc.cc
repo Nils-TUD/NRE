@@ -21,8 +21,8 @@
 
 namespace nul {
 
-/* TODO GlobalEc GlobalEc::_initial(
-	_startup_info.utcb,Hip::get().cfg_exc + 1,_startup_info.cpu,Pd::initial()
-);*/
+GlobalEc GlobalEc::_cur INIT_PRIO_GEC (
+	_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&Pd::_cur,_startup_info.stack
+);
 
 }

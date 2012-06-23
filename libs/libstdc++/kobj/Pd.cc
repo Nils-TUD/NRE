@@ -17,11 +17,26 @@
  */
 
 #include <arch/ExecEnv.h>
+#include <arch/Startup.h>
 #include <kobj/Pd.h>
 #include <kobj/Ec.h>
+#include <kobj/Pt.h>
+#include <utcb/UtcbFrame.h>
 #include <ScopedCapSels.h>
 
 namespace nul {
+
+Pd Pd::_cur INIT_PRIO_PD (CapSpace::INIT_PD);
+
+Pd::Pd(capsel_t cap) : ObjCap(cap) {
+	if(_startup_info.child) {
+		// grab our initial caps (pd, ec, sc) from parent
+		UtcbFrame uf;
+		uf.set_receive_crd(Crd(CapSpace::INIT_PD,2,Crd::OBJ_ALL));
+		Pt initpt(CapSpace::SRV_INIT);
+		initpt.call(uf);
+	}
+}
 
 Pd *Pd::current() {
 	return ExecEnv::get_current_pd();

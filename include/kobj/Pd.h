@@ -24,19 +24,21 @@
 
 namespace nul {
 
+class GlobalEc;
+
 /**
  * Represents a protection domain
  */
 class Pd : public ObjCap {
-	friend void ::_presetup();
+	friend class GlobalEc;
+	friend void ::_post_init();
 
 	/**
 	 * Creates protection-domain object for the current Pd
 	 *
 	 * @param cap the capability-selector
 	 */
-	explicit Pd(capsel_t cap) : ObjCap(cap) {
-	}
+	explicit Pd(capsel_t cap);
 
 public:
 	/**
@@ -55,6 +57,8 @@ public:
 private:
 	Pd(const Pd&);
 	Pd& operator=(const Pd&);
+
+	static Pd _cur;
 };
 
 }

@@ -27,9 +27,10 @@
 namespace nul {
 
 class Pt;
+class CPUInit;
 
 class CPU {
-	friend void ::_setup(bool);
+	friend class CPUInit;
 
 public:
 	typedef ListIterator<CPU> iterator;
@@ -74,8 +75,8 @@ private:
 	CPU& operator=(const CPU&);
 
 	CPU *_next;
-	static CPU _cpus[Hip::MAX_CPUS];
 	static CPU *_online;
+	static CPU _cpus[Hip::MAX_CPUS];
 };
 
 }

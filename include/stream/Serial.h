@@ -58,11 +58,8 @@ public:
 		return _inst;
 	}
 
-	void init(bool use_service = true);
-
 private:
-	explicit Serial() : OStream(), _ports(0), _con(), _sess(), _ds(), _prod() {
-	}
+	explicit Serial();
 	~Serial();
 
 	virtual void write(char c);

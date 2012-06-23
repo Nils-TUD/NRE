@@ -125,8 +125,6 @@ void LogSessionData::receiver(void *) {
 }
 
 int main() {
-	Serial::get().init(false);
-
 	log = new LogService();
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		log->provide_on(it->id);
