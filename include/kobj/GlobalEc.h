@@ -44,16 +44,18 @@ class GlobalEc : public Ec {
 	/**
 	 * Creates the startup GlobalEc
 	 *
-	 * @param utcb the startup utcb address
+	 * @param uaddr the startup utcb address
 	 * @param cap the capability selector for the GlobalEc
 	 * @param cpu the CPU
 	 * @param pd the protection domain
 	 * @param stack the stack address
 	 */
-	explicit GlobalEc(uintptr_t utcb,capsel_t cap,cpu_t cpu,Pd *pd,uintptr_t stack)
-			: Ec(cpu,0,cap,stack,utcb) {
+	explicit GlobalEc(uintptr_t uaddr,capsel_t cap,cpu_t cpu,Pd *pd,uintptr_t stack)
+			: Ec(cpu,0,cap,stack,uaddr) {
 		ExecEnv::set_current_ec(this);
 		ExecEnv::set_current_pd(pd);
+		// we have to init the UTCB here because the parent can't do that for us
+		utcb()->init();
 	}
 
 public:

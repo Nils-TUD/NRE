@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <Exception.h>
+
 namespace nul {
 
 class AssertException : public Exception {

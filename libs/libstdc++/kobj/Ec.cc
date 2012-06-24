@@ -25,8 +25,10 @@ namespace nul {
 void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	ScopedCapSels scs;
 	Syscalls::create_ec(scs.get(),utcb(),sp,_cpu,_event_base,type,pd->sel());
-	if(pd == Pd::current())
+	if(pd == Pd::current()) {
+		utcb()->init();
 		RCU::announce(this);
+	}
 	sel(scs.release());
 }
 

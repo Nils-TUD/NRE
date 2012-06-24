@@ -36,7 +36,8 @@ public:
 					if((1 << at_once) < count) {
 						// be carefull that we might have to align it to 1 << at_once first. this takes
 						// at most at_once typed items.
-						size_t min = Math::min<uintptr_t>(uf.freewords() / 2 - at_once,count >> at_once);
+						size_t free = uf.free_typed() - (sizeof(CapRange) / (sizeof(word_t) * 2));
+						size_t min = Math::min<uintptr_t>(free - at_once,count >> at_once);
 						cr.count(min << at_once);
 					}
 				}

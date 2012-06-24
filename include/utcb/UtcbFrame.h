@@ -92,32 +92,30 @@ private:
 		}
 	};
 
-	static word_t *get_top(Utcb *frame,size_t toff) {
-		size_t utcbtop = Math::round_dn<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
-		return reinterpret_cast<word_t*>(utcbtop) - toff;
-	}
-	static Utcb *get_frame(Utcb *base,size_t off) {
-		return reinterpret_cast<Utcb*>(reinterpret_cast<word_t*>(base) + off);
-	}
-
-	void check_write(size_t words) {
-		if(_utcb->freewords() < words)
+	void check_untyped_write(size_t u) {
+		if(free_untyped() < u)
 			throw UtcbException(E_CAPACITY);
 	}
-	void check_untyped_read(size_t words) {
-		if(_upos + words > untyped())
+	void check_typed_write(size_t t) {
+		if(free_typed() < t)
+			throw UtcbException(E_CAPACITY);
+	}
+	void check_untyped_read(size_t u) {
+		if(_upos + u > untyped())
 			throw UtcbException(E_UTCB_UNTYPED);
 	}
-	void check_typed_read(size_t words) {
-		if(_tpos + words > typed())
+	void check_typed_read(size_t t) {
+		if(_tpos + t > typed())
 			throw UtcbException(E_UTCB_TYPED);
 	}
 
-	explicit UtcbFrameRef(Utcb *utcb,size_t top) : _utcb(utcb), _top(get_top(utcb,top)), _upos(), _tpos() {
+	explicit UtcbFrameRef(Utcb *utcb,size_t top)
+			: _utcb(utcb), _top(Utcb::get_top(utcb,top)), _upos(), _tpos() {
 	}
 public:
-	explicit UtcbFrameRef(Utcb *utcb = Ec::current()->utcb()) : _utcb(utcb), _top(get_top(_utcb,_utcb->top)), _upos(), _tpos() {
-		_utcb = get_frame(_utcb,_utcb->bottom);
+	explicit UtcbFrameRef(Utcb *utcb = Ec::current()->utcb())
+			: _utcb(utcb), _top(Utcb::get_top(_utcb)), _upos(), _tpos() {
+		_utcb = Utcb::get_current_frame(_utcb);
 	}
 	virtual ~UtcbFrameRef() {
 	}
@@ -147,8 +145,11 @@ public:
 		clear();
 	}
 
-	size_t freewords() const {
-		return _utcb->freewords();
+	size_t free_untyped() const {
+		return _utcb->free_untyped();
+	}
+	size_t free_typed() const {
+		return _utcb->free_typed();
 	}
 	size_t untyped() const {
 		return _utcb->untyped;
@@ -207,8 +208,8 @@ public:
 	}
 	void add_typed(const TypedItem &item) {
 		// ensure that we're the current frame
-		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
-		check_write(2);
+		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
+		check_typed_write(1);
 		_top[-(_utcb->typed * 2 + 1)] = item._aux;
 		_top[-(_utcb->typed * 2 + 2)] = item._crd.value();
 		_utcb->typed++;
@@ -238,16 +239,16 @@ public:
 	template<typename T>
 	UtcbFrameRef &operator <<(const T& value) {
 		const size_t words = (sizeof(T) + sizeof(word_t) - 1) / sizeof(word_t);
-		check_write(words);
-		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
+		check_untyped_write(words);
+		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
 		*reinterpret_cast<T*>(_utcb->msg + untyped()) = value;
 		_utcb->untyped += words;
 		return *this;
 	}
 	UtcbFrameRef &operator <<(const String& value) {
 		const size_t words = Math::blockcount(value.length(),sizeof(word_t)) + 1;
-		check_write(words);
-		assert(get_frame(_utcb->base(),_utcb->base()->bottom) == _utcb);
+		check_untyped_write(words);
+		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
 		*reinterpret_cast<size_t*>(_utcb->msg + untyped()) = value.length();
 		memcpy(_utcb->msg + untyped() + 1,value.str(),value.length());
 		_utcb->untyped += words;

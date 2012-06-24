@@ -65,18 +65,18 @@ protected:
 	 * Constructor
 	 *
 	 * @param cpu the cpu to bind the Ec to
-	 * @param event_base the offset for the event-portals
+	 * @param evb the offset for the event-portals
 	 * @param cap the capability (INVALID if a new one should be used)
 	 * @param stack the stack address (0 = create one automatically)
-	 * @param utcb the utcb address (0 = create one automatically)
+	 * @param uaddr the utcb address (0 = create one automatically)
 	 */
-	explicit Ec(cpu_t cpu,capsel_t event_base,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t utcb = 0)
+	explicit Ec(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t uaddr = 0)
 			: ObjCap(cap), _next(0), _rcu_counter(0),
-			  _utcb(utcb == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
-			  _utcb_addr(utcb == 0 ? _utcb->virt() : utcb),
+			  _utcb(uaddr == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
+			  _utcb_addr(uaddr == 0 ? _utcb->virt() : uaddr),
 			  _stack(stack == 0 ? new DataSpace(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW) : 0),
 			  _stack_addr(stack == 0 ? _stack->virt() : stack),
-			  _event_base(event_base), _cpu(cpu), _tls() {
+			  _event_base(evb), _cpu(cpu), _tls() {
 	}
 	/**
 	 * The actual creation of the Ec.

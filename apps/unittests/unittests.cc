@@ -21,13 +21,13 @@ using namespace nul;
 using namespace nul::test;
 
 const TestCase testcases[] = {
-	pingpong,
+	/*pingpong,
 	catchex,
-	delegateperf,
+	delegateperf,*/
 	utcbtest,
-	regionlist,
+	/*regionlist,
 	dstest,
-	sharedmem,
+	sharedmem,*/
 };
 
 int main() {

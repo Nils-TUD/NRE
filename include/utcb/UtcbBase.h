@@ -18,41 +18,47 @@
 
 #pragma once
 
-#include <arch/Types.h>
-
-#define USE_UTCB_STACKING		0
-#define USE_UTCB_KERNEL_EXT		1
+#include <arch/ExecEnv.h>
+#include <utcb/UtcbHead.h>
 
 namespace nul {
 
 class Utcb;
-class UtcbFrame;
 class UtcbFrameRef;
+class UtcbFrame;
 class OStream;
-OStream &operator<<(OStream &os,const Utcb &utcb);
+
 OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
-class UtcbHead {
-	friend class UtcbFrame;
+class UtcbBase : public UtcbHead {
 	friend class UtcbFrameRef;
-	friend OStream &operator<<(OStream &os,const Utcb &utcb);
+	friend class UtcbFrame;
 	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
-protected:
-#if USE_UTCB_KERNEL_EXT
-	uint16_t top;
-	uint16_t bottom;
-#endif
-	union {
-		struct {
-			uint16_t untyped;
-			uint16_t typed;
-		};
-		word_t mtr;
+public:
+	enum {
+		SIZE		= ExecEnv::PAGE_SIZE
 	};
-	word_t crd_translate;
-	word_t crd;
-	word_t nul_cpunr;
+
+protected:
+	enum {
+		WORDS		= SIZE / sizeof(word_t),
+	};
+
+	word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
+
+	// no construction and copying
+	UtcbBase();
+	~UtcbBase();
+	UtcbBase(const UtcbBase&);
+	UtcbBase& operator=(const UtcbBase&);
+
+public:
+	void reset() {
+		mtr = 0;
+		crd = 0;
+		crd_translate = 0;
+	}
 };
 
 }

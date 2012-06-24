@@ -16,15 +16,17 @@
  * General Public License version 2 for more details.
  */
 
-#include <utcb/Utcb.h>
+#include <utcb/UtcbStack.h>
 #include <utcb/UtcbFrame.h>
+
+#if USE_UTCB_STACKING
 
 namespace nul {
 
 OStream &operator<<(OStream &os,const Utcb &utcb) {
-	os.writef("Utcb @ %p:\n",&utcb);
-	os.writef("top: %u\n",utcb.top);
-	os.writef("bottom: %u\n",utcb.bottom);
+	os << "Utcb @ " << &utcb << ":\n";
+	os << "top: " << utcb.top << "\n";
+	os << "bottom: " << utcb.bottom << "\n";
 	uint16_t boff = utcb.bottom;
 	uint16_t toff = utcb.top;
 	while(1) {
@@ -40,3 +42,5 @@ OStream &operator<<(OStream &os,const Utcb &utcb) {
 }
 
 }
+
+#endif
