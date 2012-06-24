@@ -54,8 +54,6 @@ class GlobalEc : public Ec {
 			: Ec(cpu,0,cap,stack,uaddr) {
 		ExecEnv::set_current_ec(this);
 		ExecEnv::set_current_pd(pd);
-		// we have to init the UTCB here because the parent can't do that for us
-		utcb()->init();
 	}
 
 public:

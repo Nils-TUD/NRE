@@ -83,10 +83,6 @@ class Utcb : public UtcbBase {
 		utcb->top = this->top;
 		assert(utcb->bottom <= MAX_BOTTOM && utcb->top <= MAX_TOP);
 	}
-
-public:
-	void init() {
-	}
 };
 
 }

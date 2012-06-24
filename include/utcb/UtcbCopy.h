@@ -102,11 +102,6 @@ class Utcb : public UtcbBase {
 		add_untyped(-(utcount + 1));
 		add_typed(-(tcount + 1));
 	}
-
-public:
-	void init() {
-		msg[POS_SLOT] = 0;
-	}
 };
 
 }
