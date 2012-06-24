@@ -15,10 +15,11 @@ crossdir = os.path.abspath('../cross/' + target + '/dist')
 
 hostenv = Environment(
 	ENV = os.environ,
-	CXXFLAGS = '-Wall -Wextra -ansi',
+	CXXFLAGS = '-Wall -Wextra -ansi'
 )
 env = Environment(
-	CXXFLAGS = '-Wall -Wextra -ansi',
+	CXXFLAGS = '-Wall -Wextra -ansi -mno-sse',
+	CFLAGS = '-Wall -Wextra -mno-sse',
 	# without "-z max-page-size=0x1000" ld produces really large binaries for x86_64, because it
 	# aligns to 2MiB (not only in virtual memory, but also in the binary)
 	LINKFLAGS = '-Wl,--no-undefined -static -Wl,-static -static-libgcc -Wl,-z,max-page-size=0x1000',
@@ -34,13 +35,13 @@ env = Environment(
 
 btype = os.environ.get('NOVA_BUILD')
 if btype == 'debug':
-	env.Append(CXXFLAGS = ' -O0 -g -mno-sse')
-	env.Append(CFLAGS = ' -O0 -g -mno-sse')
+	env.Append(CXXFLAGS = ' -O0 -g')
+	env.Append(CFLAGS = ' -O0 -g')
 else:
 	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
 	# disable stacktraces later, so that we don't need the framepointer.
-	env.Append(CXXFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
-	env.Append(CFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer -mno-sse')
+	env.Append(CXXFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 

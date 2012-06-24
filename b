@@ -35,6 +35,7 @@ fi
 echo "Building for $NOVA_TARGET in $NOVA_BUILD mode..."
 
 if [ ! -f $build/test.dump ]; then
+	mkdir -p $build
 	echo "" > $build/test.dump
 fi
 
