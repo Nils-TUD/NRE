@@ -33,13 +33,13 @@ const TestCase pingpong = {
 	"PingPong",test_pingpong
 };
 
-static const unsigned tries = 10000;
+static const uint tries = 10000;
 static uint64_t results[tries];
 
 static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
 	try {
-		unsigned a,b,c;
+		uint a,b,c;
 		uf >> a >> b >> c;
 		uf.clear();
 		uf << (a + b) << (a + b + c);
@@ -53,16 +53,16 @@ static void test_pingpong() {
 	LocalEc ec(CPU::current().id);
 	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
-	unsigned sum = 0;
+	uint sum = 0;
 	tic = Util::tsc();
 	tac = Util::tsc();
 	rdtsc = tac - tic;
 	UtcbFrame uf;
-	for(unsigned i = 0; i < tries; i++) {
+	for(uint i = 0; i < tries; i++) {
 		tic = Util::tsc();
 		uf << 1 << 2 << 3;
 		pt.call(uf);
-		unsigned x = 0,y = 0;
+		uint x = 0,y = 0;
 		uf >> x >> y;
 		uf.clear();
 		sum += x + y;
@@ -73,14 +73,14 @@ static void test_pingpong() {
 		results[i] = ipc_duration;
 	}
 	uint64_t avg = 0;
-	for(unsigned i = 0; i < tries; i++)
+	for(uint i = 0; i < tries; i++)
 		avg += results[i];
 
 	avg = avg / tries;
 	WVPERF(avg,"cycles");
 	WVPASSEQ(sum,(1 + 2) * tries + (1 + 2 + 3) * tries);
-	WVPRINTF("sum: %u\n",sum);
-	WVPRINTF("avg: %Lu\n",avg);
-	WVPRINTF("min: %Lu\n",min);
-	WVPRINTF("max: %Lu\n",max);
+	WVPRINTF("sum: %u",sum);
+	WVPRINTF("avg: %Lu",avg);
+	WVPRINTF("min: %Lu",min);
+	WVPRINTF("max: %Lu",max);
 }

@@ -24,7 +24,8 @@ const TestCase testcases[] = {
 	/*pingpong,
 	catchex,
 	delegateperf,*/
-	utcbtest,
+	utcbnest,
+	utcbperf,
 	/*regionlist,
 	dstest,
 	sharedmem,*/

@@ -27,10 +27,16 @@ using namespace nul::test;
 
 PORTAL static void portal_test(capsel_t);
 static void test_nesting();
+static void test_perf();
 
-const TestCase utcbtest = {
+const TestCase utcbnest = {
 	"Utcb nesting",test_nesting
 };
+const TestCase utcbperf = {
+	"Utcb performance",test_perf
+};
+static const uint tries = 100000;
+static uint64_t results[tries];
 
 static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
@@ -87,4 +93,46 @@ static void test_nesting() {
 	WVPASSEQ(a,2);
 	WVPASSEQ(b,1);
 	WVPASSEQ(c,4);
+}
+
+static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
+	uint64_t tic,tac,duration;
+	for(uint i = 0; i < tries; i++) {
+		tic = Util::tsc();
+		{
+			UtcbFrame uf;
+			for(size_t x = 0; x < n; ++x)
+				uf << x;
+
+			{
+				UtcbFrame nested;
+				nested << 1;
+			}
+		}
+		tac = Util::tsc();
+		duration = tac - tic - rdtsc;
+		min = Math::min(min,duration);
+		max = Math::max(max,duration);
+		results[i] = duration;
+	}
+	avg = 0;
+	for(uint i = 0; i < tries; i++)
+		avg += results[i];
+	avg = avg / tries;
+}
+
+static void test_perf() {
+	uint64_t tic,tac,min = ~0ull,max = 0,avg = 0,rdtsc;
+	tic = Util::tsc();
+	tac = Util::tsc();
+	rdtsc = tac - tic;
+	size_t sizes[] = {1,2,4,8,16,32,64,128};
+	for(size_t i = 0; i < sizeof(sizes) / sizeof(sizes[0]); ++i) {
+		perform_test(sizes[i],rdtsc,min,max,avg);
+		WVPRINTF("Using %u words:",sizes[i]);
+		WVPERF(avg,"cycles");
+		WVPRINTF("avg: %Lu",avg);
+		WVPRINTF("min: %Lu",min);
+		WVPRINTF("max: %Lu",max);
+	}
 }

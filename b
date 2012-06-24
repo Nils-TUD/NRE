@@ -13,7 +13,7 @@ if [ "$NOVA_TARGET" = "x86_32" ]; then
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	export QEMU="qemu-system-x86_64"
-	export QEMU_FLAGS="-m 256 -smp 4"
+	export QEMU_FLAGS="-m 256 -smp 4 -enable-kvm"
 else
 	echo 'Please define $NOVA_TARGET to x86_32 or x86_64 first!' >&2
 	exit 1
