@@ -21,6 +21,7 @@
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
 #include <arch/SyscallABI.h>
+#include <ScopedCapSels.h>
 
 namespace nul {
 
@@ -57,7 +58,11 @@ public:
 	 * @param initial the initial value of the semaphore
 	 * @param pd the Pd to create it in (default: current)
 	 */
-	explicit Sm(uint initial,Pd *pd = Pd::current());
+	explicit Sm(uint initial,Pd *pd = Pd::current()) {
+		ScopedCapSels scs;
+		Syscalls::create_sm(scs.get(),initial,pd->sel());
+		sel(scs.release());
+	}
 
 	/**
 	 * Performs a down on this semaphore. That is, if the value of it is zero, it will block until

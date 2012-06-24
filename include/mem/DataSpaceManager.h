@@ -43,8 +43,6 @@ class DataSpaceManager {
 public:
 	explicit DataSpaceManager() : _sm(), _slots() {
 	}
-	virtual ~DataSpaceManager() {
-	}
 
 	/**
 	 * Creates a new dataspace by given description and returns a reference to it (the properties

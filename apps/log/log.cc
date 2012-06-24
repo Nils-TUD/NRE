@@ -114,13 +114,9 @@ void LogSessionData::receiver(void *) {
 	ScopedLock<RCULock> guard(&RCU::lock());
 	LogSessionData *sess = log->get_session<LogSessionData>(caps);
 	Consumer<char> *cons = sess->cons();
-	while(1) {
-		char *c = cons->get();
-		if(c == 0)
-			break;
+	for(char *c; (c = cons->get()) != 0; cons->next()) {
 		if(sess->put(*c))
 			sess->flush();
-		cons->next();
 	}
 }
 

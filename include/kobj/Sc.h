@@ -68,14 +68,14 @@ public:
 	 * Starts the Sc, i.e. the attached GlobalEc.
 	 */
 	void start() {
-		ScopedCapSels ch;
+		ScopedCapSels scs;
 		// in this case we should assign the selector before it has been successfully created
 		// because the Sc starts immediatly. therefore, it should be completely initialized before
 		// its started.
 		try {
-			sel(ch.get());
-			Syscalls::create_sc(ch.get(),_ec->sel(),_qpd,_pd->sel());
-			ch.release();
+			sel(scs.get());
+			Syscalls::create_sc(scs.get(),_ec->sel(),_qpd,_pd->sel());
+			scs.release();
 		}
 		catch(...) {
 			sel(INVALID);

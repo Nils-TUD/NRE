@@ -46,23 +46,13 @@ public:
 	 * @throws Exception if failed (e.g. ports already allocated)
 	 */
 	explicit Ports(port_t base,uint count) : _base(base), _count(count) {
-		UtcbFrame uf;
-		ScopedCapSels cap;
-		uf.set_receive_crd(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
-		uf << ALLOC << _base << _count;
-		CPU::current().io_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		alloc();
 	}
 	/**
 	 * Releases the ports again
 	 */
 	~Ports() {
-		UtcbFrame uf;
-		uf << RELEASE << _base << _count;
-		CPU::current().io_pt->call(uf);
+		release();
 	}
 
 	/**
@@ -105,6 +95,28 @@ public:
 	}
 
 private:
+    void alloc() {
+    	UtcbFrame uf;
+		ScopedCapSels cap;
+		uf.set_receive_crd(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
+		uf << ALLOC << _base << _count;
+		CPU::current().io_pt->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+    }
+    void release() {
+		try {
+			UtcbFrame uf;
+			uf << RELEASE << _base << _count;
+			CPU::current().io_pt->call(uf);
+		}
+		catch(...) {
+			// ignore
+		}
+    }
+
     Ports(const Ports&);
     Ports& operator=(const Ports&);
 

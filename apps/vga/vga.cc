@@ -91,10 +91,7 @@ void VGASessionData::receiver(void *) {
 	ScopedLock<RCULock> guard(&RCU::lock());
 	VGASessionData *sess = srv->get_session<VGASessionData>(caps);
 	Consumer<Screen::Packet> *cons = sess->cons();
-	while(1) {
-		Screen::Packet *pk = cons->get();
-		if(pk == 0)
-			return;
+	for(Screen::Packet *pk; (pk = cons->get()) != 0; cons->next()) {
 		switch(pk->cmd) {
 			case Screen::PAINT:
 				vga.paint(*pk);
@@ -106,7 +103,6 @@ void VGASessionData::receiver(void *) {
 				vga.set_page(pk->view);
 				break;
 		}
-		cons->next();
 	}
 }
 

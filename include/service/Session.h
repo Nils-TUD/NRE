@@ -27,18 +27,37 @@
 
 namespace nul {
 
+/**
+ * Represents a session at a service. This way the service can manage per-session-data. That is,
+ * it can distinguish between clients.
+ */
 class Session {
 public:
+	/**
+	 * Opens the session at the service specified by the given connection
+	 *
+	 * @param con the connection to the service
+	 * @throws Exception if the session-creation failed
+	 */
 	explicit Session(Connection &con) : _caps(open(con)), _con(con) {
 	}
+	/**
+	 * Closes the session again
+	 */
 	virtual ~Session() {
 		close();
 		CapSpace::get().free(_caps,Hip::MAX_CPUS);
 	}
 
+	/**
+	 * @return the connection
+	 */
 	Connection &con() {
 		return _con;
 	}
+	/**
+	 * @return the base of the capabilities received to communicate with the service
+	 */
 	capsel_t caps() const {
 		return _caps;
 	}

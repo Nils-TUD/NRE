@@ -90,26 +90,20 @@ void ConsoleSessionData::receiver(void *) {
 	ConsoleService *s = ConsoleService::get();
 	ConsoleSessionData *sess = s->get_session<ConsoleSessionData>(caps);
 	Consumer<Console::SendPacket> *cons = sess->cons();
-	while(1) {
-		Console::SendPacket *pk = cons->get();
-		if(pk == 0)
-			return;
-		{
-			ScopedLock<UserSm> guard(&sess->sm());
-			switch(pk->cmd) {
-				case Console::WRITE:
-					sess->put(*pk);
-					if(sess == s->active() && sess->view() == pk->view)
-						s->screen().paint(pk->x,pk->y,pk->character,pk->color);
-					break;
+	for(Console::SendPacket *pk; (pk = cons->get()) != 0; cons->next()) {
+		ScopedLock<UserSm> guard(&sess->sm());
+		switch(pk->cmd) {
+			case Console::WRITE:
+				sess->put(*pk);
+				if(sess == s->active() && sess->view() == pk->view)
+					s->screen().paint(pk->x,pk->y,pk->character,pk->color);
+				break;
 
-				case Console::SCROLL:
-					sess->scroll(pk->view);
-					if(sess == s->active() && sess->view() == pk->view)
-						s->screen().scroll();
-					break;
-			}
+			case Console::SCROLL:
+				sess->scroll(pk->view);
+				if(sess == s->active() && sess->view() == pk->view)
+					s->screen().scroll();
+				break;
 		}
-		cons->next();
 	}
 }

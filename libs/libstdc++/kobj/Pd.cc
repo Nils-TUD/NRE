@@ -43,9 +43,9 @@ Pd *Pd::current() {
 }
 
 Pd::Pd(Crd crd,Pd *pd) : ObjCap() {
-	ScopedCapSels ch;
-	Syscalls::create_pd(ch.get(),crd,pd->sel());
-	sel(ch.release());
+	ScopedCapSels scs;
+	Syscalls::create_pd(scs.get(),crd,pd->sel());
+	sel(scs.release());
 }
 
 }

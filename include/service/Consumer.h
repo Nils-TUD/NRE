@@ -16,6 +16,15 @@ namespace nul {
 template<typename T>
 class Producer;
 
+/**
+ * Consumer-part for the producer-consumer-communication over a dataspace.
+ *
+ * Usage-example:
+ * Consumer<char> cons(&ds);
+ * for(char *c; (c = cons->get()) != 0; cons.next()) {
+ *   // do something with *c
+ * }
+ */
 template<typename T>
 class Consumer {
 	friend class Producer<T>;
@@ -27,6 +36,14 @@ class Consumer {
 	};
 
 public:
+	/**
+	 * Creates a consumer that uses the given dataspace for communication
+	 *
+	 * @param ds the dataspace
+	 * @param init whether the consumer should init the state. this should only be done by one
+	 * 	party and preferably by the first one. That is, if the client is the consumer it should
+	 * 	init it (because it will create the dataspace and share it to the service).
+	 */
 	explicit Consumer(DataSpace *ds,bool init = false)
 		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
 		  _max((ds->size() - sizeof(Interface)) / sizeof(T)),
@@ -37,15 +54,32 @@ public:
 		}
 	}
 
+	/**
+	 * Stops waiting for the producer. This way, if get() is blocked on the semaphore, it will
+	 * be unblocked.
+	 */
 	void stop() {
 		_stop = true;
 		Sync::memory_barrier();
 		_sm.up();
 	}
 
+	/**
+	 * @return whether there is more data to read
+	 */
 	bool has_data() const {
 		return _if->rpos != _if->wpos;
 	}
+
+	/**
+	 * Retrieves the item at current position. If there is no item anymore, it blocks until the
+	 * producer notifies it, that there is data available. You might interrupt that by using stop().
+	 * Note that the method will only return 0 if it has been stopped *and* there is no data anymore.
+	 *
+	 * Important: You have to call next() to move to the next item.
+	 *
+	 * @return pointer to the data
+	 */
 	T *get() {
 		while(_if->rpos == _if->wpos) {
 			if(_stop)
@@ -60,6 +94,11 @@ public:
 		}
 		return _if->buffer + _if->rpos;
 	}
+
+	/**
+	 * Tells the producer that you're done working with the current item (i.e. the producer will
+	 * never touch the item while you're working with it)
+	 */
 	void next() {
 		_if->rpos = (_if->rpos + 1) % _max;
 		if(_if->rpos == _if->wpos) {

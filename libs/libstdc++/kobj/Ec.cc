@@ -23,11 +23,11 @@
 namespace nul {
 
 void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
-	ScopedCapSels ch;
-	Syscalls::create_ec(ch.get(),utcb(),sp,_cpu,_event_base,type,pd->sel());
+	ScopedCapSels scs;
+	Syscalls::create_ec(scs.get(),utcb(),sp,_cpu,_event_base,type,pd->sel());
 	if(pd == Pd::current())
 		RCU::announce(this);
-	sel(ch.release());
+	sel(scs.release());
 }
 
 // slot 0 is reserved

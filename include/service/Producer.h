@@ -15,9 +15,21 @@
 
 namespace nul {
 
+/**
+ * Producer-part for the producer-consumer-communication over a dataspace.
+ */
 template<typename T>
 class Producer {
 public:
+	/**
+	 * Creates a producer that uses the given dataspace for communication
+	 *
+	 * @param ds the dataspace
+	 * @param block whether you want to block if the client can't accept more data
+	 * @param init whether the producer should init the state. this should only be done by one
+	 * 	party and preferably by the first one. That is, if the client is the producer it should
+	 * 	init it (because it will create the dataspace and share it to the service).
+	 */
 	explicit Producer(DataSpace *ds,bool block = true,bool init = true)
 		: _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
 		  _max((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T)),
@@ -28,6 +40,13 @@ public:
 		}
 	}
 
+	/**
+	 * Produces the given item. If the client is currently not able to accept it, the method will
+	 * either block (if enabled) or return false.
+	 *
+	 * @param value the value to produce
+	 * @return true if the item has been written successfully (always true if blocking is enabled)
+	 */
 	bool produce(const T &value) {
 		// wait until its not full anymore
 		while((_if->wpos + 1) % _max == _if->rpos) {

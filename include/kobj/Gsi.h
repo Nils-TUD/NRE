@@ -69,9 +69,14 @@ private:
 		return cap.release();
 	}
 	void release() {
-		UtcbFrame uf;
-		uf << RELEASE << _gsi;
-		CPU::current().gsi_pt->call(uf);
+		try {
+			UtcbFrame uf;
+			uf << RELEASE << _gsi;
+			CPU::current().gsi_pt->call(uf);
+		}
+		catch(...) {
+			// ignore
+		}
 	}
 
 	uint _gsi;

@@ -34,7 +34,7 @@ class Pd : public ObjCap {
 	friend void ::_post_init();
 
 	/**
-	 * Creates protection-domain object for the current Pd
+	 * Creates protection-domain object for the current Pd (only used during startup)
 	 *
 	 * @param cap the capability-selector
 	 */

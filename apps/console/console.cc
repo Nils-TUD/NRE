@@ -31,8 +31,7 @@ int main() {
 
 	Connection con("keyboard");
 	KeyboardSession kb(con);
-	while(1) {
-		Keyboard::Packet *pk = kb.consumer().get();
+	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
 		if(!srv->handle_keyevent(*pk)) {
 			if(srv->active()) {
 				Console::ReceivePacket rpk;
@@ -42,7 +41,6 @@ int main() {
 				srv->active()->prod()->produce(rpk);
 			}
 		}
-		kb.consumer().next();
 	}
 	return 0;
 }
