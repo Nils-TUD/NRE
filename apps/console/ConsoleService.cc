@@ -13,46 +13,48 @@
 using namespace nul;
 
 ConsoleService *ConsoleService::_inst;
-CPU::iterator ConsoleSessionData::_cpu_it;
+
+ConsoleService::ConsoleService(const char *name)
+	: Service(name,ConsoleSessionData::portal), _screen("screen"), _sess(_screen),
+	  _sess_cycler(sessions_begin(),sessions_end()) {
+}
 
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::portal_func func) {
 	return new ConsoleSessionData(this,id,caps,func);
 }
 
-bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
-	if(_active == sessions_end())
-		_active = sessions_begin();
-	if(_active == sessions_end())
-		return false;
+void ConsoleService::created_session(size_t idx) {
+	_sess_cycler.reset(sessions_begin(),iterator(this,idx),sessions_end());
+}
 
+bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
+	bool res = false;
 	switch(pk.keycode) {
 		case Keyboard::VK_LEFT:
-			if(~pk.flags & Keyboard::RELEASE) {
-				if(_active == sessions_begin())
-					_active = sessions_end();
-				--_active;
-				_active->switch_to(_active->view());
-			}
-			return true;
+			if(~pk.flags & Keyboard::RELEASE)
+				prev();
+			res = true;
+			break;
 
 		case Keyboard::VK_RIGHT:
-			if(~pk.flags & Keyboard::RELEASE) {
-				++_active;
-				if(_active == sessions_end())
-					_active = sessions_begin();
-				_active->switch_to(_active->view());
-			}
-			return true;
+			if(~pk.flags & Keyboard::RELEASE)
+				next();
+			res = true;
+			break;
 
 		case Keyboard::VK_UP:
-			if(~pk.flags & Keyboard::RELEASE)
-				_active->switch_to((_active->view() - 1) % Screen::VIEW_COUNT);
-			return true;
+			if(active() && (~pk.flags & Keyboard::RELEASE))
+				active()->prev();
+			res = true;
+			break;
 
 		case Keyboard::VK_DOWN:
-			if(~pk.flags & Keyboard::RELEASE)
-				_active->switch_to((_active->view() + 1) % Screen::VIEW_COUNT);
-			return true;
+			if(active() && (~pk.flags & Keyboard::RELEASE))
+				active()->next();
+			res = true;
+			break;
 	}
-	return false;
+	if(res && active())
+		active()->repaint();
+	return res;
 }

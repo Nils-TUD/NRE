@@ -16,6 +16,9 @@
 #include "tests/CatchEx.h"
 #include "tests/SharedMemory.h"
 #include "tests/DataSpaceTest.h"
+#include "tests/SListTest.h"
+#include "tests/DListTest.h"
+#include "tests/CyclerTest.h"
 
 using namespace nul;
 using namespace nul::test;
@@ -28,6 +31,11 @@ const TestCase testcases[] = {
 	utcbperf,
 	regionlist,
 	dstest,
+	slisttest,
+	dlisttest,
+	cyclertest1,
+	cyclertest2,
+	cyclertest3,
 	/*sharedmem,*/
 };
 

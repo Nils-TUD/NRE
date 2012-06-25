@@ -16,6 +16,7 @@ SessionData::SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func)
 	for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
 		LocalEc *ec = s->get_ec(i);
 		if(ec) {
+			// TODO we shouldn't use the same Ec for the session-portals (cap acception)
 			// just use portals if the service wants to provide one. otherwise use a semaphore to
 			// prevent the client from calling us
 			if(func)

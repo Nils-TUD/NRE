@@ -25,8 +25,14 @@ namespace nul {
 class Console {
 public:
 	enum {
-		COLS	= Screen::COLS,
-		ROWS	= Screen::ROWS,
+		COLS		= Screen::COLS,
+		ROWS		= Screen::ROWS,
+		VIEW_COUNT	= Screen::VIEW_COUNT
+	};
+
+	enum ViewCommand {
+		CREATE_VIEW,
+		DESTROY_VIEW
 	};
 
 	enum Command {
@@ -36,7 +42,6 @@ public:
 
 	struct SendPacket {
 		Command cmd;
-		uint8_t view;
 		uint8_t x;
 		uint8_t y;
 		uint8_t character;
@@ -51,32 +56,21 @@ public:
 };
 
 class ConsoleSession : public Session {
-	enum {
-		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
-		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE,
-	};
-
 public:
-	explicit ConsoleSession(Connection &con) : Session(con),
-			_in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			_out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			_consumer(&_in_ds,true), _producer(&_out_ds,true,true) {
-		_in_ds.share(*this);
-		_out_ds.share(*this);
+	explicit ConsoleSession(Connection &con) : Session(con), _pts() {
+		for(cpu_t cpu = 0; cpu < Hip::MAX_CPUS; ++cpu) {
+			if(con.available_on(cpu))
+				_pts[cpu] = new Pt(caps() + cpu);
+		}
 	}
 
-	Consumer<Console::ReceivePacket> &consumer() {
-		return _consumer;
-	}
-	Producer<Console::SendPacket> &producer() {
-		return _producer;
+	Pt &pt(cpu_t cpu) const {
+		assert(_pts[cpu] != 0);
+		return *_pts[cpu];
 	}
 
 private:
-	DataSpace _in_ds;
-	DataSpace _out_ds;
-	Consumer<Console::ReceivePacket> _consumer;
-	Producer<Console::SendPacket> _producer;
+	Pt *_pts[Hip::MAX_CPUS];
 };
 
 }

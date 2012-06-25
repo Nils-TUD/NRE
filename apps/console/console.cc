@@ -38,7 +38,9 @@ int main() {
 				rpk.flags = pk->flags;
 				rpk.keycode = pk->keycode;
 				rpk.character = Keymap::translate(*pk);
-				srv->active()->prod()->produce(rpk);
+				ConsoleSessionView *view = srv->active()->active();
+				if(view)
+					view->prod().produce(rpk);
 			}
 		}
 	}

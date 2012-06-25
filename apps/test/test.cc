@@ -64,7 +64,6 @@ static void write(void *) {
 		pt.call(uf);
 	}
 }
-#endif
 
 struct Info {
 	ConsoleSession *sess;
@@ -95,37 +94,34 @@ static void writer(void*) {
 		}
 	}
 }
+#endif
 
-static UserSm *sm;
 static Connection *console;
 static ConsoleSession *sess;
 
 static void view0(void*) {
-	ConsoleView view(*sess,0);
-	int i = 0,c;
+	ConsoleView view(*sess);
+	int i = 0;
 	while(1) {
-		ScopedLock<UserSm> guard(sm);
-		view << "Huhu, from view 0: " << i << "\n";
+		char c = view.read();
+		view << "Huhu, from view " << view.id() << ": " << c << "\n";
 		i++;
-		//io.read();
 	}
 }
 
 static void view1(void*) {
-	ConsoleView view(*sess,1);
-	int i = 0,c;
+	ConsoleView view(*sess);
+	int i = 0;
 	while(1) {
-		ScopedLock<UserSm> guard(sm);
-		view << "Huhu, from view 1: " << i << "\n";
+		char c = view.read();
+		view << "Huhu, from view " << view.id() << ": " << c << "\n";
 		i++;
-		//io.read();
 	}
 }
 
 int main() {
 	console = new Connection("console");
 	sess = new ConsoleSession(*console);
-	sm = new UserSm();
 	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
 	sc1->start();
 	Sc *sc2 = new Sc(new GlobalEc(view1,0),Qpd());

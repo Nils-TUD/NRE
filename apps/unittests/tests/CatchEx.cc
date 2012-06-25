@@ -63,8 +63,8 @@ static void test_catchex() {
 	avg = avg / tries;
 	WVPERF(avg,"cycles");
 	WVPASSEQ(sum,tries);
-	WVPRINTF("sum: %u\n",sum);
-	WVPRINTF("avg: %Lu\n",avg);
-	WVPRINTF("min: %Lu\n",min);
-	WVPRINTF("max: %Lu\n",max);
+	WVPRINTF("sum: %u",sum);
+	WVPRINTF("avg: %Lu",avg);
+	WVPRINTF("min: %Lu",min);
+	WVPRINTF("max: %Lu",max);
 }

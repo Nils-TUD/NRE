@@ -62,22 +62,27 @@ env.Append(
 	LIBPATH = '#' + builddir + '/bin/lib',
 	SYSLIBPATH = crossdir + '/lib',
 	SYSGCCLIBPATH = crossdir + '/lib/gcc/' + cross + '/' + crossver,
+	LINK_ADDR = 0x100000
 )
 
 def NulProgram(env, target, source):
-	prog = env.Program(
+	# for better debugging: put every executable at a different address
+	myenv = env.Clone()
+	myenv.Append(LINKFLAGS = ' -Wl,--section-start=.init=' + ("0x%x" % env['LINK_ADDR']))
+	env['LINK_ADDR'] += 0x100000
+	prog = myenv.Program(
 		target, source,
 		LIBS = ['stdc++','supc++'],
-		LIBPATH = [env['LIBPATH'], env['SYSLIBPATH']]
+		LIBPATH = [myenv['LIBPATH'], myenv['SYSLIBPATH']]
 	)
-	env.Depends(prog, env['SYSGCCLIBPATH'] + '/crt0.o')
-	env.Depends(prog, env['SYSGCCLIBPATH'] + '/crt1.o')
-	env.Depends(prog, env['SYSGCCLIBPATH'] + '/crtn.o')
-	env.Depends(prog, env['LIBPATH'] + '/libstdc++.a')
-	env.Depends(prog, env['LIBPATH'] + '/libc.a')
-	env.Depends(prog, env['LIBPATH'] + '/libm.a')
-	env.Depends(prog, env['LIBPATH'] + '/libg.a')
-	env.Install(env['BINARYDIR'], prog)
+	myenv.Depends(prog, myenv['SYSGCCLIBPATH'] + '/crt0.o')
+	myenv.Depends(prog, myenv['SYSGCCLIBPATH'] + '/crt1.o')
+	myenv.Depends(prog, myenv['SYSGCCLIBPATH'] + '/crtn.o')
+	myenv.Depends(prog, myenv['LIBPATH'] + '/libstdc++.a')
+	myenv.Depends(prog, myenv['LIBPATH'] + '/libc.a')
+	myenv.Depends(prog, myenv['LIBPATH'] + '/libm.a')
+	myenv.Depends(prog, myenv['LIBPATH'] + '/libg.a')
+	myenv.Install(env['BINARYDIR'], prog)
 
 env.NulProgram = NulProgram
 hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')

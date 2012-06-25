@@ -14,8 +14,8 @@ using namespace nul;
 char ConsoleView::read() {
 	Console::ReceivePacket *pk = 0;
 	do {
-		pk = _sess.consumer().get();
-		_sess.consumer().next();
+		pk = _consumer.get();
+		_consumer.next();
 	}
 	while(pk->flags & Keyboard::RELEASE);
 	return pk->character;
@@ -35,18 +35,16 @@ void ConsoleView::write(char c) {
 		}
 		Console::SendPacket pk;
 		pk.cmd = Console::WRITE;
-		pk.view = _view;
 		pk.character = c;
 		pk.color = 0 << 4 | 4;
 		pk.x = _col++;
 		pk.y = _row;
-		_sess.producer().produce(pk);
+		_producer.produce(pk);
 	}
 }
 
 void ConsoleView::scroll() {
 	Console::SendPacket pk;
 	pk.cmd = Console::SCROLL;
-	pk.view = _view;
-	_sess.producer().produce(pk);
+	_producer.produce(pk);
 }

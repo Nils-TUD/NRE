@@ -174,12 +174,15 @@ private:
 	virtual SessionData *create_session(size_t id,capsel_t pts,Pt::portal_func func) {
 		return new SessionData(this,id,pts,func);
 	}
+	virtual void created_session(size_t) {
+	}
 
 	SessionData *new_session() {
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			if(_sessions[i] == 0) {
 				rcu_assign_pointer(_sessions[i],create_session(i,_caps + i * Hip::MAX_CPUS,_func));
+				created_session(i);
 				return _sessions[i];
 			}
 		}
@@ -215,10 +218,9 @@ template<class T>
 class SessionIterator {
 	friend class Service;
 
+public:
 	explicit SessionIterator(Service *s,ssize_t pos = 0) : _s(s), _pos(pos), _last(next()) {
 	}
-
-public:
 	~SessionIterator() {
 	}
 
@@ -252,10 +254,10 @@ public:
 		operator++();
 		return tmp;
 	}
-	bool operator ==(const SessionIterator<T>& rhs) {
+	bool operator ==(const SessionIterator<T>& rhs) const {
 		return _pos == rhs._pos;
 	}
-	bool operator !=(const SessionIterator<T>& rhs) {
+	bool operator !=(const SessionIterator<T>& rhs) const {
 		return _pos != rhs._pos;
 	}
 

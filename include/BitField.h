@@ -40,6 +40,14 @@ public:
 		return (_words[idx(bit)] & bitpos(bit)) != 0;
 	}
 
+	uint first_set() const {
+		// TODO this can be improved
+		for(uint i = 0; i < BITS; ++i) {
+			if(is_set(i))
+				return i;
+		}
+		return BITS;
+	}
 	void set(uint bit) {
 		_words[idx(bit)] |= bitpos(bit);
 	}
@@ -61,7 +69,7 @@ public:
 	}
 
 private:
-	word_t _words[BITS / (sizeof(word_t) * 8)];
+	word_t _words[(BITS + sizeof(word_t) * 8 - 1) / (sizeof(word_t) * 8)];
 };
 
 template<uint BITS>

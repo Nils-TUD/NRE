@@ -13,6 +13,7 @@
 #include <service/Connection.h>
 #include <dev/Screen.h>
 #include <dev/Keyboard.h>
+#include <Cycler.h>
 
 class ConsoleSessionData;
 
@@ -27,6 +28,21 @@ public:
 		return _inst = new ConsoleService(name);
 	}
 
+	ConsoleSessionData *active() {
+		iterator it = _sess_cycler.current();
+		return it != sessions_end() ? &*it : 0;
+	}
+	bool is_active(const ConsoleSessionData *sess) const {
+		return _sess_cycler.valid() && sess == &*_sess_cycler.current();
+	}
+
+	iterator prev() {
+		return _sess_cycler.prev();
+	}
+	iterator next() {
+		return _sess_cycler.next();
+	}
+
 	iterator sessions_begin() {
 		return Service::sessions_begin<ConsoleSessionData>();
 	}
@@ -34,23 +50,19 @@ public:
 		return Service::sessions_end<ConsoleSessionData>();
 	}
 
-	ConsoleSessionData *active() {
-		return _active != sessions_end() ? &*_active : 0;
-	}
 	nul::ScreenSession &screen() {
 		return _sess;
 	}
 	bool handle_keyevent(const nul::Keyboard::Packet &pk);
 
 private:
-	ConsoleService(const char *name)
-		: Service(name), _screen("screen"), _sess(_screen), _active(sessions_begin()) {
-	}
+	ConsoleService(const char *name);
 
 	virtual nul::SessionData *create_session(size_t id,capsel_t caps,nul::Pt::portal_func func);
+	virtual void created_session(size_t idx);
 
 	nul::Connection _screen;
 	nul::ScreenSession _sess;
-	iterator _active;
+	nul::Cycler<iterator> _sess_cycler;
 	static ConsoleService *_inst;
 };

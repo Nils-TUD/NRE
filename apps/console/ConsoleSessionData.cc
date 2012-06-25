@@ -15,95 +15,92 @@
 using namespace nul;
 
 ConsoleSessionData::ConsoleSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-	: SessionData(s,id,caps,func), _view(0), _sm(), _ec(receiver,next_cpu()), _sc(),
-	  _in_ds(), _out_ds(),
-	  _buffer(Screen::VIEW_COUNT * ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-	  _prod(), _cons() {
-	_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
-	memset(reinterpret_cast<void*>(_buffer.virt()),0,_buffer.size());
+	: SessionData(s,id,caps,func), _sm(), _views(), _view_cycler(_views.begin(),_views.end()), _view_ids() {
+	_view_ids.set_all();
 }
 
 ConsoleSessionData::~ConsoleSessionData() {
-	delete _out_ds;
-	delete _in_ds;
-	delete _prod;
-	delete _cons;
-	delete _sc;
+	while(_views.length() > 0) {
+		ConsoleSessionView *view = &*_views.begin();
+		RCU::invalidate(view);
+		_views.remove(view);
+	}
 }
 
 void ConsoleSessionData::invalidate() {
-	if(_cons)
-		_cons->stop();
-}
-
-void ConsoleSessionData::put(const Console::SendPacket &pk) {
-	if(pk.y < Screen::ROWS && pk.x < Screen::COLS && pk.view < Screen::VIEW_COUNT) {
-		uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt()) + pk.view * ExecEnv::PAGE_SIZE;
-		uint8_t *pos = buf + pk.y * Screen::COLS * 2 + pk.x * 2;
-		*pos = pk.character;
-		*(pos + 1) = pk.color;
-	}
-}
-
-void ConsoleSessionData::scroll(uint view) {
-	if(view < Screen::VIEW_COUNT) {
-		char *screen = reinterpret_cast<char*>(_buffer.virt()) + view * ExecEnv::PAGE_SIZE;
-		memmove(screen,screen + Screen::COLS * 2,Screen::COLS * (Screen::ROWS - 1) * 2);
-		memset(screen + Screen::COLS * (Screen::ROWS - 1) * 2,0,Screen::COLS * 2);
-	}
-}
-
-void ConsoleSessionData::switch_to(uint view) {
-	assert(view < Screen::VIEW_COUNT);
-	ConsoleService *s = ConsoleService::get();
 	ScopedLock<UserSm> guard(&_sm);
-	_view = view;
-	s->screen().set_view(view);
-	uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt()) + view * ExecEnv::PAGE_SIZE;
-	for(uint8_t y = 0; y < Screen::ROWS; ++y) {
-		for(uint8_t x = 0; x < Screen::COLS; ++x) {
-			uint8_t *pos = buf + y * Screen::COLS * 2 + x * 2;
-			s->screen().paint(x,y,*pos,*(pos + 1));
+	for(iterator it = _views.begin(); it != _views.end(); ++it)
+		it->invalidate();
+}
+
+uint ConsoleSessionData::create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds) {
+	ScopedLock<UserSm> guard(&_sm);
+	uint id = _view_ids.first_set();
+	if(id == Console::VIEW_COUNT)
+		throw ServiceException(E_CAPACITY);
+
+	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds,out_ds));
+	iterator it = _views.append(v.release());
+	_view_ids.clear(id);
+	_view_cycler.reset(_views.begin(),it,_views.end());
+	repaint();
+	return id;
+}
+
+bool ConsoleSessionData::destroy_view(uint view) {
+	ScopedLock<UserSm> guard(&_sm);
+	for(iterator it = _views.begin(); it != _views.end(); ++it) {
+		if(it->id() == view) {
+			_views.remove(&*it);
+			_view_ids.set(it->id());
+			_view_cycler.reset(_views.begin(),_views.begin(),_views.end());
+			repaint();
+			it->invalidate();
+			RCU::invalidate(&*it);
+			return true;
 		}
 	}
+	return false;
 }
 
-void ConsoleSessionData::accept_ds(DataSpace *ds) {
-	ScopedLock<UserSm> guard(&_sm);
-	if(_out_ds == 0) {
-		_out_ds = ds;
-		_prod = new Producer<Console::ReceivePacket>(ds,false,false);
-	}
-	else if(_in_ds == 0) {
-		_in_ds = ds;
-		_cons = new Consumer<Console::SendPacket>(ds,false);
-		_sc = new Sc(&_ec,Qpd());
-		_sc->start();
-	}
-	else
-		throw ServiceException(E_ARGS_INVALID);
-}
+void ConsoleSessionData::portal(capsel_t pid) {
+	UtcbFrameRef uf;
+	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
+		ConsoleSessionData *sess = ConsoleService::get()->get_session<ConsoleSessionData>(pid);
+		Console::ViewCommand cmd;
+		uf >> cmd;
+		switch(cmd) {
+			case Console::CREATE_VIEW: {
+				DataSpaceDesc indesc,outdesc;
+				capsel_t insel = uf.get_delegated(0).offset();
+				capsel_t outsel = uf.get_delegated(0).offset();
+				uf >> indesc >> outdesc;
+				uf.finish_input();
 
-void ConsoleSessionData::receiver(void *) {
-	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
-	ScopedLock<RCULock> guard(&RCU::lock());
-	ConsoleService *s = ConsoleService::get();
-	ConsoleSessionData *sess = s->get_session<ConsoleSessionData>(caps);
-	Consumer<Console::SendPacket> *cons = sess->cons();
-	for(Console::SendPacket *pk; (pk = cons->get()) != 0; cons->next()) {
-		ScopedLock<UserSm> guard(&sess->sm());
-		switch(pk->cmd) {
-			case Console::WRITE:
-				sess->put(*pk);
-				if(sess == s->active() && sess->view() == pk->view)
-					s->screen().paint(pk->x,pk->y,pk->character,pk->color);
-				break;
+				uint view = sess->create_view(new DataSpace(indesc,insel),new DataSpace(outdesc,outsel));
 
-			case Console::SCROLL:
-				sess->scroll(pk->view);
-				if(sess == s->active() && sess->view() == pk->view)
-					s->screen().scroll();
-				break;
+				uf.accept_delegates();
+				uf << E_SUCCESS << view;
+			}
+			break;
+
+			case Console::DESTROY_VIEW: {
+				uint view;
+				uf >> view;
+				uf.finish_input();
+
+				if(sess->destroy_view(view))
+					uf << E_SUCCESS;
+				else
+					uf << E_NOT_FOUND;
+			}
+			break;
 		}
+	}
+	catch(const Exception &e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
+		uf.clear();
+		uf << e.code();
 	}
 }

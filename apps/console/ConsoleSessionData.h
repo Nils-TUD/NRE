@@ -10,64 +10,60 @@
 #pragma once
 
 #include <kobj/UserSm.h>
-#include <kobj/GlobalEc.h>
-#include <kobj/Sc.h>
-#include <service/Service.h>
-#include <service/Consumer.h>
-#include <service/Producer.h>
-#include <mem/DataSpace.h>
 #include <dev/Console.h>
-#include <dev/Screen.h>
-#include <CPU.h>
+#include <DList.h>
 
 #include "ConsoleService.h"
+#include "ConsoleSessionView.h"
+
+class ConsoleSessionView;
 
 class ConsoleSessionData : public nul::SessionData {
 public:
+	typedef nul::DList<ConsoleSessionView>::iterator iterator;
+
 	ConsoleSessionData(nul::Service *s,size_t id,capsel_t caps,nul::Pt::portal_func func);
 	virtual ~ConsoleSessionData();
 
 	virtual void invalidate();
 
-	void put(const nul::Console::SendPacket &pk);
-	void scroll(uint view);
-	void switch_to(uint view);
+	ConsoleSessionView *active() {
+		iterator it = _view_cycler.current();
+		return it != _views.end() ? &*it : 0;
+	}
+	bool is_active() const {
+		return ConsoleService::get()->is_active(this);
+	}
+	bool is_active(const ConsoleSessionView *view) const {
+		return is_active() && view == &*_view_cycler.current();
+	}
 
-	uint view() const {
-		return _view;
+	iterator prev() {
+		return _view_cycler.prev();
 	}
-	nul::UserSm &sm() {
-		return _sm;
+	iterator next() {
+		return _view_cycler.next();
 	}
-	nul::Consumer<nul::Console::SendPacket> *cons() {
-		return _cons;
+
+	void repaint() {
+		iterator it = _view_cycler.current();
+		if(it != _views.end())
+			it->repaint();
 	}
-	nul::Producer<nul::Console::ReceivePacket> *prod() {
-		return _prod;
-	}
+
+	uint create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
+	bool destroy_view(uint view);
+
+	PORTAL static void portal(capsel_t pid);
 
 protected:
-	virtual void accept_ds(nul::DataSpace *ds);
-
-private:
-	static cpu_t next_cpu() {
-		static nul::UserSm sm;
-		nul::ScopedLock<nul::UserSm> guard(&sm);
-		if(_cpu_it == nul::CPU::end())
-			_cpu_it = nul::CPU::begin();
-		return (_cpu_it++)->id;
+	virtual void accept_ds(nul::DataSpace *) {
+		throw nul::ServiceException(nul::E_ARGS_INVALID);
 	}
 
-	static void receiver(void *);
-
-	uint _view;
+private:
 	nul::UserSm _sm;
-	nul::GlobalEc _ec;
-	nul::Sc *_sc;
-	nul::DataSpace *_in_ds;
-	nul::DataSpace *_out_ds;
-	nul::DataSpace _buffer;
-	nul::Producer<nul::Console::ReceivePacket> *_prod;
-	nul::Consumer<nul::Console::SendPacket> *_cons;
-	static nul::CPU::iterator _cpu_it;
+	nul::DList<ConsoleSessionView> _views;
+	nul::Cycler<iterator> _view_cycler;
+	nul::BitField<nul::Console::VIEW_COUNT> _view_ids;
 };

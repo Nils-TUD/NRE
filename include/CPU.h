@@ -20,9 +20,9 @@
 
 #include <kobj/Ec.h>
 #include <cap/CapSpace.h>
-#include <ListIterator.h>
-#include <Hip.h>
 #include <Assert.h>
+#include <SList.h>
+#include <Hip.h>
 
 namespace nul {
 
@@ -33,7 +33,7 @@ class CPU {
 	friend class CPUInit;
 
 public:
-	typedef ListIterator<CPU> iterator;
+	typedef SListIterator<CPU> iterator;
 
 	static CPU &current() {
 		return get(Ec::current()->cpu());
@@ -44,10 +44,10 @@ public:
 	}
 
 	static iterator begin() {
-		return ListIterator<CPU>(_online);
+		return SListIterator<CPU>(_online);
 	}
 	static iterator end() {
-		return ListIterator<CPU>();
+		return SListIterator<CPU>();
 	}
 
 	cpu_t id;
