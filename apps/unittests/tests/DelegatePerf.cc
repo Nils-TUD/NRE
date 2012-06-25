@@ -60,7 +60,7 @@ static void test_delegate() {
 
 	avg = avg / tries;
 	WVPERF(avg,"cycles");
-	WVPRINTF("avg: %Lu\n",avg);
-	WVPRINTF("min: %Lu\n",min);
-	WVPRINTF("max: %Lu\n",max);
+	WVPRINTF("avg: %Lu",avg);
+	WVPRINTF("min: %Lu",min);
+	WVPRINTF("max: %Lu",max);
 }

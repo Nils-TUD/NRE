@@ -97,19 +97,21 @@ static void test_nesting() {
 
 static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
 	uint64_t tic,tac,duration;
+	min = ~0ull;
+	max = 0;
 	for(uint i = 0; i < tries; i++) {
-		tic = Util::tsc();
 		{
 			UtcbFrame uf;
 			for(size_t x = 0; x < n; ++x)
 				uf << x;
 
+			tic = Util::tsc();
 			{
 				UtcbFrame nested;
 				nested << 1;
 			}
+			tac = Util::tsc();
 		}
-		tac = Util::tsc();
 		duration = tac - tic - rdtsc;
 		min = Math::min(min,duration);
 		max = Math::max(max,duration);
@@ -122,7 +124,7 @@ static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uin
 }
 
 static void test_perf() {
-	uint64_t tic,tac,min = ~0ull,max = 0,avg = 0,rdtsc;
+	uint64_t tic,tac,min,max,avg,rdtsc;
 	tic = Util::tsc();
 	tac = Util::tsc();
 	rdtsc = tac - tic;

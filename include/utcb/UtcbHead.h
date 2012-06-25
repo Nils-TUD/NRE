@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 
-#define USE_UTCB_STACKING		0
+#define USE_UTCB_STACKING		1
 #define USE_UTCB_KERNEL_EXT		1
 
 namespace nul {
