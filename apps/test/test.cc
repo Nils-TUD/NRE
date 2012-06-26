@@ -105,6 +105,8 @@ static void view0(void*) {
 	while(1) {
 		//char c = view.read();
 		view << "Huhu, from view " << view.id() << ": " << i << "\n";
+		if(i % 1000000 == 0)
+			Serial::get().writef("i=%d\n",i);
 		i++;
 	}
 }
@@ -115,6 +117,8 @@ static void view1(void*) {
 	while(1) {
 		//char c = view.read();
 		view << "Huhu, from view " << view.id() << ": " << i << "\n";
+		if(i % 1000000 == 0)
+			Serial::get().writef("i=%d\n",i);
 		i++;
 	}
 }
@@ -124,8 +128,8 @@ int main() {
 	sess = new ConsoleSession(*console);
 	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
 	sc1->start();
-	Sc *sc2 = new Sc(new GlobalEc(view1,0),Qpd());
-	sc2->start();
+	/*Sc *sc2 = new Sc(new GlobalEc(view1,0),Qpd());
+	sc2->start();*/
 
 	/*
 	for(int i = 0; i < 2; ++i) {

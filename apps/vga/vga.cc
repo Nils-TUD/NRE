@@ -92,8 +92,8 @@ void VGASessionData::receiver(void *) {
 					vga.paint(*pk);
 				break;
 			case Screen::SCROLL:
-				if(pk->id == current)
-					vga.scroll();
+				//if(pk->id == current)
+				//	vga.scroll();
 				break;
 			case Screen::SETVIEW:
 				current = pk->id;

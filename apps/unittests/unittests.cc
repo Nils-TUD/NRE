@@ -11,7 +11,7 @@
 
 #include "tests/Pingpong.h"
 #include "tests/UtcbTest.h"
-#include "tests/RegionListTest.h"
+#include "tests/ChildMemoryTest.h"
 #include "tests/DelegatePerf.h"
 #include "tests/CatchEx.h"
 #include "tests/SharedMemory.h"
@@ -19,23 +19,25 @@
 #include "tests/SListTest.h"
 #include "tests/DListTest.h"
 #include "tests/CyclerTest.h"
+#include "tests/RegMngTest.h"
 
 using namespace nul;
 using namespace nul::test;
 
 const TestCase testcases[] = {
-	pingpong,
+	/*pingpong,
 	catchex,
 	delegateperf,
 	utcbnest,
 	utcbperf,
-	regionlist,
+	childmem,
 	dstest,
 	slisttest,
 	dlisttest,
 	cyclertest1,
 	cyclertest2,
-	cyclertest3,
+	cyclertest3,*/
+	regmng,
 	/*sharedmem,*/
 };
 

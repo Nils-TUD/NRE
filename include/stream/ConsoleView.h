@@ -20,8 +20,8 @@ namespace nul {
 
 class ConsoleView : public IStream, public OStream {
 	enum {
-		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
-		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE,
+		IN_DS_SIZE	= ExecEnv::PAGE_SIZE * 256,
+		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * 256,
 	};
 
 public:

@@ -19,16 +19,18 @@
 #include <subsystem/ChildMemory.h>
 #include <util/ScopedPtr.h>
 
-#include "RegionListTest.h"
+#include "ChildMemoryTest.h"
 
 using namespace nul;
 using namespace nul::test;
 
-const TestCase regionlist = {
-	"Regionlist",test_reglist
+static void test_childmem();
+
+const TestCase childmem = {
+	"ChildMemory",test_childmem
 };
 
-void test_reglist() {
+void test_childmem() {
 	uintptr_t src = 0;
 	size_t size;
 

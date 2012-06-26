@@ -10,5 +10,5 @@ bin/apps/vga provides=screen
 bin/apps/console provides=console
 #bin/apps/screen provides=screen
 bin/apps/test
-bin/apps/sub
+#bin/apps/sub
 

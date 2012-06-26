@@ -20,6 +20,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase regionlist;
-
-void test_reglist();
+extern const nul::test::TestCase childmem;

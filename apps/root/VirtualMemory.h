@@ -25,7 +25,7 @@ public:
 		if(RAM_BEGIN + phys >= RAM_END)
 			return 0;
 		if(RAM_BEGIN + phys + size > RAM_END)
-			size = RAM_END - size;
+			size = RAM_END - (RAM_BEGIN + phys);
 		return RAM_BEGIN + phys;
 	}
 	static uintptr_t phys_to_virt(uintptr_t virt) {

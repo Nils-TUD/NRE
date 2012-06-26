@@ -41,8 +41,9 @@ OStream &operator<<(OStream &os,const ChildMemory &cm) {
 	for(size_t i = 0; i < ChildMemory::MAX_DS; ++i) {
 		if(cm._ds[i].unmapsel != 0) {
 			const ChildMemory::DS *ds = cm._ds + i;
-			os.writef("\t\t%u: %p .. %p (type %u)\n",
-					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.size(),ds->desc.type());
+			os.writef("\t\t%u: %p .. %p (type %u, origin %p)\n",
+					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.size(),ds->desc.type(),
+					ds->desc.origin());
 		}
 	}
 	return os;
