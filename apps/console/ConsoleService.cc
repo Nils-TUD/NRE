@@ -19,6 +19,15 @@ ConsoleService::ConsoleService(const char *name)
 	  _sess_cycler(sessions_begin(),sessions_end()) {
 }
 
+void ConsoleService::prepare_utcbs() {
+	// we want to accept two dataspaces
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		LocalEc *ec = get_ec(it->id);
+		UtcbFrameRef uf(ec->utcb());
+		uf.accept_delegates(1);
+	}
+}
+
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::portal_func func) {
 	return new ConsoleSessionData(this,id,caps,func);
 }

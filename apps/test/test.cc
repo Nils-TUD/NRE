@@ -104,7 +104,7 @@ static void view0(void*) {
 	int i = 0;
 	while(1) {
 		char c = view.read();
-		view << "Huhu, from view " << view.id() << ": " << c << "\n";
+		view << "Huhu, from view " << view.id() << ": " << i << "\n";
 		i++;
 	}
 }
@@ -114,7 +114,7 @@ static void view1(void*) {
 	int i = 0;
 	while(1) {
 		char c = view.read();
-		view << "Huhu, from view " << view.id() << ": " << c << "\n";
+		view << "Huhu, from view " << view.id() << ": " << i << "\n";
 		i++;
 	}
 }

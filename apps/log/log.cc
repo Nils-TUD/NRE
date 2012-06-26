@@ -12,6 +12,7 @@
 #include <stream/Serial.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
+#include <Cycler.h>
 
 using namespace nul;
 
@@ -23,7 +24,7 @@ class LogSessionData : public SessionData {
 public:
 	LogSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,id,caps,func), _bufpos(0), _buf(),
-		  _ec(receiver,next_cpu()), _sc(), _cons(), _ds(), _sm() {
+		  _ec(receiver,_cpus.next()->id), _sc(), _cons(), _ds(), _sm() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
@@ -49,14 +50,7 @@ public:
 			_buf[_bufpos++] = '\n';
 		return c == '\n' || _bufpos == sizeof(_buf);
 	}
-	void flush() {
-		ScopedLock<UserSm> guard(&_sm);
-		Serial::get() << "\e[0;" << _colors[id() % 8] << "m[" << id() << "] ";
-		for(size_t i = 0; i < _bufpos; ++i)
-			Serial::get() << _buf[i];
-		Serial::get() << "\e[0m";
-		_bufpos = 0;
-	}
+	void flush();
 
 protected:
 	virtual void accept_ds(DataSpace *ds) {
@@ -70,14 +64,6 @@ protected:
 	}
 
 private:
-	static cpu_t next_cpu() {
-		static UserSm sm;
-		ScopedLock<UserSm> guard(&sm);
-		if(_cpu_it == CPU::end())
-			_cpu_it = CPU::begin();
-		return (_cpu_it++)->id;
-	}
-
 	static void receiver(void *);
 
 	size_t _bufpos;
@@ -88,7 +74,7 @@ private:
 	DataSpace *_ds;
 	UserSm _sm;
 	static const char *_colors[];
-	static CPU::iterator _cpu_it;
+	static Cycler<CPU::iterator,LockPolicyDefault<SpinLock> > _cpus;
 };
 
 class LogService : public Service {
@@ -96,18 +82,33 @@ public:
 	LogService() : Service("log") {
 	}
 
+	UserSm &sm() {
+		return _sm;
+	}
+
 private:
 	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 		return new LogSessionData(this,id,caps,func);
 	}
+
+	UserSm _sm;
 };
 
 const char *LogSessionData::_colors[] = {
 	"31","32","33","34","35","36","37","30"
 };
-CPU::iterator LogSessionData::_cpu_it;
+Cycler<CPU::iterator,LockPolicyDefault<SpinLock> > LogSessionData::_cpus(CPU::begin(),CPU::end());
 
 static LogService *log;
+
+void LogSessionData::flush() {
+	ScopedLock<UserSm> guard(&log->sm());
+	Serial::get() << "\e[0;" << _colors[id() % 8] << "m[" << id() << "] ";
+	for(size_t i = 0; i < _bufpos; ++i)
+		Serial::get() << _buf[i];
+	Serial::get() << "\e[0m";
+	_bufpos = 0;
+}
 
 void LogSessionData::receiver(void *) {
 	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);

@@ -49,8 +49,8 @@ public:
 	};
 
 	struct ReceivePacket {
+		uint flags;
 		uint8_t keycode;
-		uint8_t flags;
 		char character;
 	};
 };

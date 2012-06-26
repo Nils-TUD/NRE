@@ -28,6 +28,8 @@ public:
 		return _inst = new ConsoleService(name);
 	}
 
+	void prepare_utcbs();
+
 	ConsoleSessionData *active() {
 		iterator it = _sess_cycler.current();
 		return it != sessions_end() ? &*it : 0;

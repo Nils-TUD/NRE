@@ -12,13 +12,14 @@
 using namespace nul;
 
 char ConsoleView::read() {
-	Console::ReceivePacket *pk = 0;
-	do {
-		pk = _consumer.get();
-		_consumer.next();
+	char c;
+	while(1) {
+		Console::ReceivePacket pk = receive();
+		c = pk.character;
+		if(c != '\0' && (~pk.flags & Keyboard::RELEASE))
+			break;
 	}
-	while(pk->flags & Keyboard::RELEASE);
-	return pk->character;
+	return c;
 }
 
 void ConsoleView::write(char c) {

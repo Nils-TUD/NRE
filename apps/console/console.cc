@@ -27,6 +27,7 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		srv->provide_on(it->id);
 	srv->reg();
+	srv->prepare_utcbs();
 	srv->screen().set_view(0);
 
 	Connection con("keyboard");
@@ -34,13 +35,14 @@ int main() {
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
 		if(!srv->handle_keyevent(*pk)) {
 			if(srv->active()) {
-				Console::ReceivePacket rpk;
-				rpk.flags = pk->flags;
-				rpk.keycode = pk->keycode;
-				rpk.character = Keymap::translate(*pk);
 				ConsoleSessionView *view = srv->active()->active();
-				if(view)
+				if(view) {
+					Console::ReceivePacket rpk;
+					rpk.flags = pk->flags;
+					rpk.keycode = pk->keycode;
+					rpk.character = Keymap::translate(*pk);
 					view->prod().produce(rpk);
+				}
 			}
 		}
 	}

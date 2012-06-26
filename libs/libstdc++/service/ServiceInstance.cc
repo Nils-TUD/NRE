@@ -27,9 +27,9 @@
 namespace nul {
 
 ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
-		: _s(s), _ec(cpu), _pt(&_ec,pt,portal), _sm() {
-	_ec.set_tls<Service*>(Ec::TLS_PARAM,s);
-	UtcbFrameRef ecuf(_ec.utcb());
+		: _s(s), _session_ec(cpu), _service_ec(cpu), _pt(&_service_ec,pt,portal), _sm() {
+	_service_ec.set_tls<Service*>(Ec::TLS_PARAM,s);
+	UtcbFrameRef ecuf(_service_ec.utcb());
 	// for dataspace sharing
 	ecuf.accept_delegates(0);
 	// for session-identification

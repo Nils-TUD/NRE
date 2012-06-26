@@ -62,8 +62,8 @@ protected:
 	}
 
 private:
+	uint _next_id;
 	nul::UserSm _sm;
 	nul::DList<ConsoleSessionView> _views;
 	nul::Cycler<iterator> _view_cycler;
-	nul::BitField<nul::Console::VIEW_COUNT> _view_ids;
 };

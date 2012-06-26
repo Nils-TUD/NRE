@@ -15,8 +15,7 @@
 using namespace nul;
 
 ConsoleSessionData::ConsoleSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-	: SessionData(s,id,caps,func), _sm(), _views(), _view_cycler(_views.begin(),_views.end()), _view_ids() {
-	_view_ids.set_all();
+	: SessionData(s,id,caps,func), _next_id(), _sm(), _views(), _view_cycler(_views.begin(),_views.end()) {
 }
 
 ConsoleSessionData::~ConsoleSessionData() {
@@ -35,13 +34,9 @@ void ConsoleSessionData::invalidate() {
 
 uint ConsoleSessionData::create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds) {
 	ScopedLock<UserSm> guard(&_sm);
-	uint id = _view_ids.first_set();
-	if(id == Console::VIEW_COUNT)
-		throw ServiceException(E_CAPACITY);
-
+	uint id = _next_id++;
 	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds,out_ds));
 	iterator it = _views.append(v.release());
-	_view_ids.clear(id);
 	_view_cycler.reset(_views.begin(),it,_views.end());
 	repaint();
 	return id;
@@ -52,7 +47,6 @@ bool ConsoleSessionData::destroy_view(uint view) {
 	for(iterator it = _views.begin(); it != _views.end(); ++it) {
 		if(it->id() == view) {
 			_views.remove(&*it);
-			_view_ids.set(it->id());
 			_view_cycler.reset(_views.begin(),_views.begin(),_views.end());
 			repaint();
 			it->invalidate();

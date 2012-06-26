@@ -32,7 +32,7 @@ class DataSpaceManager {
 	friend OStream &operator<<(OStream &os,const DataSpaceManager<DS2> &mng);
 
 	enum {
-		MAX_SLOTS	= 128
+		MAX_SLOTS	= 256
 	};
 
 	struct Slot {

@@ -32,10 +32,10 @@ public:
 	explicit ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
 
 	cpu_t cpu() const {
-		return _ec.cpu();
+		return _session_ec.cpu();
 	}
 	LocalEc &ec() {
-		return _ec;
+		return _session_ec;
 	}
 
 private:
@@ -45,7 +45,8 @@ private:
 	PORTAL static void portal(capsel_t pid);
 
 	Service *_s;
-	LocalEc _ec;
+	LocalEc _session_ec;
+	LocalEc _service_ec;
 	Pt _pt;
 	UserSm _sm;
 };

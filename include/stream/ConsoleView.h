@@ -40,6 +40,15 @@ public:
 		return _view;
 	}
 
+	Console::ReceivePacket receive() {
+		Console::ReceivePacket *pk = _consumer.get();
+		if(!pk)
+			throw Exception(E_ABORT);
+		Console::ReceivePacket res = *pk;
+		_consumer.next();
+		return res;
+	}
+
 	virtual char read();
 	virtual void write(char c);
 
@@ -49,8 +58,8 @@ private:
 	void create_view() {
 		UtcbFrame uf;
 		uf << Console::CREATE_VIEW << _in_ds.desc() << _out_ds.desc();
-		uf.delegate(_in_ds.sel());
-		uf.delegate(_out_ds.sel());
+		uf.delegate(_in_ds.sel(),0);
+		uf.delegate(_out_ds.sel(),1);
 		_sess.pt(CPU::current().id).call(uf);
 		ErrorCode res;
 		uf >> res;
