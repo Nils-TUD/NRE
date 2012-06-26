@@ -21,7 +21,7 @@
 #include <arch/SpinLock.h>
 #include <arch/Types.h>
 #include <Exception.h>
-#include <ScopedLock.h>
+#include <util/ScopedLock.h>
 #include <Hip.h>
 
 namespace nul {

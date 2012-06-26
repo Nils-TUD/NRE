@@ -13,7 +13,7 @@
 #include <service/Connection.h>
 #include <dev/Screen.h>
 #include <dev/Keyboard.h>
-#include <Cycler.h>
+#include <util/Cycler.h>
 
 class ConsoleSessionData;
 

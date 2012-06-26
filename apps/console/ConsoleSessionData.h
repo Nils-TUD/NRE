@@ -11,7 +11,7 @@
 
 #include <kobj/UserSm.h>
 #include <dev/Console.h>
-#include <DList.h>
+#include <util/DList.h>
 
 #include "ConsoleService.h"
 #include "ConsoleSessionView.h"

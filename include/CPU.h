@@ -21,7 +21,7 @@
 #include <kobj/Ec.h>
 #include <cap/CapSpace.h>
 #include <Assert.h>
-#include <SList.h>
+#include <util/SList.h>
 #include <Hip.h>
 
 namespace nul {

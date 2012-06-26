@@ -22,7 +22,7 @@
 #include <kobj/Ports.h>
 #include <cap/Caps.h>
 #include <arch/Elf.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

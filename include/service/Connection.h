@@ -12,7 +12,7 @@
 #include <utcb/UtcbFrame.h>
 #include <cap/CapSpace.h>
 #include <kobj/Pt.h>
-#include <BitField.h>
+#include <util/BitField.h>
 #include <CPU.h>
 
 namespace nul {

@@ -28,9 +28,9 @@
 #include <subsystem/ChildMemory.h>
 #include <mem/RegionManager.h>
 #include <utcb/UtcbFrame.h>
-#include <BitField.h>
+#include <util/BitField.h>
 #include <CPU.h>
-#include <Atomic.h>
+#include <util/Atomic.h>
 
 namespace nul {
 

@@ -14,8 +14,8 @@
 #include <service/Consumer.h>
 #include <mem/DataSpace.h>
 #include <dev/Screen.h>
-#include <ScopedLock.h>
-#include <Cycler.h>
+#include <util/ScopedLock.h>
+#include <util/Cycler.h>
 
 #include "HostVGA.h"
 

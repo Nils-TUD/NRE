@@ -21,7 +21,7 @@
 #include <kobj/ObjCap.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Pd.h>
-#include <ScopedCapSels.h>
+#include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
 namespace nul {

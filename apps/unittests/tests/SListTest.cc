@@ -7,7 +7,7 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <SList.h>
+#include <util/SList.h>
 
 #include "SListTest.h"
 

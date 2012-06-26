@@ -21,8 +21,8 @@
 #include <utcb/UtcbFrame.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
-#include <ScopedLock.h>
-#include <ScopedPtr.h>
+#include <util/ScopedLock.h>
+#include <util/ScopedPtr.h>
 
 namespace nul {
 

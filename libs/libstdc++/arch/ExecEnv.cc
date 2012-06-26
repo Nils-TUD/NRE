@@ -18,9 +18,9 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/UserSm.h>
-#include <ScopedLock.h>
+#include <util/ScopedLock.h>
 #include <Compiler.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

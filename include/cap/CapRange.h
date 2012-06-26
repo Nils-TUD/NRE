@@ -19,7 +19,7 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

@@ -23,7 +23,7 @@
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
-#include <Math.h>
+#include <util/Math.h>
 #include <Exception.h>
 #include <cstring>
 #include <Assert.h>

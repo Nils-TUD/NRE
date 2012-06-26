@@ -26,11 +26,11 @@
 #include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
-#include <ScopedPtr.h>
-#include <BitField.h>
+#include <util/ScopedPtr.h>
+#include <util/BitField.h>
 #include <RCU.h>
 #include <CPU.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

@@ -20,7 +20,7 @@
 #include <kobj/Ec.h>
 #include <pthread.h>
 #include <cstdlib>
-#include <Atomic.h>
+#include <util/Atomic.h>
 
 using namespace nul;
 

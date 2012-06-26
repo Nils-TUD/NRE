@@ -7,9 +7,9 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <SList.h>
-#include <DList.h>
-#include <Cycler.h>
+#include <util/SList.h>
+#include <util/DList.h>
+#include <util/Cycler.h>
 
 #include "CyclerTest.h"
 

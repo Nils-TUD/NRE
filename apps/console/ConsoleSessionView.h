@@ -15,9 +15,9 @@
 #include <service/Consumer.h>
 #include <service/Producer.h>
 #include <dev/Console.h>
-#include <ScopedLock.h>
-#include <Cycler.h>
-#include <DList.h>
+#include <util/ScopedLock.h>
+#include <util/Cycler.h>
+#include <util/DList.h>
 #include <CPU.h>
 
 class ConsoleSessionData;

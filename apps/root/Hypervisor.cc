@@ -11,7 +11,7 @@
 #include <kobj/Gsi.h>
 #include <kobj/Ports.h>
 #include <utcb/UtcbFrame.h>
-#include <ScopedLock.h>
+#include <util/ScopedLock.h>
 
 #include "Hypervisor.h"
 #include "VirtualMemory.h"

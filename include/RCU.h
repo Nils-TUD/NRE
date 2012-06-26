@@ -11,9 +11,9 @@
 
 #include <kobj/Ec.h>
 #include <kobj/UserSm.h>
-#include <ScopedLock.h>
-#include <Sync.h>
-#include <Util.h>
+#include <util/ScopedLock.h>
+#include <util/Sync.h>
+#include <util/Util.h>
 
 /**
  * Usage:

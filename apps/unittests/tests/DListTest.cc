@@ -7,7 +7,7 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <DList.h>
+#include <util/DList.h>
 
 #include "DListTest.h"
 

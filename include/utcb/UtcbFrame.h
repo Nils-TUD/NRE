@@ -26,7 +26,7 @@
 #include <String.h>
 #include <cstring>
 #include <Assert.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

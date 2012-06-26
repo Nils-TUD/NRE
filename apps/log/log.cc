@@ -12,7 +12,7 @@
 #include <stream/Serial.h>
 #include <kobj/GlobalEc.h>
 #include <kobj/Sc.h>
-#include <Cycler.h>
+#include <util/Cycler.h>
 
 using namespace nul;
 

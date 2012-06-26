@@ -10,7 +10,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <cap/Caps.h>
-#include <Util.h>
+#include <util/Util.h>
 #include <CPU.h>
 
 #include "DelegatePerf.h"

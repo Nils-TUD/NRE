@@ -18,7 +18,7 @@
 
 #include <stream/OStream.h>
 #include <arch/Startup.h>
-#include <Digits.h>
+#include <util/Digits.h>
 #include <cstring>
 
 namespace nul {

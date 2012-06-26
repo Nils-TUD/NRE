@@ -12,7 +12,7 @@
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <ScopedCapSels.h>
+#include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 #include <CPU.h>
 

@@ -19,10 +19,10 @@
 #pragma once
 
 #include <utcb/UtcbFrame.h>
-#include <ScopedCapSels.h>
+#include <util/ScopedCapSels.h>
 #include <kobj/Pt.h>
 #include <CPU.h>
-#include <Util.h>
+#include <util/Util.h>
 
 namespace nul {
 

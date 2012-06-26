@@ -12,7 +12,7 @@
 #include <arch/Types.h>
 #include <Exception.h>
 #include <mem/DataSpaceDesc.h>
-#include <Math.h>
+#include <util/Math.h>
 #include <Assert.h>
 
 extern void test_reglist();

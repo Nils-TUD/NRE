@@ -11,7 +11,7 @@
 
 #include <mem/RegionManager.h>
 #include <kobj/UserSm.h>
-#include <ScopedLock.h>
+#include <util/ScopedLock.h>
 
 class VirtualMemory {
 	enum {

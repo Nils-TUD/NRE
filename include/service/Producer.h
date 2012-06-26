@@ -11,7 +11,7 @@
 
 #include <mem/DataSpace.h>
 #include <service/Consumer.h>
-#include <Sync.h>
+#include <util/Sync.h>
 
 namespace nul {
 

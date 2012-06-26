@@ -13,7 +13,7 @@
 #include <kobj/Ports.h>
 #include <cap/CapRange.h>
 #include <mem/RegionManager.h>
-#include <BitField.h>
+#include <util/BitField.h>
 #include <Hip.h>
 
 class Hypervisor {

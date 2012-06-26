@@ -6,7 +6,7 @@
 #include <stream/Serial.h>
 #include <cstring>
 #include <Syscalls.h>
-#include <Atomic.h>
+#include <util/Atomic.h>
 #include "dlmalloc-config.h"
 
 using namespace nul;

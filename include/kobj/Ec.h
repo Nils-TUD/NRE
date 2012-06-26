@@ -24,8 +24,8 @@
 #include <kobj/Pd.h>
 #include <kobj/UserSm.h>
 #include <utcb/Utcb.h>
-#include <ScopedLock.h>
-#include <ScopedCapSels.h>
+#include <util/ScopedLock.h>
+#include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
 namespace nul {

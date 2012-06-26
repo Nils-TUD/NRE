@@ -12,7 +12,7 @@
 #include <cap/CapRange.h>
 #include <utcb/UtcbFrame.h>
 #include <CPU.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

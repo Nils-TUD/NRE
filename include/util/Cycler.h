@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <LockPolicy.h>
+#include <util/LockPolicy.h>
 #include <Assert.h>
 
 namespace nul {

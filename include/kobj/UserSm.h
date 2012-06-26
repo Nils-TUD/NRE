@@ -10,7 +10,7 @@
 #pragma once
 
 #include <kobj/Sm.h>
-#include <Atomic.h>
+#include <util/Atomic.h>
 #include <stream/Serial.h>
 
 namespace nul {

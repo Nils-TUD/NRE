@@ -19,7 +19,7 @@
 #pragma once
 
 #include <subsystem/Child.h>
-#include <BitField.h>
+#include <util/BitField.h>
 #include <Exception.h>
 
 namespace nul {

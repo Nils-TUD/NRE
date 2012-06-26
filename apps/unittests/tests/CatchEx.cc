@@ -18,7 +18,7 @@
 
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <Util.h>
+#include <util/Util.h>
 #include <CPU.h>
 
 #include "CatchEx.h"

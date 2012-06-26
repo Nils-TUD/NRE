@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 #include <Exception.h>
-#include <Math.h>
+#include <util/Math.h>
 
 namespace nul {
 

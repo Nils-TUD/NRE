@@ -17,7 +17,7 @@
  */
 
 #include <subsystem/ChildMemory.h>
-#include <ScopedPtr.h>
+#include <util/ScopedPtr.h>
 
 #include "RegionListTest.h"
 

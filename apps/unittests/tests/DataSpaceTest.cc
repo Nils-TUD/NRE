@@ -17,7 +17,7 @@
  */
 
 #include <mem/DataSpace.h>
-#include <Util.h>
+#include <util/Util.h>
 
 #include "DataSpaceTest.h"
 

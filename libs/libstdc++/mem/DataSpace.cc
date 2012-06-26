@@ -14,7 +14,7 @@
 #include <service/Session.h>
 #include <service/Service.h>
 #include <stream/Serial.h>
-#include <ScopedCapSels.h>
+#include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 #include <CPU.h>
 

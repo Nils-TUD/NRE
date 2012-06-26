@@ -20,7 +20,7 @@
 
 #include <utcb/UtcbBase.h>
 #include <Assert.h>
-#include <Math.h>
+#include <util/Math.h>
 
 #if USE_UTCB_STACKING
 
