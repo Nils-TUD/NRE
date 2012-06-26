@@ -14,8 +14,9 @@
 
 using namespace nul;
 
-ConsoleSessionData::ConsoleSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-	: SessionData(s,id,caps,func), _next_id(), _sm(), _views(), _view_cycler(_views.begin(),_views.end()) {
+ConsoleSessionData::ConsoleSessionData(Service *s,uint page,size_t id,capsel_t caps,Pt::portal_func func)
+	: SessionData(s,id,caps,func), _page(page), _next_id(), _sm(), _views(),
+	  _view_cycler(_views.begin(),_views.end()) {
 }
 
 ConsoleSessionData::~ConsoleSessionData() {

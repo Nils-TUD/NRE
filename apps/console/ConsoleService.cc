@@ -19,21 +19,28 @@ ConsoleService::ConsoleService(const char *name)
 	  _sess_cycler(sessions_begin(),sessions_end()) {
 }
 
-void ConsoleService::prepare_utcbs() {
+void ConsoleService::init() {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc *ec = get_ec(it->id);
 		UtcbFrameRef uf(ec->utcb());
 		uf.accept_delegates(1);
 	}
+
+	// add dummy sessions for boot screen and HV screen
+	add_session(new ConsoleSessionData(
+			this,ConsoleSessionData::PAGE_BOOT,0,caps() + 0 * Hip::MAX_CPUS,0));
+	add_session(new ConsoleSessionData(
+			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * Hip::MAX_CPUS,0));
 }
 
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::portal_func func) {
-	return new ConsoleSessionData(this,id,caps,func);
+	return new ConsoleSessionData(this,ConsoleSessionData::PAGE_USER,id,caps,func);
 }
 
 void ConsoleService::created_session(size_t idx) {
 	_sess_cycler.reset(sessions_begin(),iterator(this,idx),sessions_end());
+	active()->repaint();
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {

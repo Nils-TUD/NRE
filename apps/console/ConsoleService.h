@@ -28,7 +28,7 @@ public:
 		return _inst = new ConsoleService(name);
 	}
 
-	void prepare_utcbs();
+	void init();
 
 	ConsoleSessionData *active() {
 		iterator it = _sess_cycler.current();

@@ -27,7 +27,6 @@ public:
 	enum {
 		COLS		= Screen::COLS,
 		ROWS		= Screen::ROWS,
-		VIEW_COUNT	= Screen::VIEW_COUNT
 	};
 
 	enum ViewCommand {

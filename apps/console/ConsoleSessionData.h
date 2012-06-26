@@ -20,9 +20,15 @@ class ConsoleSessionView;
 
 class ConsoleSessionData : public nul::SessionData {
 public:
+	enum {
+		PAGE_BOOT,
+		PAGE_HV,
+		PAGE_USER
+	};
+
 	typedef nul::DList<ConsoleSessionView>::iterator iterator;
 
-	ConsoleSessionData(nul::Service *s,size_t id,capsel_t caps,nul::Pt::portal_func func);
+	ConsoleSessionData(nul::Service *s,uint page,size_t id,capsel_t caps,nul::Pt::portal_func func);
 	virtual ~ConsoleSessionData();
 
 	virtual void invalidate();
@@ -46,9 +52,12 @@ public:
 	}
 
 	void repaint() {
-		iterator it = _view_cycler.current();
-		if(it != _views.end())
-			it->repaint();
+		ConsoleService::get()->screen().set_view(_page);
+		if(_page == PAGE_USER) {
+			iterator it = _view_cycler.current();
+			if(it != _views.end())
+				it->repaint();
+		}
 	}
 
 	uint create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
@@ -62,6 +71,7 @@ protected:
 	}
 
 private:
+	uint _page;
 	uint _next_id;
 	nul::UserSm _sm;
 	nul::DList<ConsoleSessionView> _views;

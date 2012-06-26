@@ -26,9 +26,8 @@ int main() {
 	ConsoleService *srv = ConsoleService::create("console");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		srv->provide_on(it->id);
+	srv->init();
 	srv->reg();
-	srv->prepare_utcbs();
-	srv->screen().set_view(0);
 
 	Connection con("keyboard");
 	KeyboardSession kb(con);

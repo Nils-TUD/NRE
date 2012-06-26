@@ -170,6 +170,21 @@ public:
 		return _sm;
 	}
 
+protected:
+	capsel_t caps() const {
+		return _caps;
+	}
+	void add_session(SessionData *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],sess);
+		created_session(sess->id());
+	}
+	void remove_session(SessionData *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],0);
+		sess->invalidate();
+		RCU::invalidate(sess);
+		RCU::gc(true);
+	}
+
 private:
 	virtual SessionData *create_session(size_t id,capsel_t pts,Pt::portal_func func) {
 		return new SessionData(this,id,pts,func);
@@ -181,8 +196,7 @@ private:
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			if(_sessions[i] == 0) {
-				rcu_assign_pointer(_sessions[i],create_session(i,_caps + i * Hip::MAX_CPUS,_func));
-				created_session(i);
+				add_session(create_session(i,_caps + i * Hip::MAX_CPUS,_func));
 				return _sessions[i];
 			}
 		}
@@ -195,10 +209,7 @@ private:
 		SessionData *sess = _sessions[i];
 		if(!sess)
 			throw ServiceException(E_NOT_FOUND);
-		rcu_assign_pointer(_sessions[i],0);
-		sess->invalidate();
-		RCU::invalidate(sess);
-		RCU::gc(true);
+		remove_session(sess);
 	}
 
 	Service(const Service&);
