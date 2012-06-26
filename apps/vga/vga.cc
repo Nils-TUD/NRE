@@ -15,6 +15,7 @@
 #include <mem/DataSpace.h>
 #include <dev/Screen.h>
 #include <ScopedLock.h>
+#include <Cycler.h>
 
 #include "HostVGA.h"
 
@@ -23,7 +24,7 @@ using namespace nul;
 class VGASessionData : public SessionData {
 public:
 	VGASessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _sm(), _ec(receiver,next_cpu()), _sc(), _ds(), _cons() {
+		: SessionData(s,id,caps,func), _sm(), _ec(receiver,_cpus.next()->id), _sc(), _ds(), _cons() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~VGASessionData() {
@@ -53,14 +54,6 @@ protected:
 	}
 
 private:
-	static cpu_t next_cpu() {
-		static UserSm sm;
-		ScopedLock<UserSm> guard(&sm);
-		if(_cpu_it == CPU::end())
-			_cpu_it = CPU::begin();
-		return (_cpu_it++)->id;
-	}
-
 	static void receiver(void *);
 
 	UserSm _sm;
@@ -68,7 +61,7 @@ private:
 	Sc *_sc;
 	DataSpace *_ds;
 	Consumer<Screen::Packet> *_cons;
-	static CPU::iterator _cpu_it;
+	static Cycler<CPU::iterator,LockPolicyDefault<SpinLock> > _cpus;
 };
 
 class VGAService : public Service {
@@ -82,7 +75,7 @@ private:
 	}
 };
 
-CPU::iterator VGASessionData::_cpu_it;
+Cycler<CPU::iterator,LockPolicyDefault<SpinLock> > VGASessionData::_cpus(CPU::begin(),CPU::end());
 static HostVGA vga;
 static VGAService *srv;
 
