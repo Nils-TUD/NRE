@@ -104,10 +104,10 @@ private:
 	}
 
 	void increase_refs() {
-		Atomic::xadd(&_refs,+1);
+		Atomic::add(&_refs,+1);
 	}
 	void decrease_refs() {
-		Atomic::xadd(&_refs,-1);
+		Atomic::add(&_refs,-1);
 	}
 
 	void release_gsis() {

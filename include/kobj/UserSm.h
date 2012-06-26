@@ -33,7 +33,7 @@ public:
 	 * kernel semaphore. If not, it decreases the value.
 	 */
 	void down() {
-		if(Atomic::xadd(&_value,-1) <= 0)
+		if(Atomic::add(&_value,-1) <= 0)
 			_sem.down();
 	}
 
@@ -42,7 +42,7 @@ public:
 	 * unblocks a waiting Ec that blocked on the associated kernel semaphore.
 	 */
 	void up() {
-		if(Atomic::xadd(&_value,+1) < 0)
+		if(Atomic::add(&_value,+1) < 0)
 			_sem.up();
 	}
 

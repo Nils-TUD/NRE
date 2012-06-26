@@ -33,6 +33,7 @@ public:
 
 	struct Packet {
 		Command cmd;
+		uint id;
 		union {
 			struct {
 				uint8_t x;
@@ -59,9 +60,10 @@ public:
 		_ds.share(*this);
 	}
 
-	void paint(uint8_t x,uint8_t y,uint8_t character,uint8_t color) {
+	void paint(uint id,uint8_t x,uint8_t y,uint8_t character,uint8_t color) {
 		Screen::Packet pk;
 		pk.cmd = Screen::PAINT;
+		pk.id = id;
 		pk.paint.x = x;
 		pk.paint.y = y;
 		pk.paint.character = character;
@@ -69,15 +71,17 @@ public:
 		_producer.produce(pk);
 	}
 
-	void scroll() {
+	void scroll(uint id) {
 		Screen::Packet pk;
+		pk.id = id;
 		pk.cmd = Screen::SCROLL;
 		_producer.produce(pk);
 	}
 
-	void set_view(uint view) {
+	void set_view(uint id,uint view) {
 		Screen::Packet pk;
 		pk.cmd = Screen::SETVIEW;
+		pk.id = id;
 		pk.view = view;
 		_producer.produce(pk);
 	}

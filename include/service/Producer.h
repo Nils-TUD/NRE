@@ -52,7 +52,7 @@ public:
 		while((_if->wpos + 1) % _max == _if->rpos) {
 			if(!_block)
 				return false;
-			_empty.down();
+			_empty.zero();
 		}
 
 		size_t old = _if->wpos;

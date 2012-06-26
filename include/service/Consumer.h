@@ -84,9 +84,9 @@ public:
 		while(_if->rpos == _if->wpos) {
 			if(_stop)
 				return 0;
-			// sm.down() might fail if the service is the consumer
+			// sm.zero() might fail if the service is the consumer
 			try {
-				_sm.down();
+				_sm.zero();
 			}
 			catch(...) {
 				return 0;

@@ -30,6 +30,9 @@ public:
 	uint id() const {
 		return _id;
 	}
+	uint uid() const {
+		return _uid;
+	}
 	bool is_active() const;
 	nul::Consumer<nul::Console::SendPacket> &cons() {
 		return _cons;
@@ -48,6 +51,7 @@ private:
 
 private:
 	uint _id;
+	uint _uid;
 	bool _active;
 	nul::GlobalEc _ec;
 	nul::Sc _sc;
@@ -58,4 +62,5 @@ private:
 	nul::Consumer<nul::Console::SendPacket> _cons;
 	ConsoleSessionData *_sess;
 	static nul::ForwardCycler<nul::CPU::iterator,nul::LockPolicyDefault<nul::SpinLock> > _cpus;
+	static uint _next_uid;
 };

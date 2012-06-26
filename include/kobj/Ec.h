@@ -134,7 +134,7 @@ public:
 	 * @return the TLS index
 	 */
 	size_t create_tls() {
-		size_t next = Atomic::xadd(&_tls_idx,+1);
+		size_t next = Atomic::add(&_tls_idx,+1);
 		assert(next < TLS_SIZE);
 		return next;
 	}

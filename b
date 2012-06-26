@@ -104,5 +104,11 @@ case "$1" in
 		BUILD_DIR="$PWD/$build" $build/tools/debug ./unittests $build/bin/apps/${1:5}
 		kill `pgrep qemu`
 		;;
+	list)
+		ls -1 $build/bin/apps | while read l; do	
+			$crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
+				grep "\.init" | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
+		done
+		;;
 esac
 

@@ -80,6 +80,7 @@ static HostVGA vga;
 static VGAService *srv;
 
 void VGASessionData::receiver(void *) {
+	uint current = -1;
 	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
 	ScopedLock<RCULock> guard(&RCU::lock());
 	VGASessionData *sess = srv->get_session<VGASessionData>(caps);
@@ -87,12 +88,15 @@ void VGASessionData::receiver(void *) {
 	for(Screen::Packet *pk; (pk = cons->get()) != 0; cons->next()) {
 		switch(pk->cmd) {
 			case Screen::PAINT:
-				vga.paint(*pk);
+				if(pk->id == current)
+					vga.paint(*pk);
 				break;
 			case Screen::SCROLL:
-				vga.scroll();
+				if(pk->id == current)
+					vga.scroll();
 				break;
 			case Screen::SETVIEW:
+				current = pk->id;
 				vga.set_page(pk->view);
 				break;
 		}

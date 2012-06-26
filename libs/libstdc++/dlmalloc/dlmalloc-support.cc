@@ -50,12 +50,12 @@ void semaphore_destroy(DlMallocSm *lk) {
 }
 
 void semaphore_down(DlMallocSm *lk) {
-	if(Atomic::xadd(&lk->value,-1) <= 0)
+	if(Atomic::add(&lk->value,-1) <= 0)
 		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_DOWN);
 }
 
 void semaphore_up(DlMallocSm *lk) {
-	if(Atomic::xadd(&lk->value,+1) < 0)
+	if(Atomic::add(&lk->value,+1) < 0)
 		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_UP);
 }
 

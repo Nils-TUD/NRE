@@ -16,10 +16,12 @@
 using namespace nul;
 
 ForwardCycler<CPU::iterator,LockPolicyDefault<SpinLock> > ConsoleSessionView::_cpus(CPU::begin(),CPU::end());
+// 0 and 1 is for boot and HV
+uint ConsoleSessionView::_next_uid = 2;
 
 ConsoleSessionView::ConsoleSessionView(ConsoleSessionData *sess,uint id,DataSpace *in_ds,DataSpace *out_ds)
-	: RCUObject(), DListItem(), _id(id), _ec(receiver,_cpus.next()->id), _sc(&_ec,Qpd()),
-	  _in_ds(in_ds), _out_ds(out_ds),
+	: RCUObject(), DListItem(), _id(id), _uid(Atomic::add(&_next_uid,+1)),
+	  _ec(receiver,_cpus.next()->id), _sc(&_ec,Qpd()), _in_ds(in_ds), _out_ds(out_ds),
 	  _buffer(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 	  _prod(in_ds,false,false), _cons(out_ds,false), _sess(sess) {
 	_ec.set_tls<ConsoleSessionView*>(Ec::TLS_PARAM,this);
@@ -61,7 +63,7 @@ void ConsoleSessionView::repaint() {
 	for(uint8_t y = 0; y < Screen::ROWS; ++y) {
 		for(uint8_t x = 0; x < Screen::COLS; ++x) {
 			uint8_t *pos = buf + y * Screen::COLS * 2 + x * 2;
-			s->screen().paint(x,y,*pos,*(pos + 1));
+			s->screen().paint(_uid,x,y,*pos,*(pos + 1));
 		}
 	}
 }
@@ -76,13 +78,13 @@ void ConsoleSessionView::receiver(void *) {
 			case Console::WRITE:
 				view->put(*pk);
 				if(view->is_active())
-					s->screen().paint(pk->x,pk->y,pk->character,pk->color);
+					s->screen().paint(view->uid(),pk->x,pk->y,pk->character,pk->color);
 				break;
 
 			case Console::SCROLL:
 				view->scroll();
 				if(view->is_active())
-					s->screen().scroll();
+					s->screen().scroll(view->uid());
 				break;
 		}
 	}
