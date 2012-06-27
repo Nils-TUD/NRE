@@ -86,6 +86,23 @@ public:
 	}
 
 	/**
+	 * @return the prev power of two. That is, if it is already a power of 2 it returns the input. If
+	 * 	not it rounds down to the prev power of two.
+	 */
+	template<typename T>
+	static inline T prev_pow2(T value) {
+		return 1 << prev_pow2_shift(value);
+	}
+	template<typename T>
+	static inline T prev_pow2_shift(T value) {
+		if(value <= 1)
+			return value;
+		if(!is_pow2(value))
+			return bit_scan_reverse(value) - 1;
+		return bit_scan_reverse(value);
+	}
+
+	/**
 	 * @return the next power of two. That is, if it is already a power of 2 it returns the input. If
 	 * 	not it rounds up to the next power of two.
 	 */

@@ -36,9 +36,9 @@ const TestCase testcases[] = {
 	dlisttest,
 	cyclertest1,
 	cyclertest2,
-	cyclertest3,*/
-	regmng,
-	/*sharedmem,*/
+	cyclertest3,
+	regmng,*/
+	sharedmem,
 };
 
 int main() {

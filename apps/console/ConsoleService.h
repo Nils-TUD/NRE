@@ -11,9 +11,10 @@
 
 #include <service/Service.h>
 #include <service/Connection.h>
-#include <dev/Screen.h>
 #include <dev/Keyboard.h>
 #include <util/Cycler.h>
+
+#include "Screen.h"
 
 class ConsoleSessionData;
 
@@ -52,8 +53,8 @@ public:
 		return Service::sessions_end<ConsoleSessionData>();
 	}
 
-	nul::ScreenSession &screen() {
-		return _sess;
+	Screen *screen() {
+		return _screen;
 	}
 	bool handle_keyevent(const nul::Keyboard::Packet &pk);
 
@@ -63,8 +64,7 @@ private:
 	virtual nul::SessionData *create_session(size_t id,capsel_t caps,nul::Pt::portal_func func);
 	virtual void created_session(size_t idx);
 
-	nul::Connection _screen;
-	nul::ScreenSession _sess;
+	Screen *_screen;
 	nul::Cycler<iterator> _sess_cycler;
 	static ConsoleService *_inst;
 };

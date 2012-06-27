@@ -17,7 +17,6 @@
 #include <stream/IStream.h>
 #include <stream/OStream.h>
 #include <dev/Keyboard.h>
-#include <dev/Screen.h>
 #include <mem/DataSpace.h>
 
 namespace nul {
@@ -25,8 +24,8 @@ namespace nul {
 class Console {
 public:
 	enum {
-		COLS		= Screen::COLS,
-		ROWS		= Screen::ROWS,
+		COLS		= 80,
+		ROWS		= 25,
 	};
 
 	enum ViewCommand {

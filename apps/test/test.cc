@@ -99,7 +99,7 @@ static void writer(void*) {
 static Connection *console;
 static ConsoleSession *sess;
 
-static void view0(void*) {
+static void view1(void*) {
 	ConsoleView view(*sess);
 	int i = 0;
 	while(1) {
@@ -111,16 +111,19 @@ static void view0(void*) {
 	}
 }
 
-static void view1(void*) {
+static void view0(void*) {
 	ConsoleView view(*sess);
-	int i = 0;
-	while(1) {
+	uint64_t tic = Util::tsc();
+	int i;
+	for(i = 0; i < 10000000; ++i) {
+		view.write('a');
 		//char c = view.read();
-		view << "Huhu, from view " << view.id() << ": " << i << "\n";
-		if(i % 1000000 == 0)
-			Serial::get().writef("i=%d\n",i);
-		i++;
+		//view << "Huhu, from view " << view.id() << ": " << i << "\n";
 	}
+	uint64_t tac = Util::tsc();
+	Serial::get().writef("%d items took %Lu cycles (%Lu cycles/item)\n",i,tac - tic,(tac - tic) / i);
+	Sm sm(0);
+	sm.down();
 }
 
 int main() {

@@ -12,6 +12,8 @@
 #include <mem/DataSpace.h>
 #include <service/Consumer.h>
 #include <util/Sync.h>
+#include <util/Math.h>
+#include <cstdlib>
 
 namespace nul {
 
@@ -32,12 +34,19 @@ public:
 	 */
 	explicit Producer(DataSpace *ds,bool block = true,bool init = true)
 		: _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
-		  _max((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T)),
+		  _max(Math::prev_pow2((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T))),
 		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _block(block) {
 		if(init) {
 			_if->rpos = 0;
 			_if->wpos = 0;
 		}
+	}
+
+	/**
+	 * @return the length of the ring-buffer
+	 */
+	size_t rblength() const {
+		return _max;
 	}
 
 	/**
@@ -49,17 +58,19 @@ public:
 	 */
 	bool produce(const T &value) {
 		// wait until its not full anymore
-		while((_if->wpos + 1) % _max == _if->rpos) {
+		while(EXPECT_FALSE(((_if->wpos + 1) & (_max - 1)) == _if->rpos)) {
 			if(!_block)
 				return false;
+			_sm.up();
 			_empty.zero();
 		}
 
-		size_t old = _if->wpos;
-		_if->buffer[_if->wpos] = value;
-		_if->wpos = (_if->wpos + 1) % _max;
+		bool was_empty = _if->wpos == _if->rpos;
 		Sync::memory_barrier();
-		if(old == _if->rpos) {
+		_if->buffer[_if->wpos] = value;
+		_if->wpos = (_if->wpos + 1) & (_max - 1);
+		Sync::memory_barrier();
+		if(EXPECT_FALSE(was_empty)) {
 			try {
 				_sm.up();
 			}

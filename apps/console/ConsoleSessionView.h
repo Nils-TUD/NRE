@@ -52,6 +52,7 @@ private:
 private:
 	uint _id;
 	uint _uid;
+	uint _pos;
 	bool _active;
 	nul::GlobalEc _ec;
 	nul::Sc _sc;

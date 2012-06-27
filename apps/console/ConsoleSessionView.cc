@@ -20,7 +20,7 @@ ForwardCycler<CPU::iterator,LockPolicyDefault<SpinLock> > ConsoleSessionView::_c
 uint ConsoleSessionView::_next_uid = 2;
 
 ConsoleSessionView::ConsoleSessionView(ConsoleSessionData *sess,uint id,DataSpace *in_ds,DataSpace *out_ds)
-	: RCUObject(), DListItem(), _id(id), _uid(Atomic::add(&_next_uid,+1)),
+	: RCUObject(), DListItem(), _id(id), _uid(Atomic::add(&_next_uid,+1)), _pos(0),
 	  _ec(receiver,_cpus.next()->id), _sc(&_ec,Qpd()), _in_ds(in_ds), _out_ds(out_ds),
 	  _buffer(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 	  _prod(in_ds,false,false), _cons(out_ds,false), _sess(sess) {
@@ -45,27 +45,36 @@ bool ConsoleSessionView::is_active() const {
 void ConsoleSessionView::put(const Console::SendPacket &pk) {
 	if(pk.y < Screen::ROWS && pk.x < Screen::COLS) {
 		uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt());
-		uint8_t *pos = buf + pk.y * Screen::COLS * 2 + pk.x * 2;
+		uint8_t *pos = buf + (_pos + pk.y * Screen::COLS * 2 + pk.x * 2) % Screen::SIZE;
 		*pos = pk.character;
 		*(pos + 1) = pk.color;
+		ConsoleService::get()->screen()->paint(_uid,pk.x,pk.y,pos,2);
 	}
 }
 
 void ConsoleSessionView::scroll() {
 	uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt());
-	memmove(buf,buf + Screen::COLS * 2,Screen::COLS * (Screen::ROWS - 1) * 2);
-	memset(buf + Screen::COLS * (Screen::ROWS - 1) * 2,0,Screen::COLS * 2);
+	memset(buf + _pos,0,Screen::COLS * 2);
+	_pos = (_pos + Screen::COLS * 2) % Screen::SIZE;
 }
 
 void ConsoleSessionView::repaint() {
+	size_t count = Screen::SIZE - _pos;
+	ConsoleService::get()->screen()->paint(_uid,0,0,reinterpret_cast<uint8_t*>(_buffer.virt()),count);
+	count = _pos;
+	ConsoleService::get()->screen()->paint(_uid,0,0,reinterpret_cast<uint8_t*>(_buffer.virt()),count);
+	/*
+
+	ConsoleService::get()->screen()->paint(_uid,0,pk.y,pos,2);
+
 	ConsoleService *s = ConsoleService::get();
 	uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt());
 	for(uint8_t y = 0; y < Screen::ROWS; ++y) {
 		for(uint8_t x = 0; x < Screen::COLS; ++x) {
-			uint8_t *pos = buf + y * Screen::COLS * 2 + x * 2;
+			uint8_t *pos = buf + (_pos + y * Screen::COLS * 2 + x * 2) % Screen::SIZE;
 			s->screen().paint(_uid,x,y,*pos,*(pos + 1));
 		}
-	}
+	}*/
 }
 
 void ConsoleSessionView::receiver(void *) {
@@ -77,14 +86,13 @@ void ConsoleSessionView::receiver(void *) {
 		switch(pk->cmd) {
 			case Console::WRITE:
 				view->put(*pk);
-				if(view->is_active())
-					s->screen().paint(view->uid(),pk->x,pk->y,pk->character,pk->color);
 				break;
 
 			case Console::SCROLL:
 				view->scroll();
-				if(view->is_active())
-					s->screen().scroll(view->uid());
+				//if(view->is_active())
+				//	view->repaint();
+					//s->screen().scroll(view->uid());
 				break;
 		}
 	}

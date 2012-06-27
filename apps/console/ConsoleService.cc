@@ -9,13 +9,14 @@
 
 #include "ConsoleService.h"
 #include "ConsoleSessionData.h"
+#include "HostVGA.h"
 
 using namespace nul;
 
 ConsoleService *ConsoleService::_inst;
 
 ConsoleService::ConsoleService(const char *name)
-	: Service(name,ConsoleSessionData::portal), _screen("screen"), _sess(_screen),
+	: Service(name,ConsoleSessionData::portal), _screen(new HostVGA()),
 	  _sess_cycler(sessions_begin(),sessions_end()) {
 }
 

@@ -14,7 +14,9 @@
 #include <mem/DataSpace.h>
 #include <dev/Console.h>
 
-class HostVGA {
+#include "Screen.h"
+
+class HostVGA : public Screen {
 	enum Register {
 		START_ADDR_HI	= 0xc,
 		START_ADDR_LO	= 0xd
@@ -29,13 +31,12 @@ class HostVGA {
 
 public:
 	explicit HostVGA()
-			: _ports(0x3d4,2), _page(0),
+			: Screen(), _ports(0x3d4,2), _page(0),
 			  _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::LOCKED,nul::DataSpaceDesc::RW,VGA_MEM) {
 	}
 
-	void paint(const nul::Screen::Packet &pk);
-	void scroll();
-	void set_page(uint page);
+	virtual void paint(uint uid,uint8_t x,uint8_t y,uint8_t *buffer,size_t count);
+	virtual void set_page(uint uid,uint page);
 
 private:
 	void write(Register reg,uint8_t val) {

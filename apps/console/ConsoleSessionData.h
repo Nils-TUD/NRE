@@ -55,12 +55,12 @@ public:
 		if(_page == PAGE_USER) {
 			iterator it = _view_cycler.current();
 			if(it != _views.end()) {
-				ConsoleService::get()->screen().set_view(it->uid(),_page);
+				ConsoleService::get()->screen()->set_page(it->uid(),_page);
 				it->repaint();
 			}
 		}
 		else
-			ConsoleService::get()->screen().set_view(_page,_page);
+			ConsoleService::get()->screen()->set_page(_page,_page);
 	}
 
 	uint create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
