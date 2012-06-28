@@ -43,6 +43,8 @@ public:
 		Command cmd;
 		uint8_t x;
 		uint8_t y;
+		uint8_t color;
+		uint8_t character;
 		uint8_t len;
 		uint8_t buffer[BUF_SIZE];
 	};

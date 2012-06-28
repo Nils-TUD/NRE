@@ -51,6 +51,7 @@ public:
 		CREATE,
 		JOIN,
 		SHARE,
+		SWITCH_TO,
 		DESTROY
 	};
 
@@ -136,6 +137,13 @@ public:
 	DataSpaceDesc::Type type() const {
 		return _desc.type();
 	}
+
+	/**
+	 * Copies the contents of this dataspace into <dest> and swaps this.desc().origin() with
+	 * <dest>.desc().origin(). That means, afterwards this will access the memory of <dest> and
+	 * the other way around.
+	 */
+	void switch_to(const DataSpace &dest);
 
 	/**
 	 * Shares this dataspace with the given session. That is, it passes this dataspace to the

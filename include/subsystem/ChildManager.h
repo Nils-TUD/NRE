@@ -45,7 +45,7 @@ class ChildManager {
 	class Portals {
 	public:
 		enum {
-			COUNT	= 10
+			COUNT	= 9
 		};
 
 		PORTAL static void startup(capsel_t pid);
@@ -55,8 +55,7 @@ class ChildManager {
 		PORTAL static void get_service(capsel_t pid);
 		PORTAL static void io(capsel_t);
 		PORTAL static void gsi(capsel_t);
-		PORTAL static void map(capsel_t pid);
-		PORTAL static void unmap(capsel_t pid);
+		PORTAL static void dataspace(capsel_t pid);
 		PORTAL static void pf(capsel_t pid);
 	};
 
@@ -146,6 +145,9 @@ private:
 		return Math::next_pow2(Hip::get().service_caps() * _cpu_count);
 	}
 	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
+
+	void map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type);
+	void unmap(UtcbFrameRef &uf,Child *c);
 
 	ChildManager(const ChildManager&);
 	ChildManager& operator=(const ChildManager&);

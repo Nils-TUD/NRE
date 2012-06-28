@@ -60,8 +60,7 @@ CPUInit::CPUInit() {
 		// create per-cpu-portals
 		if(_startup_info.child) {
 			capsel_t off = cpu.id * Hip::get().service_caps();
-			cpu.map_pt = new Pt(off + CapSpace::SRV_MAP);
-			cpu.unmap_pt = new Pt(off + CapSpace::SRV_UNMAP);
+			cpu.ds_pt = new Pt(off + CapSpace::SRV_DS);
 			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.unreg_pt = new Pt(off + CapSpace::SRV_UNREG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);

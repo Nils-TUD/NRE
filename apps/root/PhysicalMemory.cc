@@ -130,55 +130,49 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	return true;
 }
 
-void PhysicalMemory::portal_map(capsel_t) {
+void PhysicalMemory::portal_dataspace(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		capsel_t sel = 0;
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
 		uf >> type >> desc;
-		if(type == DataSpace::JOIN)
+		if(type == DataSpace::JOIN || type == DataSpace::DESTROY)
 			sel = uf.get_translated(0).offset();
 		uf.finish_input();
 
-		if(desc.type() == DataSpaceDesc::VIRTUAL) {
-			uintptr_t addr = VirtualMemory::alloc(desc.size());
-			uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
-		}
-		else {
-			const RootDataSpace &ds = type == DataSpace::JOIN ? _dsmng.join(desc,sel) : _dsmng.create(desc);
+		switch(type) {
+			case DataSpace::CREATE:
+			case DataSpace::JOIN:
+				if(desc.type() == DataSpaceDesc::VIRTUAL) {
+					uintptr_t addr = VirtualMemory::alloc(desc.size());
+					uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+				}
+				else {
+					const RootDataSpace &ds = type == DataSpace::JOIN ? _dsmng.join(desc,sel) : _dsmng.create(desc);
 
-			if(type == DataSpace::CREATE) {
-				uf.delegate(ds.sel(),0);
-				uf.delegate(ds.unmapsel(),1);
-			}
-			else
-				uf.delegate(ds.unmapsel());
-			// pass back attributes so that the caller has the correct ones
-			uf << E_SUCCESS << ds.desc();
+					if(type == DataSpace::CREATE) {
+						uf.delegate(ds.sel(),0);
+						uf.delegate(ds.unmapsel(),1);
+					}
+					else
+						uf.delegate(ds.unmapsel());
+					// pass back attributes so that the caller has the correct ones
+					uf << E_SUCCESS << ds.desc();
+				}
+				break;
+
+			case DataSpace::DESTROY:
+				if(desc.type() == DataSpaceDesc::VIRTUAL)
+					VirtualMemory::free(desc.virt(),desc.size());
+				else
+					_dsmng.release(desc,sel);
+				uf << E_SUCCESS;
+				break;
 		}
 	}
 	catch(const Exception& e) {
 		uf.clear();
 		uf << e.code();
-	}
-}
-
-void PhysicalMemory::portal_unmap(capsel_t) {
-	UtcbFrameRef uf;
-	try {
-		DataSpaceDesc desc;
-		DataSpace::RequestType type;
-		capsel_t sel = uf.get_translated(0).offset();
-		uf >> type >> desc;
-		uf.finish_input();
-
-		if(desc.type() == DataSpaceDesc::VIRTUAL)
-			VirtualMemory::free(desc.virt(),desc.size());
-		else
-			_dsmng.release(desc,sel);
-	}
-	catch(...) {
-		// ignore
 	}
 }

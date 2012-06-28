@@ -58,8 +58,7 @@ CPU0Init::CPU0Init() {
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	// use the local stack here since we can't map dataspaces yet
 	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
-	cpu.map_pt = new Pt(ec,PhysicalMemory::portal_map);
-	cpu.unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
+	cpu.ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
 	// accept translated caps
@@ -120,8 +119,7 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->id != CPU::current().id) {
 			LocalEc *ec = new LocalEc(it->id);
-			it->map_pt = new Pt(ec,PhysicalMemory::portal_map);
-			it->unmap_pt = new Pt(ec,PhysicalMemory::portal_unmap);
+			it->ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 			it->io_pt = new Pt(ec,Hypervisor::portal_io);
 			// accept translated caps

@@ -63,8 +63,7 @@ public:
 		return _mem;
 	}
 
-	PORTAL static void portal_map(capsel_t);
-	PORTAL static void portal_unmap(capsel_t);
+	PORTAL static void portal_dataspace(capsel_t);
 
 private:
 	static bool can_map(uintptr_t phys,size_t size,uint &flags);

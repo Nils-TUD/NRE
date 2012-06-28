@@ -25,7 +25,7 @@ using namespace nul;
 using namespace nul::test;
 
 const TestCase testcases[] = {
-	/*pingpong,
+	pingpong,
 	catchex,
 	delegateperf,
 	utcbnest,
@@ -37,8 +37,8 @@ const TestCase testcases[] = {
 	cyclertest1,
 	cyclertest2,
 	cyclertest3,
-	regmng,*/
-	sharedmem,
+	regmng,
+	/*sharedmem,*/
 };
 
 int main() {

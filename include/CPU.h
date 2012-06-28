@@ -56,8 +56,7 @@ public:
 	uint8_t core;
 	uint8_t package;
 
-	Pt *map_pt;
-	Pt *unmap_pt;
+	Pt *ds_pt;
 	Pt *io_pt;
 	Pt *gsi_pt;
 	Pt *reg_pt;
@@ -69,7 +68,7 @@ public:
 	}
 
 private:
-	CPU() : id(), map_pt(), unmap_pt(), io_pt(), gsi_pt(), reg_pt(), unreg_pt(), get_pt(), _next() {
+	CPU() : id(), ds_pt(), io_pt(), gsi_pt(), reg_pt(), unreg_pt(), get_pt(), _next() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);

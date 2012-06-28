@@ -33,7 +33,7 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	ScopedCapSels caps(2,2);
 	uf.set_receive_crd(Crd(caps.get(),1,Crd::OBJ_ALL));
 	uf << CREATE << desc;
-	CPU::current().map_pt->call(uf);
+	CPU::current().ds_pt->call(uf);
 
 	handle_response(uf);
 	uf >> desc;
@@ -47,6 +47,16 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 void DataSpace::create() {
 	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
 	create(_desc,&_sel,&_unmapsel);
+}
+
+void DataSpace::switch_to(const DataSpace &dest) {
+	// TODO this is not finished
+	UtcbFrame uf;
+	uf.translate(sel());
+	uf.translate(dest.sel());
+	uf << SWITCH_TO;
+	CPU::current().ds_pt->call(uf);
+	handle_response(uf);
 }
 
 void DataSpace::share(Session &s) {
@@ -70,7 +80,7 @@ void DataSpace::join() {
 	uf.set_receive_crd(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN << _desc;
-	CPU::current().map_pt->call(uf);
+	CPU::current().ds_pt->call(uf);
 
 	handle_response(uf);
 	uf >> _desc;
@@ -83,7 +93,7 @@ void DataSpace::destroy() {
 
 	uf.translate(_unmapsel);
 	uf << DESTROY << _desc;
-	CPU::current().unmap_pt->call(uf);
+	CPU::current().ds_pt->call(uf);
 
 	CapSpace::get().free(_unmapsel);
 	CapSpace::get().free(_sel);

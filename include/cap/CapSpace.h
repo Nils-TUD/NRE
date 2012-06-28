@@ -65,8 +65,7 @@ public:
 		SRV_GET			= 0x26,		// get service
 		SRV_IO			= 0x27,		// alloc/release io ports
 		SRV_GSI			= 0x28,		// alloc/release global system interrupt
-		SRV_MAP			= 0x29,		// map dataspace portal
-		SRV_UNMAP		= 0x30,		// unmap dataspace portal
+		SRV_DS			= 0x29,		// dataspace portal
 	};
 
 	static CapSpace& get() {
