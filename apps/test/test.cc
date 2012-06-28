@@ -99,19 +99,19 @@ static void writer(void*) {
 static Connection *console;
 static ConsoleSession *sess;
 
-static void view1(void*) {
+static void view0(void*) {
 	ConsoleView view(*sess);
 	int i = 0;
 	while(1) {
 		//char c = view.read();
 		view << "Huhu, from view " << view.id() << ": " << i << "\n";
-		if(i % 1000000 == 0)
+		if(i % 10000 == 0)
 			Serial::get().writef("i=%d\n",i);
 		i++;
 	}
 }
 
-static void view0(void*) {
+static void view1(void*) {
 	ConsoleView view(*sess);
 	uint64_t tic = Util::tsc();
 	int i;

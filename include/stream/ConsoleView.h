@@ -21,7 +21,7 @@ namespace nul {
 class ConsoleView : public IStream, public OStream {
 	enum {
 		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
-		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE,
+		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * 16,
 	};
 
 public:
@@ -31,6 +31,10 @@ public:
 		  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		  _consumer(&_in_ds,true), _producer(&_out_ds,true,true) {
 		create_view();
+		_pk = _producer.current();
+		_pk->cmd = Console::WRITE;
+		_pk->x = 0;
+		_pk->y = _row;
 	}
 	virtual ~ConsoleView() {
 		destroy_view();
@@ -49,6 +53,7 @@ public:
 		return res;
 	}
 
+	void flush();
 	virtual char read();
 	virtual void write(char c);
 
@@ -79,6 +84,7 @@ private:
 	uint8_t _row;
 	DataSpace _in_ds;
 	DataSpace _out_ds;
+	Console::SendPacket *_pk;
 	Consumer<Console::ReceivePacket> _consumer;
 	Producer<Console::SendPacket> _producer;
 };

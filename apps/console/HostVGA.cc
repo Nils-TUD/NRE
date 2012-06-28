@@ -14,7 +14,7 @@ using namespace nul;
 void HostVGA::paint(uint uid,uint8_t x,uint8_t y,uint8_t *buffer,size_t count) {
 	if(uid == current()) {
 		assert((y * COLS * 2 + x * 2) + count <= (ROWS * COLS * 2));
-		memcpy(reinterpret_cast<char*>(_ds.virt()) + y * COLS * 2 + x * 2,buffer,count);
+		//memcpy(screen() + y * COLS * 2 + x * 2,buffer,count);
 	}
 }
 

@@ -49,14 +49,7 @@ public:
 		return _max;
 	}
 
-	/**
-	 * Produces the given item. If the client is currently not able to accept it, the method will
-	 * either block (if enabled) or return false.
-	 *
-	 * @param value the value to produce
-	 * @return true if the item has been written successfully (always true if blocking is enabled)
-	 */
-	bool produce(const T &value) {
+	T *current() {
 		// wait until its not full anymore
 		while(EXPECT_FALSE(((_if->wpos + 1) & (_max - 1)) == _if->rpos)) {
 			if(!_block)
@@ -64,10 +57,11 @@ public:
 			_sm.up();
 			_empty.zero();
 		}
+		return _if->buffer + _if->wpos;
+	}
 
+	void next() {
 		bool was_empty = _if->wpos == _if->rpos;
-		Sync::memory_barrier();
-		_if->buffer[_if->wpos] = value;
 		_if->wpos = (_if->wpos + 1) & (_max - 1);
 		Sync::memory_barrier();
 		if(EXPECT_FALSE(was_empty)) {
@@ -78,6 +72,19 @@ public:
 				// if the client closed the session, we might get here. so, just ignore it.
 			}
 		}
+	}
+
+	/**
+	 * Produces the given item. If the client is currently not able to accept it, the method will
+	 * either block (if enabled) or return false.
+	 *
+	 * @param value the value to produce
+	 * @return true if the item has been written successfully (always true if blocking is enabled)
+	 */
+	bool produce(const T &value) {
+		T *slot = current();
+		*slot = value;
+		next();
 		return true;
 	}
 

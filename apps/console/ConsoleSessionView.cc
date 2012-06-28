@@ -59,22 +59,10 @@ void ConsoleSessionView::scroll() {
 }
 
 void ConsoleSessionView::repaint() {
-	size_t count = Screen::SIZE - _pos;
-	ConsoleService::get()->screen()->paint(_uid,0,0,reinterpret_cast<uint8_t*>(_buffer.virt()),count);
-	count = _pos;
-	ConsoleService::get()->screen()->paint(_uid,0,0,reinterpret_cast<uint8_t*>(_buffer.virt()),count);
-	/*
-
-	ConsoleService::get()->screen()->paint(_uid,0,pk.y,pos,2);
-
-	ConsoleService *s = ConsoleService::get();
-	uint8_t *buf = reinterpret_cast<uint8_t*>(_buffer.virt());
-	for(uint8_t y = 0; y < Screen::ROWS; ++y) {
-		for(uint8_t x = 0; x < Screen::COLS; ++x) {
-			uint8_t *pos = buf + (_pos + y * Screen::COLS * 2 + x * 2) % Screen::SIZE;
-			s->screen().paint(_uid,x,y,*pos,*(pos + 1));
-		}
-	}*/
+	ConsoleService::get()->screen()->paint(
+			_uid,0,0,reinterpret_cast<uint8_t*>(_buffer.virt() + _pos),Screen::SIZE - _pos);
+	ConsoleService::get()->screen()->paint(
+			_uid,0,(Screen::SIZE - _pos) / (Screen::COLS * 2),reinterpret_cast<uint8_t*>(_buffer.virt()),_pos);
 }
 
 void ConsoleSessionView::receiver(void *) {
@@ -90,6 +78,8 @@ void ConsoleSessionView::receiver(void *) {
 
 			case Console::SCROLL:
 				view->scroll();
+				if(view->is_active())
+					view->repaint();
 				//if(view->is_active())
 				//	view->repaint();
 					//s->screen().scroll(view->uid());

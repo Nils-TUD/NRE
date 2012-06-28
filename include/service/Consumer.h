@@ -110,7 +110,11 @@ public:
 	 */
 	void next() {
 		_if->rpos = (_if->rpos + 1) & (_max - 1);
-		Sync::memory_barrier();
+		//if(_if->rpos == _if->wpos) {
+		if(((_if->wpos + 1) & (_max - 1)) == _if->rpos) {
+			Sync::memory_barrier();
+			_empty.up();
+		}
 	}
 
 private:

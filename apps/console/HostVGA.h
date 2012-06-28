@@ -39,6 +39,9 @@ public:
 	virtual void set_page(uint uid,uint page);
 
 private:
+	char *screen() const {
+		return reinterpret_cast<char*>(_ds.virt() + _page * nul::ExecEnv::PAGE_SIZE);
+	}
 	void write(Register reg,uint8_t val) {
 		_ports.out<uint8_t>(reg,0);
 		_ports.out<uint8_t>(val,1);
