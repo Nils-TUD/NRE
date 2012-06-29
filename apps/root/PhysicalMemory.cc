@@ -23,6 +23,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
 	uint flags = _desc.perm();
 	if(_desc.origin() != 0) {
+		_desc.origin(Math::round_dn<uintptr_t>(_desc.origin(),ExecEnv::PAGE_SIZE));
 		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags))
 			throw DataSpaceException(E_ARGS_INVALID);
 		_desc.perm(flags);
@@ -52,12 +53,11 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
 
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
-	revoke_mem(_desc.virt(),_desc.size());
 	uint flags = _desc.perm();
-	if(PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags)) {
+	bool isdev = PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags);
+	revoke_mem(_desc.virt(),_desc.size(),isdev);
+	if(isdev)
 		VirtualMemory::free(_desc.virt(),_desc.size());
-		revoke_mem(_desc.origin(),_desc.size());
-	}
 	else
 		PhysicalMemory::_mem.free(_desc.origin(),_desc.size());
 
@@ -81,10 +81,10 @@ void PhysicalMemory::RootDataSpace::operator delete (void *ptr) throw() {
 	ds->_desc.size(0);
 }
 
-void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
+void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size,bool self) {
 	size_t count = size >> ExecEnv::PAGE_SHIFT;
 	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
-	CapRange(start,count,Crd::MEM_ALL).revoke(false);
+	CapRange(start,count,Crd::MEM_ALL).revoke(self);
 }
 
 void PhysicalMemory::add(uintptr_t addr,size_t size) {
@@ -119,7 +119,7 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	}
 	// check if the child wants to request none-device-memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(Math::overlapped(phys,size,it->addr,it->size))
+		if(it->type != Hip_mem::RESERVED && Math::overlapped(phys,size,it->addr,it->size))
 			return false;
 	}
 	return true;

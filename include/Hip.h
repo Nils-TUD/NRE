@@ -171,6 +171,7 @@ class Hip_mem {
 public:
 	enum {
 		AVAILABLE	= 1,
+		RESERVED	= 2,
 		HYPERVISOR	= -1,
 		MB_MODULE	= -2
 	};

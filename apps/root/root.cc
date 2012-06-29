@@ -97,7 +97,8 @@ int main() {
 
 	// remove all not available memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type != Hip_mem::AVAILABLE)
+		// also remove the BIOS-area (make it available as device-memory)
+		if(it->type != Hip_mem::AVAILABLE || it->addr == 0)
 			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
 	}
 

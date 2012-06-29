@@ -47,7 +47,7 @@ public:
 		static void operator delete(void *ptr) throw();
 
 	private:
-		static void revoke_mem(uintptr_t addr,size_t size);
+		static void revoke_mem(uintptr_t addr,size_t size,bool self = false);
 
 		nul::DataSpaceDesc _desc;
 		capsel_t _sel;

@@ -29,6 +29,7 @@
 #include <dev/Console.h>
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
+#include <dev/ACPI.h>
 #include <cap/Caps.h>
 #include <Exception.h>
 
@@ -125,12 +126,18 @@ static void view1(void*) {
 }
 
 int main() {
-	console = new Connection("console");
+	/*console = new Connection("console");
 	sess = new ConsoleSession(*console);
 	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
 	sc1->start();
 	Sc *sc2 = new Sc(new GlobalEc(view0,0),Qpd());
-	sc2->start();
+	sc2->start();*/
+
+	Connection con("acpi");
+	ACPISession sess(con);
+	uintptr_t addr;
+	for(size_t i = 0; (addr = sess.find_table(String("APIC"),i)) != 0; ++i)
+		Serial::get() << "APIC " << i << " @ " << reinterpret_cast<void*>(addr) << "\n";
 
 	/*
 	for(int i = 0; i < 2; ++i) {

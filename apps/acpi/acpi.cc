@@ -17,62 +17,42 @@
  */
 
 #include <service/Service.h>
+#include <dev/ACPI.h>
+
+#include "HostACPI.h"
 
 using namespace nul;
 
-#if 0
-class ACPISessionData : public SessionData {
-public:
-	ACPISessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _prod(), _ds() {
-	}
-	virtual ~ACPISessionData() {
-		delete _ds;
-		delete _prod;
-	}
-
-	Producer<T> *prod() {
-		return _prod;
-	}
-
-protected:
-	virtual void accept_ds(DataSpace *ds) {
-		_ds = ds;
-		_prod = new Producer<T>(ds,false,false);
-	}
-
-private:
-	Producer<T> *_prod;
-	DataSpace *_ds;
-};
-
-class ACPIService : public Service {
-public:
-	typedef SessionIterator<ACPISessionData<T> > iterator;
-
-	ACPIService(const char *name,Pt::portal_func func) : Service(name,func) {
-	}
-
-private:
-	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new ACPISessionData(this,id,caps,func);
-	}
-};
-
 static HostACPI *hostacpi;
 
-PORTAL static void portal_acpi(capsel_t pid) {
+PORTAL static void portal_acpi(capsel_t) {
 	UtcbFrameRef uf;
 	try {
-		String name;
+		ACPI::Command cmd;
+		uf >> cmd;
+
 		if(!hostacpi)
 			throw Exception(E_NOT_FOUND);
 
-		uf >> name;
-		uf.finish_input();
+		switch(cmd) {
+			case ACPI::GET_MEM: {
+				uf.finish_input();
+				uf.delegate(hostacpi->mem().sel());
+				uf << E_SUCCESS << hostacpi->mem().desc();
+			}
+			break;
 
-		uintptr_t off = hostacpi->find(name.str());
-		uf << E_SUCCESS << off;
+			case ACPI::FIND_TABLE: {
+				String name;
+				uint instance;
+				uf >> name >> instance;
+				uf.finish_input();
+
+				uintptr_t off = hostacpi->find(name.str(),instance);
+				uf << E_SUCCESS << off;
+			}
+			break;
+		}
 	}
 	catch(const Exception &e) {
 		uf.clear();
@@ -88,15 +68,12 @@ int main() {
 		Serial::get() << e.name() << ": " << e.msg() << "\n";
 	}
 
-	ACPIService *srv = new ACPIService("acpi",portal_acpi);
+	Service *srv = new Service("acpi",portal_acpi);
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		srv->provide_on(it->id);
 	srv->reg();
 
-	Sm sm;
+	Sm sm(0);
 	sm.down();
 	return 0;
 }
-#endif
-
-int main() { return 0; }

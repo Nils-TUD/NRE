@@ -15,7 +15,7 @@
 class HostACPI {
 	enum {
 		BIOS_MEM_ADDR	= 0xe0000,
-		BIOS_MEM_SIZE	= 0x100000 - 0xe0000,
+		BIOS_MEM_SIZE	= 0x20000,
 		BIOS_ADDR		= 0x0,
 		BIOS_SIZE		= 0x1000,
 		BIOS_EBDA_OFF	= 0x40E,
@@ -50,7 +50,11 @@ class HostACPI {
 
 public:
 	HostACPI();
-	uintptr_t find(const char *name);
+
+	const nul::DataSpace &mem() const {
+		return *_ds;
+	}
+	uintptr_t find(const char *name,uint instance);
 
 private:
 	static char checksum(char *table,unsigned count) {
