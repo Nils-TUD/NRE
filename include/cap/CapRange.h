@@ -20,6 +20,7 @@
 
 #include <arch/Types.h>
 #include <util/Math.h>
+#include <Syscalls.h>
 
 namespace nul {
 
@@ -29,6 +30,17 @@ public:
 	}
 	explicit CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = 0)
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
+	}
+
+	void revoke(bool self) {
+		uintptr_t start = _start;
+		size_t count = _count;
+		while(count > 0) {
+			uint minshift = Math::minshift(start,count);
+			Syscalls::revoke(Crd(start,minshift,_attr),self);
+			start += 1 << minshift;
+			count -= 1 << minshift;
+		}
 	}
 
 	uintptr_t start() const {

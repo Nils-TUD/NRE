@@ -84,12 +84,7 @@ void PhysicalMemory::RootDataSpace::operator delete (void *ptr) throw() {
 void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size) {
 	size_t count = size >> ExecEnv::PAGE_SHIFT;
 	uintptr_t start = addr >> ExecEnv::PAGE_SHIFT;
-	while(count > 0) {
-		uint minshift = Math::minshift(start,count);
-		Syscalls::revoke(Crd(start,minshift,Crd::MEM_ALL),false);
-		start += 1 << minshift;
-		count -= 1 << minshift;
-	}
+	CapRange(start,count,Crd::MEM_ALL).revoke(false);
 }
 
 void PhysicalMemory::add(uintptr_t addr,size_t size) {

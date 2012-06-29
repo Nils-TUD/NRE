@@ -30,7 +30,7 @@ size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
 
 ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
+		_dsm(), _registry(), _sm(), _switchsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
@@ -526,6 +526,86 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	}
 }
 
+// TODO especially this usecase shows that ChildMemory is a really bad datastructure for this
+// way too much linear searches and so on
+static void remap(Child *ch,DataSpaceDesc &src,DataSpaceDesc &dst,
+		uintptr_t srcorg,uintptr_t dstorg,capsel_t srcsel,capsel_t dstsel) {
+	// remove them from child-regions
+	if(srcsel != ObjCap::INVALID)
+		ch->reglist().remove(srcsel);
+	if(dstsel != ObjCap::INVALID)
+		ch->reglist().remove(dstsel);
+
+	// swap origins (add expects them in virt)
+	uintptr_t vsrc = src.virt();
+	uintptr_t vdst = dst.virt();
+	src.virt(dstorg);
+	dst.virt(srcorg);
+	// and map them again; the next pagefault will handle the rest
+	if(srcsel != ObjCap::INVALID)
+		ch->reglist().add(src,vsrc,src.perm(),srcsel);
+	if(dstsel != ObjCap::INVALID)
+		ch->reglist().add(dst,vdst,dst.perm(),dstsel);
+}
+
+void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
+	capsel_t srcsel = uf.get_translated(0).offset();
+	capsel_t dstsel = uf.get_translated(0).offset();
+	uf.finish_input();
+
+	{
+		// note that we need another lock here since it may also involve childs of c (c may have
+		// delegated it and if they cause a pagefault during this operation, we might get mixed
+		// results)
+		ScopedLock<UserSm> guard_switch(&_switchsm);
+
+		uintptr_t srcorg,dstorg;
+		{
+			// first do the stuff for the child that requested the switch
+			ScopedLock<UserSm> guard_regs(&c->_sm);
+			DataSpaceDesc src,dst;
+			bool found_src = c->reglist().find(srcsel,src);
+			bool found_dst = c->reglist().find(dstsel,dst);
+			if((!found_src || !found_dst))
+				throw Exception(E_ARGS_INVALID);
+			if(src.size() != dst.size())
+				throw Exception(E_ARGS_INVALID);
+
+			// first revoke the memory to prevent further accesses
+			CapRange(src.origin() >> ExecEnv::PAGE_SHIFT,
+					src.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			CapRange(dst.origin() >> ExecEnv::PAGE_SHIFT,
+					dst.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			// now copy the content
+			memcpy(reinterpret_cast<char*>(dst.origin()),reinterpret_cast<char*>(src.origin()),src.size());
+			// change mapping
+			srcorg = src.origin();
+			dstorg = dst.origin();
+			remap(c,src,dst,srcorg,dstorg,srcsel,dstsel);
+		}
+
+		// now change the mapping for all other childs that have one of these dataspaces
+		for(size_t x = 0,i = 0; i < MAX_CHILDS && x < _child_count; ++i) {
+			if(_childs[i] == 0 || _childs[i] == c)
+				continue;
+
+			Child *ch = _childs[i];
+			ScopedLock<UserSm> guard_regs(&ch->_sm);
+			DataSpaceDesc chsrc,chdst;
+			bool found_src = ch->reglist().find(srcsel,chsrc);
+			bool found_dst = ch->reglist().find(dstsel,chdst);
+			if(!found_src && !found_dst)
+				continue;
+
+			remap(ch,chsrc,chdst,srcorg,dstorg,found_src ? srcsel : ObjCap::INVALID,
+					found_dst ? dstsel : ObjCap::INVALID);
+			x++;
+		}
+	}
+
+	uf << E_SUCCESS;
+}
+
 void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
 	capsel_t sel = 0;
 	DataSpaceDesc desc;
@@ -561,8 +641,16 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 				cm->map(uf,c,type);
 				break;
 
+			case DataSpace::SWITCH_TO:
+				cm->switch_to(uf,c);
+				break;
+
 			case DataSpace::DESTROY:
 				cm->unmap(uf,c);
+				break;
+
+			case DataSpace::SHARE:
+				throw Exception(E_ARGS_INVALID);
 				break;
 		}
 	}
@@ -581,13 +669,14 @@ void ChildManager::Portals::pf(capsel_t pid) {
 
 	bool kill = false;
 	try {
-		ScopedLock<UserSm> guard(&c->_sm);
+		ScopedLock<UserSm> guard_switch(&cm->_switchsm);
+		ScopedLock<UserSm> guard_regs(&c->_sm);
 		uintptr_t pfaddr = uf->qual[1];
 		unsigned error = uf->qual[0];
 		uintptr_t eip = uf->rip;
 
-		//Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-		//		c->cmdline().str(),pfaddr,eip,cpu,error);
+		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+				c->cmdline().str(),pfaddr,eip,cpu,error);
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);

@@ -49,14 +49,16 @@ void DataSpace::create() {
 	create(_desc,&_sel,&_unmapsel);
 }
 
-void DataSpace::switch_to(const DataSpace &dest) {
-	// TODO this is not finished
+void DataSpace::switch_to(DataSpace &dest) {
 	UtcbFrame uf;
-	uf.translate(sel());
-	uf.translate(dest.sel());
+	uf.translate(unmapsel());
+	uf.translate(dest.unmapsel());
 	uf << SWITCH_TO;
 	CPU::current().ds_pt->call(uf);
 	handle_response(uf);
+	uintptr_t tmp = _desc.origin();
+	_desc.origin(dest._desc.origin());
+	dest._desc.origin(tmp);
 }
 
 void DataSpace::share(Session &s) {

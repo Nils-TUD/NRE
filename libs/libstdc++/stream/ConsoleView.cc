@@ -11,20 +11,6 @@
 
 using namespace nul;
 
-void ConsoleView::flush() {
-	if(_row == Console::ROWS - 1) {
-		scroll();
-		_row--;
-	}
-	_pk->len = _col;
-	_producer.next();
-	_pk = _producer.current();
-	_pk->cmd = Console::WRITE;
-	_pk->x = 0;
-	_pk->y = ++_row;
-	_col = 0;
-}
-
 char ConsoleView::read() {
 	char c;
 	while(1) {
@@ -39,17 +25,19 @@ char ConsoleView::read() {
 void ConsoleView::write(char c) {
 	if(c == '\r')
 		_col = 0;
-	else if(c == '\n' || _col == Console::BUF_SIZE - 1) {
-		flush();
+	else if(c == '\n' || _col == Console::COLS) {
+		_row++;
+		_col = 0;
+		if(_row == Console::ROWS) {
+			memmove(screen(),screen() + Console::COLS * 2,(Console::ROWS - 1) * Console::COLS * 2);
+			memset(screen() + (Console::ROWS - 1) * Console::COLS * 2,0,Console::COLS * 2);
+			_row--;
+		}
 	}
 	else {
-		_pk->buffer[_col++] = c;
-		_pk->buffer[_col++] = 0 << 4 | 4;
+		char *pos = screen() + _row * Console::COLS * 2 + _col * 2;
+		pos[0] = c;
+		pos[1] = 0 << 4 | 4;
+		_col++;
 	}
-}
-
-void ConsoleView::scroll() {
-	Console::SendPacket pk;
-	pk.cmd = Console::SCROLL;
-	_producer.produce(pk);
 }

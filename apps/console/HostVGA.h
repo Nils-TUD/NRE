@@ -14,6 +14,7 @@
 #include <mem/DataSpace.h>
 #include <dev/Console.h>
 
+#include "ConsoleSessionData.h"
 #include "Screen.h"
 
 class HostVGA : public Screen {
@@ -23,10 +24,8 @@ class HostVGA : public Screen {
 	};
 	enum {
 		PAGE_COUNT		= 8,
-		VGA_MEM			= 0xb8000,
-		VGA_MEM_SIZE	= nul::ExecEnv::PAGE_SIZE * PAGE_COUNT,
-		COLS			= 80,
-		ROWS			= 25,
+		VGA_MEM			= 0xb8000 + ConsoleSessionData::PAGE_USER * nul::ExecEnv::PAGE_SIZE,
+		VGA_MEM_SIZE	= nul::ExecEnv::PAGE_SIZE,
 	};
 
 public:
@@ -35,13 +34,12 @@ public:
 			  _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::LOCKED,nul::DataSpaceDesc::RW,VGA_MEM) {
 	}
 
-	virtual void paint(uint uid,uint8_t x,uint8_t y,uint8_t *buffer,size_t count);
+	virtual nul::DataSpace &mem() {
+		return _ds;
+	}
 	virtual void set_page(uint uid,uint page);
 
 private:
-	char *screen() const {
-		return reinterpret_cast<char*>(_ds.virt() + _page * nul::ExecEnv::PAGE_SIZE);
-	}
 	void write(Register reg,uint8_t val) {
 		_ports.out<uint8_t>(reg,0);
 		_ports.out<uint8_t>(val,1);

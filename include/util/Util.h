@@ -26,6 +26,13 @@ namespace nul {
 
 class Util {
 public:
+	template<typename T>
+	static void swap(T &t1,T &t2) {
+		T tmp = t1;
+		t1 = t2;
+		t2 = tmp;
+	}
+
 	static void write_backtrace(OStream& os) {
 		uintptr_t addrs[32];
 		ExecEnv::collect_backtrace(addrs,sizeof(addrs));

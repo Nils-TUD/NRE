@@ -27,20 +27,15 @@ ConsoleSessionData::~ConsoleSessionData() {
 	}
 }
 
-void ConsoleSessionData::invalidate() {
-	ScopedLock<UserSm> guard(&_sm);
-	for(iterator it = _views.begin(); it != _views.end(); ++it)
-		it->invalidate();
-}
-
-uint ConsoleSessionData::create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds) {
+ConsoleSessionView *ConsoleSessionData::create_view(nul::DataSpace *in_ds) {
 	ScopedLock<UserSm> guard(&_sm);
 	uint id = _next_id++;
-	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds,out_ds));
-	iterator it = _views.append(v.release());
+	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds));
+	iterator it = _views.append(v.get());
+	ConsoleService::get()->active()->to_back();
 	_view_cycler.reset(_views.begin(),it,_views.end());
-	repaint();
-	return id;
+	to_front();
+	return v.release();
 }
 
 bool ConsoleSessionData::destroy_view(uint view) {
@@ -48,9 +43,10 @@ bool ConsoleSessionData::destroy_view(uint view) {
 	for(iterator it = _views.begin(); it != _views.end(); ++it) {
 		if(it->id() == view) {
 			_views.remove(&*it);
+			if(is_active() && _view_cycler.current() != it)
+				_view_cycler.current()->swap();
 			_view_cycler.reset(_views.begin(),_views.begin(),_views.end());
-			repaint();
-			it->invalidate();
+			to_front();
 			RCU::invalidate(&*it);
 			return true;
 		}
@@ -67,16 +63,16 @@ void ConsoleSessionData::portal(capsel_t pid) {
 		uf >> cmd;
 		switch(cmd) {
 			case Console::CREATE_VIEW: {
-				DataSpaceDesc indesc,outdesc;
+				DataSpaceDesc indesc;
 				capsel_t insel = uf.get_delegated(0).offset();
-				capsel_t outsel = uf.get_delegated(0).offset();
-				uf >> indesc >> outdesc;
+				uf >> indesc;
 				uf.finish_input();
 
-				uint view = sess->create_view(new DataSpace(indesc,insel),new DataSpace(outdesc,outsel));
+				ConsoleSessionView *view = sess->create_view(new DataSpace(indesc,insel));
 
 				uf.accept_delegates();
-				uf << E_SUCCESS << view;
+				uf.delegate(view->out_ds().sel());
+				uf << E_SUCCESS << view->id() << view->out_ds().desc();
 			}
 			break;
 

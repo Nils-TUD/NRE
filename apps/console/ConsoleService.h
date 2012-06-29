@@ -39,12 +39,8 @@ public:
 		return _sess_cycler.valid() && sess == &*_sess_cycler.current();
 	}
 
-	iterator prev() {
-		return _sess_cycler.prev();
-	}
-	iterator next() {
-		return _sess_cycler.next();
-	}
+	void prev();
+	void next();
 
 	iterator sessions_begin() {
 		return Service::sessions_begin<ConsoleSessionData>();

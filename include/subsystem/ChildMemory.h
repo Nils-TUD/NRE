@@ -82,6 +82,14 @@ public:
 		return count;
 	}
 
+	bool find(capsel_t sel,DataSpaceDesc &ds) {
+		size_t i = get(sel);
+		if(i == MAX_DS)
+			return false;
+		ds = _ds[i].desc;
+		return true;
+	}
+
 	uint find(uintptr_t addr,uintptr_t &src,size_t &size) const {
 		addr &= ~(ExecEnv::PAGE_SIZE - 1);
 		const Region *r = get(addr,1);
@@ -133,14 +141,12 @@ public:
 	}
 
 	DataSpaceDesc remove(capsel_t ds) {
-		for(size_t i = 0; i < MAX_DS; ++i) {
-			if(_ds[i].unmapsel == ds) {
-				_ds[i].unmapsel = 0;
-				remove(_ds[i].desc.virt(),_ds[i].desc.size());
-				return _ds[i].desc;
-			}
-		}
-		throw ChildMemoryException(E_NOT_FOUND);
+		size_t i = get(ds);
+		if(i == MAX_DS)
+			throw ChildMemoryException(E_NOT_FOUND);
+		_ds[i].unmapsel = 0;
+		remove(_ds[i].desc.virt(),_ds[i].desc.size());
+		return _ds[i].desc;
 	}
 
 	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
@@ -196,6 +202,13 @@ public:
 	}
 
 private:
+	size_t get(capsel_t ds) {
+		for(size_t i = 0; i < MAX_DS; ++i) {
+			if(_ds[i].unmapsel == ds)
+				return i;
+		}
+		return MAX_DS;
+	}
 	Region *get(uintptr_t addr,size_t size) {
 		return const_cast<Region*>(const_cast<const ChildMemory*>(this)->get(addr,size));
 	}

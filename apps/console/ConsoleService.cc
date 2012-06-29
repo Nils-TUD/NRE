@@ -25,7 +25,7 @@ void ConsoleService::init() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc *ec = get_ec(it->id);
 		UtcbFrameRef uf(ec->utcb());
-		uf.accept_delegates(1);
+		uf.accept_delegates(0);
 	}
 
 	// add dummy sessions for boot screen and HV screen
@@ -35,43 +35,48 @@ void ConsoleService::init() {
 			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * Hip::MAX_CPUS,0));
 }
 
+void ConsoleService::prev() {
+	_sess_cycler.current()->to_back();
+	_sess_cycler.prev()->to_front();
+}
+
+void ConsoleService::next() {
+	_sess_cycler.current()->to_back();
+	_sess_cycler.next()->to_front();
+}
+
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::portal_func func) {
 	return new ConsoleSessionData(this,ConsoleSessionData::PAGE_USER,id,caps,func);
 }
 
 void ConsoleService::created_session(size_t idx) {
+	if(_sess_cycler.valid())
+		_sess_cycler.current()->to_back();
 	_sess_cycler.reset(sessions_begin(),iterator(this,idx),sessions_end());
-	active()->repaint();
+	active()->to_front();
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
-	bool res = false;
 	switch(pk.keycode) {
 		case Keyboard::VK_LEFT:
 			if(~pk.flags & Keyboard::RELEASE)
 				prev();
-			res = true;
-			break;
+			return true;
 
 		case Keyboard::VK_RIGHT:
 			if(~pk.flags & Keyboard::RELEASE)
 				next();
-			res = true;
-			break;
+			return true;
 
 		case Keyboard::VK_UP:
 			if(active() && (~pk.flags & Keyboard::RELEASE))
 				active()->prev();
-			res = true;
-			break;
+			return true;
 
 		case Keyboard::VK_DOWN:
 			if(active() && (~pk.flags & Keyboard::RELEASE))
 				active()->next();
-			res = true;
-			break;
+			return true;
 	}
-	if(res && active())
-		active()->repaint();
-	return res;
+	return false;
 }

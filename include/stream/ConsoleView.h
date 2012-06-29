@@ -21,22 +21,17 @@ namespace nul {
 class ConsoleView : public IStream, public OStream {
 	enum {
 		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
-		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * 16,
 	};
 
 public:
 	ConsoleView(ConsoleSession &sess)
-		: _sess(sess), _view(0), _col(0), _row(0),
-		  _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-		  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-		  _consumer(&_in_ds,true), _producer(&_out_ds,true,true) {
+		: _sess(sess), _view(), _col(0), _row(0),
+		  _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _out_ds(),
+		  _consumer(&_in_ds,true) {
 		create_view();
-		_pk = _producer.current();
-		_pk->cmd = Console::WRITE;
-		_pk->x = 0;
-		_pk->y = _row;
 	}
 	virtual ~ConsoleView() {
+		delete _out_ds;
 		destroy_view();
 	}
 
@@ -53,24 +48,28 @@ public:
 		return res;
 	}
 
-	void flush();
 	virtual char read();
 	virtual void write(char c);
 
 private:
-	void scroll();
+	char *screen() const {
+		return reinterpret_cast<char*>(_out_ds->virt());
+	}
 
 	void create_view() {
 		UtcbFrame uf;
-		uf << Console::CREATE_VIEW << _in_ds.desc() << _out_ds.desc();
+		uf.accept_delegates(0);
+		uf << Console::CREATE_VIEW << _in_ds.desc();
 		uf.delegate(_in_ds.sel(),0);
-		uf.delegate(_out_ds.sel(),1);
 		_sess.pt(CPU::current().id).call(uf);
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
-		uf >> _view;
+		capsel_t sel = uf.get_delegated(0).offset();
+		DataSpaceDesc desc;
+		uf >> _view >> desc;
+		_out_ds = new DataSpace(desc,sel);
 	}
 	void destroy_view() {
 		UtcbFrame uf;
@@ -83,10 +82,8 @@ private:
 	uint8_t _col;
 	uint8_t _row;
 	DataSpace _in_ds;
-	DataSpace _out_ds;
-	Console::SendPacket *_pk;
+	DataSpace *_out_ds;
 	Consumer<Console::ReceivePacket> _consumer;
-	Producer<Console::SendPacket> _producer;
 };
 
 }

@@ -31,8 +31,6 @@ public:
 	ConsoleSessionData(nul::Service *s,uint page,size_t id,capsel_t caps,nul::Pt::portal_func func);
 	virtual ~ConsoleSessionData();
 
-	virtual void invalidate();
-
 	ConsoleSessionView *active() {
 		iterator it = _view_cycler.current();
 		return it != _views.end() ? &*it : 0;
@@ -44,26 +42,42 @@ public:
 		return is_active() && view == &*_view_cycler.current();
 	}
 
-	iterator prev() {
-		return _view_cycler.prev();
+	void prev() {
+		if(_views.length() > 1) {
+			// copy current to backend
+			_view_cycler.current()->swap();
+			// copy prev to frontend
+			_view_cycler.prev()->swap();
+		}
 	}
-	iterator next() {
-		return _view_cycler.next();
+	void next() {
+		if(_views.length() > 1) {
+			_view_cycler.current()->swap();
+			_view_cycler.next()->swap();
+		}
 	}
 
-	void repaint() {
+	void to_back() {
+		if(_page == PAGE_USER) {
+			iterator it = _view_cycler.current();
+			if(it != _views.end())
+				it->swap();
+		}
+	}
+
+	void to_front() {
 		if(_page == PAGE_USER) {
 			iterator it = _view_cycler.current();
 			if(it != _views.end()) {
 				ConsoleService::get()->screen()->set_page(it->uid(),_page);
-				it->repaint();
+				it->swap();
 			}
 		}
 		else
 			ConsoleService::get()->screen()->set_page(_page,_page);
 	}
 
-	uint create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
+	ConsoleSessionView *create_view(nul::DataSpace *in_ds);
 	bool destroy_view(uint view);
 
 	PORTAL static void portal(capsel_t pid);

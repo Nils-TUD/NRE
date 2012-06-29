@@ -147,6 +147,7 @@ private:
 	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
 
 	void map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type);
+	void switch_to(UtcbFrameRef &uf,Child *c);
 	void unmap(UtcbFrameRef &uf,Child *c);
 
 	ChildManager(const ChildManager&);
@@ -158,6 +159,7 @@ private:
 	DataSpaceManager<DataSpace> _dsm;
 	ServiceRegistry _registry;
 	UserSm _sm;
+	UserSm _switchsm;
 	Sm _regsm;
 	Sm _diesm;
 	// we need different Ecs to be able to receive a different number of caps

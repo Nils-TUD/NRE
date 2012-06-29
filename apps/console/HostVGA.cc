@@ -11,13 +11,6 @@
 
 using namespace nul;
 
-void HostVGA::paint(uint uid,uint8_t x,uint8_t y,uint8_t *buffer,size_t count) {
-	if(uid == current()) {
-		assert((y * COLS * 2 + x * 2) + count <= (ROWS * COLS * 2));
-		//memcpy(screen() + y * COLS * 2 + x * 2,buffer,count);
-	}
-}
-
 void HostVGA::set_page(uint uid,uint page) {
 	current(uid);
 	page &= PAGE_COUNT - 1;

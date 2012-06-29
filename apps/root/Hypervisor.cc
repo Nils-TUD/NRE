@@ -98,15 +98,6 @@ char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 	return vaddr;
 }
 
-void Hypervisor::revoke_io(Ports::port_t base,uint count) {
-	while(count > 0) {
-		uint minshift = Math::minshift(base,count);
-		Syscalls::revoke(Crd(base,minshift,Crd::IO_ALL),false);
-		base += 1 << minshift;
-		count -= 1 << minshift;
-	}
-}
-
 void Hypervisor::portal_mem(capsel_t) {
 	UtcbFrameRef uf;
 	CapRange range;
@@ -161,7 +152,7 @@ void Hypervisor::portal_io(capsel_t) {
 
 			case Ports::RELEASE:
 				release_ports(base,count);
-				revoke_io(base,count);
+				CapRange(base,count,Crd::IO_ALL).revoke(false);
 				break;
 		}
 
