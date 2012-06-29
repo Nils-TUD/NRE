@@ -85,6 +85,24 @@ public:
 	}
 
 	/**
+	 * Swaps the virt-property of the two dataspaces specified by ds1 and ds2
+	 *
+	 * @param ds1 the unmap-selector for the first dataspace
+	 * @param ds2 the unmap-selector for the second dataspace
+	 */
+	void swap(capsel_t ds1,capsel_t ds2) {
+		ScopedLock<UserSm> guard(&_sm);
+		Slot *s1 = find_unmap(ds1);
+		Slot *s2 = find_unmap(ds2);
+		if(!s1 || !s2)
+			throw DataSpaceException(E_NOT_FOUND);
+
+		uintptr_t tmp = s1->ds->_desc.virt();
+		s1->ds->_desc.virt(s2->ds->_desc.virt());
+		s2->ds->_desc.virt(tmp);
+	}
+
+	/**
 	 * Releases the dataspace identified by the given selector, i.e. the number of references are
 	 * decreased. If it reaches zero, the dataspace is destroyed.
 	 *
@@ -94,23 +112,27 @@ public:
 	 */
 	void release(DataSpaceDesc &desc,capsel_t sel) {
 		ScopedLock<UserSm> guard(&_sm);
-		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds->unmapsel() == sel) {
-				if(--_slots[i].refs == 0) {
-					desc = _slots[i].ds->desc();
-					delete _slots[i].ds;
-					_slots[i].ds = 0;
-				}
-				return;
-			}
+		Slot *s = find_unmap(sel);
+		if(!s)
+			throw DataSpaceException(E_NOT_FOUND);
+		if(--s->refs == 0) {
+			desc = s->ds->desc();
+			delete s->ds;
+			s->ds = 0;
 		}
-		throw DataSpaceException(E_NOT_FOUND);
 	}
 
 private:
 	Slot *find(capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
 			if(_slots[i].refs && _slots[i].ds->sel() == sel)
+				return _slots + i;
+		}
+		return 0;
+	}
+	Slot *find_unmap(capsel_t sel) {
+		for(size_t i = 0; i < MAX_SLOTS; ++i) {
+			if(_slots[i].refs && _slots[i].ds->unmapsel() == sel)
 				return _slots + i;
 		}
 		return 0;

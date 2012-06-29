@@ -601,6 +601,10 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 					found_dst ? dstsel : ObjCap::INVALID);
 			x++;
 		}
+
+		// now swap the origins also in the dataspace-manager (otherwise clients that join
+		// afterwards will receive the wrong location)
+		_dsm.swap(srcsel,dstsel);
 	}
 
 	uf << E_SUCCESS;
@@ -675,8 +679,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		unsigned error = uf->qual[0];
 		uintptr_t eip = uf->rip;
 
-		Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-				c->cmdline().str(),pfaddr,eip,cpu,error);
+		//Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+		//		c->cmdline().str(),pfaddr,eip,cpu,error);
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);

@@ -70,6 +70,7 @@ private:
 		DataSpaceDesc desc;
 		uf >> _view >> desc;
 		_out_ds = new DataSpace(desc,sel);
+		Serial::get() << *_out_ds << "\n";
 	}
 	void destroy_view() {
 		UtcbFrame uf;
