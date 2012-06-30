@@ -41,23 +41,22 @@ private:
 
 class ACPISession : public Session {
 public:
-	explicit ACPISession(Connection &con) : Session(con), _ds(), _pts() {
-		for(cpu_t cpu = 0; cpu < Hip::MAX_CPUS; ++cpu) {
-			if(con.available_on(cpu))
-				_pts[cpu] = new Pt(caps() + cpu);
-		}
+	explicit ACPISession(Connection &con) : Session(con), _ds(), _pts(new Pt*[CPU::count()]) {
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		get_mem();
 	}
 	virtual ~ACPISession() {
-		for(cpu_t cpu = 0; cpu < Hip::MAX_CPUS; ++cpu)
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _pts[cpu];
+		delete[] _pts;
 		delete _ds;
 	}
 
 	uintptr_t find_table(const String &name,uint instance = 0) const {
 		UtcbFrame uf;
 		uf << ACPI::FIND_TABLE << name << instance;
-		_pts[CPU::current().id]->call(uf);
+		_pts[CPU::current().log_id()]->call(uf);
 
 		ErrorCode res;
 		uf >> res;
@@ -73,7 +72,7 @@ private:
 		UtcbFrame uf;
 		uf.accept_delegates(0);
 		uf << ACPI::GET_MEM;
-		_pts[CPU::current().id]->call(uf);
+		_pts[CPU::current().log_id()]->call(uf);
 
 		ErrorCode res;
 		uf >> res;
@@ -86,7 +85,7 @@ private:
 	}
 
 	DataSpace *_ds;
-	Pt *_pts[Hip::MAX_CPUS];
+	Pt **_pts;
 };
 
 }

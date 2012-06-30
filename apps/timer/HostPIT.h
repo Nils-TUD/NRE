@@ -16,22 +16,32 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/Ec.h>
-#include <Compiler.h>
-#include <CPU.h>
-#include <RCU.h>
+#pragma once
 
-namespace nul {
+#include <kobj/Ports.h>
 
-void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
-	ScopedCapSels scs;
-	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(_cpu).phys_id(),_event_base,type,pd->sel());
-	if(pd == Pd::current())
-		RCU::announce(this);
-	sel(scs.release());
-}
+#include "HostTimer.h"
 
-// slot 0 is reserved
-size_t Ec::_tls_idx = 1;
+class HostPIT : public HostTimer {
+	enum {
+		FREQ			= 1193180ULL,
+		DEFAULT_PERIOD	= 1000ULL, // ms
+		IRQ				= 2,
+		PORT_BASE		= 0x40
+	};
 
-}
+public:
+	HostPIT(uint period_us);
+
+	virtual void start(ticks_t ticks) {
+		_ticks = ticks;
+	}
+	virtual freq_t freq() {
+		return _freq;
+	}
+
+private:
+	nul::Ports _ports;
+	freq_t _freq;
+	ticks_t _ticks;
+};

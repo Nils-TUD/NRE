@@ -96,10 +96,10 @@ public:
 private:
 	virtual void write(char c) = 0;
 
-	void printnpad(llong n, uint pad, uint flags);
-	void printupad(ullong u, uint base, uint pad, uint flags);
-	int printpad(int count, uint flags);
-	int printu(ullong n, uint base, char *chars);
+	void printnpad(llong n,uint pad,uint flags);
+	void printupad(ullong u,uint base,uint pad,uint flags);
+	int printpad(int count,uint flags);
+	int printu(ullong n,uint base,char *chars);
 	int printn(llong n);
 	void printptr(uintptr_t u,uint flags);
 	int puts(const char *str);

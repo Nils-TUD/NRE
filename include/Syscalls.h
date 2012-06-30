@@ -89,16 +89,16 @@ public:
 	 * @param ec the capability selector to use for the Ec
 	 * @param utcb the address of the utcb to use
 	 * @param sp the initial stack pointer
-	 * @param cpunr the CPU to bind the Ec to
+	 * @param cpu the physical CPU id to bind the Ec to
 	 * @param event_base the event base for the Ec
 	 * @param type the type of Ec (global or local)
 	 * @param dstpd the Pd in which the Ec should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_ec(capsel_t ec,void *utcb,void *sp,cpu_t cpunr,unsigned event_base,
+	static inline void create_ec(capsel_t ec,void *utcb,void *sp,cpu_t cpu,unsigned event_base,
 			ECType type,capsel_t dstpd) {
 		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
-		        reinterpret_cast<word_t>(utcb) | cpunr,
+		        reinterpret_cast<word_t>(utcb) | cpu,
 		        reinterpret_cast<word_t>(sp),
 		        event_base);
 	}
@@ -181,7 +181,7 @@ public:
 	 * corresponding interrupt semaphore.
 	 *
 	 * @param sm the GSI to assign
-	 * @param cpu the CPU to which the GSI should be routed
+	 * @param cpu the physical CPU id to which the GSI should be routed
 	 * @param pci_cfg_mem for GSIs delivered as MSI, this must refer to the memory-mapped PCI
 	 * 	configuration space of the device that generates the interrupt.
 	 * @param msi_address will be set to the address of the MSI

@@ -23,16 +23,16 @@
 
 namespace nul {
 
-class Hip_cpu;
-class Hip_mem;
+class HipCPU;
+class HipMem;
 
 /**
  * Hypervisor information page
  */
 class Hip {
 public:
-	typedef const Hip_mem* mem_iterator;
-	typedef const Hip_cpu* cpu_iterator;
+	typedef const HipMem* mem_iterator;
+	typedef const HipCPU* cpu_iterator;
 
 	enum {
 		MAX_CPUS	= 64,	// has to be a power of 2
@@ -105,10 +105,14 @@ public:
 	size_t cpu_count() const {
 		return (mem_offs - cpu_offs) / cpu_size;
 	}
+
 	/**
-	 * @return the number of online CPUs
+	 * Determines the logical CPU id for the given physical CPU id
+	 *
+	 * @param cpu the physical CPU id
+	 * @return the logical CPU id
 	 */
-	size_t cpu_online_count() const;
+	cpu_t cpu_phys_to_log(cpu_t cpu) const;
 
 	/**
 	 * @return beginning of memory items
@@ -140,7 +144,7 @@ public:
 /**
  * CPU item in the Hip
  */
-class Hip_cpu {
+class HipCPU {
 public:
 	uint8_t flags;
 	uint8_t thread;
@@ -167,7 +171,7 @@ public:
 /**
  * Memory item in the Hip
  */
-class Hip_mem {
+class HipMem {
 public:
 	enum {
 		AVAILABLE	= 1,

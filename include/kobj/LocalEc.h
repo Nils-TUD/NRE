@@ -38,7 +38,7 @@ public:
 	/**
 	 * Creates a new LocalEc on CPU <cpu>.
 	 *
-	 * @param cpu the CPU to bind the Ec to
+	 * @param cpu the logical CPU id to bind the Ec to
 	 * @param event_base the event-base to use for this Ec (default: select it automatically)
 	 * @param stackaddr the stack-address (0 = create a stack)
 	 * @param utcb the utcb-address (0 = select it automatically)

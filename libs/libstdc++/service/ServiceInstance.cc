@@ -33,7 +33,7 @@ ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
 	// for dataspace sharing
 	ecuf.accept_delegates(0);
 	// for session-identification
-	ecuf.accept_translates(s->_caps,Math::next_pow2_shift(Service::MAX_SESSIONS * Hip::MAX_CPUS));
+	ecuf.accept_translates(s->_caps,Math::next_pow2_shift(Service::MAX_SESSIONS * CPU::count()));
 }
 
 void ServiceInstance::portal(capsel_t) {
@@ -47,7 +47,7 @@ void ServiceInstance::portal(capsel_t) {
 				uf.finish_input();
 
 				SessionData *sess = s->new_session();
-				uf.delegate(CapRange(sess->caps(),Hip::MAX_CPUS,Crd::OBJ_ALL));
+				uf.delegate(CapRange(sess->caps(),CPU::count(),Crd::OBJ_ALL));
 			}
 			break;
 

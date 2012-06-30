@@ -45,7 +45,7 @@ static ShmService *srv;
 class ShmSessionData : public SessionData {
 public:
 	ShmSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _ec(receiver,CPU::current().id), _sc(), _cons(), _ds() {
+		: SessionData(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~ShmSessionData() {
@@ -124,7 +124,7 @@ static void shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
-	srv->provide_on(CPU::current().id);
+	srv->provide_on(CPU::current().log_id());
 	srv->reg();
 	srv->wait();
 	srv->unreg();
@@ -155,7 +155,7 @@ static Hip::mem_iterator get_self() {
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we're the third module (root and log come first)
-		if(it->type == Hip_mem::MB_MODULE && i++ > 1)
+		if(it->type == HipMem::MB_MODULE && i++ > 1)
 			return it;
 	}
 	return hip.mem_end();

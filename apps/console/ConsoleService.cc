@@ -23,7 +23,7 @@ ConsoleService::ConsoleService(const char *name)
 void ConsoleService::init() {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalEc *ec = get_ec(it->id);
+		LocalEc *ec = get_ec(it->log_id());
 		UtcbFrameRef uf(ec->utcb());
 		uf.accept_delegates(1);
 	}

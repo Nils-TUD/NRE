@@ -46,7 +46,7 @@ public:
 	 */
 	virtual ~Session() {
 		close();
-		CapSpace::get().free(_caps,Hip::MAX_CPUS);
+		CapSpace::get().free(_caps,CPU::count());
 	}
 
 	/**
@@ -65,10 +65,10 @@ public:
 private:
 	capsel_t open(Connection &con) {
 		UtcbFrame uf;
-		ScopedCapSels caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+		ScopedCapSels caps(CPU::count(),CPU::count());
+		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << Service::OPEN_SESSION;
-		con.pt(CPU::current().id)->call(uf);
+		con.pt(CPU::current().log_id())->call(uf);
 
 		ErrorCode res;
 		uf >> res;
@@ -81,7 +81,7 @@ private:
 		UtcbFrame uf;
 		uf.translate(_caps);
 		uf << Service::CLOSE_SESSION;
-		_con.pt(CPU::current().id)->call(uf);
+		_con.pt(CPU::current().log_id())->call(uf);
 	}
 
 	Session(const Session&);

@@ -25,7 +25,7 @@ using namespace nul;
 int main() {
 	ConsoleService *srv = ConsoleService::create("console");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->id);
+		srv->provide_on(it->log_id());
 	srv->init();
 	srv->reg();
 

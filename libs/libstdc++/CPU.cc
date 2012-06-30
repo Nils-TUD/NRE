@@ -16,6 +16,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Startup.h>
 #include <kobj/Pt.h>
 #include <cap/CapSpace.h>
 #include <CPU.h>
@@ -30,20 +31,25 @@ class CPUInit {
 	static CPUInit init;
 };
 
+size_t CPU::_count = 0;
 CPU *CPU::_online = 0;
 CPU CPU::_cpus[Hip::MAX_CPUS] INIT_PRIO_CPUS;
+cpu_t CPU::_logtophys[Hip::MAX_CPUS];
 CPUInit CPUInit::init INIT_PRIO_CPUS;
 
 CPUInit::CPUInit() {
 	CPU *last = 0;
 	const Hip& hip = Hip::get();
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it) {
-		CPU &cpu = CPU::get(it->id());
-		cpu.id = it->id();
+	cpu_t id = 0;
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++id) {
+		CPU &cpu = CPU::get(id);
+		cpu._id = id;
+		CPU::_logtophys[id] = it->id();
 		if(!it->enabled())
 			continue;
 
 		// build a list of all online CPUs
+		CPU::_count++;
 		if(last)
 			last->_next = &cpu;
 		else
@@ -59,14 +65,14 @@ CPUInit::CPUInit() {
 
 		// create per-cpu-portals
 		if(_startup_info.child) {
-			capsel_t off = cpu.id * Hip::get().service_caps();
+			capsel_t off = cpu.log_id() * Hip::get().service_caps();
 			cpu.ds_pt = new Pt(off + CapSpace::SRV_DS);
 			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
 			cpu.unreg_pt = new Pt(off + CapSpace::SRV_UNREG);
 			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
 			cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
 			cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
-			if(cpu.id == CPU::current().id) {
+			if(cpu.phys_id() == _startup_info.cpu) {
 				// switch to dlmalloc, since we have created its dependencies now
 				// note: by doing it here, the startup-heap-size does not depend on the number of CPUs
 				dlmalloc_init();

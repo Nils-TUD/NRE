@@ -65,7 +65,7 @@ private:
 		if(res != E_SUCCESS)
 			throw Exception(res);
 
-		Syscalls::assign_gsi(cap.get(),CPU::current().id);
+		Syscalls::assign_gsi(cap.get(),CPU::current().phys_id());
 		return cap.release();
 	}
 	void release() {

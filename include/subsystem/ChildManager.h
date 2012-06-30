@@ -142,7 +142,7 @@ private:
 	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
 
 	static inline size_t per_child_caps() {
-		return Math::next_pow2(Hip::get().service_caps() * _cpu_count);
+		return Math::next_pow2(Hip::get().service_caps() * CPU::count());
 	}
 	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
 
@@ -163,9 +163,8 @@ private:
 	Sm _regsm;
 	Sm _diesm;
 	// we need different Ecs to be able to receive a different number of caps
-	LocalEc *_ecs[Hip::MAX_CPUS];
-	LocalEc *_regecs[Hip::MAX_CPUS];
-	static size_t _cpu_count;
+	LocalEc **_ecs;
+	LocalEc **_regecs;
 };
 
 }

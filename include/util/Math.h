@@ -53,6 +53,13 @@ public:
 	}
 
 	/**
+	 * @return the number of set bits in v (population count)
+	 */
+	static int popcount(uint v) {
+		return __builtin_popcount(v);
+	}
+
+	/**
 	 * @return whether the ranges [<b1>..<b1>+<s1>) and [<b2>..<b2>+<s2>) overlap somewhere.
 	 */
 	static inline bool overlapped(uint64_t b1,size_t s1,uint64_t b2,size_t s2) {

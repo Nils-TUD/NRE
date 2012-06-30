@@ -110,7 +110,7 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 		return false;
 	// check if its a module
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type == Hip_mem::MB_MODULE && phys >= it->addr &&
+		if(it->type == HipMem::MB_MODULE && phys >= it->addr &&
 				phys + size <= Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE)) {
 			// don't give the user write-access here
 			flags = DataSpaceDesc::R;
@@ -119,7 +119,7 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	}
 	// check if the child wants to request none-device-memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type != Hip_mem::RESERVED && Math::overlapped(phys,size,it->addr,it->size))
+		if(it->type != HipMem::RESERVED && Math::overlapped(phys,size,it->addr,it->size))
 			return false;
 	}
 	return true;
@@ -163,6 +163,11 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 				else
 					_dsmng.release(desc,sel);
 				uf << E_SUCCESS;
+				break;
+
+			case DataSpace::SWITCH_TO:
+			case DataSpace::SHARE:
+				assert(false);
 				break;
 		}
 	}

@@ -38,9 +38,12 @@ public:
 	static CPU &current() {
 		return get(Ec::current()->cpu());
 	}
-	static CPU &get(cpu_t id) {
-		assert(id < Hip::MAX_CPUS);
-		return _cpus[id];
+	static CPU &get(cpu_t log_id) {
+		assert(log_id < Hip::MAX_CPUS);
+		return _cpus[log_id];
+	}
+	static size_t count() {
+		return _count;
 	}
 
 	static iterator begin() {
@@ -50,7 +53,6 @@ public:
 		return SListIterator<CPU>();
 	}
 
-	cpu_t id;
 	uint8_t flags;
 	uint8_t thread;
 	uint8_t core;
@@ -63,19 +65,29 @@ public:
 	Pt *unreg_pt;
 	Pt *get_pt;
 
+	cpu_t phys_id() const {
+		return _logtophys[_id];
+	}
+	cpu_t log_id() const {
+		return _id;
+	}
+
 	CPU *next() {
 		return _next;
 	}
 
 private:
-	CPU() : id(), ds_pt(), io_pt(), gsi_pt(), reg_pt(), unreg_pt(), get_pt(), _next() {
+	CPU() : ds_pt(), io_pt(), gsi_pt(), reg_pt(), unreg_pt(), get_pt(), _id(), _next() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);
 
+	cpu_t _id;
 	CPU *_next;
+	static size_t _count;
 	static CPU *_online;
 	static CPU _cpus[Hip::MAX_CPUS];
+	static cpu_t _logtophys[Hip::MAX_CPUS];
 };
 
 }

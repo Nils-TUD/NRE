@@ -24,7 +24,7 @@ class LogSessionData : public SessionData {
 public:
 	LogSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,id,caps,func), _bufpos(0), _buf(),
-		  _ec(receiver,_cpus.next()->id), _sc(), _cons(), _ds(), _sm() {
+		  _ec(receiver,_cpus.next()->log_id()), _sc(), _cons(), _ds(), _sm() {
 		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
 	}
 	virtual ~LogSessionData() {
@@ -124,7 +124,7 @@ void LogSessionData::receiver(void *) {
 int main() {
 	log = new LogService();
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		log->provide_on(it->id);
+		log->provide_on(it->log_id());
 	log->reg();
 	log->wait();
 	return 0;

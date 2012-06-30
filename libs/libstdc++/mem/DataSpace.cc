@@ -69,7 +69,7 @@ void DataSpace::share(Session &s) {
 	// for the dataspace protocol
 	uf << SHARE << _desc;
 	uf.delegate(_sel);
-	s.con().pt(CPU::current().id)->call(uf);
+	s.con().pt(CPU::current().log_id())->call(uf);
 	handle_response(uf);
 }
 

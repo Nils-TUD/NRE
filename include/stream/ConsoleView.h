@@ -63,7 +63,7 @@ private:
 		uf << Console::CREATE_VIEW << _in_ds.desc() << _out_ds.desc();
 		uf.delegate(_in_ds.sel(),0);
 		uf.delegate(_out_ds.sel(),1);
-		_sess.pt(CPU::current().id).call(uf);
+		_sess.pt(CPU::current().log_id()).call(uf);
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)
@@ -73,7 +73,7 @@ private:
 	void destroy_view() {
 		UtcbFrame uf;
 		uf << Console::DESTROY_VIEW << _view;
-		_sess.pt(CPU::current().id).call(uf);
+		_sess.pt(CPU::current().log_id()).call(uf);
 	}
 
 	ConsoleSession &_sess;

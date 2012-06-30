@@ -115,16 +115,16 @@ int main() {
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		kbsrv->provide_on(it->id);
+		kbsrv->provide_on(it->log_id());
 	kbsrv->reg();
 
 	if(hostkb->mouse_enabled()) {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse");
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			mousesrv->provide_on(it->id);
+			mousesrv->provide_on(it->log_id());
 		mousesrv->reg();
 
-		Sc *sc = new Sc(new GlobalEc(mousehandler,CPU::current().id),Qpd());
+		Sc *sc = new Sc(new GlobalEc(mousehandler,CPU::current().log_id()),Qpd());
 		sc->start();
 	}
 

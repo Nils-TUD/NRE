@@ -40,11 +40,14 @@ public:
 
 class ConsoleSession : public Session {
 public:
-	explicit ConsoleSession(Connection &con) : Session(con), _pts() {
-		for(cpu_t cpu = 0; cpu < Hip::MAX_CPUS; ++cpu) {
-			if(con.available_on(cpu))
-				_pts[cpu] = new Pt(caps() + cpu);
-		}
+	explicit ConsoleSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+			_pts[it->log_id()] = con.available_on(it->log_id()) ? new Pt(caps() + it->log_id()) : 0;
+	}
+	virtual ~ConsoleSession() {
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+			delete _pts[it->log_id()];
+		delete[] _pts;
 	}
 
 	Pt &pt(cpu_t cpu) const {
@@ -53,7 +56,7 @@ public:
 	}
 
 private:
-	Pt *_pts[Hip::MAX_CPUS];
+	Pt **_pts;
 };
 
 }

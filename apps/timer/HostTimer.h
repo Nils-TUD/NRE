@@ -16,22 +16,20 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/Ec.h>
-#include <Compiler.h>
-#include <CPU.h>
-#include <RCU.h>
+#pragma once
 
-namespace nul {
+#include <arch/Types.h>
 
-void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
-	ScopedCapSels scs;
-	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(_cpu).phys_id(),_event_base,type,pd->sel());
-	if(pd == Pd::current())
-		RCU::announce(this);
-	sel(scs.release());
-}
+class HostTimer {
+public:
+	typedef uint64_t ticks_t;
+	typedef uint64_t freq_t;
 
-// slot 0 is reserved
-size_t Ec::_tls_idx = 1;
+	HostTimer() {
+	}
+	virtual ~HostTimer() {
+	}
 
-}
+	virtual void start(ticks_t ticks) = 0;
+	virtual freq_t freq() = 0;
+};

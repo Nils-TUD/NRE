@@ -85,7 +85,8 @@ public:
 private:
 	explicit Child(ChildManager *cm,const char *cmdline)
 			: _cm(cm), _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(), _pts(),
-			  _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(), _gsis(),
+			  _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
+			  _last_fault_addr(), _last_fault_cpu(), _gsis(),
 			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
 	}
 	~Child() {
@@ -151,6 +152,8 @@ private:
 	uintptr_t _stack;
 	uintptr_t _utcb;
 	uintptr_t _hip;
+	uintptr_t _last_fault_addr;
+	cpu_t _last_fault_cpu;
 	BitField<Hip::MAX_GSIS> _gsis;
 	capsel_t _gsi_caps;
 	UserSm _sm;

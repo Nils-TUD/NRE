@@ -46,12 +46,12 @@ class GlobalEc : public Ec {
 	 *
 	 * @param uaddr the startup utcb address
 	 * @param cap the capability selector for the GlobalEc
-	 * @param cpu the CPU
+	 * @param cpu the physical CPU id
 	 * @param pd the protection domain
 	 * @param stack the stack address
 	 */
 	explicit GlobalEc(uintptr_t uaddr,capsel_t cap,cpu_t cpu,Pd *pd,uintptr_t stack)
-			: Ec(cpu,0,cap,stack,uaddr) {
+			: Ec(Hip::get().cpu_phys_to_log(cpu),0,cap,stack,uaddr) {
 		ExecEnv::set_current_ec(this);
 		ExecEnv::set_current_pd(pd);
 	}
@@ -63,7 +63,7 @@ public:
 	 * Creates a new GlobalEc that starts at <start> on CPU <cpu>.
 	 *
 	 * @param start the entry-point of the Ec
-	 * @param cpu the CPU to bind the Ec to
+	 * @param cpu the logical CPU id to bind the Ec to
 	 * @param pd the protection-domain (default: Pd::current())
 	 * @param utcb the utcb-address (0 = select it automatically)
 	 */

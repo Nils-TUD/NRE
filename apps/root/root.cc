@@ -57,7 +57,7 @@ CPU0Init::CPU0Init() {
 	CPU &cpu = CPU::current();
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	// use the local stack here since we can't map dataspaces yet
-	LocalEc *ec = new LocalEc(cpu.id,ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
+	LocalEc *ec = new LocalEc(cpu.log_id(),ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
 	cpu.ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
@@ -91,14 +91,14 @@ int main() {
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
 		// FIXME: why can't we use the memory above 4G?
-		if(it->type == Hip_mem::AVAILABLE && it->addr < 0x100000000)
+		if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
 			PhysicalMemory::add(it->addr,it->size);
 	}
 
 	// remove all not available memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// also remove the BIOS-area (make it available as device-memory)
-		if(it->type != Hip_mem::AVAILABLE || it->addr == 0)
+		if(it->type != HipMem::AVAILABLE || it->addr == 0)
 			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
 	}
 
@@ -118,8 +118,8 @@ int main() {
 
 	// now init the stuff for all other CPUs (using dlmalloc)
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		if(it->id != CPU::current().id) {
-			LocalEc *ec = new LocalEc(it->id);
+		if(it->log_id() != CPU::current().log_id()) {
+			LocalEc *ec = new LocalEc(it->log_id());
 			it->ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 			it->io_pt = new Pt(ec,Hypervisor::portal_io);
@@ -148,7 +148,7 @@ static void start_childs() {
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
-		if(it->type == Hip_mem::MB_MODULE && i++ >= 1) {
+		if(it->type == HipMem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
 			uintptr_t virt = VirtualMemory::alloc(it->size);
 			Hypervisor::map_mem(it->addr,virt,it->size);
@@ -169,7 +169,7 @@ static void portal_pagefault(capsel_t) {
 	uintptr_t eip = uf->rip;
 
 	Serial::get().writef("Root: Pagefault for %p @ %p on cpu %u, error=%#x\n",
-			pfaddr,eip,CPU::current().id,error);
+			pfaddr,eip,CPU::current().phys_id(),error);
 	ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1),uf->rbp,addrs,32);
 	Serial::get().writef("Backtrace:\n");
 	addr = addrs;

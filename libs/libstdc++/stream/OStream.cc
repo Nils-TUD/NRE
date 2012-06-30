@@ -26,7 +26,7 @@ namespace nul {
 char OStream::_hexchars_big[] = "0123456789ABCDEF";
 char OStream::_hexchars_small[] = "0123456789abcdef";
 
-void OStream::vwritef(const char *fmt, va_list ap) {
+void OStream::vwritef(const char *fmt,va_list ap) {
 	char c,b;
 	char *s;
 	llong n;
@@ -39,15 +39,15 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 		return;
 
 	while(1) {
-		/* wait for a '%' */
+		// wait for a '%'
 		while((c = *fmt++) != '%') {
 			write(c);
-			/* finished? */
+			// finished?
 			if(c == '\0')
 				return;
 		}
 
-		/* read flags */
+		// read flags
 		flags = 0;
 		pad = 0;
 		readFlags = true;
@@ -83,7 +83,7 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 			}
 		}
 
-		/* read pad-width */
+		// read pad-width
 		if(pad == 0) {
 			while(*fmt >= '0' && *fmt <= '9') {
 				pad = pad * 10 + (*fmt - '0');
@@ -91,7 +91,7 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 			}
 		}
 
-		/* read length */
+		// read length
 		switch(*fmt) {
 			case 'l':
 				flags |= LONG;
@@ -111,9 +111,8 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 				break;
 		}
 
-		/* determine OStream */
 		switch(c = *fmt++) {
-			/* signed integer */
+			// signed integer
 			case 'd':
 			case 'i':
 				if(flags & LONGLONG)
@@ -129,13 +128,13 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 				printnpad(n,pad,flags);
 				break;
 
-			/* pointer */
+			// pointer
 			case 'p':
 				u = va_arg(ap, uintptr_t);
 				printptr(u,flags);
 				break;
 
-			/* unsigned integer */
+			// unsigned integer
 			case 'b':
 			case 'u':
 			case 'o':
@@ -157,7 +156,7 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 				printupad(u,base,pad,flags);
 				break;
 
-			/* string */
+			// string
 			case 's':
 				s = va_arg(ap, char*);
 				if(pad > 0 && !(flags & PADRIGHT)) {
@@ -169,7 +168,7 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 					printpad(pad - n,flags);
 				break;
 
-			/* character */
+			// character
 			case 'c':
 				b = (char)va_arg(ap, uint);
 				write(b);
@@ -184,14 +183,14 @@ void OStream::vwritef(const char *fmt, va_list ap) {
 
 void OStream::printnpad(llong n,uint pad,uint flags) {
 	int count = 0;
-	/* pad left */
+	// pad left
 	if(!(flags & PADRIGHT) && pad > 0) {
 		size_t width = Digits::count_signed(n,10);
 		if(n > 0 && (flags & (FORCESIGN | SPACESIGN)))
 			width++;
 		count += printpad(pad - width,flags);
 	}
-	/* print '+' or ' ' instead of '-' */
+	// print '+' or ' ' instead of '-'
 	if(n > 0) {
 		if((flags & FORCESIGN)) {
 			write('+');
@@ -202,21 +201,21 @@ void OStream::printnpad(llong n,uint pad,uint flags) {
 			count++;
 		}
 	}
-	/* print number */
+	// print number
 	count += printn(n);
-	/* pad right */
+	// pad right
 	if((flags & PADRIGHT) && pad > 0)
 		printpad(pad - count,flags);
 }
 
 void OStream::printupad(ullong u,uint base,uint pad,uint flags) {
 	int count = 0;
-	/* pad left - spaces */
+	// pad left - spaces
 	if(!(flags & PADRIGHT) && !(flags & PADZEROS) && pad > 0) {
 		size_t width = Digits::count_unsigned(u,base);
 		count += printpad(pad - width,flags);
 	}
-	/* print base-prefix */
+	// print base-prefix
 	if((flags & PRINTBASE)) {
 		if(base == 16 || base == 8) {
 			write('0');
@@ -228,17 +227,17 @@ void OStream::printupad(ullong u,uint base,uint pad,uint flags) {
 			count++;
 		}
 	}
-	/* pad left - zeros */
+	// pad left - zeros
 	if(!(flags & PADRIGHT) && (flags & PADZEROS) && pad > 0) {
 		size_t width = Digits::count_unsigned(u,base);
 		count += printpad(pad - width,flags);
 	}
-	/* print number */
+	// print number
 	if(flags & CAPHEX)
 		count += printu(u,base,_hexchars_big);
 	else
 		count += printu(u,base,_hexchars_small);
-	/* pad right */
+	// pad right
 	if((flags & PADRIGHT) && pad > 0)
 		printpad(pad - count,flags);
 }
@@ -276,7 +275,7 @@ int OStream::printn(llong n) {
 void OStream::printptr(uintptr_t u,uint flags) {
 	size_t size = sizeof(uintptr_t);
 	flags |= PADZEROS;
-	/* 2 hex-digits per byte and a ':' every 2 bytes */
+	// 2 hex-digits per byte and a ':' every 2 bytes
 	while(size > 0) {
 		printupad((u >> (size * 8 - 16)) & 0xFFFF,16,4,flags);
 		size -= 2;

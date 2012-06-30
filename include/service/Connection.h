@@ -29,40 +29,44 @@ public:
 	 * @param service the service-name
 	 * @throws Exception if the connection failed
 	 */
-	explicit Connection(const char *service) : _available(), _caps(connect(service)), _pts() {
+	explicit Connection(const char *service)
+		: _available(), _caps(connect(service)), _pts(new Pt*[CPU::count()]) {
+		for(size_t i = 0; i < CPU::count(); ++i)
+			_pts[i] = 0;
 	}
 	/**
 	 * Closes the connection
 	 */
 	~Connection() {
-		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
+		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _pts[i];
-		CapSpace::get().free(_caps,Hip::MAX_CPUS);
+		delete[] _pts;
+		CapSpace::get().free(_caps,CPU::count());
 	}
 
 	/**
-	 * @param cpu the CPU
+	 * @param log_id the logical CPU id
 	 * @return true if you can use the given CPU to talk to the service
 	 */
-	bool available_on(cpu_t cpu) const {
-		return _available.is_set(cpu);
+	bool available_on(cpu_t log_id) const {
+		return _available.is_set(log_id);
 	}
 	/**
-	 * @param cpu the CPU
+	 * @param log_id the logical CPU id
 	 * @return the portal for CPU <cpu>
 	 */
-	Pt *pt(cpu_t cpu) {
-		assert(available_on(cpu));
-		if(_pts[cpu] == 0)
-			_pts[cpu] = new Pt(_caps + cpu);
-		return _pts[cpu];
+	Pt *pt(cpu_t log_id) {
+		assert(available_on(log_id));
+		if(_pts[log_id] == 0)
+			_pts[log_id] = new Pt(_caps + log_id);
+		return _pts[log_id];
 	}
 
 private:
 	capsel_t connect(const char *service) {
 		UtcbFrame uf;
-		ScopedCapSels caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+		ScopedCapSels caps(CPU::count(),CPU::count());
+		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << String(service);
 		CPU::current().get_pt->call(uf);
 		ErrorCode res;
@@ -78,7 +82,7 @@ private:
 
 	BitField<Hip::MAX_CPUS> _available;
 	capsel_t _caps;
-	Pt *_pts[Hip::MAX_CPUS];
+	Pt **_pts;
 };
 
 }

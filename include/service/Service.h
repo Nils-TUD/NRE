@@ -51,10 +51,9 @@ class SessionData : public RCUObject {
 public:
 	explicit SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func);
 	virtual ~SessionData() {
-		for(uint i = 0; i < Hip::MAX_CPUS; ++i) {
-			if(_objs[i])
-				delete _objs[i];
-		}
+		for(uint i = 0; i < CPU::count(); ++i)
+			delete _objs[i];
+		delete[] _objs;
 	}
 
 	size_t id() const {
@@ -75,7 +74,7 @@ protected:
 private:
 	size_t _id;
 	capsel_t _caps;
-	ObjCap *_objs[Hip::MAX_CPUS];
+	ObjCap **_objs;
 };
 
 class Service {
@@ -95,17 +94,21 @@ public:
 	};
 
 	explicit Service(const char *name,Pt::portal_func portal = 0)
-		: _regcaps(CapSpace::get().allocate(Hip::MAX_CPUS,Hip::MAX_CPUS)),
-		  _caps(CapSpace::get().allocate(MAX_SESSIONS * Hip::MAX_CPUS,MAX_SESSIONS * Hip::MAX_CPUS)),
-		  _sm(), _name(name), _func(portal), _insts(), _reg_cpus(), _sessions() {
+		: _regcaps(CapSpace::get().allocate(CPU::count(),CPU::count())),
+		  _caps(CapSpace::get().allocate(MAX_SESSIONS * CPU::count(),MAX_SESSIONS * CPU::count())),
+		  _sm(), _name(name), _func(portal), _insts(new ServiceInstance*[CPU::count()]),
+		  _reg_cpus(), _sessions() {
+		for(size_t i = 0; i < CPU::count(); ++i)
+			_insts[i] = 0;
 	}
 	virtual ~Service() {
 		for(size_t i = 0; i < MAX_SESSIONS; ++i)
 			delete _sessions[i];
-		for(size_t i = 0; i < Hip::MAX_CPUS; ++i)
+		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _insts[i];
-		CapSpace::get().free(_caps,MAX_SESSIONS * Hip::MAX_CPUS);
-		CapSpace::get().free(_regcaps,Hip::MAX_CPUS);
+		delete[] _insts;
+		CapSpace::get().free(_caps,MAX_SESSIONS * CPU::count());
+		CapSpace::get().free(_regcaps,CPU::count());
 	}
 
 	const char *name() const {
@@ -122,7 +125,7 @@ public:
 
 	template<class T>
 	T *get_session(capsel_t pid) {
-		return get_session_by_id<T>((pid - _caps) / Hip::MAX_CPUS);
+		return get_session_by_id<T>((pid - _caps) / CPU::count());
 	}
 	template<class T>
 	T *get_session_by_id(size_t id) {
@@ -142,7 +145,7 @@ public:
 	}
 	void reg() {
 		UtcbFrame uf;
-		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
 		uf << String(_name) << _reg_cpus;
 		CPU::current().reg_pt->call(uf);
 		ErrorCode res;
@@ -196,7 +199,7 @@ private:
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			if(_sessions[i] == 0) {
-				add_session(create_session(i,_caps + i * Hip::MAX_CPUS,_func));
+				add_session(create_session(i,_caps + i * CPU::count(),_func));
 				return _sessions[i];
 			}
 		}
@@ -205,7 +208,7 @@ private:
 
 	void destroy_session(capsel_t pid) {
 		ScopedLock<UserSm> guard(&_sm);
-		size_t i = (pid - _caps) / Hip::MAX_CPUS;
+		size_t i = (pid - _caps) / CPU::count();
 		SessionData *sess = _sessions[i];
 		if(!sess)
 			throw ServiceException(E_NOT_FOUND);
@@ -220,7 +223,7 @@ private:
 	UserSm _sm;
 	const char *_name;
 	Pt::portal_func _func;
-	ServiceInstance *_insts[Hip::MAX_CPUS];
+	ServiceInstance **_insts;
 	BitField<Hip::MAX_CPUS> _reg_cpus;
 	SessionData *_sessions[MAX_SESSIONS];
 };

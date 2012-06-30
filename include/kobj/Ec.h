@@ -64,7 +64,7 @@ protected:
 	/**
 	 * Constructor
 	 *
-	 * @param cpu the cpu to bind the Ec to
+	 * @param cpu the logical cpu to bind the Ec to
 	 * @param evb the offset for the event-portals
 	 * @param cap the capability (INVALID if a new one should be used)
 	 * @param stack the stack address (0 = create one automatically)
@@ -104,7 +104,7 @@ public:
 	}
 
 	/**
-	 * @return the cpu
+	 * @return the logical cpu id
 	 */
 	cpu_t cpu() const {
 		return _cpu;

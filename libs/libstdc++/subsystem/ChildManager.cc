@@ -26,34 +26,36 @@
 
 namespace nul {
 
-size_t ChildManager::_cpu_count = Hip::get().cpu_online_count();
-
 ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
 		_dsm(), _registry(), _sm(), _switchsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
+	_ecs = new LocalEc*[CPU::count()];
+	_regecs = new LocalEc*[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
-			ecs[i][it->id] = new LocalEc(it->id);
-			ecs[i][it->id]->set_tls(Ec::TLS_PARAM,this);
+			ecs[i][it->log_id()] = new LocalEc(it->log_id());
+			ecs[i][it->log_id()]->set_tls(Ec::TLS_PARAM,this);
 		}
 
-		UtcbFrameRef defuf(_ecs[it->id]->utcb());
+		UtcbFrameRef defuf(_ecs[it->log_id()]->utcb());
 		defuf.accept_translates();
 		defuf.accept_delegates(0);
 
-		UtcbFrameRef reguf(_regecs[it->id]->utcb());
-		reguf.accept_delegates(Math::next_pow2_shift<size_t>(Hip::MAX_CPUS));
+		UtcbFrameRef reguf(_regecs[it->log_id()]->utcb());
+		reguf.accept_delegates(Math::next_pow2_shift<size_t>(CPU::count()));
 	}
 }
 
 ChildManager::~ChildManager() {
-	for(size_t i = 0; i < MAX_CHILDS; ++i)
+	for(size_t i = 0; i < CPU::count(); ++i)
 		delete _childs[i];
-	for(size_t i = 0; i < Hip::MAX_CPUS; ++i) {
+	for(size_t i = 0; i < CPU::count(); ++i) {
 		delete _ecs[i];
 		delete _regecs[i];
 	}
+	delete[] _ecs;
+	delete[] _regecs;
 	CapSpace::get().free(MAX_CHILDS * per_child_caps());
 }
 
@@ -144,9 +146,9 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
 		capsel_t pts = _portal_caps + idx * per_child_caps();
-		c->_ptcount = _cpu_count * Portals::COUNT;
+		c->_ptcount = CPU::count() * Portals::COUNT;
 		c->_pts = new Pt*[c->_ptcount];
-		for(cpu_t cpu = 0; cpu < _cpu_count; ++cpu) {
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
 			size_t idx = cpu * Portals::COUNT;
 			size_t off = cpu * Hip::get().service_caps();
 			c->_pts[idx + 0] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
@@ -360,8 +362,8 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 		throw ServiceRegistryException(E_NOT_FOUND);
 
 	UtcbFrame uf;
-	ScopedCapSels caps(Hip::MAX_CPUS,Hip::MAX_CPUS);
-	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(Hip::MAX_CPUS),Crd::OBJ_ALL));
+	ScopedCapSels caps(CPU::count(),CPU::count());
+	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
 
@@ -383,7 +385,7 @@ void ChildManager::Portals::get_service(capsel_t) {
 
 		const ServiceRegistry::Service* s = cm->get_service(name);
 
-		uf.delegate(CapRange(s->pts(),Hip::MAX_CPUS,Crd::OBJ_ALL));
+		uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
 		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
@@ -695,10 +697,29 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			if((error & 0x4) && !(flags & ChildMemory::R))
 				kill = true;
 		}
+
+		// is the page already mapped (may be ok if two cpus accessed the page at the same time)
+		if(!kill && (flags & ChildMemory::M)) {
+			// same fault for same cpu again?
+			if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
+				Serial::get().writef("Child '%s': Caused fault for %p on cpu %u twice. Killing Ec\n",
+						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id());
+				kill = true;
+			}
+			else {
+				Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error);
+				Serial::get() << "Page already mapped. See regionlist:\n";
+				Serial::get() << c->reglist();
+				c->_last_fault_addr = pfaddr;
+				c->_last_fault_cpu = cpu;
+			}
+		}
+
 		if(kill) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-					c->cmdline().str(),pfaddr,eip,cpu,error);
+					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error);
 			//Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Ec\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
@@ -721,12 +742,6 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this
 			// one to notify the parent that he should map it?
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
-		}
-		else {
-			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-					c->cmdline().str(),pfaddr,eip,cpu,error);
-			Serial::get() << "Page already mapped. See regionlist:\n";
-			Serial::get() << c->reglist();
 		}
 	}
 	catch(...) {
