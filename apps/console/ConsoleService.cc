@@ -25,7 +25,7 @@ void ConsoleService::init() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalEc *ec = get_ec(it->id);
 		UtcbFrameRef uf(ec->utcb());
-		uf.accept_delegates(0);
+		uf.accept_delegates(1);
 	}
 
 	// add dummy sessions for boot screen and HV screen

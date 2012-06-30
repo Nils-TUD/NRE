@@ -27,10 +27,10 @@ ConsoleSessionData::~ConsoleSessionData() {
 	}
 }
 
-ConsoleSessionView *ConsoleSessionData::create_view(nul::DataSpace *in_ds) {
+ConsoleSessionView *ConsoleSessionData::create_view(DataSpace *in_ds,DataSpace *out_ds) {
 	ScopedLock<UserSm> guard(&_sm);
 	uint id = _next_id++;
-	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds));
+	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds,out_ds));
 	iterator it = _views.append(v.get());
 	ConsoleService::get()->active()->to_back();
 	_view_cycler.reset(_views.begin(),it,_views.end());
@@ -63,16 +63,17 @@ void ConsoleSessionData::portal(capsel_t pid) {
 		uf >> cmd;
 		switch(cmd) {
 			case Console::CREATE_VIEW: {
-				DataSpaceDesc indesc;
+				DataSpaceDesc indesc,outdesc;
 				capsel_t insel = uf.get_delegated(0).offset();
-				uf >> indesc;
+				capsel_t outsel = uf.get_delegated(0).offset();
+				uf >> indesc >> outdesc;
 				uf.finish_input();
 
-				ConsoleSessionView *view = sess->create_view(new DataSpace(indesc,insel));
+				ConsoleSessionView *view = sess->create_view(
+						new DataSpace(indesc,insel),new DataSpace(outdesc,outsel));
 
 				uf.accept_delegates();
-				uf.delegate(view->out_ds().sel());
-				uf << E_SUCCESS << view->id() << view->out_ds().desc();
+				uf << E_SUCCESS << view->id();
 			}
 			break;
 

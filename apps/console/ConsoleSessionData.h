@@ -77,7 +77,7 @@ public:
 			ConsoleService::get()->screen()->set_page(_page,_page);
 	}
 
-	ConsoleSessionView *create_view(nul::DataSpace *in_ds);
+	ConsoleSessionView *create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
 	bool destroy_view(uint view);
 
 	PORTAL static void portal(capsel_t pid);

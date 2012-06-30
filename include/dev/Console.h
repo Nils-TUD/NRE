@@ -10,14 +10,11 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <kobj/Pt.h>
 #include <service/Session.h>
 #include <service/Connection.h>
-#include <service/Producer.h>
-#include <service/Consumer.h>
-#include <stream/IStream.h>
-#include <stream/OStream.h>
 #include <dev/Keyboard.h>
-#include <mem/DataSpace.h>
+#include <Hip.h>
 
 namespace nul {
 
@@ -32,21 +29,6 @@ public:
 	enum ViewCommand {
 		CREATE_VIEW,
 		DESTROY_VIEW
-	};
-
-	enum Command {
-		WRITE,
-		SCROLL
-	};
-
-	struct SendPacket {
-		Command cmd;
-		uint8_t x;
-		uint8_t y;
-		uint8_t color;
-		uint8_t character;
-		uint8_t len;
-		uint8_t buffer[BUF_SIZE];
 	};
 
 	struct ReceivePacket {

@@ -24,7 +24,7 @@ class ConsoleSessionData;
 
 class ConsoleSessionView : public nul::RCUObject, public nul::DListItem {
 public:
-	ConsoleSessionView(ConsoleSessionData *sess,uint id,nul::DataSpace *in_ds);
+	ConsoleSessionView(ConsoleSessionData *sess,uint id,nul::DataSpace *in_ds,nul::DataSpace *out_ds);
 	virtual ~ConsoleSessionView();
 
 	uint id() const {
@@ -40,7 +40,7 @@ public:
 		return _prod;
 	}
 	nul::DataSpace &out_ds() {
-		return _out_ds;
+		return *_out_ds;
 	}
 
 private:
@@ -49,7 +49,7 @@ private:
 	uint _pos;
 	bool _active;
 	nul::DataSpace *_in_ds;
-	nul::DataSpace _out_ds;
+	nul::DataSpace *_out_ds;
 	nul::Producer<nul::Console::ReceivePacket> _prod;
 	ConsoleSessionData *_sess;
 	static nul::ForwardCycler<nul::CPU::iterator,nul::LockPolicyDefault<nul::SpinLock> > _cpus;
