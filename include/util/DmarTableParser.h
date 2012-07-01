@@ -38,7 +38,7 @@ public:
 
 	class DeviceScope {
 	public:
-		DeviceScope(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit DeviceScope(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
 			//printf("%p len = %u (%u), type = %u\n", base, _elem->length, size_left, _elem->type);
 		}
 
@@ -84,7 +84,7 @@ public:
 
 	class Dhrd {
 	public:
-		Dhrd(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit Dhrd(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
 		}
 
 		uint8_t flags() const {
@@ -122,7 +122,7 @@ public:
 
 	class Element {
 	public:
-		Element(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit Element(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
 		}
 
 		Type type() const {
@@ -158,7 +158,7 @@ public:
 		return Element(_base + 48,_header->length - 48);
 	}
 
-	DmarTableParser(const char *base) : _base(base) {
+	explicit DmarTableParser(const char *base) : _base(base) {
 		assert(_header->signature == 0x52414d44U); // "DMAR"
 	}
 

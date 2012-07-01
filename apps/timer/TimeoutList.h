@@ -43,7 +43,7 @@ class TimeoutList {
 	};
 
 public:
-	TimeoutList() : _entries() {
+	explicit TimeoutList() : _entries() {
 		for(size_t i = 0; i < ENTRIES; i++) {
 			_entries[i]._prev = _entries + i;
 			_entries[i]._next = _entries + i;

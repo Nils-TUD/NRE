@@ -82,6 +82,8 @@ private:
 		uint b_v = (b.package << 16) | (b.core << 8) | (b.thread);
 		return (a_v <= b_v);
 	}
+
+	Topology();
 };
 
 }

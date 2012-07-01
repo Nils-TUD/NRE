@@ -35,7 +35,7 @@ public:
 	 * @param count the number of cap selectors
 	 * @param align the alignment
 	 */
-	explicit ScopedCapSels(unsigned count = 1,unsigned align = 1)
+	explicit ScopedCapSels(uint count = 1,uint align = 1)
 		: _cap(CapSpace::get().allocate(count,align)), _count(count), _owned(true) {
 	}
 	/**
@@ -70,7 +70,7 @@ private:
 
 private:
 	capsel_t _cap;
-	unsigned _count;
+	uint _count;
 	bool _owned;
 };
 

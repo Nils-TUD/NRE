@@ -33,7 +33,7 @@ void HostTimer::ClientData::init(cpu_t cpuno,HostTimer::PerCpu *per_cpu) {
 	cpu = cpuno;
 }
 
-HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_wallclock)
+HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 		: _clocks_per_tick(0), _timer(), _rtc(), _clock(Timer::WALLCLOCK_FREQ), _per_cpu(), _xcpu_up(0) {
 	if(!force_pit) {
 		try {
@@ -54,7 +54,7 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_wallclock)
 			_clocks_per_tick / CPT_RES,_clocks_per_tick % CPT_RES,CPT_RES);
 
 	// Get wallclock time
-	if(slow_wallclock)
+	if(slow_rtc)
 		_rtc.sync();
 	timevalue_t msecs = _rtc.timestamp();
 	DateInfo date;

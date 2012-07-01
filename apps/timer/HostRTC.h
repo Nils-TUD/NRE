@@ -30,7 +30,7 @@ class HostRTC {
 	};
 
 public:
-	HostRTC() : _ports(PORT_BASE,2), _clock(1000) {
+	explicit HostRTC() : _ports(PORT_BASE,2), _clock(1000) {
 	}
 
 	/**

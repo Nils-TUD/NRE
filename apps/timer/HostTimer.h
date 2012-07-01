@@ -51,7 +51,7 @@ public:
 		cpu_t cpu;
 		nul::Sm *sm;
 
-		ClientData() : abstimeout(0), count(0), nr(0), cpu(0), sm(0) {
+		explicit ClientData() : abstimeout(0), count(0), nr(0), cpu(0), sm(0) {
 		}
 
 		void init(cpu_t cpu,HostTimer::PerCpu *per_cpu);
@@ -89,7 +89,7 @@ private:
 		RemoteSlot *slots; // Array
 		size_t slot_count; // with this many entries
 
-		PerCpu(HostTimer *ht,cpu_t cpu)
+		explicit PerCpu(HostTimer *ht,cpu_t cpu)
 			: has_timer(false), timer(0), abstimeouts(), ec(cpu),
 			  worker_pt(&ec,portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
 			  remote_slot(), slots(), slot_count() {
@@ -98,7 +98,7 @@ private:
 	};
 
 public:
-	HostTimer(bool force_pit = false,bool force_hpet_legacy = false,bool slow_wallclock = false);
+	explicit HostTimer(bool force_pit = false,bool force_hpet_legacy = false,bool slow_rtc = false);
 
 	void setup_clientdata(ClientData *data,cpu_t cpu) {
 		data->init(cpu,_per_cpu[cpu]);

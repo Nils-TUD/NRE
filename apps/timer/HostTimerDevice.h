@@ -25,7 +25,7 @@ class HostTimerDevice {
 public:
 	class Timer {
 	public:
-		Timer() {
+		explicit Timer() {
 		}
 		virtual ~Timer() {
 		}

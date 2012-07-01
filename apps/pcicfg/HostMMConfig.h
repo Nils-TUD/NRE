@@ -49,7 +49,7 @@ class HostMMConfig : public Config {
 
 	class MMConfigRange : public nul::SListItem {
 	public:
-		MMConfigRange(uintptr_t base,uintptr_t start,size_t size)
+		explicit MMConfigRange(uintptr_t base,uintptr_t start,size_t size)
 			: _start(start), _size(size),
 			  _ds(size * nul::ExecEnv::PAGE_SIZE,nul::DataSpaceDesc::LOCKED,nul::DataSpaceDesc::R,base),
 			  _mmconfig(reinterpret_cast<uint*>(_ds.virt())) {
@@ -78,7 +78,7 @@ class HostMMConfig : public Config {
 	};
 
 public:
-	HostMMConfig();
+	explicit HostMMConfig();
 
 	virtual bool contains(uint32_t bdf,size_t offset) const {
 		for(nul::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {

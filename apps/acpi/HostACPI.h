@@ -49,7 +49,7 @@ class HostACPI {
 	} PACKED;
 
 public:
-	HostACPI();
+	explicit HostACPI();
 
 	const nul::DataSpace &mem() const {
 		return *_ds;

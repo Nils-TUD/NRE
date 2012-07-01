@@ -22,7 +22,7 @@
 
 class Config {
 public:
-	Config() {
+	explicit Config() {
 	}
 	virtual ~Config() {
 	}

@@ -77,7 +77,7 @@ private:
 	}
 
 public:
-	capsel_t allocate(unsigned count = 1,unsigned align = 1) {
+	capsel_t allocate(uint count = 1,uint align = 1) {
 		ScopedLock<SpinLock> lock(&_lck);
 		capsel_t res = (_off + align - 1) & ~(align - 1);
 		if(res + count < res || res + count > Hip::get().cfg_cap)
@@ -85,7 +85,7 @@ public:
 		_off = res + count;
 		return res;
 	}
-	void free(capsel_t,unsigned = 1) {
+	void free(capsel_t,uint = 1) {
 		// TODO implement me
 	}
 

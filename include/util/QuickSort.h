@@ -27,7 +27,6 @@ class Quicksort {
 public:
 	typedef bool (*cmp_func)(T const &a,T const &b);
 
-public:
 	static void sort(cmp_func cmp,T a[],size_t count) {
 		sort(cmp,a,0,count - 1);
 	}
@@ -55,7 +54,6 @@ private:
 		return si;
 	}
 
-private:
 	Quicksort();
 };
 

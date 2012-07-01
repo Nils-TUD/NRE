@@ -33,9 +33,9 @@ struct DateInfo {
 	int yday;
 	int isdsdt;
 
-	DateInfo() : sec(), min(), hour(), mday(), mon(), year(), wday(), yday(), isdsdt() {
+	explicit DateInfo() : sec(), min(), hour(), mday(), mon(), year(), wday(), yday(), isdsdt() {
 	}
-	DateInfo(int _year, int _mon, int _mday, int _hour, int _min, int _sec)
+	explicit DateInfo(int _year, int _mon, int _mday, int _hour, int _min, int _sec)
 		: sec(_sec), min(_min), hour(_hour), mday(_mday), mon(_mon), year(_year), wday(0), yday(0),
 		  isdsdt(0) {
 	}
