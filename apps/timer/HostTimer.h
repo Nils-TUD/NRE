@@ -73,7 +73,7 @@ private:
 
 	struct PerCpu {
 		bool has_timer;
-		DeviceTimer *timer;
+		HostTimerDevice::Timer *timer;
 		TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
 
 		nul::LocalEc ec;

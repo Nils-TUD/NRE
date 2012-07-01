@@ -69,11 +69,11 @@ class HostHPET : public HostTimerDevice {
 		HostHpetTimer timer[24];
 	};
 
-	class HPETTimer : public DeviceTimer {
+	class HPETTimer : public Timer {
 		friend class HostHPET;
 
 	public:
-		explicit HPETTimer() : DeviceTimer(), _no(), _gsi(), _reg() {
+		explicit HPETTimer() : Timer(), _no(), _gsi(), _reg() {
 		}
 
 		virtual nul::Gsi &gsi() {
@@ -116,7 +116,7 @@ public:
 	virtual size_t timer_count() const {
 		return _usable_timers;
 	}
-	virtual DeviceTimer *timer(size_t i) {
+	virtual Timer *timer(size_t i) {
 		return _timer + i;
 	}
 	virtual timevalue_t freq() const {
@@ -143,12 +143,12 @@ public:
 	    _reg->config |= ENABLE_CNF;
 	    _last = ticks;
 	}
-	virtual void enable(DeviceTimer *t,bool enable_ints) {
+	virtual void enable(Timer *t,bool enable_ints) {
 		HPETTimer *timer = static_cast<HPETTimer*>(t);
 		if(enable_ints)
 			timer->_reg->config |= INT_ENB_CNF;
 	}
-	virtual void ack_irq(DeviceTimer *t) {
+	virtual void ack_irq(Timer *t) {
 		HPETTimer *timer = static_cast<HPETTimer*>(t);
 		if(timer->_ack != 0)
 			_reg->isr = timer->_ack;

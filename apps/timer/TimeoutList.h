@@ -22,8 +22,6 @@
 #include <Exception.h>
 #include <Assert.h>
 
-#include "DeviceTimer.h"
-
 class TimerException : public nul::Exception {
 public:
 	explicit TimerException(nul::ErrorCode code) throw() : nul::Exception(code) {

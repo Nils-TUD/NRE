@@ -19,11 +19,22 @@
 #pragma once
 
 #include <arch/Types.h>
-
-#include "DeviceTimer.h"
+#include <kobj/Gsi.h>
 
 class HostTimerDevice {
 public:
+	class Timer {
+	public:
+		Timer() {
+		}
+		virtual ~Timer() {
+		}
+
+		virtual nul::Gsi &gsi() = 0;
+		virtual void init(cpu_t cpu) = 0;
+		virtual void program_timeout(timevalue_t next) = 0;
+	};
+
 	explicit HostTimerDevice() {
 	}
 	virtual ~HostTimerDevice() {
@@ -35,12 +46,12 @@ public:
 
 	virtual bool is_periodic() const = 0;
 	virtual size_t timer_count() const = 0;
-	virtual DeviceTimer *timer(size_t i) = 0;
+	virtual Timer *timer(size_t i) = 0;
 	virtual bool is_in_past(timevalue_t ticks) const = 0;
 	virtual timevalue_t next_timeout(timevalue_t now,timevalue_t next) = 0;
 	virtual void start(timevalue_t ticks) = 0;
-	virtual void enable(DeviceTimer *t,bool enable_ints) = 0;
-	virtual void ack_irq(DeviceTimer *) {
+	virtual void enable(Timer *t,bool enable_ints) = 0;
+	virtual void ack_irq(Timer *) {
 	}
 	virtual timevalue_t freq() const = 0;
 };

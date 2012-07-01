@@ -130,8 +130,7 @@ static void shm_service(int argc,char *argv[]) {
 	srv->unreg();
 }
 
-static void shm_client(int argc,char *argv[]) {
-	assert(argc == 2);
+static void shm_client(int,char *argv[]) {
 	size_t ds_size = IStringStream::read_from<size_t>(argv[1]);
 	Connection con("shm");
 	Session sess(con);

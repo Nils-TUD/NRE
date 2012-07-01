@@ -31,9 +31,9 @@ class HostPIT : public HostTimerDevice {
 		PORT_BASE		= 0x40
 	};
 
-	class PitTimer : public DeviceTimer {
+	class PitTimer : public Timer {
 	public:
-		explicit PitTimer() : DeviceTimer(), _gsi(IRQ) {
+		explicit PitTimer() : Timer(), _gsi(IRQ) {
 		}
 
 		virtual nul::Gsi &gsi() {
@@ -67,7 +67,7 @@ public:
 	virtual size_t timer_count() const {
 		return 1;
 	}
-	virtual DeviceTimer *timer(size_t) {
+	virtual Timer *timer(size_t) {
 		return &_timer;
 	}
 	virtual timevalue_t freq() const {
@@ -83,7 +83,7 @@ public:
 	virtual void start(timevalue_t ticks) {
 		_ticks = ticks;
 	}
-	virtual void enable(DeviceTimer *,bool) {
+	virtual void enable(Timer *,bool) {
 		// nothing to do
 	}
 
