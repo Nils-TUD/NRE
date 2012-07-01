@@ -9,14 +9,17 @@
 
 #pragma once
 
+#include <kobj/Gsi.h>
 #include <mem/DataSpace.h>
+#include <util/Atomic.h>
 #include <Assert.h>
 
-#include "HostTimer.h"
+#include "HostTimerDevice.h"
 
-class HostHPET : public HostTimer {
+class HostHPET : public HostTimerDevice {
 	enum {
-		MAX_TIMERS		= 24
+		MAX_TIMERS				= 24,
+		MIN_TICKS_BETWEEN_WRAP	= 4
 	};
 
 	enum {
@@ -66,36 +69,106 @@ class HostHPET : public HostTimer {
 		HostHpetTimer timer[24];
 	};
 
-	struct Timer {
-		unsigned _no;
-		HostHpetTimer *_reg;
+	class HPETTimer : public Timer {
+		friend class HostHPET;
 
-		Timer() : _no(), _reg() {
+	public:
+		explicit HPETTimer() : Timer(), _no(), _gsi(), _reg() {
 		}
+
+		virtual nul::Gsi &gsi() {
+			return *_gsi;
+		}
+		virtual void init(cpu_t cpu);
+		virtual void program_timeout(uint64_t next) {
+			// Program a new timeout. Top 32-bits are discarded.
+			_reg->comp[0] = next;
+		}
+
+	private:
+		uint _no;
+		uint _ack;
+		nul::Gsi *_gsi;
+		HostHpetTimer *_reg;
+		static uint _assigned_irqs;
 	};
 
 public:
-	HostHPET(bool force_legacy);
+	explicit HostHPET(bool force_legacy);
 
+	virtual uint64_t last_ticks() {
+		return nul::Atomic::read_atonce(_last);
+	}
+	virtual uint64_t current_ticks() {
+		uint32_t r = _reg->counter[0];
+		return correct_overflow(nul::Atomic::read_atonce(_last),r);
+	}
+	virtual uint64_t update_ticks(bool) {
+		uint64_t newv = _reg->counter[0];
+		newv = correct_overflow(nul::Atomic::read_atonce(_last),newv);
+		nul::Atomic::write_atonce(_last,newv);
+		return newv;
+	}
+
+	virtual bool is_periodic() const {
+		return false;
+	}
+	virtual size_t timer_count() const {
+		return _usable_timers;
+	}
+	virtual Timer *timer(size_t i) {
+		return _timer + i;
+	}
+	virtual freq_t freq() {
+		return _freq;
+	}
+
+	virtual bool is_in_past(uint64_t ticks) {
+		return static_cast<int32_t>(ticks - _reg->counter[0]) <= 8;
+	}
+	virtual uint64_t next_timeout(uint64_t now,uint64_t next) {
+		// Generate at least some IRQs between wraparound IRQs to make
+		// overflow detection robust. Only needed with HPETs.
+		if(next == ~0ULL ||
+				(static_cast<int64_t>(next - now) > 0x100000000LL / MIN_TICKS_BETWEEN_WRAP)) {
+			next = now + 0x100000000ULL / MIN_TICKS_BETWEEN_WRAP;
+		}
+		return next;
+	}
 	virtual void start(ticks_t ticks) {
 	    assert((_reg->config & ENABLE_CNF) == 0);
 		// Start HPET counter at value. HPET might be 32-bit. In this case,
 		// the upper 32-bit of value are ignored.
 	    _reg->main    = ticks;
 	    _reg->config |= ENABLE_CNF;
+	    _last = ticks;
 	}
-	virtual freq_t freq() {
-		return _freq;
+	virtual void enable(Timer *t,bool enable_ints) {
+		HPETTimer *timer = static_cast<HPETTimer*>(t);
+		if(enable_ints)
+			timer->_reg->config |= INT_ENB_CNF;
+	}
+	virtual void ack_irq(Timer *t) {
+		HPETTimer *timer = static_cast<HPETTimer*>(t);
+		if(timer->_ack != 0)
+			_reg->isr = timer->_ack;
 	}
 
 private:
+	static uint64_t correct_overflow(uint64_t last,uint32_t newv) {
+		bool of = (static_cast<uint32_t>(newv) < static_cast<uint32_t>(last));
+		return (((last >> 32) + of) << 32) | newv;
+	}
+
 	static uintptr_t get_address();
+	static uint16_t get_rid(uint8_t block,uint comparator);
 
 	uintptr_t _addr;
 	nul::DataSpace _mem;
 	HostHpetRegister *_reg;
 	uint _usable_timers;
-	Timer _timer[MAX_TIMERS];
+	HPETTimer _timer[MAX_TIMERS];
 	freq_t _freq;
+	volatile uint64_t _last;
 	static bool _verbose;
 };

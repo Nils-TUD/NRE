@@ -31,6 +31,32 @@ public:
 		return __sync_bool_compare_and_swap(ptr,oldval,newval);
 	}
 
+	static uint64_t read_atonce(volatile uint64_t &v) {
+		uint32_t lo = 0;
+		uint32_t hi = 0;
+		// We don't need a lock prefix, because this is only meant to be
+		// uninterruptible not atomic. So don't use this for SMP!
+		asm ("cmpxchg8b %2\n"
+				: "+a" (static_cast<uint32_t>(lo)), "+d" (static_cast<uint32_t>(hi))
+				: "m" (v), "b" (static_cast<uint32_t>(lo)), "c" (static_cast<uint32_t>(hi)));
+		return (static_cast<uint64_t>(hi) << 32) | lo;
+	}
+
+	static void write_atonce(volatile uint64_t &to,uint64_t value) {
+		uint32_t nlo = value;
+		uint32_t nhi = value >> 32;
+		uint32_t olo = 0;
+		uint32_t ohi = 0;
+
+		// We iterate at least twice to get the correct old value and then
+		// to substitute it.
+		asm ("1: cmpxchg8b %0\n"
+				"jne 1b"
+				: "+m" (to),
+				"+a" (static_cast<uint32_t>(olo)), "+d" (static_cast<uint32_t>(ohi))
+				: "b" (static_cast<uint32_t>(nlo)), "c" (static_cast<uint32_t>(nhi)));
+	}
+
 private:
 	Atomic();
 };

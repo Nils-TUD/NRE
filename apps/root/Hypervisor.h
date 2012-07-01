@@ -25,8 +25,10 @@ public:
 	static void map_mem(uintptr_t phys,uintptr_t virt,size_t size);
 	static char *map_string(uintptr_t phys,uint max_pages = 2);
 
-	static void allocate_gsi(uint gsi) {
+	static void allocate_gsi(uint &gsi,void *pcicfg = 0) {
 		nul::ScopedLock<nul::UserSm> guard(&_gsi_sm);
+		if(pcicfg)
+			gsi = nul::Hip::get().cfg_gsi - ++_next_msi;
 		if(_gsis.is_set(gsi))
 			throw nul::Exception(nul::E_EXISTS);
 		_gsis.set(gsi);
@@ -54,5 +56,6 @@ private:
 	static nul::BitField<nul::Hip::MAX_GSIS> _gsis;
 	static nul::UserSm _io_sm;
 	static nul::UserSm _gsi_sm;
+	static uint _next_msi;
 	static Hypervisor _init;
 };

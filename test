@@ -8,7 +8,8 @@ bin/apps/log provides=log
 bin/apps/keyboard provides=keyboard
 bin/apps/console provides=console
 bin/apps/acpi provides=acpi
-bin/apps/timer
+bin/apps/pcicfg provides=pcicfg
+bin/apps/timer provides=timer
 bin/apps/test
 #bin/apps/sub
 

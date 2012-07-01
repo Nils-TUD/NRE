@@ -87,7 +87,7 @@ private:
 			: _cm(cm), _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(), _pts(),
 			  _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
 			  _last_fault_addr(), _last_fault_cpu(), _gsis(),
-			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _sm() {
+			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _sm() {
 	}
 	~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
@@ -156,6 +156,7 @@ private:
 	cpu_t _last_fault_cpu;
 	BitField<Hip::MAX_GSIS> _gsis;
 	capsel_t _gsi_caps;
+	capsel_t _gsi_next;
 	UserSm _sm;
 };
 

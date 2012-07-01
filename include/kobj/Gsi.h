@@ -34,16 +34,36 @@ public:
 	 * Allocates the given GSI from the parent
 	 *
 	 * @param gsi the GSI
+	 * @param cpu the CPU to route the gsi to
 	 */
-	explicit Gsi(uint gsi) : Sm(alloc(gsi),true), _gsi(gsi) {
+	explicit Gsi(uint gsi,cpu_t cpu = CPU::current().log_id()) : Sm(alloc(gsi,0,cpu),true) {
 		// neither keep the cap nor the selector
 		set_flags(0);
 	}
+
+	/**
+	 * Allocates a new GSI for the device specified by the given PCI configuration space location
+	 *
+	 * @param pcicfg the location in the PCI configuration space
+	 * @param cpu the CPU to route the gsi to
+	 */
+	explicit Gsi(void *pcicfg,cpu_t cpu = CPU::current().log_id()) : Sm(alloc(0,pcicfg,cpu),true) {
+		// neither keep the cap nor the selector
+		set_flags(0);
+	}
+
 	/**
 	 * Releases the GSI
 	 */
 	virtual ~Gsi() {
 		release();
+	}
+
+	uint64_t msi_addr() const {
+		return _msi_addr;
+	}
+	word_t msi_value() const {
+		return _msi_value;
 	}
 
 	/**
@@ -54,18 +74,19 @@ public:
 	}
 
 private:
-	capsel_t alloc(uint gsi) {
+	capsel_t alloc(uint gsi,void *pcicfg,cpu_t cpu) {
 		UtcbFrame uf;
 		ScopedCapSels cap;
 		uf.set_receive_crd(Crd(cap.get(),0,Crd::OBJ_ALL));
-		uf << ALLOC << gsi;
+		uf << ALLOC << gsi << pcicfg;
 		CPU::current().gsi_pt->call(uf);
+
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
-
-		Syscalls::assign_gsi(cap.get(),CPU::current().phys_id());
+		uf >> _gsi;
+		Syscalls::assign_gsi(cap.get(),CPU::get(cpu).phys_id(),pcicfg,&_msi_addr,&_msi_value);
 		return cap.release();
 	}
 	void release() {
@@ -79,6 +100,8 @@ private:
 		}
 	}
 
+	uint64_t _msi_addr;
+	word_t _msi_value;
 	uint _gsi;
 };
 

@@ -401,10 +401,14 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		uint gsi;
+		void *pcicfg = 0;
 		Gsi::Op op;
 		uf >> op >> gsi;
+		if(op == Gsi::ALLOC)
+			uf >> pcicfg;
 		uf.finish_input();
 
+		capsel_t cap = 0;
 		ScopedLock<UserSm> guard(&c->_sm);
 		{
 			if(gsi >= Hip::MAX_GSIS)
@@ -412,25 +416,33 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 			// make sure that just the owner can release it
 			if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
 				throw Exception(E_ARGS_INVALID);
+			if(c->_gsi_next == Hip::MAX_GSIS)
+				throw Exception(E_CAPACITY);
 
 			{
 				UtcbFrame puf;
-				if(op == Gsi::ALLOC)
-					puf.set_receive_crd(Crd(c->_gsi_caps + gsi,0,Crd::OBJ_ALL));
 				puf << op << gsi;
+				if(op == Gsi::ALLOC) {
+					puf << pcicfg;
+					cap = c->_gsi_next++;
+					puf.set_receive_crd(Crd(c->_gsi_caps + cap,0,Crd::OBJ_ALL));
+				}
 				CPU::current().gsi_pt->call(puf);
 				ErrorCode res;
 				puf >> res;
 				if(res != E_SUCCESS)
 					throw Exception(res);
-
+				if(op == Gsi::ALLOC)
+					puf >> gsi;
 				c->gsis().set(gsi,op == Gsi::ALLOC);
 			}
-
-			if(op == Gsi::ALLOC)
-				uf.delegate(c->_gsi_caps + gsi);
 		}
+
 		uf << E_SUCCESS;
+		if(op == Gsi::ALLOC) {
+			uf << gsi;
+			uf.delegate(c->_gsi_caps + cap);
+		}
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.get_receive_crd(),true);

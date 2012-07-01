@@ -19,10 +19,11 @@
 #pragma once
 
 #include <kobj/Ports.h>
+#include <kobj/Gsi.h>
 
-#include "HostTimer.h"
+#include "HostTimerDevice.h"
 
-class HostPIT : public HostTimer {
+class HostPIT : public HostTimerDevice {
 	enum {
 		FREQ			= 1193180ULL,
 		DEFAULT_PERIOD	= 1000ULL, // ms
@@ -30,18 +31,65 @@ class HostPIT : public HostTimer {
 		PORT_BASE		= 0x40
 	};
 
-public:
-	HostPIT(uint period_us);
+	class PitTimer : public Timer {
+	public:
+		explicit PitTimer() : Timer(), _gsi(IRQ) {
+		}
 
-	virtual void start(ticks_t ticks) {
-		_ticks = ticks;
+		virtual nul::Gsi &gsi() {
+			return _gsi;
+		}
+		virtual void init(cpu_t) {
+		}
+		virtual void program_timeout(uint64_t) {
+		}
+
+	private:
+		nul::Gsi _gsi;
+	};
+
+public:
+	explicit HostPIT(uint period_us);
+
+	virtual uint64_t last_ticks() {
+		return nul::Atomic::read_atonce(_ticks);
+	}
+	virtual uint64_t current_ticks() {
+		return nul::Atomic::read_atonce(_ticks);
+	}
+	virtual uint64_t update_ticks(bool refresh_only) {
+		return refresh_only ? _ticks : ++_ticks;
+	}
+
+	virtual bool is_periodic() const {
+		return true;
+	}
+	virtual size_t timer_count() const {
+		return 1;
+	}
+	virtual Timer *timer(size_t) {
+		return &_timer;
 	}
 	virtual freq_t freq() {
 		return _freq;
+	}
+
+	virtual bool is_in_past(uint64_t ticks) {
+		return ticks < _ticks;
+	}
+	virtual uint64_t next_timeout(uint64_t,uint64_t next) {
+		return next;
+	}
+	virtual void start(ticks_t ticks) {
+		_ticks = ticks;
+	}
+	virtual void enable(Timer *,bool) {
+		// nothing to do
 	}
 
 private:
 	nul::Ports _ports;
 	freq_t _freq;
 	ticks_t _ticks;
+	PitTimer _timer;
 };

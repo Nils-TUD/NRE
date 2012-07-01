@@ -16,39 +16,88 @@
  * General Public License version 2 for more details.
  */
 
-#include <stream/Serial.h>
-#include <Exception.h>
+#include <kobj/Sm.h>
+#include <dev/Timer.h>
 
-#include "HostHPET.h"
-#include "HostPIT.h"
-
-// Resolution of our TSC clocks per HPET clock measurement. Lower
-// resolution mean larger error in HPET counter estimation.
-#define CPT_RES   /* 1 divided by */ (1U<<13) /* clocks per hpet tick */
+#include "HostTimer.h"
 
 using namespace nul;
 
-int main() {
-	HostTimer *t;
+class TimerService;
+
+static HostTimer *timer;
+static TimerService *srv;
+
+class TimerSessionData : public SessionData {
+public:
+	TimerSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: SessionData(s,id,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+			timer->setup_clientdata(_data + it->log_id(),it->log_id());
+	}
+	virtual ~TimerSessionData() {
+		delete[] _data;
+	}
+
+	HostTimer::ClientData *data(cpu_t cpu) {
+		return _data + cpu;
+	}
+
+private:
+	HostTimer::ClientData *_data;
+};
+
+class TimerService : public Service {
+public:
+	TimerService(const char *name,Pt::portal_func func) : Service(name,func) {
+	}
+
+private:
+	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+		return new TimerSessionData(this,id,caps,func);
+	}
+};
+
+PORTAL static void portal_timer(capsel_t pid) {
+	ScopedLock<RCULock> guard(&RCU::lock());
+	TimerSessionData *sess = srv->get_session<TimerSessionData>(pid);
+	UtcbFrameRef uf;
 	try {
-		t = new HostHPET(false);
+		nul::Timer::Command cmd;
+		uf >> cmd;
+
+		switch(cmd) {
+			case nul::Timer::GET_SMS:
+				uf.finish_input();
+
+				for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+					uf.delegate(sess->data(it->log_id())->sm->sel(),it->log_id());
+				uf << E_SUCCESS;
+				break;
+
+			case nul::Timer::PROG_TIMER: {
+				uint64_t time;
+				uf >> time;
+				uf.finish_input();
+
+				timer->program_timer(sess->data(CPU::current().log_id()),time);
+				uf << E_SUCCESS;
+			}
+			break;
+		}
 	}
 	catch(const Exception &e) {
-		Serial::get() << "TIMER: HPET initialization failed: " << e.msg() << "\n";
-		Serial::get() << "TIMER: Trying PIT instead\n";
-		t = new HostPIT(1000);
+		uf.clear();
+		uf << e.code();
 	}
+}
 
-    // HPET: Counter is running, IRQs are off.
-    // PIT:  PIT is programmed to run in periodic mode, if HPET didn't work for us.
-
-    uint64_t clocks_per_tick = (static_cast<uint64_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / t->freq();
-	Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",clocks_per_tick / CPT_RES,
-			clocks_per_tick % CPT_RES,CPT_RES);
-
-    // Get wallclock time
-    HostTimer::ticks_t initial_counter = 0; // TODO wallclock_init();
-    t->start(initial_counter);
+int main() {
+	timer = new HostTimer();
+	srv = new TimerService("timer",portal_timer);
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+		srv->provide_on(it->log_id());
+	srv->reg();
 
 	Sm sm(0);
 	sm.down();

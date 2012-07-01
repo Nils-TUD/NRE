@@ -24,6 +24,7 @@ RegionManager Hypervisor::_io INIT_PRIO_HV;
 BitField<Hip::MAX_GSIS> Hypervisor::_gsis INIT_PRIO_HV;
 UserSm Hypervisor::_io_sm INIT_PRIO_HV;
 UserSm Hypervisor::_gsi_sm INIT_PRIO_HV;
+uint Hypervisor::_next_msi = 0;
 Hypervisor Hypervisor::_init INIT_PRIO_HV;
 
 Hypervisor::Hypervisor() {
@@ -110,25 +111,31 @@ void Hypervisor::portal_gsi(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		uint gsi;
+		void *pcicfg = 0;
 		Gsi::Op op;
 		uf >> op >> gsi;
+		if(op == Gsi::ALLOC)
+			uf >> pcicfg;
 		uf.finish_input();
 		// we can trust the values because it's send from ourself
 		assert(gsi < Hip::MAX_GSIS);
 
 		switch(op) {
 			case Gsi::ALLOC:
-				allocate_gsi(gsi);
+				allocate_gsi(gsi,pcicfg);
 				break;
 
 			case Gsi::RELEASE:
 				release_gsi(gsi);
+				CapRange(Hip::MAX_CPUS + gsi,1,Crd::OBJ_ALL).revoke(false);
 				break;
 		}
 
-		if(op == Gsi::ALLOC)
-			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;
+		if(op == Gsi::ALLOC) {
+			uf << gsi;
+			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
+		}
 	}
 	catch(const Exception& e) {
 		uf.clear();

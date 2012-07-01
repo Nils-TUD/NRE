@@ -80,6 +80,8 @@ CPU0Init::CPU0Init() {
 // a separate library? or even for other things, so that we have a small, general library and some
 // more advanced libs on top of that
 // TODO what about different permissions for dataspaces? i.e. client has R, service has W
+// TODO we have to think about mapping device-memory again. it might be necessary to let multiple
+// Pds map one device (e.g. use acpi to find a device and map it).
 
 int main() {
 	const Hip &hip = Hip::get();

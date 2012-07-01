@@ -8,7 +8,9 @@
  */
 
 #include <dev/ACPI.h>
+#include <dev/PCIConfig.h>
 #include <stream/Serial.h>
+#include <util/DmarTableParser.h>
 #include <util/Math.h>
 #include <Hip.h>
 
@@ -17,6 +19,52 @@
 using namespace nul;
 
 bool HostHPET::_verbose = true;
+uint HostHPET::HPETTimer::_assigned_irqs = 0;
+
+void HostHPET::HPETTimer::init(cpu_t cpu) {
+	// Prefer MSIs. No sharing, no routing problems, always edge triggered.
+	if(!(_reg->config & LEG_RT_CNF) && (_reg->config & FSB_INT_DEL_CAP)) {
+		uint16_t rid = get_rid(0,_no);
+		if(_verbose)
+			Serial::get().writef("TIMER: HPET comparator %u RID %x\n",_no,rid);
+
+		Connection con("pcicfg");
+		PCIConfigSession pcicfg(con);
+		void *pcicfg_addr = reinterpret_cast<void*>(pcicfg.read(rid,0));
+		_gsi = new Gsi(pcicfg_addr,cpu);
+
+		if(_verbose) {
+			Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#x)\n",
+					_no,_gsi->gsi(),cpu,_gsi->msi_addr(),_gsi->msi_value());
+		}
+
+		_ack = 0;
+		_reg->msi[0] = _gsi->msi_value();
+		_reg->msi[1] = _gsi->msi_addr();
+		_reg->config |= FSB_INT_EN_CNF;
+	}
+	else {
+		// If legacy is enabled, only allow IRQ2
+		uint32_t allowed_irqs = (_reg->config & LEG_RT_CNF) ? (1U << 2) : _reg->int_route;
+		uint32_t possible_irqs = ~_assigned_irqs & allowed_irqs;
+		if(possible_irqs == 0)
+			throw Exception(E_CAPACITY,"No IRQs left");
+
+		uint irq = Math::bit_scan_reverse(possible_irqs);
+		_assigned_irqs |= (1U << irq);
+
+		_gsi = new Gsi(irq,cpu);
+		_ack = (irq < 16) ? 0 : (1U << _no);
+
+		if(_verbose) {
+			Serial::get().writef("TIMER: Timer %u -> IRQ %u (assigned %#x ack %#x).\n",
+					_no,irq,_assigned_irqs,_ack);
+		}
+
+		_reg->config &= ~(0x1F << 9) | INT_TYPE_CNF;
+		_reg->config |= (irq << 9) | ((irq < 16) ? 0 /* Edge */: INT_TYPE_CNF /* Level */);
+	}
+}
 
 HostHPET::HostHPET(bool force_legacy)
 		: _addr(get_address()),
@@ -122,6 +170,61 @@ HostHPET::HostHPET(bool force_legacy)
 	// HPET configuration
 	_freq = 1000000000000000ULL / _reg->period;
 	Serial::get().writef("TIMER: HPET ticks with %Lu HZ.\n",_freq);
+}
+
+/**
+ * Try to find out HPET routing ID. Returns 0 on failure.
+ *
+ * HPET routing IDs are stored in the DMAR table and we need them
+ * for interrupt remapping to work. This method is complicated by
+ * weird BIOSes that give each comparator its own RID. Our heuristic
+ * is to check, whether we see multiple device scope entries per
+ * ID. If this is the case, we assume that each comparator has a
+ * different RID.
+ */
+uint16_t HostHPET::get_rid(uint8_t block,uint comparator) {
+	Connection con("acpi");
+	ACPISession sess(con);
+	uintptr_t addr = sess.find_table(String("DMAR"));
+	if(!addr)
+		throw Exception(E_NOT_FOUND,"Unable to find DMAR in ACPI tables");
+
+	DmarTableParser p(reinterpret_cast<char*>(addr));
+	DmarTableParser::Element e = p.get_element();
+
+	uint16_t first_rid_found = 0;
+	do {
+		if(e.type() != DmarTableParser::DHRD)
+			continue;
+
+		DmarTableParser::Dhrd dhrd = e.get_dhrd();
+		if(!dhrd.has_scopes())
+			continue;
+
+		DmarTableParser::DeviceScope s = dhrd.get_scope();
+		do {
+			if(s.type() != DmarTableParser::MSI_CAPABLE_HPET)
+				continue;
+
+			// We assume the enumaration IDs correspond to timer blocks.
+			// XXX Is this true? We haven't seen an HPET with multiple blocks yet.
+			if(s.id() != block)
+				continue;
+
+			if(first_rid_found == 0)
+				first_rid_found = s.rid();
+
+			// Return the RID for the right comparator.
+			if(comparator-- == 0)
+				return s.rid();
+		}
+		while(s.has_next() and ((s = s.next()),true));
+	}
+	while(e.has_next() and ((e = e.next()),true));
+
+	// When we get here, either we haven't found a single RID or only
+	// one. For the latter case, we assume it's the right one.
+	return first_rid_found;
 }
 
 uintptr_t HostHPET::get_address() {

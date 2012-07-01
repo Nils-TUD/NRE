@@ -60,6 +60,13 @@ public:
 	}
 
 	/**
+	 * @return true if <address> is in the range [base..base+size)
+	 */
+	static inline bool in_range(uintptr_t  address,uintptr_t base,uintptr_t size) {
+		return (base <= address) && (address <= base + size - 1);
+	}
+
+	/**
 	 * @return whether the ranges [<b1>..<b1>+<s1>) and [<b2>..<b2>+<s2>) overlap somewhere.
 	 */
 	static inline bool overlapped(uint64_t b1,size_t s1,uint64_t b2,size_t s2) {

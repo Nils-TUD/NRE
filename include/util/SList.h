@@ -46,7 +46,7 @@ public:
 		return &operator *();
 	}
 	SListIterator<T>& operator ++() {
-		_n = _n->next();
+		_n = static_cast<T*>(_n->next());
 		return *this;
 	}
 	SListIterator<T> operator ++(int) {

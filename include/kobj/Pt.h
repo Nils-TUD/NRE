@@ -75,8 +75,9 @@ public:
 	 * Calls this portal with given UtcbFrame. The state of the UtcbFrame is reset afterwards, so
 	 * that you can iterate over the typed and untyped item again from the beginning.
 	 * Note: although you can specify the UtcbFrame, you can't really choose it. That is, the kernel
-	 * will always use the Utcb that belongs to your Ec. The parameter is rather passed symbolically
-	 * to make clear that the UtcbFrame you're working with is changed by the call.
+	 * will always use the top-most UtcbFrame of the Utcb that belongs to your Ec. The parameter
+	 * is rather passed symbolically to make clear that the UtcbFrame you're working with is
+	 * changed by the call.
 	 *
 	 * @param uf the UtcbFrame
 	 */

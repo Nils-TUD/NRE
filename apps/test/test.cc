@@ -30,6 +30,7 @@
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
 #include <dev/ACPI.h>
+#include <dev/Timer.h>
 #include <cap/Caps.h>
 #include <Exception.h>
 
@@ -40,9 +41,9 @@ static Connection *con;
 #if 0
 static void read(void *) {
 	while(1) {
-		Session sess(*con);
+		Session conssess(*con);
 		DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
-		ds.share(sess);
+		ds.share(conssess);
 		Consumer<int> c(&ds);
 		for(int x = 0; x < 100; ++x) {
 			int *i = c.get();
@@ -53,10 +54,10 @@ static void read(void *) {
 }
 
 static void write(void *) {
-	Session sess(*con);
-	Pt &pt = sess.pt(CPU::current().id);
+	Session conssess(*con);
+	Pt &pt = conssess.pt(CPU::current().id);
 	DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
-	ds.share(sess);
+	ds.share(conssess);
 	int *data = reinterpret_cast<int*>(ds.virt());
 	for(uint i = 0; i < 100; ++i) {
 		UtcbFrame uf;
@@ -67,16 +68,16 @@ static void write(void *) {
 }
 
 struct Info {
-	ConsoleSession *sess;
+	ConsoleSession *conssess;
 	int no;
 };
 
 static void reader(void*) {
 	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
 	while(1) {
-		Console::ReceivePacket *pk = info->sess->consumer().get();
+		Console::ReceivePacket *pk = info->conssess->consumer().get();
 		Serial::get().writef("%u: Got c=%#x kc=%#x, flags=%#x\n",info->no,pk->character,pk->keycode,pk->flags);
-		info->sess->consumer().next();
+		info->conssess->consumer().next();
 	}
 }
 
@@ -90,18 +91,20 @@ static void writer(void*) {
 				pk.y = y;
 				pk.character = 'A' + info->no;
 				pk.color = x % 8;
-				info->sess->producer().produce(pk);
+				info->conssess->producer().produce(pk);
 			}
 		}
 	}
 }
 #endif
 
-static Connection *console;
-static ConsoleSession *sess;
+static Connection *conscon;
+static ConsoleSession *conssess;
+static Connection *timercon;
+static TimerSession *timer;
 
 static void view0(void*) {
-	ConsoleView view(*sess);
+	ConsoleView view(*conssess);
 	int i = 0;
 	while(1) {
 		//char c = view.read();
@@ -110,49 +113,53 @@ static void view0(void*) {
 	}
 }
 
-static void view1(void*) {
-	ConsoleView view(*sess);
-	uint64_t tic = Util::tsc();
-	int i;
-	for(i = 0; i < 10000000; ++i) {
-		view.write('a');
-		//char c = view.read();
-		//view << "Huhu, from view " << view.id() << ": " << i << "\n";
+static void tick_thread(void*) {
+	int i = 0;
+	while(1) {
+		timer->wait_for(Hip::get().freq_tsc * 1000);
+		Serial::get() << "CPU" << CPU::current().log_id() << ": " << ++i << " ticks\n";
 	}
-	uint64_t tac = Util::tsc();
-	Serial::get().writef("%d items took %Lu cycles (%Lu cycles/item)\n",i,tac - tic,(tac - tic) / i);
-	Sm sm(0);
-	sm.down();
 }
 
 int main() {
-	console = new Connection("console");
-	sess = new ConsoleSession(*console);
+	conscon = new Connection("console");
+	conssess = new ConsoleSession(*conscon);
 	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
 	sc1->start();
 	Sc *sc2 = new Sc(new GlobalEc(view0,0),Qpd());
 	sc2->start();
 
-	Connection con("acpi");
-	ACPISession sess(con);
-	uintptr_t addr;
-	for(size_t i = 0; (addr = sess.find_table(String("APIC"),i)) != 0; ++i)
-		Serial::get() << "APIC " << i << " @ " << reinterpret_cast<void*>(addr) << "\n";
+	{
+		Connection con("acpi");
+		ACPISession sess(con);
+		uintptr_t addr;
+		for(size_t i = 0; (addr = sess.find_table(String("APIC"),i)) != 0; ++i)
+			Serial::get() << "APIC " << i << " @ " << reinterpret_cast<void*>(addr) << "\n";
 
-	addr = sess.find_table(String("HPET"));
-	if(addr) {
-		struct HpetAcpiTable {
-			char res[40];
-			unsigned char gas[4];
-			uint32_t address[2];
-		};
-		HpetAcpiTable *table = reinterpret_cast<HpetAcpiTable*>(addr);
-		if(table->gas[0])
-			Serial::get() << "HPET access must be MMIO but is " << table->gas[0] << "\n";
-		else if(table->address[1])
-			Serial::get() << "HPET must be below 4G\n";
-		else
-			Serial::get() << "Found HPET at " << (void*)table->address[0] << "\n";
+		addr = sess.find_table(String("HPET"));
+		if(addr) {
+			struct HpetAcpiTable {
+				char res[40];
+				unsigned char gas[4];
+				uint32_t address[2];
+			};
+			HpetAcpiTable *table = reinterpret_cast<HpetAcpiTable*>(addr);
+			if(table->gas[0])
+				Serial::get() << "HPET access must be MMIO but is " << table->gas[0] << "\n";
+			else if(table->address[1])
+				Serial::get() << "HPET must be below 4G\n";
+			else
+				Serial::get() << "Found HPET at " << (void*)table->address[0] << "\n";
+		}
+	}
+
+	{
+		timercon = new Connection("timer");
+		timer = new TimerSession(*timercon);
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+			Sc *sc = new Sc(new GlobalEc(tick_thread,it->log_id()),Qpd());
+			sc->start();
+		}
 	}
 
 	/*
