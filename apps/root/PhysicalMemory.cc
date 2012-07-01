@@ -23,7 +23,6 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
 	uint flags = _desc.perm();
 	if(_desc.origin() != 0) {
-		Serial::get().writef("Mapping device memory %p .. %p\n",_desc.origin(),_desc.origin() + _desc.size());
 		_desc.origin(Math::round_dn<uintptr_t>(_desc.origin(),ExecEnv::PAGE_SIZE));
 		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags))
 			throw DataSpaceException(E_ARGS_INVALID);
@@ -57,10 +56,8 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	uint flags = _desc.perm();
 	bool isdev = PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags);
 	revoke_mem(_desc.virt(),_desc.size(),isdev);
-	if(isdev) {
-		Serial::get().writef("Unmapping device memory %p .. %p\n",_desc.origin(),_desc.origin() + _desc.size());
+	if(isdev)
 		VirtualMemory::free(_desc.virt(),_desc.size());
-	}
 	else
 		PhysicalMemory::_mem.free(_desc.origin(),_desc.size());
 
