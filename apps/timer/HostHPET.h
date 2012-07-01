@@ -69,18 +69,18 @@ class HostHPET : public HostTimerDevice {
 		HostHpetTimer timer[24];
 	};
 
-	class HPETTimer : public Timer {
+	class HPETTimer : public DeviceTimer {
 		friend class HostHPET;
 
 	public:
-		explicit HPETTimer() : Timer(), _no(), _gsi(), _reg() {
+		explicit HPETTimer() : DeviceTimer(), _no(), _gsi(), _reg() {
 		}
 
 		virtual nul::Gsi &gsi() {
 			return *_gsi;
 		}
 		virtual void init(cpu_t cpu);
-		virtual void program_timeout(uint64_t next) {
+		virtual void program_timeout(timevalue_t next) {
 			// Program a new timeout. Top 32-bits are discarded.
 			_reg->comp[0] = next;
 		}
@@ -96,15 +96,15 @@ class HostHPET : public HostTimerDevice {
 public:
 	explicit HostHPET(bool force_legacy);
 
-	virtual uint64_t last_ticks() {
+	virtual timevalue_t last_ticks() {
 		return nul::Atomic::read_atonce(_last);
 	}
-	virtual uint64_t current_ticks() {
+	virtual timevalue_t current_ticks() {
 		uint32_t r = _reg->counter[0];
 		return correct_overflow(nul::Atomic::read_atonce(_last),r);
 	}
-	virtual uint64_t update_ticks(bool) {
-		uint64_t newv = _reg->counter[0];
+	virtual timevalue_t update_ticks(bool) {
+		timevalue_t newv = _reg->counter[0];
 		newv = correct_overflow(nul::Atomic::read_atonce(_last),newv);
 		nul::Atomic::write_atonce(_last,newv);
 		return newv;
@@ -116,17 +116,17 @@ public:
 	virtual size_t timer_count() const {
 		return _usable_timers;
 	}
-	virtual Timer *timer(size_t i) {
+	virtual DeviceTimer *timer(size_t i) {
 		return _timer + i;
 	}
-	virtual freq_t freq() {
+	virtual timevalue_t freq() const {
 		return _freq;
 	}
 
-	virtual bool is_in_past(uint64_t ticks) {
+	virtual bool is_in_past(timevalue_t ticks) const {
 		return static_cast<int32_t>(ticks - _reg->counter[0]) <= 8;
 	}
-	virtual uint64_t next_timeout(uint64_t now,uint64_t next) {
+	virtual timevalue_t next_timeout(timevalue_t now,timevalue_t next) {
 		// Generate at least some IRQs between wraparound IRQs to make
 		// overflow detection robust. Only needed with HPETs.
 		if(next == ~0ULL ||
@@ -135,7 +135,7 @@ public:
 		}
 		return next;
 	}
-	virtual void start(ticks_t ticks) {
+	virtual void start(timevalue_t ticks) {
 	    assert((_reg->config & ENABLE_CNF) == 0);
 		// Start HPET counter at value. HPET might be 32-bit. In this case,
 		// the upper 32-bit of value are ignored.
@@ -143,19 +143,19 @@ public:
 	    _reg->config |= ENABLE_CNF;
 	    _last = ticks;
 	}
-	virtual void enable(Timer *t,bool enable_ints) {
+	virtual void enable(DeviceTimer *t,bool enable_ints) {
 		HPETTimer *timer = static_cast<HPETTimer*>(t);
 		if(enable_ints)
 			timer->_reg->config |= INT_ENB_CNF;
 	}
-	virtual void ack_irq(Timer *t) {
+	virtual void ack_irq(DeviceTimer *t) {
 		HPETTimer *timer = static_cast<HPETTimer*>(t);
 		if(timer->_ack != 0)
 			_reg->isr = timer->_ack;
 	}
 
 private:
-	static uint64_t correct_overflow(uint64_t last,uint32_t newv) {
+	static timevalue_t correct_overflow(timevalue_t last,uint32_t newv) {
 		bool of = (static_cast<uint32_t>(newv) < static_cast<uint32_t>(last));
 		return (((last >> 32) + of) << 32) | newv;
 	}
@@ -168,7 +168,7 @@ private:
 	HostHpetRegister *_reg;
 	uint _usable_timers;
 	HPETTimer _timer[MAX_TIMERS];
-	freq_t _freq;
-	volatile uint64_t _last;
+	timevalue_t _freq;
+	volatile timevalue_t _last;
 	static bool _verbose;
 };

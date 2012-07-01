@@ -44,6 +44,40 @@ public:
 		return value & ~(align - 1);
 	}
 
+	static uint8_t from_bcd(uint8_t value) {
+		return (value & 0xf) + (value >> 4) * 10;
+	}
+	static uint8_t to_bcd(uint8_t value) {
+		return ((value / 10) << 4) + (value % 10);
+	}
+
+	template<typename T>
+	static inline T moddiv(T &value,T divisor) {
+		T res = value % divisor;
+		value /= divisor;
+		return res;
+	}
+	template<typename T>
+	static inline T divmod(T &value,T divisor) {
+		T res = value / divisor;
+		value %= divisor;
+		return res;
+	}
+	/**
+	 * Computes (<value> * <factor>) / <divisor> and takes care that <value> * <factor> might be
+	 * larger than 64 bit (the end-result has to fit in 64 bit again, of course).
+	 */
+	static uint64_t muldiv128(uint64_t value,uint64_t factor,uint64_t divisor) {
+		uint32_t low = value & 0xFFFFFFFF;
+		uint32_t high = value >> 32;
+		uint64_t lower = static_cast<uint64_t>(low) * factor;
+		uint64_t upper = static_cast<uint64_t>(high) * factor;
+		uint32_t rem = moddiv<uint64_t>(upper,divisor);
+		lower += static_cast<uint64_t>(rem) << 32;
+		lower /= divisor;
+		return (upper << 32) + lower;
+	}
+
 	/**
 	 * @return the number of blocks of size <blocksize> that <value> contains
 	 */

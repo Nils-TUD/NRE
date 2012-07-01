@@ -43,6 +43,7 @@ public:
 	}
 
 	static void write_atonce(volatile uint64_t &to,uint64_t value) {
+		to = value;
 		uint32_t nlo = value;
 		uint32_t nhi = value >> 32;
 		uint32_t olo = 0;

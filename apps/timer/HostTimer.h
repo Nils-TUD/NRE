@@ -21,9 +21,11 @@
 #include <kobj/LocalEc.h>
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
+#include <dev/Timer.h>
 
 #include "TimeoutList.h"
 #include "HostTimerDevice.h"
+#include "HostRTC.h"
 
 class HostTimer {
 	struct PerCpu;
@@ -40,7 +42,7 @@ public:
 		// This field has different semantics: When this ClientData
 		// belongs to a client it contains an absolute TSC value. If it
 		// belongs to a remote CPU it contains an absolute timer count.
-		volatile uint64_t abstimeout;
+		volatile timevalue_t abstimeout;
 
 		// How often has the timeout triggered?
 		volatile uint count;
@@ -71,13 +73,13 @@ private:
 
 	struct PerCpu {
 		bool has_timer;
-		Timer *timer;
+		DeviceTimer *timer;
 		TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
 
 		nul::LocalEc ec;
 		nul::Pt worker_pt;
 		nul::Sm xcpu_sm;
-		Timer::timevalue_t last_to;
+		timevalue_t last_to;
 
 		// Used by CPUs without timer
 		nul::Sm *remote_sm; // for cross cpu wakeup
@@ -96,13 +98,13 @@ private:
 	};
 
 public:
-	HostTimer(bool force_pit = false,bool force_hpet_legacy = false);
+	HostTimer(bool force_pit = false,bool force_hpet_legacy = false,bool slow_wallclock = false);
 
 	void setup_clientdata(ClientData *data,cpu_t cpu) {
 		data->init(cpu,_per_cpu[cpu]);
 	}
 
-	void program_timer(ClientData *data,uint64_t time) {
+	void program_timer(ClientData *data,timevalue_t time) {
         data->abstimeout = time;
         nul::UtcbFrame uf;
         WorkerMessage m;
@@ -112,29 +114,37 @@ public:
         _per_cpu[data->cpu]->worker_pt.call(uf);
 	}
 
+	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
+		timevalue_t ticks = _timer->current_ticks();
+		uptime = _clock.dest_time();
+		unixts = nul::Math::muldiv128(ticks,nul::Timer::WALLCLOCK_FREQ,_timer->freq());
+	}
+
 private:
 	/**
 	 * Convert an absolute TSC value into an absolute time counter value. Call only from
 	 * per_cpu thread. Returns ZERO if result is in the past.
 	 */
-	uint64_t absolute_tsc_to_timer(uint64_t tsc) {
+	timevalue_t absolute_tsc_to_timer(timevalue_t tsc) {
 		int64_t diff = tsc - nul::Util::tsc();
 		if(diff <= 0)
 			return 0;
-		diff = (diff * CPT_RES) / _clocks_per_tick;
+		diff = nul::Math::muldiv128(diff,CPT_RES,_clocks_per_tick);
 		return diff + _timer->current_ticks();
 	}
 
 	bool per_cpu_handle_xcpu(PerCpu *per_cpu);
 	bool per_cpu_client_request(PerCpu *per_cpu,ClientData *data);
-	uint64_t handle_expired_timers(PerCpu *per_cpu,uint64_t now);
+	timevalue_t handle_expired_timers(PerCpu *per_cpu,timevalue_t now);
 
 	PORTAL static void portal_per_cpu(capsel_t pid);
 	NORETURN static void xcpu_wakeup_thread(void *);
 	NORETURN static void gsi_thread(void *);
 
-	uint64_t _clocks_per_tick;
+	timevalue_t _clocks_per_tick;
 	HostTimerDevice *_timer;
+	HostRTC _rtc;
+	nul::Clock _clock;
 	PerCpu **_per_cpu;
 	nul::Sm _xcpu_up;
 };

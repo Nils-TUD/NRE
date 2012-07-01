@@ -32,6 +32,7 @@
 #include <dev/ACPI.h>
 #include <dev/Timer.h>
 #include <cap/Caps.h>
+#include <util/Date.h>
 #include <Exception.h>
 
 using namespace nul;
@@ -102,6 +103,7 @@ static Connection *conscon;
 static ConsoleSession *conssess;
 static Connection *timercon;
 static TimerSession *timer;
+static UserSm sm;
 
 static void view0(void*) {
 	ConsoleView view(*conssess);
@@ -114,10 +116,18 @@ static void view0(void*) {
 }
 
 static void tick_thread(void*) {
+	timevalue_t uptime,unixts;
 	int i = 0;
 	while(1) {
 		timer->wait_for(Hip::get().freq_tsc * 1000);
-		Serial::get() << "CPU" << CPU::current().log_id() << ": " << ++i << " ticks\n";
+		timer->get_time(uptime,unixts);
+		ScopedLock<UserSm> guard(&sm);
+		Serial::get() << "CPU" << CPU::current().log_id() << ": ";
+		Serial::get() << ++i << " ticks, uptime=" << uptime << ", unixtime=" << unixts << ", ";
+		DateInfo date;
+		Date::gmtime(unixts / Timer::WALLCLOCK_FREQ,&date);
+		Serial::get().writef("date: %02d.%02d.%04d %d:%02d:%02d\n",
+				date.mday,date.mon,date.year,date.hour,date.min,date.sec);
 	}
 }
 

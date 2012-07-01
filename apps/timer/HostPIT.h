@@ -31,9 +31,9 @@ class HostPIT : public HostTimerDevice {
 		PORT_BASE		= 0x40
 	};
 
-	class PitTimer : public Timer {
+	class PitTimer : public DeviceTimer {
 	public:
-		explicit PitTimer() : Timer(), _gsi(IRQ) {
+		explicit PitTimer() : DeviceTimer(), _gsi(IRQ) {
 		}
 
 		virtual nul::Gsi &gsi() {
@@ -41,7 +41,7 @@ class HostPIT : public HostTimerDevice {
 		}
 		virtual void init(cpu_t) {
 		}
-		virtual void program_timeout(uint64_t) {
+		virtual void program_timeout(timevalue_t) {
 		}
 
 	private:
@@ -51,13 +51,13 @@ class HostPIT : public HostTimerDevice {
 public:
 	explicit HostPIT(uint period_us);
 
-	virtual uint64_t last_ticks() {
+	virtual timevalue_t last_ticks() {
 		return nul::Atomic::read_atonce(_ticks);
 	}
-	virtual uint64_t current_ticks() {
+	virtual timevalue_t current_ticks() {
 		return nul::Atomic::read_atonce(_ticks);
 	}
-	virtual uint64_t update_ticks(bool refresh_only) {
+	virtual timevalue_t update_ticks(bool refresh_only) {
 		return refresh_only ? _ticks : ++_ticks;
 	}
 
@@ -67,29 +67,29 @@ public:
 	virtual size_t timer_count() const {
 		return 1;
 	}
-	virtual Timer *timer(size_t) {
+	virtual DeviceTimer *timer(size_t) {
 		return &_timer;
 	}
-	virtual freq_t freq() {
+	virtual timevalue_t freq() const {
 		return _freq;
 	}
 
-	virtual bool is_in_past(uint64_t ticks) {
+	virtual bool is_in_past(timevalue_t ticks) const {
 		return ticks < _ticks;
 	}
-	virtual uint64_t next_timeout(uint64_t,uint64_t next) {
+	virtual timevalue_t next_timeout(timevalue_t,timevalue_t next) {
 		return next;
 	}
-	virtual void start(ticks_t ticks) {
+	virtual void start(timevalue_t ticks) {
 		_ticks = ticks;
 	}
-	virtual void enable(Timer *,bool) {
+	virtual void enable(DeviceTimer *,bool) {
 		// nothing to do
 	}
 
 private:
 	nul::Ports _ports;
-	freq_t _freq;
-	ticks_t _ticks;
+	timevalue_t _freq;
+	timevalue_t _ticks;
 	PitTimer _timer;
 };

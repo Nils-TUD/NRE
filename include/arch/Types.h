@@ -35,3 +35,4 @@ typedef unsigned long long ullong;
 
 typedef uint capsel_t;
 typedef uchar cpu_t;
+typedef uint64_t timevalue_t;

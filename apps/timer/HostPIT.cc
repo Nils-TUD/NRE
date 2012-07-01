@@ -21,7 +21,7 @@
 using namespace nul;
 
 HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE,4), _freq() {
-	uint64_t value = (FREQ * period_us) / 1000000ULL;
+	timevalue_t value = (FREQ * period_us) / 1000000ULL;
 	if(value == 0 || value > 65535) {
 		Serial::get().writef("TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n",period_us,
 				DEFAULT_PERIOD);

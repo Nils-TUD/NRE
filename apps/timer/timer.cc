@@ -76,12 +76,21 @@ PORTAL static void portal_timer(capsel_t pid) {
 				break;
 
 			case nul::Timer::PROG_TIMER: {
-				uint64_t time;
+				timevalue_t time;
 				uf >> time;
 				uf.finish_input();
 
 				timer->program_timer(sess->data(CPU::current().log_id()),time);
 				uf << E_SUCCESS;
+			}
+			break;
+
+			case nul::Timer::GET_TIME: {
+				uf.finish_input();
+
+				timevalue_t uptime,unixts;
+		        timer->get_time(uptime,unixts);
+		        uf << E_SUCCESS << uptime << unixts;
 			}
 			break;
 		}

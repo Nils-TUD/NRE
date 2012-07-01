@@ -52,10 +52,10 @@ public:
 	static inline void pause() {
 		asm volatile("pause");
 	}
-	static inline uint64_t tsc() {
+	static inline timevalue_t tsc() {
 		uint32_t u,l;
 		asm volatile("rdtsc" : "=a"(l), "=d"(u));
-		return (uint64_t)u << 32 | l;
+		return (timevalue_t)u << 32 | l;
 	}
 
 private:

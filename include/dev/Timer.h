@@ -29,6 +29,10 @@ namespace nul {
 
 class Timer {
 public:
+	enum {
+		WALLCLOCK_FREQ	= 1000000
+	};
+
 	enum Command {
 		GET_SMS,
 		PROG_TIMER,
@@ -56,11 +60,11 @@ public:
 		CapSpace::get().free(_caps,Math::next_pow2(CPU::count()));
 	}
 
-	void wait_for(uint64_t cycles) {
+	void wait_for(timevalue_t cycles) {
 		wait_until(Util::tsc() + cycles);
 	}
 
-	void wait_until(uint64_t cycles) {
+	void wait_until(timevalue_t cycles) {
 		UtcbFrame uf;
 		uf << Timer::PROG_TIMER << cycles;
 		_pts[CPU::current().log_id()]->call(uf);
@@ -69,6 +73,17 @@ public:
 		if(res != E_SUCCESS)
 			throw Exception(res);
 		_sms[CPU::current().log_id()]->zero();
+	}
+
+	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
+		UtcbFrame uf;
+		uf << Timer::GET_TIME;
+		_pts[CPU::current().log_id()]->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+		uf >> uptime >> unixts;
 	}
 
 private:

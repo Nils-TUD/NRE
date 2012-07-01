@@ -18,6 +18,7 @@
 
 #include <kobj/Sc.h>
 #include <stream/Serial.h>
+#include <util/Date.h>
 #include <util/Topology.h>
 
 #include "HostTimer.h"
@@ -32,8 +33,8 @@ void HostTimer::ClientData::init(cpu_t cpuno,HostTimer::PerCpu *per_cpu) {
 	cpu = cpuno;
 }
 
-HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy)
-		: _clocks_per_tick(0), _timer(), _per_cpu(), _xcpu_up(0) {
+HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_wallclock)
+		: _clocks_per_tick(0), _timer(), _rtc(), _clock(Timer::WALLCLOCK_FREQ), _per_cpu(), _xcpu_up(0) {
 	if(!force_pit) {
 		try {
 			_timer = new HostHPET(force_hpet_legacy);
@@ -48,13 +49,21 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy)
 	// HPET: Counter is running, IRQs are off.
 	// PIT:  PIT is programmed to run in periodic mode, if HPET didn't work for us.
 
-	_clocks_per_tick = (static_cast<uint64_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / _timer->freq();
+	_clocks_per_tick = (static_cast<timevalue_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / _timer->freq();
 	Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
 			_clocks_per_tick / CPT_RES,_clocks_per_tick % CPT_RES,CPT_RES);
 
 	// Get wallclock time
-	HostTimerDevice::ticks_t initial_counter = 0; // TODO wallclock_init();
-	_timer->start(initial_counter);
+	if(slow_wallclock)
+		_rtc.sync();
+	timevalue_t msecs = _rtc.timestamp();
+	DateInfo date;
+	Date::gmtime(msecs / Timer::WALLCLOCK_FREQ,&date);
+	Serial::get().writef("TIMER: timestamp: %Lu secs\n",msecs / Timer::WALLCLOCK_FREQ);
+	Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
+			date.mday,date.mon,date.year,date.hour,date.min,date.sec);
+
+	_timer->start(Math::muldiv128(msecs,_timer->freq(),Timer::WALLCLOCK_FREQ));
 
 	// Initialize per cpu data structure
 	_per_cpu = new PerCpu*[CPU::count()];
@@ -139,7 +148,7 @@ bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
 	// a timer.
 	for(size_t i = 0; i < per_cpu->slot_count; i++) {
 		RemoteSlot &cur = per_cpu->slots[i];
-		uint64_t to;
+		timevalue_t to;
 
 		do {
 			to = cur.data.abstimeout;
@@ -147,7 +156,7 @@ bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
 			if(to == 0ULL)
 				goto next;
 		}
-		while(!Atomic::swap<uint64_t,uint64_t>(&cur.data.abstimeout,to,0));
+		while(!Atomic::swap<timevalue_t,timevalue_t>(&cur.data.abstimeout,to,0));
 
 		if(to < per_cpu->last_to)
 			reprogram = true;
@@ -165,7 +174,7 @@ bool HostTimer::per_cpu_client_request(PerCpu *per_cpu,ClientData *data) {
 	unsigned nr = data->nr;
 	per_cpu->abstimeouts.cancel(nr);
 
-	uint64_t t = absolute_tsc_to_timer(data->abstimeout);
+	timevalue_t t = absolute_tsc_to_timer(data->abstimeout);
 	// XXX Set abstimeout to zero here?
 	// timer in the past?
 	if(t == 0) {
@@ -177,7 +186,7 @@ bool HostTimer::per_cpu_client_request(PerCpu *per_cpu,ClientData *data) {
 }
 
 // Returns the next timeout.
-uint64_t HostTimer::handle_expired_timers(PerCpu *per_cpu,uint64_t now) {
+timevalue_t HostTimer::handle_expired_timers(PerCpu *per_cpu,timevalue_t now) {
 	ClientData *data;
 	uint nr;
 	while((nr = per_cpu->abstimeouts.trigger(now,&data))) {
@@ -210,7 +219,7 @@ again:
 			reprogram = ht->per_cpu_client_request(per_cpu,m.data);
 			break;
 		case WorkerMessage::TIMER_IRQ: {
-			uint64_t now = ht->_timer->update_ticks(false);
+			timevalue_t now = ht->_timer->update_ticks(false);
 			ht->handle_expired_timers(per_cpu,now);
 			reprogram = true;
 			break;
@@ -223,8 +232,8 @@ again:
 		return;
 
 	// Okay, we need to program a new timeout.
-	uint64_t next_to = per_cpu->abstimeouts.timeout();
-	uint64_t estimated_now = ht->_timer->last_ticks();
+	timevalue_t next_to = per_cpu->abstimeouts.timeout();
+	timevalue_t estimated_now = ht->_timer->last_ticks();
 	// give the timer a chance to change the next timer we're about to program. this is used by
 	// HPET to tick every once in a while to ensure proper overflow detection.
 	next_to = ht->_timer->next_timeout(estimated_now,next_to);

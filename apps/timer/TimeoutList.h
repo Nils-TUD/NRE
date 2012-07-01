@@ -22,7 +22,7 @@
 #include <Exception.h>
 #include <Assert.h>
 
-#include "Timer.h"
+#include "DeviceTimer.h"
 
 class TimerException : public nul::Exception {
 public:
@@ -39,7 +39,7 @@ class TimeoutList {
 		friend class TimeoutList<ENTRIES,DATA>;
 		TimeoutEntry *_next;
 		TimeoutEntry *_prev;
-		Timer::timevalue_t _timeout;
+		timevalue_t _timeout;
 		DATA * data;
 		bool _free;
 	};
@@ -103,9 +103,9 @@ public:
 	/**
 	 * Request a new timeout.
 	 */
-	bool request(size_t nr,Timer::timevalue_t to) {
+	bool request(size_t nr,timevalue_t to) {
 		assert(nr >= 1 && nr <= ENTRIES - 1);
-		Timer::timevalue_t old = timeout();
+		timevalue_t old = timeout();
 		TimeoutEntry *current = _entries + nr;
 		cancel(nr);
 
@@ -127,7 +127,7 @@ public:
 	/**
 	 * Get the head of the queue.
 	 */
-	size_t trigger(Timer::timevalue_t now,DATA **data = 0) {
+	size_t trigger(timevalue_t now,DATA **data = 0) {
 		if(now >= timeout()) {
 			size_t i = _entries[0]._next - _entries;
 			if(data)
@@ -137,7 +137,7 @@ public:
 		return 0;
 	}
 
-	Timer::timevalue_t timeout() {
+	timevalue_t timeout() {
 		assert(_entries[0]._next);
 		return _entries[0]._next->_timeout;
 	}

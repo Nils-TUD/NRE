@@ -21,16 +21,15 @@
 #include <arch/Types.h>
 #include <kobj/Gsi.h>
 
-class Timer {
+class DeviceTimer {
 public:
-	typedef uint64_t timevalue_t;
 
-	Timer() {
+	DeviceTimer() {
 	}
-	virtual ~Timer() {
+	virtual ~DeviceTimer() {
 	}
 
 	virtual nul::Gsi &gsi() = 0;
 	virtual void init(cpu_t cpu) = 0;
-	virtual void program_timeout(uint64_t next) = 0;
+	virtual void program_timeout(timevalue_t next) = 0;
 };
