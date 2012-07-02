@@ -83,6 +83,9 @@ public:
         OBJ_ALL		= OBJ | (0x1F << 2)
 	};
 
+	bool is_null() const {
+		return value() == 0;
+	}
 	word_t offset() const {
 		return value() >> 12;
 	}

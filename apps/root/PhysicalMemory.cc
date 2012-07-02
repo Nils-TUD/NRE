@@ -22,17 +22,19 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
 	uint flags = _desc.perm();
-	if(_desc.origin() != 0) {
-		_desc.origin(Math::round_dn<uintptr_t>(_desc.origin(),ExecEnv::PAGE_SIZE));
-		if(!PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags))
+	if(_desc.phys() != 0) {
+		_desc.phys(Math::round_dn<uintptr_t>(_desc.phys(),ExecEnv::PAGE_SIZE));
+		if(!PhysicalMemory::can_map(_desc.phys(),_desc.size(),flags))
 			throw DataSpaceException(E_ARGS_INVALID);
 		_desc.perm(flags);
 		_desc.virt(VirtualMemory::alloc(_desc.size()));
-		Hypervisor::map_mem(_desc.origin(),_desc.virt(),_desc.size());
+		_desc.origin(_desc.phys());
+		Hypervisor::map_mem(_desc.phys(),_desc.virt(),_desc.size());
 	}
 	else {
-		_desc.origin(PhysicalMemory::_mem.alloc(_desc.size()));
-		_desc.virt(VirtualMemory::phys_to_virt(_desc.origin()));
+		_desc.phys(PhysicalMemory::_mem.alloc(_desc.size()));
+		_desc.origin(_desc.phys());
+		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
 	}
 
 	// create a map and unmap-cap
@@ -54,12 +56,12 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
 	uint flags = _desc.perm();
-	bool isdev = PhysicalMemory::can_map(_desc.origin(),_desc.size(),flags);
-	revoke_mem(_desc.virt(),_desc.size(),isdev);
-	if(isdev)
-		VirtualMemory::free(_desc.virt(),_desc.size());
-	else
-		PhysicalMemory::_mem.free(_desc.origin(),_desc.size());
+	bool isdev = PhysicalMemory::can_map(_desc.phys(),_desc.size(),flags);
+	if(!isdev) {
+		revoke_mem(_desc.virt(),_desc.size(),false);
+		PhysicalMemory::_mem.free(_desc.phys(),_desc.size());
+	}
+	// TODO what to do with device memory?
 
 	// revoke caps and free selectors
 	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);

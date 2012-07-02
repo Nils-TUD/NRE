@@ -120,6 +120,12 @@ public:
 		return _desc.virt();
 	}
 	/**
+	 * @return the physical address
+	 */
+	uintptr_t phys() const {
+		return _desc.phys();
+	}
+	/**
 	 * @return the size in bytes
 	 */
 	size_t size() const {

@@ -1,7 +1,7 @@
 #!/usr/bin/env novaboot
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
-bin/apps/hypervisor spinner serial keyb
+bin/apps/hypervisor spinner serial
 #HYPERVISOR_PARAMS=spinner serial
 bin/apps/root
 bin/apps/keyboard provides=keyboard
@@ -10,5 +10,5 @@ bin/apps/acpi provides=acpi
 bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/test
-#bin/apps/sub
+bin/apps/sub
 

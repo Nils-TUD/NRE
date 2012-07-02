@@ -61,7 +61,7 @@ void Log::buffer(char c) {
 }
 
 void Log::write(uint sessid,const char *line,size_t len) {
-	ScopedLock<Sm> guard(&_sm);
+	ScopedLock<UserSm> guard(&_sm);
 	_to_ser = true;
 	*this << "\e[0;" << _colors[sessid % 8] << "m[" << sessid << "] ";
 	for(size_t i = 0; i < len; ++i) {

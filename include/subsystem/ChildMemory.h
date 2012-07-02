@@ -132,7 +132,7 @@ public:
 		for(size_t i = 0; i < MAX_DS; ++i) {
 			if(_ds[i].unmapsel == 0) {
 				_ds[i].unmapsel = ds;
-				_ds[i].desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),desc.virt(),addr);
+				_ds[i].desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),desc.phys(),addr,desc.virt());
 				add(addr,desc.size(),desc.virt(),perm);
 				return;
 			}

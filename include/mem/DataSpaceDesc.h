@@ -41,7 +41,7 @@ public:
 	/**
 	 * Creates an empty descriptor
 	 */
-	explicit DataSpaceDesc() : _virt(), _origin(), _size(), _perm(), _type() {
+	explicit DataSpaceDesc() : _virt(), _phys(), _origin(), _size(), _perm(), _type() {
 	}
 	/**
 	 * Creates a descriptor from given parameters
@@ -50,10 +50,12 @@ public:
 	 * @param type the type of memory
 	 * @param perm the permissions
 	 * @param phys the physical address to request (optionally)
-	 * @param virt the virtual address, which can be used as a hint
+	 * @param virt the virtual address (ignored)
+	 * @param origin the origin of the memory (only used by the dataspace infrastructure)
 	 */
-	explicit DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _virt(virt), _origin(phys), _size(size), _perm(perm), _type(type) {
+	explicit DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0,
+			uintptr_t origin = 0)
+		: _virt(virt), _phys(phys), _origin(origin), _size(size), _perm(perm), _type(type) {
 	}
 
 	/**
@@ -67,7 +69,17 @@ public:
 	}
 
 	/**
-	 * The origin of the memory
+	 * The physical address
+	 */
+	uintptr_t phys() const {
+		return _phys;
+	}
+	void phys(uintptr_t addr) {
+		_phys = addr;
+	}
+
+	/**
+	 * The origin of the memory (only used by the dataspace infrastructure)
 	 */
 	uintptr_t origin() const {
 		return _origin;
@@ -108,6 +120,7 @@ public:
 
 private:
 	uintptr_t _virt;
+	uintptr_t _phys;
 	uintptr_t _origin;
 	size_t _size;
 	uint _perm;
@@ -115,7 +128,7 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os,const DataSpaceDesc &desc) {
-	os.writef("virt=%p size=%zu org=%p perm=%#x",
+	os.writef("virt=%p phys=%p size=%zu org=%p perm=%#x",
 			desc.virt(),desc.size(),desc.origin(),desc.perm());
 	return os;
 }

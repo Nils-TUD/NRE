@@ -37,7 +37,6 @@ PORTAL static void portal_acpi(capsel_t) {
 		switch(cmd) {
 			case ACPI::GET_MEM: {
 				uf.finish_input();
-				uf.delegate(hostacpi->mem().sel());
 				uf << E_SUCCESS << hostacpi->mem().desc();
 			}
 			break;

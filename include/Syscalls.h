@@ -209,6 +209,20 @@ public:
 		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value());
 	}
 
+	/**
+	 * Looks up the given capability range in the calling Pd, which has to contain at least the
+	 * base and the type. If existing, the kernel fills the Crd with the other information.
+	 * Otherwise a NULL-Crd is returned.
+	 *
+	 * @param crd the Crd to lookup
+	 * @return the resulting Crd
+	 */
+	static inline Crd lookup(Crd crd) {
+		word_t out1,out2;
+		SyscallABI::syscall(LOOKUP,crd.value(),0,0,0,out1,out2);
+		return Crd(out1);
+	}
+
 private:
 	Syscalls();
 	~Syscalls();

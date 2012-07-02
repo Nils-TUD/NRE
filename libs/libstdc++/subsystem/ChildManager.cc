@@ -536,7 +536,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.virt(),addr);
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.phys(),addr,ds.virt());
 	}
 }
 
@@ -580,7 +580,7 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			DataSpaceDesc src,dst;
 			bool found_src = c->reglist().find(srcsel,src);
 			bool found_dst = c->reglist().find(dstsel,dst);
-			if((!found_src || !found_dst))
+			if(!found_src || !found_dst)
 				throw Exception(E_ARGS_INVALID);
 			if(src.size() != dst.size())
 				throw Exception(E_ARGS_INVALID);
@@ -673,6 +673,7 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
+		Serial::get() << e << "\n";
 		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();
@@ -700,6 +701,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
 		uintptr_t src;
 		size_t size;
+		bool remap = false;
 		uint flags = c->reglist().find(pfaddr,src,size);
 		kill = !flags;
 		// check if the access rights are violated
@@ -712,8 +714,13 @@ void ChildManager::Portals::pf(capsel_t pid) {
 
 		// is the page already mapped (may be ok if two cpus accessed the page at the same time)
 		if(!kill && (flags & ChildMemory::M)) {
+			// first check if our parent has unmapped the memory
+			Crd res = Syscalls::lookup(Crd(src >> ExecEnv::PAGE_SHIFT,0,Crd::MEM));
+			// if so, remap it
+			if(res.is_null())
+				remap = true;
 			// same fault for same cpu again?
-			if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
+			else if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
 				Serial::get().writef("Child '%s': Caused fault for %p on cpu %u twice. Killing Ec\n",
 						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id());
 				kill = true;
@@ -742,7 +749,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				addr++;
 			}
 		}
-		else if(!(flags & ChildMemory::M)) {
+		else if(remap || !(flags & ChildMemory::M)) {
 			uint perms = flags & ChildMemory::RWX;
 			// try to map the next 32 pages
 			size_t msize = Math::min<size_t>(Math::round_up<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);

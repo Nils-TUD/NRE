@@ -72,7 +72,7 @@ private:
 	PORTAL static void portal(capsel_t pid);
 
 	nul::Ports _ports;
-	nul::Sm _sm;
+	nul::UserSm _sm;
 	bool _to_ser;
 	size_t _bufpos;
 	char _buf[MAX_LINE_LEN + 1];

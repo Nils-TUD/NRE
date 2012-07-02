@@ -70,7 +70,6 @@ public:
 private:
 	void get_mem() {
 		UtcbFrame uf;
-		uf.accept_delegates(0);
 		uf << ACPI::GET_MEM;
 		_pts[CPU::current().log_id()]->call(uf);
 
@@ -79,9 +78,8 @@ private:
 		if(res != E_SUCCESS)
 			throw Exception(res);
 		DataSpaceDesc desc;
-		capsel_t sel = uf.get_delegated(0).offset();
 		uf >> desc;
-		_ds = new DataSpace(desc,sel);
+		_ds = new DataSpace(desc);
 	}
 
 	DataSpace *_ds;

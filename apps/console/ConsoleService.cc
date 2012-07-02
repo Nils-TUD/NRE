@@ -30,9 +30,9 @@ void ConsoleService::init() {
 
 	// add dummy sessions for boot screen and HV screen
 	add_session(new ConsoleSessionData(
-			this,ConsoleSessionData::PAGE_BOOT,0,caps() + 0 * Hip::MAX_CPUS,0));
+			this,ConsoleSessionData::PAGE_BOOT,0,caps() + 0 * CPU::count(),0));
 	add_session(new ConsoleSessionData(
-			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * Hip::MAX_CPUS,0));
+			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * CPU::count(),0));
 }
 
 void ConsoleService::prev() {
