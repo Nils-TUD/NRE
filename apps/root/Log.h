@@ -70,6 +70,13 @@ private:
 			buffer(c);
 	}
 
+	// note that we use a portal here instead of shared-memory because dataspace sharing doesn't
+	// work with services living in root. the problem is the translation of caps. the translation
+	// stops as soon as the destination Pd is reached. since stuff in root walks to the
+	// directly to the root-ds-manager and bypasses the childmanager, we receive the cap that is
+	// actually meant for the childmanager in the root-ds-manager. thus, we don't find the dataspace.
+	// to prevent the whole problem, we use a portal which works fine in this case, since its
+	// not performance critical anyway. so, sending a long string doesn't really hurt.
 	PORTAL static void portal(capsel_t pid);
 
 	nul::Ports _ports;
