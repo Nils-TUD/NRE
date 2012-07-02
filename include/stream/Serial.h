@@ -32,6 +32,9 @@ namespace nul {
 class Connection;
 class LogSession;
 
+/**
+ * Common base class for all serial-outstreams. Should not be used directly.
+ */
 class BaseSerial : public OStream {
 	friend class ::Log;
 
@@ -40,24 +43,31 @@ protected:
 		MAX_LINE_LEN	= 120
 	};
 
-public:
-	static BaseSerial& get() {
-		return *_inst;
-	}
-
 	explicit BaseSerial() : OStream() {
 	}
 
-protected:
 	static BaseSerial *_inst;
 };
 
+/**
+ * Serial outstream for all tasks except root. Uses a buffer to keap at most one line or
+ * MAX_LINE_LEN local until it is sent to the log-service via a portal call.
+ */
 class Serial : public BaseSerial {
 	class Init {
 		explicit Init();
 		static Init init;
 	};
 
+public:
+	/**
+	 * @return the instance of the serial outstream
+	 */
+	static BaseSerial& get() {
+		return *_inst;
+	}
+
+private:
 	explicit Serial();
 	virtual ~Serial();
 

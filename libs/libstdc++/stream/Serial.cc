@@ -24,13 +24,15 @@
 
 namespace nul {
 
+BaseSerial *BaseSerial::_inst = 0;
+Serial::Init Serial::Init::init INIT_PRIO_SERIAL;
+
 Serial::Init::Init() {
+	// only the child uses this class. since root offers the log-service in itself, it uses a
+	// different sub-class.
 	if(_startup_info.child)
 		BaseSerial::_inst = new Serial();
 }
-
-BaseSerial *BaseSerial::_inst = 0;
-Serial::Init Serial::Init::init INIT_PRIO_SERIAL;
 
 Serial::Serial()
 	: BaseSerial(), _con(new Connection("log")), _sess(new LogSession(*_con)), _bufpos(0), _buf() {

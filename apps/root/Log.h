@@ -50,15 +50,7 @@ private:
 		while(*str)
 			out(*str++);
 	}
-
-	void buffer(char c) {
-		if(_bufpos == sizeof(_buf) || c == '\n') {
-			write(ROOT_SESS,_buf,_bufpos);
-			_bufpos = 0;
-		}
-		if(c != '\n')
-			_buf[_bufpos++] = c;
-	}
+	void buffer(char c);
 
 	virtual void write(char c) {
 		if(c == '\0')

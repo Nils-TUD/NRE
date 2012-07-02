@@ -51,6 +51,15 @@ void Log::out(char c) {
 	_ports.out<uint8_t>(c,0);
 }
 
+void Log::buffer(char c) {
+	if(_bufpos == sizeof(_buf) || c == '\n') {
+		write(ROOT_SESS,_buf,_bufpos);
+		_bufpos = 0;
+	}
+	if(c != '\n')
+		_buf[_bufpos++] = c;
+}
+
 void Log::write(uint sessid,const char *line,size_t len) {
 	ScopedLock<Sm> guard(&_sm);
 	_to_ser = true;
