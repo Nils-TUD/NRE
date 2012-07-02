@@ -65,7 +65,7 @@ int main() {
 		hostacpi = new HostACPI();
 	}
 	catch(const Exception &e) {
-		Serial::get() << e.name() << ": " << e.msg() << "\n";
+		Serial::get() << e;
 	}
 
 	Service *srv = new Service("acpi",portal_acpi);

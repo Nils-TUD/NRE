@@ -93,12 +93,16 @@ void DataSpace::destroy() {
 	assert(_sel != ObjCap::INVALID && _unmapsel != ObjCap::INVALID);
 	UtcbFrame uf;
 
-	// ensure that the range is unmapped from our address space. this might not happen immediatly
-	// otherwise because the ds might still be in use by somebody else. thus, the parent won't
-	// revoke the memory in this case. but the parent might try to reuse the addresses in our
-	// address space
-	CapRange(_desc.virt() >> ExecEnv::PAGE_SHIFT,
-			_desc.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(true);
+	// don't do that in the root-task. we allocate all memory at the beginning and simply manage
+	// the usage of it. therefore, we never revoke it.
+	if(_startup_info.child) {
+		// ensure that the range is unmapped from our address space. this might not happen immediatly
+		// otherwise because the ds might still be in use by somebody else. thus, the parent won't
+		// revoke the memory in this case. but the parent might try to reuse the addresses in our
+		// address space
+		CapRange(_desc.virt() >> ExecEnv::PAGE_SHIFT,
+				_desc.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(true);
+	}
 
 	uf.translate(_unmapsel);
 	uf << DESTROY << _desc;

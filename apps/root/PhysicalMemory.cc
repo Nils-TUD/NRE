@@ -104,6 +104,7 @@ void PhysicalMemory::map_all() {
 }
 
 bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
+	Serial::get().writef("Trying to map %p .. %p\n",phys,phys + size);
 	const Hip &hip = Hip::get();
 	// check for overflow
 	if(phys + size < phys)
@@ -119,7 +120,7 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	}
 	// check if the child wants to request none-device-memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type != HipMem::RESERVED && Math::overlapped(phys,size,it->addr,it->size))
+		if(!it->reserved() && Math::overlapped(phys,size,it->addr,it->size))
 			return false;
 	}
 	return true;

@@ -21,55 +21,52 @@
 #include <stream/OStream.h>
 #include <arch/ExecEnv.h>
 
-namespace nul {
-
-class Ports;
-class Connection;
-class Session;
-class DataSpace;
-template<class T>
-class Producer;
 class Log;
 
-class Serial : public OStream {
-	friend class Log;
+namespace nul {
 
+// note that we try to include as few headers as possible, because this class is used for debugging.
+// that is, we lack debugging support in every header that we include since we can't include this
+// header there.
+
+class Connection;
+class LogSession;
+
+class BaseSerial : public OStream {
+	friend class ::Log;
+
+protected:
 	enum {
-		COM1	= 0x3F8,
-		COM2	= 0x2E8,
-		COM3	= 0x2F8,
-		COM4	= 0x3E8
-	};
-	enum {
-		DLR_LO	= 0,
-		DLR_HI	= 1,
-		IER		= 1,	// interrupt enable register
-		FCR		= 2,	// FIFO control register
-		LCR		= 3,	// line control register
-		MCR		= 4,	// modem control register
-	};
-	enum {
-		port	= COM1,
-		DS_SIZE	= ExecEnv::PAGE_SIZE
+		MAX_LINE_LEN	= 120
 	};
 
 public:
-	static Serial& get() {
-		return _inst;
+	static BaseSerial& get() {
+		return *_inst;
 	}
 
-private:
+	explicit BaseSerial() : OStream() {
+	}
+
+protected:
+	static BaseSerial *_inst;
+};
+
+class Serial : public BaseSerial {
+	class Init {
+		explicit Init();
+		static Init init;
+	};
+
 	explicit Serial();
-	~Serial();
+	virtual ~Serial();
 
 	virtual void write(char c);
 
-	Ports *_ports;
 	Connection *_con;
-	Session *_sess;
-	DataSpace *_ds;
-	Producer<char> *_prod;
-	static Serial _inst;
+	LogSession *_sess;
+	size_t _bufpos;
+	char _buf[MAX_LINE_LEN + 1];
 };
 
 }

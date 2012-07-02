@@ -57,11 +57,11 @@ class Utcb : public UtcbBase {
 	}
 	size_t free_typed() const {
 		Utcb *utcb = base();
-		return WORDS - (utcb->bottom + sizeof(UtcbHead) / sizeof(word_t) + untyped);
+		return (WORDS - (utcb->bottom + sizeof(UtcbHead) / sizeof(word_t) + untyped)) / 2;
 	}
 	size_t free_untyped() const {
 		Utcb *utcb = base();
-		return (WORDS - (utcb->top + typed * 2)) / 2;
+		return WORDS - (utcb->top + typed * 2);
 	}
 
 	Utcb *push(word_t *&toff) {

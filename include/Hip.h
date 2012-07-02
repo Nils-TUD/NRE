@@ -175,7 +175,6 @@ class HipMem {
 public:
 	enum {
 		AVAILABLE	= 1,
-		RESERVED	= 2,
 		HYPERVISOR	= -1,
 		MB_MODULE	= -2
 	};
@@ -184,6 +183,10 @@ public:
 	uint64_t size;
 	int32_t type;
 	uint32_t aux;
+
+	bool reserved() const {
+		return type != HipMem::AVAILABLE && type != HipMem::HYPERVISOR && type != HipMem::MB_MODULE;
+	}
 };
 
 }

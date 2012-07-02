@@ -117,6 +117,12 @@ public:
 	Pt::portal_func portal() const {
 		return _func;
 	}
+	capsel_t caps() const {
+		return _caps;
+	}
+	const BitField<Hip::MAX_CPUS> &available() const {
+		return _reg_cpus;
+	}
 
 	template<class T>
 	SessionIterator<T> sessions_begin();
@@ -174,9 +180,6 @@ public:
 	}
 
 protected:
-	capsel_t caps() const {
-		return _caps;
-	}
 	void add_session(SessionData *sess) {
 		rcu_assign_pointer(_sessions[sess->id()],sess);
 		created_session(sess->id());

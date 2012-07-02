@@ -1,5 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('env')
-
-env.NulProgram(env, 'log', Glob('*.cc'))

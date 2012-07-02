@@ -38,7 +38,7 @@ class UtcbHead {
 	friend OStream &operator<<(OStream &os,const Utcb &utcb);
 	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
-protected:
+public:
 #if USE_UTCB_KERNEL_EXT
 	uint16_t top;
 	uint16_t bottom;

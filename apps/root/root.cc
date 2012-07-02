@@ -20,6 +20,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <subsystem/ChildManager.h>
+#include <service/Service.h>
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
@@ -31,6 +32,7 @@
 #include "PhysicalMemory.h"
 #include "VirtualMemory.h"
 #include "Hypervisor.h"
+#include "Log.h"
 
 using namespace nul;
 
@@ -40,6 +42,7 @@ class CPU0Init {
 };
 
 EXTERN_C void dlmalloc_init();
+PORTAL static void portal_reg(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
 static void start_childs();
@@ -50,6 +53,7 @@ CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 // stack for LocalEc of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
+static uchar regptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static ChildManager *mng;
 
 CPU0Init::CPU0Init() {
@@ -57,7 +61,8 @@ CPU0Init::CPU0Init() {
 	CPU &cpu = CPU::current();
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	// use the local stack here since we can't map dataspaces yet
-	LocalEc *ec = new LocalEc(cpu.log_id(),ObjCap::INVALID,reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
+	LocalEc *ec = new LocalEc(cpu.log_id(),ObjCap::INVALID,
+			reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
 	cpu.ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
@@ -67,6 +72,13 @@ CPU0Init::CPU0Init() {
 	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+	// register portal for the log service
+	uintptr_t regec_utcb = VirtualMemory::alloc(Utcb::SIZE);
+	LocalEc *regec = new LocalEc(cpu.log_id(),ObjCap::INVALID,
+			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
+	UtcbFrameRef reguf(regec->utcb());
+	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+	cpu.reg_pt = new Pt(regec,portal_reg);
 }
 
 // TODO clang!
@@ -131,12 +143,16 @@ int main() {
 			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+			// register portal for the log service
+			LocalEc *regec = new LocalEc(it->log_id());
+			UtcbFrameRef reguf(ec->utcb());
+			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+			it->reg_pt = new Pt(regec,portal_reg);
 		}
 	}
 
-	// free the io-ports again to make them usable for the log-service
-	Hypervisor::release_ports(0x3f8,6);
-
+	mng = new ChildManager();
+	Log::get().reg();
 	start_childs();
 
 	Sm sm(0);
@@ -145,7 +161,6 @@ int main() {
 }
 
 static void start_childs() {
-	mng = new ChildManager();
 	int i = 0;
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
@@ -160,6 +175,28 @@ static void start_childs() {
 			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);
 		}
+	}
+}
+
+static void portal_reg(capsel_t) {
+	UtcbFrameRef uf;
+	try {
+		String name;
+		BitField<Hip::MAX_CPUS> available;
+		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).offset();
+		uf >> name;
+		uf >> available;
+		uf.finish_input();
+
+		mng->reg_service(0,cap,name,available);
+
+		uf.accept_delegates();
+		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		Syscalls::revoke(uf.get_receive_crd(),true);
+		uf.clear();
+		uf << e.code();
 	}
 }
 

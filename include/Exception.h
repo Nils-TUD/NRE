@@ -92,10 +92,10 @@ public:
 	}
 
 	/**
-	 * @return the error message (may be 0)
+	 * @return the error message
 	 */
 	const char *msg() const {
-		return _msg;
+		return _msg ? _msg : "";
 	}
 	/**
 	 * @return the error-code as a string

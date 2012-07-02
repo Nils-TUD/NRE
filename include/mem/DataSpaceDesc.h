@@ -115,8 +115,8 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os,const DataSpaceDesc &desc) {
-	os.writef("virt=%p size=%zu origin=%p perm=%#x, type=%u",
-			desc.virt(),desc.size(),desc.origin(),desc.perm(),desc.type());
+	os.writef("virt=%p size=%zu org=%p perm=%#x",
+			desc.virt(),desc.size(),desc.origin(),desc.perm());
 	return os;
 }
 

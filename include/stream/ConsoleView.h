@@ -59,7 +59,6 @@ private:
 
 	void create_view() {
 		UtcbFrame uf;
-		uf.accept_delegates(0);
 		uf << Console::CREATE_VIEW << _in_ds.desc() << _out_ds.desc();
 		uf.delegate(_in_ds.sel(),0);
 		uf.delegate(_out_ds.sel(),1);
