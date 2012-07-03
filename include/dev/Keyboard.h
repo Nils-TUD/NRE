@@ -29,6 +29,10 @@ class Keyboard {
 public:
 	typedef uint keycode_t;
 
+	enum Command {
+		REBOOT
+	};
+
 	struct Packet {
 		uint8_t scancode;
 		keycode_t keycode;
@@ -176,17 +180,32 @@ class KeyboardSession : public Session {
 
 public:
 	explicit KeyboardSession(Connection &con) : Session(con),
-			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
+			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true),
+			_pts(new Pt*[CPU::count()]) {
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		_ds.share(*this);
+	}
+	virtual ~KeyboardSession() {
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+			delete _pts[cpu];
+		delete[] _pts;
 	}
 
 	Consumer<Keyboard::Packet> &consumer() {
 		return _consumer;
 	}
 
+	void reboot() {
+		UtcbFrame uf;
+		uf << Keyboard::REBOOT;
+		_pts[CPU::current().log_id()]->call(uf);
+	}
+
 private:
 	DataSpace _ds;
 	Consumer<Keyboard::Packet> _consumer;
+	Pt **_pts;
 };
 
 }

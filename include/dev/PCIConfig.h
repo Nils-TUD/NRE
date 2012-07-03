@@ -32,7 +32,8 @@ public:
 	enum Command {
 		READ,
 		WRITE,
-		ADDR
+		ADDR,
+		REBOOT
 	};
 
 private:
@@ -85,6 +86,16 @@ public:
 		uintptr_t addr;
 		uf >> addr;
 		return addr;
+	}
+
+	void reboot() {
+		UtcbFrame uf;
+		uf << PCIConfig::REBOOT;
+		_pts[CPU::current().log_id()]->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
 	}
 
 private:

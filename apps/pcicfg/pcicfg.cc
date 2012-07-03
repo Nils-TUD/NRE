@@ -41,9 +41,14 @@ PORTAL static void portal_pcicfg(capsel_t) {
 		uint32_t bdf;
 		size_t offset;
 		PCIConfig::Command cmd;
-		uf >> cmd >> bdf >> offset;
+		uf >> cmd;
 
-		Config *cfg = find(bdf,offset);
+		Config *cfg = 0;
+		if(cmd != PCIConfig::REBOOT) {
+			uf >> bdf >> offset;
+			cfg = find(bdf,offset);
+		}
+
 		switch(cmd) {
 			case PCIConfig::READ: {
 				uf.finish_input();
@@ -65,6 +70,13 @@ PORTAL static void portal_pcicfg(capsel_t) {
 				uf.finish_input();
 				uintptr_t res = cfg->addr(bdf,offset);
 				uf << E_SUCCESS << res;
+			}
+			break;
+
+			case PCIConfig::REBOOT: {
+				uf.finish_input();
+				pcicfg->reset();
+				uf << E_SUCCESS;
 			}
 			break;
 		}

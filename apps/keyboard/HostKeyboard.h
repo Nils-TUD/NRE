@@ -93,6 +93,7 @@ public:
 	}
 	bool read(nul::Keyboard::Packet &data);
 	bool read(nul::Mouse::Packet &data);
+	void reboot();
 	void reset();
 
 private:

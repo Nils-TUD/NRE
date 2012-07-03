@@ -134,33 +134,9 @@ static void tick_thread(void*) {
 int main() {
 	conscon = new Connection("console");
 	conssess = new ConsoleSession(*conscon);
-	Sc *sc1 = new Sc(new GlobalEc(view0,0),Qpd());
-	sc1->start();
-	Sc *sc2 = new Sc(new GlobalEc(view0,0),Qpd());
-	sc2->start();
-
-	{
-		Connection con("acpi");
-		ACPISession sess(con);
-		uintptr_t addr;
-		for(size_t i = 0; (addr = sess.find_table(String("APIC"),i)) != 0; ++i)
-			Serial::get() << "APIC " << i << " @ " << reinterpret_cast<void*>(addr) << "\n";
-
-		addr = sess.find_table(String("HPET"));
-		if(addr) {
-			struct HpetAcpiTable {
-				char res[40];
-				unsigned char gas[4];
-				uint32_t address[2];
-			};
-			HpetAcpiTable *table = reinterpret_cast<HpetAcpiTable*>(addr);
-			if(table->gas[0])
-				Serial::get() << "HPET access must be MMIO but is " << table->gas[0] << "\n";
-			else if(table->address[1])
-				Serial::get() << "HPET must be below 4G\n";
-			else
-				Serial::get() << "Found HPET at " << (void*)table->address[0] << "\n";
-		}
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		Sc *sc = new Sc(new GlobalEc(view0,it->log_id()),Qpd());
+		sc->start();
 	}
 
 	{

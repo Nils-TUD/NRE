@@ -20,12 +20,12 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
 	// get rsdt
 	DataSpace *ds;
 	ds = new DataSpace(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,_rsdp->rsdtAddr);
-	RSDT *rsdt = reinterpret_cast<RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
+	ACPI::RSDT *rsdt = reinterpret_cast<ACPI::RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
 	if(rsdt->length > ExecEnv::PAGE_SIZE) {
 		uintptr_t size = rsdt->length;
 		delete ds;
 		ds = new DataSpace(size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,_rsdp->rsdtAddr);
-		rsdt = reinterpret_cast<RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
+		rsdt = reinterpret_cast<ACPI::RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
 	}
 
 	if(checksum(reinterpret_cast<char*>(rsdt),rsdt->length) != 0)
@@ -34,10 +34,10 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
 	// find out the address range of all tables to map them contiguously
 	uint32_t *tables = reinterpret_cast<uint32_t*>(rsdt + 1);
 	uintptr_t min = 0xFFFFFFFF, max = 0;
-	size_t count = (rsdt->length - sizeof(RSDT)) / 4;
+	size_t count = (rsdt->length - sizeof(ACPI::RSDT)) / 4;
 	for(size_t i = 0; i < count; i++) {
 		DataSpace tmp(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,tables[i]);
-		RSDT *tbl = reinterpret_cast<RSDT*>(tmp.virt() + (tables[i] & (ExecEnv::PAGE_SIZE - 1)));
+		ACPI::RSDT *tbl = reinterpret_cast<ACPI::RSDT*>(tmp.virt() + (tables[i] & (ExecEnv::PAGE_SIZE - 1)));
 		/* determine the address range for the RSDT's */
 		if(tables[i] < min)
 			min = tables[i];
@@ -49,9 +49,9 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
 	size_t size = (max + ExecEnv::PAGE_SIZE * 2 - 1) - (min & ~(ExecEnv::PAGE_SIZE - 1));
 	_ds = new DataSpace(size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,min);
 	_count = count;
-	_tables = new RSDT*[count];
+	_tables = new ACPI::RSDT*[count];
 	for(size_t i = 0; i < count; i++) {
-		_tables[i] = reinterpret_cast<RSDT*>(
+		_tables[i] = reinterpret_cast<ACPI::RSDT*>(
 				_ds->virt() + (min & (ExecEnv::PAGE_SIZE - 1)) - min + tables[i]);
 	}
 }

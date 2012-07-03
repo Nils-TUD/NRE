@@ -51,6 +51,11 @@ public:
 		select(bdf,offset);
 		_data.out<uint32_t>(value);
 	}
+	void reset() {
+		_addr.out<uint8_t>((_addr.in<uint8_t>(1) & ~4) | 0x02,1);
+		_addr.out<uint8_t>(0x06,1);
+		_addr.out<uint8_t>(0x01,1);
+	}
 
 private:
 	void select(uint32_t bdf,size_t offset) {

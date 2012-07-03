@@ -16,8 +16,8 @@ using namespace nul;
 ConsoleService *ConsoleService::_inst;
 
 ConsoleService::ConsoleService(const char *name)
-	: Service(name,ConsoleSessionData::portal), _screen(new HostVGA()),
-	  _sess_cycler(sessions_begin(),sessions_end()) {
+	: Service(name,ConsoleSessionData::portal), _con("reboot"), _reboot(_con),
+	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()) {
 }
 
 void ConsoleService::init() {
@@ -58,6 +58,11 @@ void ConsoleService::created_session(size_t idx) {
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
 	switch(pk.keycode) {
+		case Keyboard::VK_END:
+			if((pk.flags & Keyboard::RCTRL) && (pk.flags & Keyboard::RELEASE))
+				_reboot.reboot();
+			return true;
+
 		case Keyboard::VK_LEFT:
 			if(~pk.flags & Keyboard::RELEASE)
 				prev();

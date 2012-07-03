@@ -58,7 +58,7 @@ class KeyboardService : public Service {
 public:
 	typedef SessionIterator<KeyboardSessionData<T> > iterator;
 
-	KeyboardService(const char *name) : Service(name) {
+	KeyboardService(const char *name,Pt::portal_func func = 0) : Service(name,func) {
 	}
 
 	iterator sessions_begin() {
@@ -109,11 +109,29 @@ static void mousehandler(void*) {
 	}
 }
 
+PORTAL static void portal_keyboard(capsel_t) {
+	UtcbFrameRef uf;
+	try {
+		Keyboard::Command cmd;
+		uf >> cmd;
+		switch(cmd) {
+			case Keyboard::REBOOT:
+				hostkb->reboot();
+				break;
+		}
+		uf << E_SUCCESS;
+	}
+	catch(const Exception &e) {
+		uf.clear();
+		uf << e.code();
+	}
+}
+
 int main() {
-	hostkb = new HostKeyboard(0x60,1,true);
+	hostkb = new HostKeyboard(0x60,2,true);
 	hostkb->reset();
 
-	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard");
+	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		kbsrv->provide_on(it->log_id());
 	kbsrv->reg();

@@ -12,6 +12,7 @@
 #include <service/Service.h>
 #include <service/Connection.h>
 #include <dev/Keyboard.h>
+#include <dev/Reboot.h>
 #include <util/Cycler.h>
 
 #include "Screen.h"
@@ -60,6 +61,8 @@ private:
 	virtual nul::SessionData *create_session(size_t id,capsel_t caps,nul::Pt::portal_func func);
 	virtual void created_session(size_t idx);
 
+	nul::Connection _con;
+	nul::RebootSession _reboot;
 	Screen *_screen;
 	nul::Cycler<iterator> _sess_cycler;
 	static ConsoleService *_inst;

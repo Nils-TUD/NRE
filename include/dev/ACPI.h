@@ -35,6 +35,19 @@ public:
 		FIND_TABLE
 	};
 
+	  /* root system descriptor table */
+	struct RSDT {
+		char signature[4];
+		uint32_t length;
+		uint8_t revision;
+		uint8_t checksum;
+		char oemId[6];
+		char oemTableId[8];
+		uint32_t oemRevision;
+		char creatorId[4];
+		uint32_t creatorRevision;
+	} PACKED;
+
 private:
 	ACPI();
 };
@@ -53,7 +66,7 @@ public:
 		delete _ds;
 	}
 
-	uintptr_t find_table(const String &name,uint instance = 0) const {
+	ACPI::RSDT *find_table(const String &name,uint instance = 0) const {
 		UtcbFrame uf;
 		uf << ACPI::FIND_TABLE << name << instance;
 		_pts[CPU::current().log_id()]->call(uf);
@@ -64,7 +77,7 @@ public:
 			throw Exception(res);
 		uintptr_t offset;
 		uf >> offset;
-		return offset == 0 ? 0 : _ds->virt() + offset;
+		return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
 	}
 
 private:

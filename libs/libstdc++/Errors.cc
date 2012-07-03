@@ -32,6 +32,7 @@ static const char *msgs[] = {
 	/* E_ELF_INVALID */		"Invalid ELF file",
 	/* E_ELF_SIG */			"Invalid ELF signature",
 	/* E_ARGS_INVALID */	"Invalid arguments",
+	/* E_FAILURE */			"Failure",
 };
 
 const char *to_string(ErrorCode code) {

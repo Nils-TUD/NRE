@@ -469,6 +469,10 @@ bool HostKeyboard::handle_scancode(Keyboard::Packet &data,uint8_t key) {
 	return true;
 }
 
+void HostKeyboard::reboot() {
+	_port_ctrl.out<uint8_t>(0xfe);
+}
+
 void HostKeyboard::reset() {
 	uint8_t cmdbyte = 0;
 

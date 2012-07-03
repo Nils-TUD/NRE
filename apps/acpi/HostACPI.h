@@ -10,6 +10,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <dev/ACPI.h>
 #include <Compiler.h>
 
 class HostACPI {
@@ -35,19 +36,6 @@ class HostACPI {
 		uint8_t xchecksum;
 	} PACKED;
 
-	  /* root system descriptor table */
-	struct RSDT {
-		char signature[4];
-		uint32_t length;
-		uint8_t revision;
-		uint8_t checksum;
-		char oemId[6];
-		char oemTableId[8];
-		uint32_t oemRevision;
-		char creatorId[4];
-		uint32_t creatorRevision;
-	} PACKED;
-
 public:
 	explicit HostACPI();
 
@@ -67,7 +55,7 @@ private:
 
 private:
 	size_t _count;
-	RSDT **_tables;
+	nul::ACPI::RSDT **_tables;
 	RSDP *_rsdp;
 	nul::DataSpace *_ds;
 };
