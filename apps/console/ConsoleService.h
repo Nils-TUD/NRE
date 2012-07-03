@@ -16,6 +16,7 @@
 #include <util/Cycler.h>
 
 #include "Screen.h"
+#include "ViewSwitcher.h"
 
 class ConsoleSessionData;
 
@@ -50,6 +51,9 @@ public:
 		return Service::sessions_end<ConsoleSessionData>();
 	}
 
+	ViewSwitcher &switcher() {
+		return _switcher;
+	}
 	Screen *screen() {
 		return _screen;
 	}
@@ -65,5 +69,6 @@ private:
 	nul::RebootSession _reboot;
 	Screen *_screen;
 	nul::Cycler<iterator> _sess_cycler;
+	ViewSwitcher _switcher;
 	static ConsoleService *_inst;
 };

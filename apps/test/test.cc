@@ -139,6 +139,7 @@ int main() {
 		sc->start();
 	}
 
+	/*
 	{
 		timercon = new Connection("timer");
 		timer = new TimerSession(*timercon);
@@ -148,7 +149,6 @@ int main() {
 		}
 	}
 
-	/*
 	for(int i = 0; i < 2; ++i) {
 		Connection *con = new Connection("console");
 		Info *info = new Info();
@@ -161,7 +161,6 @@ int main() {
 		sc2->ec()->set_tls(Ec::TLS_PARAM,info);
 		sc2->start();
 	}
-	*/
 
 	{
 		Connection con("keyboard");
@@ -184,6 +183,7 @@ int main() {
 			ms.consumer().next();
 		}
 	}
+	*/
 
 	/*
 	{

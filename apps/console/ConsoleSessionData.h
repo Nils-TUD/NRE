@@ -77,6 +77,17 @@ public:
 			ConsoleService::get()->screen()->set_page(_page,_page);
 	}
 
+	void set_page() {
+		if(_page == PAGE_USER) {
+			iterator it = _view_cycler.current();
+			if(it != _views.end()) {
+				ConsoleService::get()->screen()->set_page(it->uid(),_page);
+				return;
+			}
+		}
+		ConsoleService::get()->screen()->set_page(_page,_page);
+	}
+
 	ConsoleSessionView *create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
 	bool destroy_view(uint view);
 

@@ -17,7 +17,7 @@ ConsoleService *ConsoleService::_inst;
 
 ConsoleService::ConsoleService(const char *name)
 	: Service(name,ConsoleSessionData::portal), _con("reboot"), _reboot(_con),
-	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()) {
+	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()), _switcher() {
 }
 
 void ConsoleService::init() {
@@ -37,15 +37,15 @@ void ConsoleService::init() {
 
 void ConsoleService::prev() {
 	_sess_cycler.current()->to_back();
-	_sess_cycler.prev()->to_front();
+	_switcher.switch_to(&*_sess_cycler.prev());
 }
 
 void ConsoleService::next() {
 	_sess_cycler.current()->to_back();
-	_sess_cycler.next()->to_front();
+	_switcher.switch_to(&*_sess_cycler.next());
 }
 
-SessionData *ConsoleService::create_session(size_t id,capsel_t caps,nul::Pt::portal_func func) {
+SessionData *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 	return new ConsoleSessionData(this,ConsoleSessionData::PAGE_USER,id,caps,func);
 }
 
@@ -53,7 +53,7 @@ void ConsoleService::created_session(size_t idx) {
 	if(_sess_cycler.valid())
 		_sess_cycler.current()->to_back();
 	_sess_cycler.reset(sessions_begin(),iterator(this,idx),sessions_end());
-	active()->to_front();
+	_switcher.switch_to(active());
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {

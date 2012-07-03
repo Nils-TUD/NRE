@@ -9,7 +9,9 @@
 
 #pragma once
 
+#include <kobj/Sm.h>
 #include <mem/DataSpace.h>
+#include <util/Sync.h>
 #include <util/Math.h>
 
 namespace nul {
