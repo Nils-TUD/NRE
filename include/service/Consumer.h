@@ -69,7 +69,12 @@ public:
 	void stop() {
 		_stop = true;
 		Sync::memory_barrier();
-		_sm.up();
+		try {
+			_sm.up();
+		}
+		catch(...) {
+			// ignore it
+		}
 	}
 
 	/**
@@ -110,7 +115,6 @@ public:
 	 */
 	void next() {
 		_if->rpos = (_if->rpos + 1) & (_max - 1);
-		//if(_if->rpos == _if->wpos) {
 		if(((_if->wpos + 1) & (_max - 1)) == _if->rpos) {
 			Sync::memory_barrier();
 			_empty.up();

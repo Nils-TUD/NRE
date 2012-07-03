@@ -673,7 +673,6 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
-		Serial::get() << e << "\n";
 		Syscalls::revoke(uf.get_receive_crd(),true);
 		uf.clear();
 		uf << e.code();

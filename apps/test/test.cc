@@ -187,7 +187,6 @@ int main() {
 	}
 	*/
 
-	/*
 	{
 		Connection con("keyboard");
 		KeyboardSession kb(con);
@@ -209,7 +208,6 @@ int main() {
 			ms.consumer().next();
 		}
 	}
-	*/
 
 	/*
 	{

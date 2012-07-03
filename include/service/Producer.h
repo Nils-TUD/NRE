@@ -49,17 +49,33 @@ public:
 		return _max;
 	}
 
+	/**
+	 * If the client is currently not able to accept it, the method will either block
+	 * (if enabled) or return 0.
+	 *
+	 * @return the pointer to the slot to write to or 0 if there is no free slot at the moment and
+	 * 	blocking is disabled
+	 */
 	T *current() {
 		// wait until its not full anymore
 		while(EXPECT_FALSE(((_if->wpos + 1) & (_max - 1)) == _if->rpos)) {
 			if(!_block)
-				return false;
-			_sm.up();
-			_empty.zero();
+				return 0;
+			try {
+				_sm.up();
+				_empty.zero();
+			}
+			catch(...) {
+				return 0;
+			}
 		}
 		return _if->buffer + _if->wpos;
 	}
 
+	/**
+	 * Moves to the next slot. That is, the position is moved forward and the consumer is notified,
+	 * if necessary, that new data is available
+	 */
 	void next() {
 		bool was_empty = _if->wpos == _if->rpos;
 		_if->wpos = (_if->wpos + 1) & (_max - 1);
@@ -75,17 +91,19 @@ public:
 	}
 
 	/**
-	 * Produces the given item. If the client is currently not able to accept it, the method will
-	 * either block (if enabled) or return false.
+	 * Produces the given item. This is a convenience method which waits for a free slot, copies
+	 * the given item into it and moves to the next.
 	 *
 	 * @param value the value to produce
 	 * @return true if the item has been written successfully (always true if blocking is enabled)
 	 */
 	bool produce(const T &value) {
 		T *slot = current();
-		*slot = value;
-		next();
-		return true;
+		if(slot) {
+			*slot = value;
+			next();
+		}
+		return slot != 0;
 	}
 
 private:

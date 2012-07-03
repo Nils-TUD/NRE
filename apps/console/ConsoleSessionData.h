@@ -82,11 +82,6 @@ public:
 
 	PORTAL static void portal(capsel_t pid);
 
-protected:
-	virtual void accept_ds(nul::DataSpace *) {
-		throw nul::ServiceException(nul::E_ARGS_INVALID);
-	}
-
 private:
 	uint _page;
 	uint _next_id;
