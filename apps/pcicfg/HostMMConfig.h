@@ -55,6 +55,9 @@ class HostMMConfig : public Config {
 			  _mmconfig(reinterpret_cast<uint*>(_ds.virt())) {
 		}
 
+		uintptr_t addr() const {
+			return _ds.phys();
+		}
 		bool contains(uint32_t bdf,size_t offset) {
 			return offset < 0x400 && nul::Math::in_range(bdf,_start,_size);
 		}
@@ -87,7 +90,12 @@ public:
 		}
 		return false;
 	}
+	virtual uintptr_t addr(uint32_t bdf,size_t offset) {
+		MMConfigRange *range = find(bdf,offset);
+		return range->addr();
+	}
 	virtual uint32_t read(uint32_t bdf,size_t offset) {
+		nul::Serial::get() << "MMCONFIG: bdf=" << bdf << ", offset=" << offset << "\n";
 		MMConfigRange *range = find(bdf,offset);
 		return range->read(bdf,offset);
 	}

@@ -30,8 +30,10 @@ void HostHPET::HPETTimer::init(cpu_t cpu) {
 
 		Connection con("pcicfg");
 		PCIConfigSession pcicfg(con);
-		void *pcicfg_addr = reinterpret_cast<void*>(pcicfg.read(rid,0));
-		_gsi = new Gsi(pcicfg_addr,cpu);
+		uintptr_t phys_addr = pcicfg.addr(rid,0);
+		DataSpace hpetds(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,phys_addr);
+		UNUSED volatile char fetch = *reinterpret_cast<char*>(hpetds.virt());
+		_gsi = new Gsi(reinterpret_cast<void*>(hpetds.virt()),cpu);
 
 		if(_verbose) {
 			Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#x)\n",
@@ -187,7 +189,7 @@ uint16_t HostHPET::get_rid(uint8_t block,uint comparator) {
 	ACPISession sess(con);
 	uintptr_t addr = sess.find_table(String("DMAR"));
 	if(!addr)
-		throw Exception(E_NOT_FOUND,"Unable to find DMAR in ACPI tables");
+		return 0;
 
 	DmarTableParser p(reinterpret_cast<char*>(addr));
 	DmarTableParser::Element e = p.get_element();

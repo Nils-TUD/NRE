@@ -36,7 +36,7 @@ public:
 
 	enum {
 		MAX_CPUS	= 64,	// has to be a power of 2
-		MAX_GSIS	= 64
+		MAX_GSIS	= 128
 	};
 
 	/**

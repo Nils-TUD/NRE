@@ -28,10 +28,10 @@ static HostPCIConfig *pcicfg;
 static HostMMConfig *mmcfg;
 
 static Config *find(uint32_t bdf,size_t offset) {
-	if(pcicfg->contains(bdf,offset))
-		return pcicfg;
 	if(mmcfg && mmcfg->contains(bdf,offset))
 		return mmcfg;
+	if(pcicfg->contains(bdf,offset))
+		return pcicfg;
 	throw Exception(E_NOT_FOUND);
 }
 
@@ -58,6 +58,13 @@ PORTAL static void portal_pcicfg(capsel_t) {
 				uf.finish_input();
 				cfg->write(bdf,offset,value);
 				uf << E_SUCCESS;
+			}
+			break;
+
+			case PCIConfig::ADDR: {
+				uf.finish_input();
+				uintptr_t res = cfg->addr(bdf,offset);
+				uf << E_SUCCESS << res;
 			}
 			break;
 		}

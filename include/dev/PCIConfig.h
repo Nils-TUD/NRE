@@ -31,7 +31,8 @@ class PCIConfig {
 public:
 	enum Command {
 		READ,
-		WRITE
+		WRITE,
+		ADDR
 	};
 
 private:
@@ -71,6 +72,19 @@ public:
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
+	}
+
+	uintptr_t addr(uint32_t bdf,size_t offset) {
+		UtcbFrame uf;
+		uf << PCIConfig::ADDR << bdf << offset;
+		_pts[CPU::current().log_id()]->call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+		uintptr_t addr;
+		uf >> addr;
+		return addr;
 	}
 
 private:

@@ -37,8 +37,12 @@ public:
 	virtual bool contains(uint32_t bdf,size_t offset) const {
 		return offset < 0x40 && bdf < 0x10000;
 	}
+	virtual uintptr_t addr(uint32_t,size_t) {
+		throw nul::Exception(nul::E_ARGS_INVALID);
+	}
 	virtual uint32_t read(uint32_t bdf,size_t offset) {
 		nul::ScopedLock<nul::UserSm> guard(&_sm);
+		nul::Serial::get() << "PCICONFIG: bdf=" << bdf << ", offset=" << offset << "\n";
 		select(bdf,offset);
 		return _data.in<uint32_t>();
 	}

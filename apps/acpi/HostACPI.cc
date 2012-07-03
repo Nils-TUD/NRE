@@ -9,6 +9,7 @@
 
 #include <mem/DataSpace.h>
 #include <stream/Serial.h>
+#include <String.h>
 #include <cstring>
 
 #include "HostACPI.h"

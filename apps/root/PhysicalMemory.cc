@@ -106,7 +106,6 @@ void PhysicalMemory::map_all() {
 }
 
 bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
-	Serial::get().writef("Trying to map %p .. %p\n",phys,phys + size);
 	const Hip &hip = Hip::get();
 	// check for overflow
 	if(phys + size < phys)

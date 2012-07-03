@@ -28,6 +28,7 @@ public:
 	}
 
 	virtual bool contains(uint32_t bdf,size_t offset) const = 0;
+	virtual uintptr_t addr(uint32_t bdf,size_t offset) = 0;
 	virtual uint32_t read(uint32_t bdf,size_t offset) = 0;
 	virtual void write(uint32_t bdf,size_t offset,uint32_t value) = 0;
 };
