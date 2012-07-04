@@ -16,20 +16,30 @@
 #include <mem/DataSpace.h>
 
 class ConsoleSessionData;
+class ConsoleSessionView;
 
 class ViewSwitcher {
 	enum {
-		DS_SIZE	= nul::ExecEnv::PAGE_SIZE
+		DS_SIZE		= nul::ExecEnv::PAGE_SIZE,
+		COLOR		= 0x1F
 	};
 
 	struct SwitchCommand {
+		size_t oldsessid;
 		size_t sessid;
+		size_t oldviewid;
+		size_t viewid;
 	};
 
 public:
 	explicit ViewSwitcher();
 
-	void switch_to(ConsoleSessionData *sess);
+	void start() {
+		_sc.start();
+	}
+
+	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);
+	void switch_to(ConsoleSessionView *from,ConsoleSessionView *to);
 
 private:
 	static void switch_thread(void*);
@@ -39,4 +49,6 @@ private:
 	nul::Consumer<SwitchCommand> _cons;
 	nul::GlobalEc _ec;
 	nul::Sc _sc;
+	static char _backup[];
+	static char _buffer[];
 };

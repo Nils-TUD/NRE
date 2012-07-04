@@ -12,8 +12,8 @@
 using namespace nul;
 
 void HostVGA::set_page(uint uid,uint page) {
+	assert(page < PAGE_COUNT);
 	current(uid);
-	page &= PAGE_COUNT - 1;
 	_page = page;
 	// due to odd/even addressing
 	page <<= 11;

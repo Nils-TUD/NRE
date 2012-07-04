@@ -31,7 +31,7 @@ public:
 		_current = current;
 	}
 
-	virtual nul::DataSpace &mem() = 0;
+	virtual nul::DataSpace &mem(uint page) = 0;
 	virtual void set_page(uint uid,uint page) = 0;
 
 private:

@@ -33,7 +33,9 @@ public:
 	uint uid() const {
 		return _uid;
 	}
-	bool is_active() const;
+	ConsoleSessionData *session() {
+		return _sess;
+	}
 
 	void swap();
 	nul::Producer<nul::Console::ReceivePacket> &prod() {

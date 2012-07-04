@@ -728,7 +728,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error);
 				Serial::get() << "Page already mapped. See regionlist:\n";
-				Serial::get() << c->reglist();
+				//Serial::get() << c->reglist();
 				c->_last_fault_addr = pfaddr;
 				c->_last_fault_cpu = cpu;
 			}

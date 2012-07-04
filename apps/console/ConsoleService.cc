@@ -33,16 +33,19 @@ void ConsoleService::init() {
 			this,ConsoleSessionData::PAGE_BOOT,0,caps() + 0 * CPU::count(),0));
 	add_session(new ConsoleSessionData(
 			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * CPU::count(),0));
+	_switcher.start();
 }
 
 void ConsoleService::prev() {
-	_sess_cycler.current()->to_back();
-	_switcher.switch_to(&*_sess_cycler.prev());
+	ConsoleSessionData *old = active();
+	iterator it = _sess_cycler.prev();
+	_switcher.switch_to(old,&*it);
 }
 
 void ConsoleService::next() {
-	_sess_cycler.current()->to_back();
-	_switcher.switch_to(&*_sess_cycler.next());
+	ConsoleSessionData *old = active();
+	iterator it = _sess_cycler.next();
+	_switcher.switch_to(old,&*it);
 }
 
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
@@ -50,10 +53,10 @@ SessionData *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_f
 }
 
 void ConsoleService::created_session(size_t idx) {
-	if(_sess_cycler.valid())
-		_sess_cycler.current()->to_back();
-	_sess_cycler.reset(sessions_begin(),iterator(this,idx),sessions_end());
-	_switcher.switch_to(active());
+	ConsoleSessionData *old = active();
+	iterator it = iterator(this,idx);
+	_sess_cycler.reset(sessions_begin(),it,sessions_end());
+	_switcher.switch_to(old,&*it);
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {

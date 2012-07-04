@@ -23,19 +23,22 @@ class HostVGA : public Screen {
 		START_ADDR_LO	= 0xd
 	};
 	enum {
-		PAGE_COUNT		= 8,
-		VGA_MEM			= 0xb8000 + ConsoleSessionData::PAGE_USER * nul::ExecEnv::PAGE_SIZE,
-		VGA_MEM_SIZE	= nul::ExecEnv::PAGE_SIZE,
+		PAGE_COUNT		= 3,
+		VGA_MEM			= 0xb8000,
+		VGA_PAGE_SIZE	= nul::ExecEnv::PAGE_SIZE,
 	};
 
 public:
-	explicit HostVGA()
-			: Screen(), _ports(0x3d4,2), _page(0),
-			  _ds(VGA_MEM_SIZE,nul::DataSpaceDesc::LOCKED,nul::DataSpaceDesc::RW,VGA_MEM) {
+	explicit HostVGA() : Screen(), _ports(0x3d4,2), _page(0), _ds() {
+		for(uint p = 0; p < PAGE_COUNT; ++p) {
+			_ds[p] = new nul::DataSpace(VGA_PAGE_SIZE,nul::DataSpaceDesc::LOCKED,
+					nul::DataSpaceDesc::RW,VGA_MEM + p * nul::ExecEnv::PAGE_SIZE);
+		}
 	}
 
-	virtual nul::DataSpace &mem() {
-		return _ds;
+	virtual nul::DataSpace &mem(uint page) {
+		assert(page < PAGE_COUNT);
+		return *_ds[page];
 	}
 	virtual void set_page(uint uid,uint page);
 
@@ -47,5 +50,5 @@ private:
 
 	nul::Ports _ports;
 	uint _page;
-	nul::DataSpace _ds;
+	nul::DataSpace *_ds[PAGE_COUNT];
 };

@@ -31,10 +31,10 @@ ConsoleSessionView *ConsoleSessionData::create_view(DataSpace *in_ds,DataSpace *
 	ScopedLock<UserSm> guard(&_sm);
 	uint id = _next_id++;
 	ScopedPtr<ConsoleSessionView> v(new ConsoleSessionView(this,id,in_ds,out_ds));
+	iterator old = _view_cycler.current();
 	iterator it = _views.append(v.get());
-	ConsoleService::get()->active()->to_back();
 	_view_cycler.reset(_views.begin(),it,_views.end());
-	to_front();
+	ConsoleService::get()->switcher().switch_to(&*old,&*it);
 	return v.release();
 }
 
@@ -42,11 +42,10 @@ bool ConsoleSessionData::destroy_view(uint view) {
 	ScopedLock<UserSm> guard(&_sm);
 	for(iterator it = _views.begin(); it != _views.end(); ++it) {
 		if(it->id() == view) {
+			iterator old = _view_cycler.current();
 			_views.remove(&*it);
-			if(is_active() && _view_cycler.current() != it)
-				_view_cycler.current()->swap();
 			_view_cycler.reset(_views.begin(),_views.begin(),_views.end());
-			to_front();
+			ConsoleService::get()->switcher().switch_to(&*old,&*_view_cycler.current());
 			RCU::invalidate(&*it);
 			return true;
 		}

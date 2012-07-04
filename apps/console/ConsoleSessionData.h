@@ -35,48 +35,30 @@ public:
 		iterator it = _view_cycler.current();
 		return it != _views.end() ? &*it : 0;
 	}
-	bool is_active() const {
-		return ConsoleService::get()->is_active(this);
-	}
-	bool is_active(const ConsoleSessionView *view) const {
-		return is_active() && view == &*_view_cycler.current();
+	ConsoleSessionView *get(uint id) {
+		for(iterator it = _views.begin(); it != _views.end(); ++it) {
+			if(it->id() == id)
+				return &*it;
+		}
+		return 0;
 	}
 
 	void prev() {
 		if(_views.length() > 1) {
-			// copy current to backend
-			_view_cycler.current()->swap();
-			// copy prev to frontend
-			_view_cycler.prev()->swap();
+			iterator cur = _view_cycler.current();
+			ConsoleService::get()->switcher().switch_to(&*cur,&*_view_cycler.prev());
 		}
 	}
 	void next() {
 		if(_views.length() > 1) {
-			_view_cycler.current()->swap();
-			_view_cycler.next()->swap();
+			iterator cur = _view_cycler.current();
+			ConsoleService::get()->switcher().switch_to(&*cur,&*_view_cycler.next());
 		}
 	}
 
-	void to_back() {
-		if(_page == PAGE_USER) {
-			iterator it = _view_cycler.current();
-			if(it != _views.end())
-				it->swap();
-		}
+	uint page() const {
+		return _page;
 	}
-
-	void to_front() {
-		if(_page == PAGE_USER) {
-			iterator it = _view_cycler.current();
-			if(it != _views.end()) {
-				ConsoleService::get()->screen()->set_page(it->uid(),_page);
-				it->swap();
-			}
-		}
-		else
-			ConsoleService::get()->screen()->set_page(_page,_page);
-	}
-
 	void set_page() {
 		if(_page == PAGE_USER) {
 			iterator it = _view_cycler.current();

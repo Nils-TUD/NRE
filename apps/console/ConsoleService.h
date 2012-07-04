@@ -37,9 +37,6 @@ public:
 		iterator it = _sess_cycler.current();
 		return it != sessions_end() ? &*it : 0;
 	}
-	bool is_active(const ConsoleSessionData *sess) const {
-		return _sess_cycler.valid() && sess == &*_sess_cycler.current();
-	}
 
 	void prev();
 	void next();

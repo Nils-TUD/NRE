@@ -31,10 +31,6 @@ ConsoleSessionView::~ConsoleSessionView() {
 	delete _in_ds;
 }
 
-bool ConsoleSessionView::is_active() const {
-	return _sess->is_active(this);
-}
-
 void ConsoleSessionView::swap() {
-	_out_ds->switch_to(ConsoleService::get()->screen()->mem());
+	_out_ds->switch_to(ConsoleService::get()->screen()->mem(_sess->page()));
 }
