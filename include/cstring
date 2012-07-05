@@ -20,3 +20,4 @@ EXTERN_C int memcmp(const void *str1,const void *str2,size_t count);
 EXTERN_C int strcmp(const char *dst,const char *src);
 EXTERN_C char *strchr(const char *str,int ch);
 EXTERN_C char *strstr(const char *str1,const char *str2);
+EXTERN_C int strcspn(const char *s,const char *reject);
