@@ -23,12 +23,43 @@ public:
 		return __sync_fetch_and_add(ptr,value);
 	}
 
+	template<typename T> static void bit_and(T *ptr,T value) {
+		__sync_and_and_fetch(ptr,value);
+	}
+	template<typename T> static void bit_or(T *ptr,T value) {
+		__sync_or_and_fetch(ptr,value);
+	}
+
+	template<typename T>
+	static void set_bit(T *vector,uint bit,bool value = true) {
+		uint index = bit >> 5;
+		T mask = 1 << (bit & 0x1f);
+		if(value && (~vector[index] & mask))
+			bit_or(vector + index,mask);
+		if(!value && (vector[index] & mask))
+			bit_and(vector + index,~mask);
+	}
+
 	/**
 	 * Compare and swap
 	 */
 	template<typename T,typename Y>
 	static bool swap(T volatile *ptr,Y oldval,Y newval) {
 		return __sync_bool_compare_and_swap(ptr,oldval,newval);
+	}
+
+	static uint32_t cmpxchg4b(unsigned *var,uint32_t oldvalue,uint32_t newvalue) {
+		return __sync_val_compare_and_swap(reinterpret_cast<uint32_t*>(var),oldvalue,newvalue);
+	}
+	static uint32_t cmpxchg4b(volatile void *var,uint32_t oldvalue,uint32_t newvalue) {
+		return __sync_val_compare_and_swap(reinterpret_cast<volatile uint32_t*>(var),oldvalue,newvalue);
+	}
+
+	static uint64_t cmpxchg8b(void *var,uint64_t oldvalue,uint64_t newvalue) {
+		return __sync_val_compare_and_swap(reinterpret_cast<uint64_t*>(var),oldvalue,newvalue);
+	}
+	static uint64_t cmpxchg8b(volatile void *var,uint64_t oldvalue,uint64_t newvalue) {
+		return __sync_val_compare_and_swap(reinterpret_cast<volatile uint64_t*>(var),oldvalue,newvalue);
 	}
 
 	static uint64_t read_atonce(volatile uint64_t &v) {

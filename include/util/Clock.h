@@ -93,10 +93,20 @@ public:
 	 * @return the delta in the destination frequency
 	 */
 	timevalue_t dest_delta(timevalue_t tsc) const {
+		return delta(_dst_freq,tsc);
+	}
+
+	timevalue_t time(timevalue_t freq) const {
+		return time_of(freq,source_time());
+	}
+	timevalue_t time_of(timevalue_t freq,timevalue_t tsc) const {
+		return Math::muldiv128(tsc,freq,_src_freq);
+	}
+	timevalue_t delta(timevalue_t freq,timevalue_t tsc) const {
 		timevalue_t now = source_time();
 		if(now > tsc)
 			return 0;
-		return Math::muldiv128(tsc - now,_dst_freq,_src_freq);
+		return Math::muldiv128(tsc - now,freq,_src_freq);
 	}
 
 private:

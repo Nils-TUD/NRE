@@ -19,6 +19,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <stream/OStream.h>
 
 namespace nul {
 

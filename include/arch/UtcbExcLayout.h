@@ -20,10 +20,29 @@
 
 #include <arch/Types.h>
 #include <utcb/UtcbHead.h>
+#include <cstring>
+
+#define GREG(NAME)						\
+	union {								\
+		struct {						\
+			uint8_t NAME##l, NAME##h;	\
+		};								\
+		uint16_t NAME##x;				\
+		uint32_t e##NAME##x;			\
+		word_t r##NAME##x;				\
+	}
+
+#define GREG16(NAME)					\
+	union {								\
+		uint16_t NAME;					\
+		uint32_t e##NAME;				\
+		word_t r##NAME;					\
+	}
 
 namespace nul {
 
 class UtcbExc : public UtcbHead {
+public:
 	struct Descriptor {
 		uint16_t sel,ar;
 		uint32_t limit;
@@ -36,33 +55,43 @@ class UtcbExc : public UtcbHead {
 		}
 	};
 
-public:
-	word_t mtd;
-	word_t inst_len,rip,rfl;
-	uint32_t intr_state,actv_state,inj_info,inj_error;
 	union {
 		struct {
-			word_t rax,rcx,rdx,rbx,rsp,rbp,rsi,rdi;
-#ifdef __x86_64__
-            word_t r8,r9,r10,r11,r12,r13,r14,r15;
-#endif
+			word_t mtd;
+			word_t inst_len;
+			GREG16(ip); GREG16(fl);
+			uint32_t intr_state,actv_state,inj_info,inj_error;
+			union {
+				struct {
+					GREG(a); GREG(c); GREG(d); GREG(b);
+					GREG16(sp); GREG16(bp); GREG16(si); GREG16(di);
+		#ifdef __x86_64__
+					word_t r8,r9,r10,r11,r12,r13,r14,r15;
+		#endif
+				};
+		#ifdef __x86_64__
+				word_t gpr[16];
+		#else
+				word_t gpr[8];
+		#endif
+			};
+			uint64_t qual[2];
+			uint32_t ctrl[2];
+			int64_t tsc_off;
+			word_t cr0,cr2,cr3,cr4;
+		#ifdef __x86_64__
+			word_t cr8,reserved;
+		#endif
+			word_t dr7,sysenter_cs,sysenter_rsp,sysenter_rip;
+			Descriptor es,cs,ss,ds,fs,gs;
+			Descriptor ld,tr,gd,id;
 		};
-#ifdef __x86_64__
-		word_t gpr[16];
-#else
-		word_t gpr[8];
-#endif
+		word_t words[];
 	};
-	uint64_t qual[2];
-	uint32_t ctrl[2];
-	int64_t tsc_off;
-	word_t cr0,cr2,cr3,cr4;
-#ifdef __x86_64__
-	word_t cr8,reserved;
-#endif
-	word_t dr7,sysenter_cs,sysenter_rsp,sysenter_rip;
-	Descriptor es,cs,ss,ds,fs,gs;
-	Descriptor ld,tr,gd,id;
+
+	void clear() {
+		memset(words, 0, sizeof(words));
+	}
 };
 
 }

@@ -21,11 +21,23 @@
 #include <arch/Types.h>
 #include <arch/ExecEnv.h>
 #include <stream/OStream.h>
+#include <stream/OStringStream.h>
+#include <Exception.h>
 
 namespace nul {
 
 class Util {
 public:
+	static void panic(const char *fmt,...) {
+		static char msg[256];
+		va_list ap;
+		OStringStream os(msg,sizeof(msg));
+		va_start(ap,fmt);
+		os.vwritef(fmt,ap);
+		va_end(ap);
+		throw Exception(E_FAILURE,msg);
+	}
+
 	template<typename T>
 	static void swap(T &t1,T &t2) {
 		T tmp = t1;

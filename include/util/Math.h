@@ -65,7 +65,7 @@ public:
 	}
 	/**
 	 * Computes (<value> * <factor>) / <divisor> and takes care that <value> * <factor> might be
-	 * larger than 64 bit (the end-result has to fit in 64 bit again, of course).
+	 * larger than 64 bit (the end-result has to fit in 64-bit again, of course).
 	 */
 	static uint64_t muldiv128(uint64_t value,uint64_t factor,uint64_t divisor) {
 		uint32_t low = value & 0xFFFFFFFF;

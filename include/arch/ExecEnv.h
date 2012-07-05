@@ -44,6 +44,7 @@ public:
 		PAGE_SIZE		= 1 << PAGE_SHIFT,
 		STACK_SIZE		= PAGE_SIZE,
 		KERNEL_START	= ARCH_KERNEL_START,
+		PHYS_ADDR_SIZE	= 40
 	};
 
 	static inline Pd *get_current_pd() {
