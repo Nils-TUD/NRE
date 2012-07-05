@@ -64,6 +64,12 @@ class Utcb : public UtcbBase {
 		return WORDS - (utcb->top + typed * 2);
 	}
 
+	// only used for UtcbCopy
+	void push_layer() {
+	}
+	void pop_layer() {
+	}
+
 	Utcb *push(word_t *&toff) {
 		Utcb *utcb = base();
 		size_t off = (sizeof(UtcbHead) / sizeof(word_t)) + untyped;

@@ -29,7 +29,7 @@ OStream &operator<<(OStream &os,const UtcbFrameRef &frm) {
 		os.writef("\t\t%zu: %#x\n",i,frm._utcb->msg[i]);
 	os << "\tTyped: " << frm.typed() << "\n";
 	for(size_t i = 0; i < frm.typed() * 2; i += 2)
-		os.writef("\t\t%zu: %#x %#x\n",i,frm._top[-(i + 1)],frm._top[-(i + 2)]);
+		os.writef("\t\t%zu: %#x %#x @ %p\n",i,frm._top[-(i + 1)],frm._top[-(i + 2)],&frm._top[-(i + 1)]);
 	return os;
 }
 

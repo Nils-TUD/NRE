@@ -111,13 +111,16 @@ private:
 
 	explicit UtcbFrameRef(Utcb *utcb,size_t top)
 			: _utcb(utcb), _top(Utcb::get_top(utcb,top)), _upos(), _tpos() {
+		_utcb->push_layer();
 	}
 public:
 	explicit UtcbFrameRef(Utcb *utcb = Ec::current()->utcb())
 			: _utcb(utcb), _top(Utcb::get_top(_utcb)), _upos(), _tpos() {
 		_utcb = Utcb::get_current_frame(_utcb);
+		_utcb->push_layer();
 	}
 	virtual ~UtcbFrameRef() {
+		_utcb->pop_layer();
 	}
 
 	void clear() {

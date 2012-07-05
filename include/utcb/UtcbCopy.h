@@ -32,8 +32,10 @@ class Utcb : public UtcbBase {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
 
+public:
 	enum {
-		POS_SLOT	= ((SIZE - sizeof(UtcbHead)) / sizeof(word_t)) / 2
+		POS_SLOT	= ((SIZE - sizeof(UtcbHead)) / sizeof(word_t)) / 2,
+		SLOTS		= WORDS - sizeof(UtcbHead) / sizeof(word_t)
 	};
 
 	static word_t *get_top(Utcb *frame) {
@@ -47,15 +49,18 @@ class Utcb : public UtcbBase {
 		return base;
 	}
 
+	uint layer() const {
+		return (msg[POS_SLOT] >> 12) & 0xF;
+	}
 	uint untyped_count() const {
-		return msg[POS_SLOT] & 0xFFFF;
+		return msg[POS_SLOT] & 0xFFF;
 	}
 	uint untyped_start() const {
 		return POS_SLOT - untyped_count();
 	}
 	void add_untyped(int n) {
 		short ut = untyped_count();
-		msg[POS_SLOT] = (msg[POS_SLOT] & 0xFFFF0000) | (ut + n);
+		msg[POS_SLOT] = (msg[POS_SLOT] & 0xFFFFF000) | (ut + n);
 	}
 	uint typed_count() const {
 		return msg[POS_SLOT] >> 16;
@@ -67,40 +72,57 @@ class Utcb : public UtcbBase {
 		short t = typed_count();
 		msg[POS_SLOT] = (msg[POS_SLOT] & 0x0000FFFF) | (t + n) << 16;
 	}
+	void set_layer(int layer) {
+		assert(layer >= 0 && layer <= 0xF);
+		msg[POS_SLOT] = (msg[POS_SLOT] & 0xFFFF0FFF) | (layer << 12);
+	}
 
 	Utcb *base() const {
 		return reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(this) & ~(SIZE - 1));
 	}
 	size_t free_typed() const {
-		return (WORDS - POS_SLOT - 1 - typed_count() - typed * 2) / 2;
+		return (SLOTS - POS_SLOT - 1 - typed_count() - typed * 2) / 2;
 	}
 	size_t free_untyped() const {
-		return POS_SLOT - untyped_count() - untyped - (sizeof(UtcbHead) / sizeof(word_t));
+		return POS_SLOT - untyped_count() - untyped;
+	}
+
+	void push_layer() {
+		set_layer(layer() + 1);
+	}
+	void pop_layer() {
+		set_layer(layer() - 1);
 	}
 
 	Utcb *push(word_t *&) {
-		const int utcount = (sizeof(UtcbHead) / sizeof(word_t)) + untyped;
-		const int tcount = typed * 2;
-		word_t *utbackup = msg + untyped_start();
-		word_t *tbackup = msg + typed_start();
-		memcpy(utbackup - utcount,this,utcount * sizeof(word_t));
-		utbackup[-(utcount + 1)] = utcount;
-		memcpy(tbackup,get_top(this) - tcount,tcount * sizeof(word_t));
-		tbackup[tcount] = tcount;
-		add_untyped(utcount + 1);
-		add_typed(tcount + 1);
+		uint l = layer();
+		if(l > 1) {
+			const int utcount = (sizeof(UtcbHead) / sizeof(word_t)) + untyped;
+			const int tcount = typed * 2;
+			word_t *utbackup = msg + untyped_start();
+			word_t *tbackup = msg + typed_start();
+			memcpy(utbackup - utcount,this,utcount * sizeof(word_t));
+			utbackup[-(utcount + 1)] = utcount;
+			memcpy(tbackup,get_top(this) - tcount,tcount * sizeof(word_t));
+			tbackup[tcount] = tcount;
+			add_untyped(utcount + 1);
+			add_typed(tcount + 1);
+		}
 		reset();
 		return this;
 	}
 	void pop() {
-		const word_t *utbackup = msg + untyped_start();
-		const word_t *tbackup = msg + typed_start();
-		const int utcount = utbackup[0];
-		const int tcount = tbackup[-1];
-		memcpy(this,utbackup + 1,utcount * sizeof(word_t));
-		memcpy(get_top(this) - tcount,tbackup,tcount * sizeof(word_t));
-		add_untyped(-(utcount + 1));
-		add_typed(-(tcount + 1));
+		uint l = layer();
+		if(l > 1) {
+			const word_t *utbackup = msg + untyped_start();
+			const word_t *tbackup = msg + typed_start();
+			const int utcount = utbackup[0];
+			const int tcount = tbackup[-1];
+			memcpy(this,utbackup + 1,utcount * sizeof(word_t));
+			memcpy(get_top(this) - tcount,tbackup,tcount * sizeof(word_t));
+			add_untyped(-(utcount + 1));
+			add_typed(-(tcount + 1));
+		}
 	}
 };
 
