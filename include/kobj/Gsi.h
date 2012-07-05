@@ -59,18 +59,23 @@ public:
 		release();
 	}
 
-	uint64_t msi_addr() const {
-		return _msi_addr;
-	}
-	word_t msi_value() const {
-		return _msi_value;
-	}
-
 	/**
 	 * @return the GSI
 	 */
 	uint gsi() const {
 		return _gsi;
+	}
+	/**
+	 * @return the MSI address to program into the device (only set if its a MSI)
+	 */
+	uint64_t msi_addr() const {
+		return _msi_addr;
+	}
+	/**
+	 * @return the MSI value to program into the device (only set if its a MSI)
+	 */
+	word_t msi_value() const {
+		return _msi_value;
 	}
 
 private:

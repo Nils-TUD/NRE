@@ -20,8 +20,10 @@ class ConsoleSessionView;
 
 class ViewSwitcher {
 	enum {
-		DS_SIZE		= nul::ExecEnv::PAGE_SIZE,
-		COLOR		= 0x1F
+		DS_SIZE			= nul::ExecEnv::PAGE_SIZE,
+		COLOR			= 0x1F,
+		SWITCH_TIME		= 1000,	// ms
+		REFRESH_DELAY	= 25	// ms
 	};
 
 	struct SwitchCommand {

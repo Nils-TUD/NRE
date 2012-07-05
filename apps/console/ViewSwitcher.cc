@@ -49,6 +49,8 @@ void ViewSwitcher::switch_to(ConsoleSessionView *from,ConsoleSessionView *to) {
 
 void ViewSwitcher::switch_thread(void*) {
 	ViewSwitcher *vs = Ec::current()->get_tls<ViewSwitcher*>(Ec::TLS_PARAM);
+	// note that we can do that here (although we're created from ConsoleService) because we start
+	// this thread after the instance has been created (in ConsoleService::init).
 	ConsoleService *srv = ConsoleService::get();
 	Clock clock(1000);
 	Connection con("timer");
@@ -86,7 +88,7 @@ void ViewSwitcher::switch_thread(void*) {
 				ConsoleSessionData *old = srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
 				if(old) {
 					ConsoleSessionView *view = old->get(cmd->oldviewid);
-					// if there is a view and we have already given im the screen, take it away
+					// if there is a view and we have already given him the screen, take it away
 					if(until == 0 && view)
 						view->swap();
 					// if there is no screen, restore the first line
@@ -99,7 +101,7 @@ void ViewSwitcher::switch_thread(void*) {
 			sessid = cmd->sessid;
 			viewid = cmd->viewid;
 			// show the tag for 1sec
-			until = clock.source_time(1000);
+			until = clock.source_time(SWITCH_TIME);
 			tag_done = false;
 			vs->_cons.next();
 		}
@@ -113,7 +115,7 @@ void ViewSwitcher::switch_thread(void*) {
 				continue;
 			}
 
-			// write console data
+			// repaint all lines from the buffer except the first
 			ConsoleSessionView *view = sess->get(viewid);
 			sess->set_page();
 			if(view) {
@@ -145,6 +147,6 @@ void ViewSwitcher::switch_thread(void*) {
 		}
 
 		// wait 25ms
-		timer.wait_until(clock.source_time(25));
+		timer.wait_until(clock.source_time(REFRESH_DELAY));
 	}
 }
