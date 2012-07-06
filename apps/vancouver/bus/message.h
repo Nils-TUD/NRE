@@ -707,7 +707,7 @@ struct MessageBios
 /* Timer messages                                   */
 /****************************************************/
 
-typedef unsigned long long timevalue;
+typedef timevalue_t timevalue;
 
 
 /**

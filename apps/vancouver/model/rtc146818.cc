@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #include "nul/motherboard.h"
 #include "service/time.h"
 
@@ -437,3 +439,4 @@ PARAM_HANDLER(rtc,
   mb.bus_irqnotify.add(rtc, Rtc146818::receive_static<MessageIrqNotify>);
 }
 
+#endif

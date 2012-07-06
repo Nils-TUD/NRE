@@ -22,9 +22,11 @@
 #include <Exception.h>
 #include <Assert.h>
 
-class TimerException : public nul::Exception {
+namespace nul {
+
+class TimeoutListException : public Exception {
 public:
-	explicit TimerException(nul::ErrorCode code) throw() : nul::Exception(code) {
+	explicit TimeoutListException(ErrorCode code) throw() : Exception(code) {
 	}
 };
 
@@ -64,7 +66,7 @@ public:
 			_entries[i]._free = false;
 			return i;
 		}
-		throw TimerException(nul::E_CAPACITY);
+		throw TimeoutListException(E_CAPACITY);
 	}
 
 	/**
@@ -143,3 +145,5 @@ public:
 private:
 	TimeoutEntry _entries[ENTRIES];
 };
+
+}

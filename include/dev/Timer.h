@@ -60,11 +60,20 @@ public:
 		CapSpace::get().free(_caps,Math::next_pow2(CPU::count()));
 	}
 
+	Sm &sm(cpu_t cpu) {
+		return *_sms[cpu];
+	}
+
 	void wait_for(timevalue_t cycles) {
 		wait_until(Util::tsc() + cycles);
 	}
 
 	void wait_until(timevalue_t cycles) {
+		program(cycles);
+		_sms[CPU::current().log_id()]->zero();
+	}
+
+	void program(timevalue_t cycles) {
 		UtcbFrame uf;
 		uf << Timer::PROG_TIMER << cycles;
 		_pts[CPU::current().log_id()]->call(uf);
@@ -72,7 +81,6 @@ public:
 		uf >> res;
 		if(res != E_SUCCESS)
 			throw Exception(res);
-		_sms[CPU::current().log_id()]->zero();
 	}
 
 	void get_time(timevalue_t &uptime,timevalue_t &unixts) {

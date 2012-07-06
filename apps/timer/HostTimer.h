@@ -22,8 +22,8 @@
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <dev/Timer.h>
+#include <util/TimeoutList.h>
 
-#include "TimeoutList.h"
 #include "HostTimerDevice.h"
 #include "HostRTC.h"
 
@@ -74,7 +74,7 @@ private:
 	struct PerCpu {
 		bool has_timer;
 		HostTimerDevice::Timer *timer;
-		TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
+		nul::TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
 
 		nul::LocalEc ec;
 		nul::Pt worker_pt;

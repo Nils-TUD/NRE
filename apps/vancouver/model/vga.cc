@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #include "nul/motherboard.h"
 #include "executor/bios.h"
 #include "host/screen.h"
@@ -578,3 +580,4 @@ PARAM_HANDLER(vga,
   mb.bus_discovery.add(dev, Vga::receive_static<MessageDiscovery>);
 }
 
+#endif

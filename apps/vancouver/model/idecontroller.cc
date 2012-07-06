@@ -15,6 +15,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #ifndef REGBASE
 #include "nul/motherboard.h"
 #include "model/pci.h"
@@ -346,4 +348,6 @@ REGSET(PCI,
        REG_RO(PCI_SS,        0xb, 0x275c8086)
        REG_RO(PCI_CAP,       0xd, 0x00)
        REG_RW(PCI_INTR,      0xf, 0x0100, 0xff,));
+#endif
+
 #endif

@@ -15,6 +15,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details.
  */
+#if 0
 
 #ifndef REGBASE
 #include "nul/motherboard.h"
@@ -408,5 +409,7 @@ PARAM_HANDLER(ahci,
   // enable IRQ, busmaster DMA and memory accesses
   dev->PCI_write(AhciController::PCI_CMD_STS_offset, 0x406);
 }
+
+#endif
 
 #endif

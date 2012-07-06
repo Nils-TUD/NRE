@@ -16,8 +16,271 @@
  * General Public License version 2 for more details.
  */
 
+#include <kobj/Sm.h>
+#include <kobj/Ports.h>
+#include <dev/Reboot.h>
+#include <util/TimeoutList.h>
+#include <util/Util.h>
 
-int main() {
+#include "bus/motherboard.h"
+#include "bus/vcpu.h"
+#include "Timeouts.h"
+
+using namespace nul;
+
+PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
+	     " mem:0,0xa0000 mem:0x100000 ioio nullio:0x80 pic:0x20,,0x4d0 pic:0xa0,2,0x4d1"
+	     " pit:0x40,0 scp:0x92,0x61 kbc:0x60,1,12 keyb:0,0x10000 mouse:1,0x10001 rtc:0x70,8"
+	     " serial:0x3f8,0x4,0x4711 hostsink:0x4712,80 vga:0x03c0"
+	     " vbios_disk vbios_keyboard vbios_mem vbios_time vbios_reset vbios_multiboot"
+	     " msi ioapic pcihostbridge:0,0x10,0xcf8,0xe0000000 pmtimer:0x8000 vcpus")
+
+class Vancouver : public StaticReceiver<Vancouver> {
+public:
+	Vancouver(const char *args,size_t ramsize = ExecEnv::PAGE_SIZE * 1024 * 4) : _mb(),
+			_timeouts(_mb), _guest_mem(ramsize,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX),
+			_guest_size(ramsize) {
+		create_devices(args);
+		create_vcpus();
+	}
+
+	bool receive(MessageHostOp &msg) {
+		bool res = true;
+		switch(msg.type) {
+			case MessageHostOp::OP_ALLOC_IOIO_REGION: {
+				new Ports(msg.value >> 8,msg.value & 0xff);
+				Serial::get().writef("alloc ioio region %lx\n",msg.value);
+			}
+			break;
+
+			case MessageHostOp::OP_ALLOC_IOMEM: {
+				DataSpace *ds = new DataSpace(msg.len,DataSpaceDesc::LOCKED,DataSpaceDesc::RW,msg.value);
+				msg.ptr = reinterpret_cast<char*>(ds->virt());
+			}
+			break;
+
+			case MessageHostOp::OP_GUEST_MEM:
+				if(msg.value >= _guest_size)
+					msg.value = 0;
+				else {
+					msg.len = _guest_size - msg.value;
+					msg.ptr = reinterpret_cast<char*>(_guest_mem.virt() + msg.value);
+				}
+				break;
+
+			case MessageHostOp::OP_ALLOC_FROM_GUEST:
+				assert((msg.value & 0xFFF) == 0);
+				if(msg.value <= _guest_size) {
+					_guest_size -= msg.value;
+					msg.phys = _guest_size;
+					Serial::get().writef("Allocating from guest %08lx+%lx\n",_guest_size,msg.value);
+				}
+				else
+					res = false;
+				break;
+
+			case MessageHostOp::OP_NOTIFY_IRQ:
+				// TODO res = NOVA_ESUCCESS == nova_semup(_shared_sem[msg.value & 0xff]);
+				break;
+
+			case MessageHostOp::OP_ASSIGN_PCI:
+				/* TODO res = !Sigma0Base::hostop(msg);
+				_dpci |= res;
+				Logging::printf("%s\n",_dpci ? "DPCI device assigned" : "DPCI failed");*/
+				break;
+
+			case MessageHostOp::OP_GET_MODULE: {
+				// TODO that's extremly hardcoded here ;)
+				const Hip &hip = Hip::get();
+				uint module = msg.module + 7;
+				Hip::mem_iterator it;
+				for(it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+					if(it->type == HipMem::MB_MODULE && module-- == 0)
+						break;
+				}
+
+				Serial::get().writef("Loading module %p .. %p\n",it->addr,it->addr + it->size);
+
+				DataSpace ds(it->size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->addr);
+				memcpy(msg.start,reinterpret_cast<void*>(ds.virt()),ds.size());
+				msg.size = it->size;
+				msg.cmdlen = sizeof("kernel") - 1;
+				msg.cmdline = "kernel";
+				return true;
+			}
+			break;
+
+			case MessageHostOp::OP_GET_MAC:
+				// TODO res = !Sigma0Base::hostop(msg);
+				break;
+
+			case MessageHostOp::OP_ATTACH_MSI:
+			case MessageHostOp::OP_ATTACH_IRQ: {
+				/* TODO
+				unsigned irq_cap = alloc_cap();
+				myutcb()->head.crd = Crd(irq_cap,0,DESC_CAP_ALL).value();
+				res = !Sigma0Base::hostop(msg);
+				create_irq_thread(
+				        msg.type == MessageHostOp::OP_ATTACH_IRQ ? msg.value : msg.msi_gsi,irq_cap,
+				        do_gsi,"irq");
+				*/
+			}
+			break;
+
+			case MessageHostOp::OP_VCPU_CREATE_BACKEND:
+				/* TODO
+				msg.value = create_vcpu(msg.vcpu,_hip->has_svm(),myutcb()->head.nul_cpunr);
+
+				// handle cpuid overrides
+				msg.vcpu->executor.add(this,receive_static<CpuMessage>);
+				*/
+				break;
+
+			case MessageHostOp::OP_VCPU_BLOCK:
+				/* TODO
+				_lock.up();
+				res = NOVA_ESUCCESS == nova_semdown(msg.value);
+				_lock.down();
+				*/
+				break;
+
+			case MessageHostOp::OP_VCPU_RELEASE:
+				/* TODO
+				if(msg.len) {
+					res = NOVA_ESUCCESS == nova_semup(msg.value);
+					if(!res)
+						Logging::printf("vcpu release: semup failed\n");
+				}
+				res = NOVA_ESUCCESS == nova_recall(msg.value + 1);
+				*/
+				break;
+
+			case MessageHostOp::OP_ALLOC_SEMAPHORE:
+				/* TODO
+				msg.value = alloc_cap();
+				if(nova_create_sm(msg.value) != 0)
+					Logging::panic("??");
+				*/
+				break;
+
+			case MessageHostOp::OP_ALLOC_SERVICE_THREAD: {
+				/* TODO
+				phy_cpu_no cpu = myutcb()->head.nul_cpunr;
+				unsigned ec_cap = create_ec_helper(msg._alloc_service_thread.work_arg,cpu,_pt_irq,0,
+				        reinterpret_cast<void *>(msg._alloc_service_thread.work));
+				AdmissionProtocol::sched sched(AdmissionProtocol::sched::TYPE_SPORADIC); //Qpd(2, 10000)
+				return !service_admission->alloc_sc(*myutcb(),ec_cap,sched,cpu,"service");
+				*/
+			}
+			break;
+
+			case MessageHostOp::OP_CREATE_EC4PT:
+				/* TODO
+				msg._create_ec4pt.ec = create_ec4pt(msg.obj,msg._create_ec4pt.cpu,
+				        Config::EXC_PORTALS * msg._create_ec4pt.cpu,msg._create_ec4pt.utcb_out,
+				        msg._create_ec4pt.ec);
+				return msg._create_ec4pt.ec != 0;
+				*/
+
+			case MessageHostOp::OP_VIRT_TO_PHYS:
+			case MessageHostOp::OP_REGISTER_SERVICE:
+			case MessageHostOp::OP_ALLOC_SERVICE_PORTAL:
+			case MessageHostOp::OP_WAIT_CHILD:
+			default:
+				Util::panic("%s - unimplemented operation %#x",__PRETTY_FUNCTION__,msg.type);
+				break;
+		}
+		return res;
+	}
+
+	bool receive(MessagePciConfig &msg) {
+		return false;//!Sigma0Base::pcicfg(msg);
+	}
+
+	bool receive(MessageAcpi &msg) {
+		return false;//!Sigma0Base::acpi(msg);
+	}
+
+	bool receive(MessageTimer &msg) {
+		COUNTER_INC("requestTO");
+		switch(msg.type) {
+			case MessageTimer::TIMER_NEW:
+				msg.nr = _timeouts.alloc();
+				return true;
+			case MessageTimer::TIMER_REQUEST_TIMEOUT:
+				_timeouts.request(msg.nr,msg.abstime);
+				break;
+			default:
+				return false;
+		}
+		return true;
+	}
+
+	bool receive(MessageTime &msg) {
+		_timeouts.time(msg.timestamp,msg.wallclocktime);
+		return true;
+	}
+
+	bool receive(MessageLegacy &msg) {
+		if(msg.type != MessageLegacy::RESET)
+			return false;
+		// TODO ??
+		return true;
+	}
+
+private:
+	void create_devices(const char *args) {
+		_mb.bus_hostop.add(this,receive_static<MessageHostOp>);
+		//_mb.bus_console.add(this,receive_static<MessageConsole>);
+		//_mb.bus_disk.add(this,receive_static<MessageDisk>);
+		_mb.bus_timer.add(this,receive_static<MessageTimer>);
+		_mb.bus_time.add(this,receive_static<MessageTime>);
+		//_mb.bus_network.add(this,receive_static<MessageNetwork>);
+		_mb.bus_hwpcicfg.add(this,receive_static<MessageHwPciConfig>);
+		_mb.bus_acpi.add(this,receive_static<MessageAcpi>);
+		_mb.bus_legacy.add(this,receive_static<MessageLegacy>);
+		_mb.parse_args(args);
+	}
+
+	void create_vcpus() {
+	    // init VCPUs
+		for(VCpu *vcpu = _mb.last_vcpu; vcpu; vcpu = vcpu->get_last()) {
+			// init CPU strings
+			const char *short_name = "NOVA microHV";
+			vcpu->set_cpuid(0,1,reinterpret_cast<const unsigned *>(short_name)[0]);
+			vcpu->set_cpuid(0,3,reinterpret_cast<const unsigned *>(short_name)[1]);
+			vcpu->set_cpuid(0,2,reinterpret_cast<const unsigned *>(short_name)[2]);
+			const char *long_name = "Vancouver VMM proudly presents this VirtualCPU. ";
+			for(unsigned i = 0; i < 12; i++)
+				vcpu->set_cpuid(0x80000002 + (i / 4),i % 4,
+				        reinterpret_cast<const unsigned *>(long_name)[i]);
+
+			// propagate feature flags from the host
+			uint32_t ebx_1 = 0,ecx_1 = 0,edx_1 = 0;
+			Util::cpuid(1,ebx_1,ecx_1,edx_1);
+			vcpu->set_cpuid(1,1,ebx_1 & 0xff00,0xff00ff00); // clflush size
+			vcpu->set_cpuid(1,2,ecx_1,0x00000201); // +SSE3,+SSSE3
+			vcpu->set_cpuid(1,3,edx_1,0x0f80a9bf | (1 << 28)); // -PAE,-PSE36, -MTRR,+MMX,+SSE,+SSE2,+SEP
+		}
+	}
+
+	void reset() {
+	    Serial::get().writef("RESET device state\n");
+	    MessageLegacy msg2(MessageLegacy::RESET, 0);
+	    _mb.bus_legacy.send_fifo(msg2);
+	}
+
+	Motherboard _mb;
+	Timeouts _timeouts;
+	DataSpace _guest_mem;
+	size_t _guest_size;
+};
+
+int main(int argc,char *argv[]) {
+	new Vancouver("PC_PS2");
+
+	Sm sm(0);
+	sm.down();
 	return 0;
 }
 

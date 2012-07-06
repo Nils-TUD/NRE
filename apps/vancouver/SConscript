@@ -4,10 +4,14 @@ import os
 Import('env')
 
 vcenv = env.Clone()
-btype = os.environ.get('NOVA_BUILD')
-# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
-# an asm constraint is impossible. strange :/
-if btype == 'debug':
-	vcenv.Append(CXXFLAGS = ' -O1')
-	vcenv.Append(CFLAGS = ' -O1')
-vcenv.NulProgram(vcenv, 'vancouver', [Glob('*.cc'),Glob('*/*.cc')])
+if vcenv['ARCH'] == 'x86_32':
+	btype = os.environ.get('NOVA_BUILD')
+	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
+	# an asm constraint is impossible. strange :/
+	if btype == 'debug':
+		vcenv.Append(CXXFLAGS = ' -O1')
+		vcenv.Append(CFLAGS = ' -O1')
+	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
+	vcenv.NulProgram(vcenv, 'vancouver', [Glob('*.cc'),Glob('*/*.cc')])
+else:
+	print "Vancouver has not yet been ported to " + vcenv['ARCH']

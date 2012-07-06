@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #include "nul/motherboard.h"
 #include "host/dma.h"
 #include "model/sata.h"
@@ -429,3 +431,4 @@ PARAM_HANDLER(drive,
     Logging::panic("AHCI controller #%ld does not allow to set drive #%lx\n", argv[1], argv[2]);
 }
 
+#endif

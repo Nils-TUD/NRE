@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #include "nul/motherboard.h"
 #include "host/keyboard.h"
 
@@ -384,3 +386,4 @@ PARAM_HANDLER(keyb,
   mb.bus_legacy.add(dev,PS2Keyboard::receive_static<MessageLegacy>);
 }
 
+#endif

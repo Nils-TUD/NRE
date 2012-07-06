@@ -61,6 +61,10 @@ public:
 	}
 
 	// TODO move that to somewhere else
+	static inline uint32_t cpuid(uint32_t eax,uint32_t &ebx,uint32_t &ecx,uint32_t &edx) {
+		asm volatile ("cpuid": "+a"(eax), "+b"(ebx), "+c"(ecx), "+d"(edx));
+		return eax;
+	}
 	static inline void pause() {
 		asm volatile("pause");
 	}

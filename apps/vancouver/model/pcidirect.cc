@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#if 0
+
 #include "nul/motherboard.h"
 #include "host/hostpci.h"
 #include "host/hostvf.h"
@@ -485,3 +487,5 @@ PARAM_HANDLER(vfpci,
 
   new DirectPciDevice(mb, 0, argv[3], true, true, parent_bdf, vf_no, true);
 }
+
+#endif
