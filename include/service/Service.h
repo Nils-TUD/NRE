@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <kobj/UserSm.h>
@@ -146,7 +146,7 @@ public:
 		_insts[cpu] = new ServiceInstance(this,_regcaps + cpu,cpu);
 		_reg_cpus.set(cpu);
 	}
-	LocalEc *get_ec(cpu_t cpu) const {
+	LocalThread *get_ec(cpu_t cpu) const {
 		return _insts[cpu] != 0 ? &_insts[cpu]->ec() : 0;
 	}
 	void reg() {

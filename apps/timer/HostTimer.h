@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <dev/Timer.h>
@@ -76,7 +76,7 @@ private:
 		HostTimerDevice::Timer *timer;
 		nul::TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
 
-		nul::LocalEc ec;
+		nul::LocalThread ec;
 		nul::Pt worker_pt;
 		nul::Sm xcpu_sm;
 		timevalue_t last_to;
@@ -93,7 +93,7 @@ private:
 			: has_timer(false), timer(0), abstimeouts(), ec(cpu),
 			  worker_pt(&ec,portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
 			  remote_slot(), slots(), slot_count() {
-			ec.set_tls(nul::Ec::TLS_PARAM,ht);
+			ec.set_tls(nul::Thread::TLS_PARAM,ht);
 		}
 	};
 

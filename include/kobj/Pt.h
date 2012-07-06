@@ -20,15 +20,15 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/ObjCap.h>
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <utcb/UtcbFrame.h>
-#include <Compiler.h>
+#include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
 namespace nul {
 
 /**
- * Represents a portal. A portal is always bound to a LocalEc.
+ * Represents a portal. A portal is always bound to a LocalThread.
  */
 class Pt : public ObjCap {
 public:
@@ -44,28 +44,28 @@ public:
 	}
 
 	/**
-	 * Creates a portal for <func> at selector <pt> that is bound to the given Ec. The destructor
+	 * Creates a portal for <func> at selector <pt> that is bound to the given Thread. The destructor
 	 * will not free the selector, but only the capability.
 	 *
-	 * @param ec the LocalEc to bind the portal to
+	 * @param ec the LocalThread to bind the portal to
 	 * @param pt the capability selector to use
 	 * @param func the portal function
 	 * @param mtd the message-transfer descriptor to describe what information should the
 	 * 	kernel pass to the portal
 	 */
-	explicit Pt(LocalEc *ec,capsel_t pt,portal_func func,Mtd mtd = Mtd()) : ObjCap(pt,KEEP_SEL_BIT) {
+	explicit Pt(LocalThread *ec,capsel_t pt,portal_func func,Mtd mtd = Mtd()) : ObjCap(pt,KEEP_SEL_BIT) {
 		Syscalls::create_pt(pt,ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 	}
 
 	/**
-	 * Creates a portal for <func> that is bound to the given Ec.
+	 * Creates a portal for <func> that is bound to the given Thread.
 	 *
-	 * @param ec the LocalEc to bind the portal to
+	 * @param ec the LocalThread to bind the portal to
 	 * @param func the portal function
 	 * @param mtd the message-transfer descriptor to describe what information should the
 	 * 	kernel pass to the portal
 	 */
-	explicit Pt(LocalEc *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
+	explicit Pt(LocalThread *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
 		ScopedCapSels pt;
 		Syscalls::create_pt(pt.get(),ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
 		sel(pt.release());
@@ -75,7 +75,7 @@ public:
 	 * Calls this portal with given UtcbFrame. The state of the UtcbFrame is reset afterwards, so
 	 * that you can iterate over the typed and untyped item again from the beginning.
 	 * Note: although you can specify the UtcbFrame, you can't really choose it. That is, the kernel
-	 * will always use the top-most UtcbFrame of the Utcb that belongs to your Ec. The parameter
+	 * will always use the top-most UtcbFrame of the Utcb that belongs to your Thread. The parameter
 	 * is rather passed symbolically to make clear that the UtcbFrame you're working with is
 	 * changed by the call.
 	 *

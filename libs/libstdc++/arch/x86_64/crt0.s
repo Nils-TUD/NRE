@@ -47,7 +47,7 @@ _start:
 	lea		-0x1000(%rsp), %rdx		# UTCB is below HIP
 	mov		$_stack, %rsp				# switch to our stack
 	add		$0x1000, %rsp
-	sub		$16, %rsp					# leave space for Ec and Pd
+	sub		$16, %rsp					# leave space for Thread and Pd
 	jmp		2f
 1:
 	mov		%rcx, _startup_info			# store pointer to HIP

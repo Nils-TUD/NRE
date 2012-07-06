@@ -16,8 +16,8 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/LocalEc.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/LocalThread.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
 #include <kobj/Gsi.h>
@@ -74,7 +74,7 @@ struct Info {
 };
 
 static void reader(void*) {
-	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
+	Info *info = Thread::current()->get_tls<Info*>(Thread::TLS_PARAM);
 	while(1) {
 		Console::ReceivePacket *pk = info->conssess->consumer().get();
 		Serial::get().writef("%u: Got c=%#x kc=%#x, flags=%#x\n",info->no,pk->character,pk->keycode,pk->flags);
@@ -83,7 +83,7 @@ static void reader(void*) {
 }
 
 static void writer(void*) {
-	Info *info = Ec::current()->get_tls<Info*>(Ec::TLS_PARAM);
+	Info *info = Thread::current()->get_tls<Info*>(Thread::TLS_PARAM);
 	while(1) {
 		for(int y = 0; y < 25; y++) {
 			for(int x = 0; x < 80; x++) {
@@ -135,7 +135,7 @@ int main() {
 	conscon = new Connection("console");
 	conssess = new ConsoleSession(*conscon);
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		Sc *sc = new Sc(new GlobalEc(view0,it->log_id()),Qpd());
+		Sc *sc = new Sc(new GlobalThread(view0,it->log_id()),Qpd());
 		sc->start();
 	}
 
@@ -144,7 +144,7 @@ int main() {
 		timercon = new Connection("timer");
 		timer = new TimerSession(*timercon);
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-			Sc *sc = new Sc(new GlobalEc(tick_thread,it->log_id()),Qpd());
+			Sc *sc = new Sc(new GlobalThread(tick_thread,it->log_id()),Qpd());
 			sc->start();
 		}
 	}
@@ -154,11 +154,11 @@ int main() {
 		Info *info = new Info();
 		info->sess = new ConsoleSession(*con);
 		info->no = i;
-		Sc *sc1 = new Sc(new GlobalEc(reader,CPU::current().id),Qpd());
-		sc1->ec()->set_tls(Ec::TLS_PARAM,info);
+		Sc *sc1 = new Sc(new GlobalThread(reader,CPU::current().id),Qpd());
+		sc1->ec()->set_tls(Thread::TLS_PARAM,info);
 		sc1->start();
-		Sc *sc2 = new Sc(new GlobalEc(writer,CPU::current().id),Qpd());
-		sc2->ec()->set_tls(Ec::TLS_PARAM,info);
+		Sc *sc2 = new Sc(new GlobalThread(writer,CPU::current().id),Qpd());
+		sc2->ec()->set_tls(Thread::TLS_PARAM,info);
 		sc2->start();
 	}
 
@@ -197,8 +197,8 @@ int main() {
 	con = new Connection("screen");
 
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		//new Sc(new GlobalEc(write,it->id()),Qpd());
-		Sc *sc = new Sc(new GlobalEc(read,it->id),Qpd());
+		//new Sc(new GlobalThread(write,it->id()),Qpd());
+		Sc *sc = new Sc(new GlobalThread(read,it->id),Qpd());
 		sc->start();
 	}*/
 

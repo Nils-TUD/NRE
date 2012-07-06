@@ -19,7 +19,8 @@
 #pragma once
 
 #include <kobj/ObjCap.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
+#include <kobj/VCPU.h>
 #include <kobj/Pd.h>
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
@@ -27,28 +28,37 @@
 namespace nul {
 
 /**
- * Represents a scheduling context. A Sc can be bound to a GlobalEc to run it with a specified
+ * Represents a scheduling context. A Sc can be bound to a GlobalThread to run it with a specified
  * priority and time quantum.
  */
 class Sc : public ObjCap {
 public:
 	/**
-	 * Creates a new Sc that is bound to the given GlobalEc. Note that it does NOT start it. Please
+	 * Creates a new Sc that is bound to the given GlobalThread. Note that it does NOT start it. Please
 	 * call start() afterwards.
 	 *
-	 * @param ec the GlobalEc to bind it to
+	 * @param ec the GlobalThread to bind it to
 	 * @param qpd the quantum-priority descriptor for the Sc
 	 * @param pd the pd to create it in
 	 */
-	explicit Sc(GlobalEc *ec,Qpd qpd,Pd *pd = Pd::current()) : ObjCap(), _ec(ec), _qpd(qpd), _pd(pd) {
+	explicit Sc(GlobalThread *ec,Qpd qpd,Pd *pd = Pd::current()) : ObjCap(), _ec(ec), _qpd(qpd), _pd(pd) {
 		// don't create the Sc here, because then we have no chance to store the created object
-		// somewhere to make it accessible for the just started Ec
+		// somewhere to make it accessible for the just started Thread
+	}
+	/**
+	 * Creates a new Sc that is bound to the given VCPU. Note that it does NOT start it. Please
+	 * call start() afterwards.
+	 *
+	 * @param vcpu the VCPU to bind it to
+	 * @param qpd the quantum-priority descriptor for the Sc
+	 */
+	explicit Sc(VCPU *vcpu,Qpd qpd) : ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
 	}
 
 	/**
 	 * @return the ec it is bound to
 	 */
-	GlobalEc *ec() {
+	Ec *ec() {
 		return _ec;
 	}
 	/**
@@ -65,7 +75,7 @@ public:
 	}
 
 	/**
-	 * Starts the Sc, i.e. the attached GlobalEc.
+	 * Starts the Sc, i.e. the attached GlobalThread.
 	 */
 	void start() {
 		ScopedCapSels scs;
@@ -86,7 +96,7 @@ private:
 	Sc(const Sc&);
 	Sc& operator=(const Sc&);
 
-	GlobalEc *_ec;
+	Ec *_ec;
 	Qpd _qpd;
 	Pd *_pd;
 };

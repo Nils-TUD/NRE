@@ -24,7 +24,7 @@ char ViewSwitcher::_buffer[Screen::COLS + 1];
 ViewSwitcher::ViewSwitcher() : _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		_prod(&_ds,true,true), _cons(&_ds,false), _ec(switch_thread,CPU::current().log_id()),
 		_sc(&_ec,Qpd()) {
-	_ec.set_tls<ViewSwitcher*>(Ec::TLS_PARAM,this);
+	_ec.set_tls<ViewSwitcher*>(Thread::TLS_PARAM,this);
 }
 
 void ViewSwitcher::switch_to(ConsoleSessionData *from,ConsoleSessionData *to) {
@@ -48,7 +48,7 @@ void ViewSwitcher::switch_to(ConsoleSessionView *from,ConsoleSessionView *to) {
 }
 
 void ViewSwitcher::switch_thread(void*) {
-	ViewSwitcher *vs = Ec::current()->get_tls<ViewSwitcher*>(Ec::TLS_PARAM);
+	ViewSwitcher *vs = Thread::current()->get_tls<ViewSwitcher*>(Thread::TLS_PARAM);
 	// note that we can do that here (although we're created from ConsoleService) because we start
 	// this thread after the instance has been created (in ConsoleService::init).
 	ConsoleService *srv = ConsoleService::get();

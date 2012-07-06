@@ -29,13 +29,13 @@ namespace nul {
 ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
 		_dsm(), _registry(), _sm(), _switchsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
-	_ecs = new LocalEc*[CPU::count()];
-	_regecs = new LocalEc*[CPU::count()];
+	_ecs = new LocalThread*[CPU::count()];
+	_regecs = new LocalThread*[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalEc **ecs[] = {_ecs,_regecs};
+		LocalThread **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
-			ecs[i][it->log_id()] = new LocalEc(it->log_id());
-			ecs[i][it->log_id()]->set_tls(Ec::TLS_PARAM,this);
+			ecs[i][it->log_id()] = new LocalThread(it->log_id());
+			ecs[i][it->log_id()]->set_tls(Thread::TLS_PARAM,this);
 		}
 
 		UtcbFrameRef defuf(_ecs[it->log_id()]->utcb());
@@ -201,7 +201,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
 		c->reglist().add(c->_utcb,Utcb::SIZE,0,0);
-		c->_ec = new GlobalEc(reinterpret_cast<GlobalEc::startup_func>(elf->e_entry),0,0,c->_pd,c->_utcb);
+		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),0,0,c->_pd,c->_utcb);
 
 		// he needs a stack; use guards around it
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE + ExecEnv::PAGE_SIZE * 2);
@@ -255,7 +255,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 }
 
 void ChildManager::Portals::startup(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbExcFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -286,14 +286,14 @@ void ChildManager::Portals::startup(capsel_t pid) {
 		}
 	}
 	catch(...) {
-		// let the kernel kill the Ec
+		// let the kernel kill the Thread
 		uf->rip = ExecEnv::KERNEL_START;
 		uf->mtd = Mtd::RIP_LEN;
 	}
 }
 
 void ChildManager::Portals::init_caps(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -313,7 +313,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 }
 
 void ChildManager::Portals::reg(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -337,7 +337,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 }
 
 void ChildManager::Portals::unreg(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -376,7 +376,7 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 }
 
 void ChildManager::Portals::get_service(capsel_t) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		String name;
@@ -396,7 +396,7 @@ void ChildManager::Portals::get_service(capsel_t) {
 }
 
 void ChildManager::Portals::gsi(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -452,7 +452,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 }
 
 void ChildManager::Portals::io(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
@@ -646,7 +646,7 @@ void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
 }
 
 void ChildManager::Portals::dataspace(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		DataSpace::RequestType type;
@@ -680,7 +680,7 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 }
 
 void ChildManager::Portals::pf(capsel_t pid) {
-	ChildManager *cm = Ec::current()->get_tls<ChildManager*>(Ec::TLS_PARAM);
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbExcFrameRef uf;
 	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);
@@ -720,7 +720,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				remap = true;
 			// same fault for same cpu again?
 			else if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
-				Serial::get().writef("Child '%s': Caused fault for %p on cpu %u twice. Killing Ec\n",
+				Serial::get().writef("Child '%s': Caused fault for %p on cpu %u twice. Killing Thread\n",
 						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id());
 				kill = true;
 			}
@@ -739,7 +739,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, bp=%p, error=%#x\n",
 					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),uf->rbp,error);
 			//Serial::get() << c->reglist();
-			Serial::get().writef("Unable to resolve fault; killing Ec\n");
+			Serial::get().writef("Unable to resolve fault; killing Thread\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");
 			addr = addrs;
@@ -770,7 +770,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	// because there can't be any running Ecs anyway since we only destroy it when there are no
 	// other Ecs left)
 	if(kill) {
-		// let the kernel kill the Ec by causing it a pagefault in kernel-area
+		// let the kernel kill the Thread by causing it a pagefault in kernel-area
 		uf->mtd = Mtd::RIP_LEN;
 		uf->rip = ExecEnv::KERNEL_START;
 		cm->destroy_child(pid);

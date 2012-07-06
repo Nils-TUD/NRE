@@ -24,13 +24,13 @@
 
 namespace nul {
 
-class GlobalEc;
+class GlobalThread;
 
 /**
  * Represents a protection domain
  */
 class Pd : public ObjCap {
-	friend class GlobalEc;
+	friend class GlobalThread;
 	friend void ::_post_init();
 
 	/**

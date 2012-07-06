@@ -46,7 +46,7 @@ class ShmSessionData : public SessionData {
 public:
 	ShmSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: SessionData(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
-		_ec.set_tls<capsel_t>(Ec::TLS_PARAM,caps);
+		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
 	virtual ~ShmSessionData() {
 		delete _ds;
@@ -71,7 +71,7 @@ protected:
 private:
 	static void receiver(void *);
 
-	GlobalEc _ec;
+	GlobalThread _ec;
 	Sc *_sc;
 	Consumer<Item> *_cons;
 	DataSpace *_ds;
@@ -104,7 +104,7 @@ void ShmSessionData::invalidate() {
 }
 
 void ShmSessionData::receiver(void*) {
-	capsel_t caps = Ec::current()->get_tls<word_t>(Ec::TLS_PARAM);
+	capsel_t caps = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
 	ScopedLock<RCULock> guard(&RCU::lock());
 	ShmSessionData *sess = srv->get_session<ShmSessionData>(caps);
 	Consumer<Item> *cons = sess->cons();

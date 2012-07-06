@@ -50,7 +50,7 @@ static void portal_test(capsel_t) {
 }
 
 static void test_pingpong() {
-	LocalEc ec(CPU::current().log_id());
+	LocalThread ec(CPU::current().log_id());
 	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	uint sum = 0;

@@ -16,22 +16,22 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/Ec.h>
+#include <kobj/Thread.h>
 #include <Compiler.h>
 #include <CPU.h>
 #include <RCU.h>
 
 namespace nul {
 
-void Ec::create(Pd *pd,Syscalls::ECType type,void *sp) {
+void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	ScopedCapSels scs;
-	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(_cpu).phys_id(),_event_base,type,pd->sel());
+	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(cpu()).phys_id(),event_base(),type,pd->sel());
 	if(pd == Pd::current())
 		RCU::announce(this);
 	sel(scs.release());
 }
 
 // slot 0 is reserved
-size_t Ec::_tls_idx = 1;
+size_t Thread::_tls_idx = 1;
 
 }

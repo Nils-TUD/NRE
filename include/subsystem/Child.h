@@ -19,7 +19,7 @@
 #pragma once
 
 #include <kobj/Pd.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
@@ -141,7 +141,7 @@ private:
 	unsigned _refs;
 	bool _started;
 	Pd *_pd;
-	GlobalEc *_ec;
+	GlobalThread *_ec;
 	Sc *_sc;
 	Pt **_pts;
 	size_t _ptcount;

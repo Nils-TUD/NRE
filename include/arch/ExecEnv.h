@@ -26,7 +26,7 @@
 
 namespace nul {
 
-class Ec;
+class Thread;
 class Pd;
 
 class ExecEnv {
@@ -55,15 +55,15 @@ public:
 		set_current(2,pd);
 	}
 
-	static inline Ec *get_current_ec() {
-		return static_cast<Ec*>(get_current(1));
+	static inline Thread *get_current_ec() {
+		return static_cast<Thread*>(get_current(1));
 	}
 
-	static inline void set_current_ec(Ec *ec) {
+	static inline void set_current_ec(Thread *ec) {
 		set_current(1,ec);
 	}
 
-	static void *setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t ret,uintptr_t stack);
+	static void *setup_stack(Pd *pd,Thread *ec,startup_func start,uintptr_t ret,uintptr_t stack);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 	static size_t collect_backtrace(uintptr_t stack,uintptr_t bp,uintptr_t *frames,size_t max);
 

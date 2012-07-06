@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <kobj/Ec.h>
+#include <kobj/Thread.h>
 #include <kobj/UserSm.h>
 #include <util/ScopedLock.h>
 #include <util/Sync.h>
@@ -119,7 +119,7 @@ public:
 	}
 
 	void down() {
-		Ec *cur = Ec::current();
+		Thread *cur = Thread::current();
 		uint32_t counter = cur->_rcu_counter;
 		// update version-counter if we're entering a critical section
 		if(!(counter & 0xFFFF))
@@ -133,7 +133,7 @@ public:
 	void up() {
 		// ensure that everything in the critical section is written before the counter is increased
 		Sync::memory_barrier();
-		Ec *cur = Ec::current();
+		Thread *cur = Thread::current();
 		cur->_rcu_counter--;
 	}
 
@@ -176,9 +176,9 @@ private:
 class RCU {
 public:
 	/**
-	 * Adds the given Ec to the list of known Ecs. Will be called by the Ec class automatically.
+	 * Adds the given Thread to the list of known Ecs. Will be called by the Thread class automatically.
 	 */
-	static void announce(Ec *ec) {
+	static void announce(Thread *ec) {
 		ScopedLock<UserSm> guard(&_sm);
 		ec->_next = _ecs;
 		_ecs = ec;
@@ -266,10 +266,10 @@ private:
 		if(_versions_count < _ec_count)
 			store_versions();
 
-		Ec *ec = _ecs;
+		Thread *ec = _ecs;
 		for(size_t i = 0; i < _ec_count; ++i) {
-			// it's safe to delete it when either the Ec has re-entered the critical section
-			// or if it's out of its critical section. in both cases the Ec would re-read the
+			// it's safe to delete it when either the Thread has re-entered the critical section
+			// or if it's out of its critical section. in both cases the Thread would re-read the
 			// pointer and thus, can't get the object again we're about to delete.
 			uint32_t counter = ec->_rcu_counter;
 			if(!((counter >> 16) != (_versions[i] >> 16) || (counter & 0xFFFF) == 0))
@@ -288,7 +288,7 @@ private:
 		}
 
 		// update the version-numbers for all Ecs
-		Ec *ec = _ecs;
+		Thread *ec = _ecs;
 		for(size_t i = 0; i < _ec_count; ++i) {
 			_versions[i] = ec->_rcu_counter;
 			ec = ec->_next;
@@ -302,7 +302,7 @@ private:
 
 	static uint32_t *_versions;
 	static size_t _versions_count;
-	static Ec *_ecs;
+	static Thread *_ecs;
 	static size_t _ec_count;
 	static RCUObject *_objs;
 	static UserSm _sm;

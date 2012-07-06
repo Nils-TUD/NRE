@@ -53,7 +53,7 @@ static void portal_test(capsel_t) {
 
 static void test_nesting() {
 	int a,b,c;
-	LocalEc ec(CPU::current().log_id());
+	LocalThread ec(CPU::current().log_id());
 	Pt pt(&ec,portal_test);
 
 	UtcbFrame uf;

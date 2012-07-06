@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <mem/DataSpace.h>
 #include <service/Consumer.h>

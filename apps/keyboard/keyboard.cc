@@ -18,7 +18,7 @@
 
 #include <service/Service.h>
 #include <service/Producer.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <kobj/Gsi.h>
 #include <RCU.h>
@@ -142,7 +142,7 @@ int main() {
 			mousesrv->provide_on(it->log_id());
 		mousesrv->reg();
 
-		Sc *sc = new Sc(new GlobalEc(mousehandler,CPU::current().log_id()),Qpd());
+		Sc *sc = new Sc(new GlobalThread(mousehandler,CPU::current().log_id()),Qpd());
 		sc->start();
 	}
 

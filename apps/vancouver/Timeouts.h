@@ -10,7 +10,7 @@
 #pragma once
 
 #include <kobj/UserSm.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <dev/Timer.h>
 #include <util/TimeoutList.h>
@@ -26,7 +26,7 @@ class Timeouts {
 public:
 	Timeouts(Motherboard &mb) : _mb(mb), _timeouts(), _timercon("timer"), _timer(_timercon),
 		_last_to(NO_TIMEOUT), _ec(timer_thread,nul::CPU::current().log_id()), _sc(&_ec,nul::Qpd()) {
-		_ec.set_tls<Timeouts*>(nul::Ec::TLS_PARAM,this);
+		_ec.set_tls<Timeouts*>(nul::Thread::TLS_PARAM,this);
 		_sc.start();
 	}
 
@@ -56,6 +56,6 @@ private:
 	nul::Connection _timercon;
 	nul::TimerSession _timer;
 	timevalue_t _last_to;
-	nul::GlobalEc _ec;
+	nul::GlobalThread _ec;
 	nul::Sc _sc;
 };

@@ -9,7 +9,7 @@
 
 .extern abort
 
-# called by a return of a global Ec.
+# called by a return of a global Thread.
 .global ec_landing_spot
 ec_landing_spot:
 	call	abort

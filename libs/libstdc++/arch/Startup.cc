@@ -17,11 +17,12 @@
  */
 
 #include <arch/Startup.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <utcb/UtcbFrame.h>
+#include <stream/Serial.h>
 #include <Exception.h>
 #include <CPU.h>
 #include <pthread.h>
@@ -51,10 +52,10 @@ void _post_init() {
 	std::set_terminate(verbose_terminate);
 	_startup_info.done = true;
 
-	// force the linker to include the Pd, GlobalEc and pthread object-files
+	// force the linker to include the Pd, GlobalThread and pthread object-files
 	// TODO is there a better way?
 	pool[0] = &Pd::_cur;
-	pool[1] = &GlobalEc::_cur;
+	pool[1] = &GlobalThread::_cur;
 	// FIXME why do we have to force the linker to include the pthread object-file? the libsupc++
 	// calls functions of it, so it should be included automatically, right?
 	pthread_cancel(0);

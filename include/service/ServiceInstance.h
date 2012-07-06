@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
 #include <CPU.h>
@@ -34,7 +34,7 @@ public:
 	cpu_t cpu() const {
 		return _session_ec.cpu();
 	}
-	LocalEc &ec() {
+	LocalThread &ec() {
 		return _session_ec;
 	}
 
@@ -45,8 +45,8 @@ private:
 	PORTAL static void portal(capsel_t pid);
 
 	Service *_s;
-	LocalEc _session_ec;
-	LocalEc _service_ec;
+	LocalThread _session_ec;
+	LocalThread _service_ec;
 	Pt _pt;
 	UserSm _sm;
 };

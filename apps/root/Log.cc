@@ -10,7 +10,7 @@
 #include <service/Service.h>
 #include <service/Consumer.h>
 #include <stream/Serial.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <util/Cycler.h>
 #include <String.h>

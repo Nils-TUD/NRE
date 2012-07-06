@@ -19,9 +19,10 @@
 #pragma once
 
 #include <kobj/Pt.h>
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <subsystem/ServiceRegistry.h>
 #include <mem/DataSpaceManager.h>
+#include <util/Sync.h>
 #include <Exception.h>
 
 namespace nul {
@@ -163,8 +164,8 @@ private:
 	Sm _regsm;
 	Sm _diesm;
 	// we need different Ecs to be able to receive a different number of caps
-	LocalEc **_ecs;
-	LocalEc **_regecs;
+	LocalThread **_ecs;
+	LocalThread **_regecs;
 };
 
 }

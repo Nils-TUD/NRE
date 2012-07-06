@@ -9,9 +9,14 @@
 
 #pragma once
 
+#include <Assert.h>
+#include <Compiler.h>
+
+#include "bus/profile.h"
+
 using namespace nul;
 
-class VCPU {
+class VCPUHandler {
 	struct Portal {
 		capsel_t offset;
 		Pt::portal_func func;
@@ -19,42 +24,26 @@ class VCPU {
 	};
 
 public:
-#if 0
-	static unsigned create_vcpu(VCpu *vcpu,bool use_svm,unsigned cpunr) {
-		// create worker
-		unsigned cap_worker = create_ec4pt(vcpu,cpunr,
-		//Config::EXC_PORTALS*cpunr /* Use s0 exception portals */
-		        _pt_irq);
-
-		// create portals for VCPU faults
-#undef VM_FUNC
-#define VM_FUNC(NR, NAME, INPUT, CODE) {NR, NAME, INPUT},
-		struct vm_caps {
-			unsigned nr;
-			void __attribute__((regparm(1))) (*func)(unsigned,VCpu *,Utcb *);
-			unsigned mtd;
-		} vm_caps[] = {
-#include "vancouver.cc"
-		        };
-		unsigned cap_start = alloc_cap(0x100);
-		for(unsigned i = 0; i < sizeof(vm_caps) / sizeof(vm_caps[0]); i++) {
-			if(use_svm == (vm_caps[i].nr < PT_SVM))
-				continue;
-			check1(0,nova_create_pt(cap_start + (vm_caps[i].nr & 0xff), cap_worker, reinterpret_cast<unsigned long>(vm_caps[i].func), vm_caps[i].mtd));
-		}
-
-		Logging::printf("\tcreate VCPU\n");
-		unsigned cap_block = alloc_cap(2);
-		if(nova_create_sm(cap_block))
-			Logging::panic("could not create blocking semaphore\n");
-		if(nova_create_ec(cap_block + 1,0,0,cpunr,cap_start,false))
-			Logging::panic("creating a VCPU failed - does your CPU support VMX/SVM?");
-		AdmissionProtocol::sched sched; //Qpd(1, 10000)
-		if(service_admission->alloc_sc(*myutcb(),cap_block + 1,sched,cpunr,"vcpu"))
-			Logging::panic("creating a VCPU failed - admission test issue");
-		return cap_block;
+	VCPUHandler(VCpu *vcpu,bool use_svm,cpu_t cpu) : _caps(get_portals(use_svm)), _sm(1), _ec(cpu),
+		_vcpu(cpu,_caps), _sc(&_vcpu,Qpd()) {
+		_ec.set_tls<VCpu*>(Thread::TLS_PARAM,vcpu);
 	}
-#endif
+
+	nul::Sm &sm() {
+		return _sm;
+	}
+
+private:
+	capsel_t get_portals(bool use_svm) {
+		capsel_t caps = CapSpace::get().allocate(0x100);
+		for(size_t i = 0; i < sizeof(_portals) / sizeof(_portals[0]); ++i) {
+			// if VMX is used, just create the VMX-portals. the same for SVM
+			if(use_svm == (_portals[i].offset < PT_SVM))
+				continue;
+			new Pt(&_ec,caps + _portals[i].offset,_portals[i].func,Mtd(_portals[i].mtd));
+		}
+		return caps;
+	}
 
 	static void force_invalid_gueststate_amd(UtcbExcFrameRef &uf) {
 		uf->ctrl[1] = 0;
@@ -83,9 +72,9 @@ public:
 
 	static void handle_io(bool is_in,unsigned io_order,unsigned port) {
 		UtcbExcFrameRef uf;
-		VCpu *vcpu = Ec::current()->get_tls<VCpu*>(Ec::TLS_PARAM);
+		VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
 
-		CpuMessage msg(is_in,static_cast<CpuState *>(Ec::current()->utcb()),io_order,port,&uf->eax,uf->mtd);
+		CpuMessage msg(is_in,static_cast<CpuState *>(Thread::current()->utcb()),io_order,port,&uf->eax,uf->mtd);
 		skip_instruction(msg);
 		{
 			SemaphoreGuard l(_lock);
@@ -99,10 +88,10 @@ public:
 
 	static void handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type) {
 		UtcbExcFrameRef uf;
-		VCpu *vcpu = Ec::current()->get_tls<VCpu*>(Ec::TLS_PARAM);
+		VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
 
 		assert(vcpu);
-		CpuMessage msg(type,static_cast<CpuState*>(Ec::current()->utcb()),uf->mtd);
+		CpuMessage msg(type,static_cast<CpuState*>(Thread::current()->utcb()),uf->mtd);
 		if(skip)
 			skip_instruction(msg);
 
@@ -197,7 +186,7 @@ public:
 	}
 	PORTAL static void vmx_pause(capsel_t pid) {
 		UtcbExcFrameRef uf;
-		CpuMessage msg(CpuMessage::TYPE_SINGLE_STEP,static_cast<CpuState*>(Ec::current()->utcb()),uf->mtd);
+		CpuMessage msg(CpuMessage::TYPE_SINGLE_STEP,static_cast<CpuState*>(Thread::current()->utcb()),uf->mtd);
 		skip_instruction(msg);
 		COUNTER_INC("pause");
 	}
@@ -283,10 +272,15 @@ public:
 		do_recall(pid);
 	}
 
-private:
+	capsel_t _caps;
+	nul::Sm _sm;
+	nul::LocalThread _ec;
+	nul::VCPU _vcpu;
+	nul::Sc _sc;
 	bool _tsc_offset = false;
 	bool _rdtsc_exit;
-	static Portal portals[] = {
+
+	static Portal _portals[] = {
 		// the VMX portals
 		{PT_VMX + 2,	vmx_triple,		Mtd::ALL},
 		{PT_VMX + 3,	vmx_init,		Mtd::ALL},

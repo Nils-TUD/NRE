@@ -121,14 +121,16 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 		// need to query other CPUs.
 		if((_per_cpu[cpu]->slot_count > 0) || !_per_cpu[cpu]->has_timer) {
 			// Create wakeup thread
-			Sc *sc = new Sc(new GlobalEc(xcpu_wakeup_thread,cpu),Qpd());
-			sc->ec()->set_tls(Ec::TLS_PARAM,this);
+			GlobalThread *gt = new GlobalThread(xcpu_wakeup_thread,cpu);
+			Sc *sc = new Sc(gt,Qpd());
+			gt->set_tls(Thread::TLS_PARAM,this);
 			sc->start();
 			xcpu_threads_started++;
 		}
 		if(_per_cpu[cpu]->has_timer) {
-			Sc *sc = new Sc(new GlobalEc(gsi_thread,cpu),Qpd());
-			sc->ec()->set_tls(Ec::TLS_PARAM,this);
+			GlobalThread *gt = new GlobalThread(gsi_thread,cpu);
+			Sc *sc = new Sc(gt,Qpd());
+			gt->set_tls(Thread::TLS_PARAM,this);
 			sc->start();
 		}
 	}
@@ -199,7 +201,7 @@ timevalue_t HostTimer::handle_expired_timers(PerCpu *per_cpu,timevalue_t now) {
 }
 
 void HostTimer::portal_per_cpu(capsel_t) {
-	HostTimer *ht = Ec::current()->get_tls<HostTimer*>(Ec::TLS_PARAM);
+	HostTimer *ht = Thread::current()->get_tls<HostTimer*>(Thread::TLS_PARAM);
 	cpu_t cpu = CPU::current().log_id();
 	PerCpu *per_cpu = ht->_per_cpu[cpu];
 
@@ -260,7 +262,7 @@ again:
 }
 
 NORETURN void HostTimer::xcpu_wakeup_thread(void *) {
-	HostTimer *ht = Ec::current()->get_tls<HostTimer*>(Ec::TLS_PARAM);
+	HostTimer *ht = Thread::current()->get_tls<HostTimer*>(Thread::TLS_PARAM);
 	cpu_t cpu = CPU::current().log_id();
 	PerCpu *const our = ht->_per_cpu[cpu];
 	ht->_xcpu_up.up();
@@ -278,7 +280,7 @@ NORETURN void HostTimer::xcpu_wakeup_thread(void *) {
 }
 
 NORETURN void HostTimer::gsi_thread(void *) {
-	HostTimer *ht = Ec::current()->get_tls<HostTimer*>(Ec::TLS_PARAM);
+	HostTimer *ht = Thread::current()->get_tls<HostTimer*>(Thread::TLS_PARAM);
 	cpu_t cpu = CPU::current().log_id();
 	PerCpu *const our = ht->_per_cpu[cpu];
 	WorkerMessage m;

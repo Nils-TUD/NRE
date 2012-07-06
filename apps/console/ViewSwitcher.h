@@ -12,7 +12,7 @@
 #include <service/Producer.h>
 #include <service/Consumer.h>
 #include <kobj/Sc.h>
-#include <kobj/GlobalEc.h>
+#include <kobj/GlobalThread.h>
 #include <mem/DataSpace.h>
 
 class ConsoleSessionData;
@@ -49,7 +49,7 @@ private:
 	nul::DataSpace _ds;
 	nul::Producer<SwitchCommand> _prod;
 	nul::Consumer<SwitchCommand> _cons;
-	nul::GlobalEc _ec;
+	nul::GlobalThread _ec;
 	nul::Sc _sc;
 	static char _backup[];
 	static char _buffer[];

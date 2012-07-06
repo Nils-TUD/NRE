@@ -17,7 +17,7 @@
  */
 
 #include <arch/SpinLock.h>
-#include <kobj/Ec.h>
+#include <kobj/Thread.h>
 #include <pthread.h>
 #include <cstdlib>
 #include <util/Atomic.h>
@@ -25,7 +25,7 @@
 using namespace nul;
 
 int pthread_key_create(pthread_key_t* key,void (*)(void*)) {
-	*key = Ec::current()->create_tls();
+	*key = Thread::current()->create_tls();
 	return 0;
 }
 
@@ -46,11 +46,11 @@ int pthread_once(pthread_once_t* control,void (*init)(void)) {
 }
 
 void* pthread_getspecific(pthread_key_t key) {
-	return Ec::current()->get_tls<void*>(key);
+	return Thread::current()->get_tls<void*>(key);
 }
 
 int pthread_setspecific(pthread_key_t key,void* data) {
-	Ec::current()->set_tls<void*>(key,data);
+	Thread::current()->set_tls<void*>(key,data);
 	return 0;
 }
 

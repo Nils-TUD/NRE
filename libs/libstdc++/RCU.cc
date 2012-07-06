@@ -13,14 +13,14 @@
 namespace nul {
 	class Init {
 		Init() {
-			RCU::announce(Ec::current());
+			RCU::announce(Thread::current());
 		}
 		static Init init;
 	};
 
 	uint32_t *RCU::_versions = 0;
 	size_t RCU::_versions_count = 0;
-	Ec *RCU::_ecs = 0;
+	Thread *RCU::_ecs = 0;
 	size_t RCU::_ec_count = 0;
 	RCUObject *RCU::_objs = 0;
 	RCULock RCU::_lock;

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <kobj/Ec.h>
+#include <kobj/Thread.h>
 #include <cap/CapSpace.h>
 #include <Assert.h>
 #include <util/SList.h>
@@ -36,7 +36,7 @@ public:
 	typedef SListIterator<CPU> iterator;
 
 	static CPU &current() {
-		return get(Ec::current()->cpu());
+		return get(Thread::current()->cpu());
 	}
 	static CPU &get(cpu_t log_id) {
 		assert(log_id < Hip::MAX_CPUS);

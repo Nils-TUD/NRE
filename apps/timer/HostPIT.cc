@@ -16,6 +16,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <stream/Serial.h>
+
 #include "HostPIT.h"
 
 using namespace nul;

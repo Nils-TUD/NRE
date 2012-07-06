@@ -36,7 +36,7 @@ static void portal_test(capsel_t) {
 static void test_delegate() {
 	Caps::allocate(CapRange(0x100,1 << 2,Crd::IO_ALL));
 
-	LocalEc ec(CPU::current().log_id());
+	LocalThread ec(CPU::current().log_id());
 	Pt pt(&ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	tic = Util::tsc();

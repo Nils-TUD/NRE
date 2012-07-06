@@ -14,7 +14,7 @@ namespace nul {
 SessionData::SessionData(Service *s,size_t id,capsel_t pts,Pt::portal_func func)
 	: RCUObject(), _id(id), _caps(pts), _objs(new ObjCap*[CPU::count()]) {
 	for(uint i = 0; i < CPU::count(); ++i) {
-		LocalEc *ec = s->get_ec(i);
+		LocalThread *ec = s->get_ec(i);
 		_objs[i] = 0;
 		if(ec) {
 			// just use portals if the service wants to provide one. otherwise use a semaphore to

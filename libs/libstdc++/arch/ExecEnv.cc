@@ -24,7 +24,7 @@
 
 namespace nul {
 
-void *ExecEnv::setup_stack(Pd *pd,Ec *ec,startup_func start,uintptr_t ret,uintptr_t stack) {
+void *ExecEnv::setup_stack(Pd *pd,Thread *ec,startup_func start,uintptr_t ret,uintptr_t stack) {
 	void **sp = reinterpret_cast<void**>(stack);
 	unsigned stack_top = STACK_SIZE / sizeof(void*);
 	sp[--stack_top] = ec;

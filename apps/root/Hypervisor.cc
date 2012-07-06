@@ -28,10 +28,10 @@ uint Hypervisor::_next_msi = 0;
 Hypervisor Hypervisor::_init INIT_PRIO_HV;
 
 Hypervisor::Hypervisor() {
-	// note that we have to use a different Ec for the mem-portal than for all the other portals
+	// note that we have to use a different Thread for the mem-portal than for all the other portals
 	// in the root-task, because the map portal uses the mem-portal.
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
-	LocalEc *ec = new LocalEc(CPU::current().log_id(),ObjCap::INVALID,
+	LocalThread *ec = new LocalThread(CPU::current().log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
 	_mem_pt = new Pt(ec,portal_mem);
 	// make all I/O ports available

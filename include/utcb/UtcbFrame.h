@@ -21,8 +21,9 @@
 #include <arch/UtcbExcLayout.h>
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
+#include <cap/CapSpace.h>
 #include <Exception.h>
-#include <kobj/Ec.h>
+#include <kobj/Thread.h>
 #include <String.h>
 #include <cstring>
 #include <Assert.h>
@@ -114,7 +115,7 @@ private:
 		_utcb->push_layer();
 	}
 public:
-	explicit UtcbFrameRef(Utcb *utcb = Ec::current()->utcb())
+	explicit UtcbFrameRef(Utcb *utcb = Thread::current()->utcb())
 			: _utcb(utcb), _top(Utcb::get_top(_utcb)), _upos(), _tpos() {
 		_utcb = Utcb::get_current_frame(_utcb);
 		_utcb->push_layer();

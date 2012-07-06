@@ -16,7 +16,7 @@
 using namespace nul;
 
 void Timeouts::timer_thread(void*) {
-	Timeouts *to = Ec::current()->get_tls<Timeouts*>(Ec::TLS_PARAM);
+	Timeouts *to = Thread::current()->get_tls<Timeouts*>(Thread::TLS_PARAM);
 	Sm &sm = to->_timer.sm(CPU::current().log_id());
 	while(1) {
 		sm.down();

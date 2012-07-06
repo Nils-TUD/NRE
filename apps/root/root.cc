@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/LocalEc.h>
+#include <kobj/LocalThread.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <subsystem/ChildManager.h>
@@ -49,9 +49,9 @@ static void start_childs();
 
 CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 
-// stack for initial Ec (overwrites the weak-symbol defined in Startup.cc)
+// stack for initial Thread (overwrites the weak-symbol defined in Startup.cc)
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
-// stack for LocalEc of first CPU
+// stack for LocalThread of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static uchar regptstack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
 static ChildManager *mng;
@@ -61,7 +61,7 @@ CPU0Init::CPU0Init() {
 	CPU &cpu = CPU::current();
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	// use the local stack here since we can't map dataspaces yet
-	LocalEc *ec = new LocalEc(cpu.log_id(),ObjCap::INVALID,
+	LocalThread *ec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
 	cpu.ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
@@ -74,7 +74,7 @@ CPU0Init::CPU0Init() {
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 	// register portal for the log service
 	uintptr_t regec_utcb = VirtualMemory::alloc(Utcb::SIZE);
-	LocalEc *regec = new LocalEc(cpu.log_id(),ObjCap::INVALID,
+	LocalThread *regec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
 	UtcbFrameRef reguf(regec->utcb());
 	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
@@ -85,8 +85,8 @@ CPU0Init::CPU0Init() {
 // TODO KObjects reference-counted? copying, ...
 // TODO what about resource-release when terminating entire subsystems?
 // TODO when a service dies, the client will notice it as soon as it tries to access the service
-// again. then it will throw an exception and call abort(). this in turn will kill this Ec. but
-// what if the client has more than one Ec? I mean, the client is basically dead and we should
+// again. then it will throw an exception and call abort(). this in turn will kill this Thread. but
+// what if the client has more than one Thread? I mean, the client is basically dead and we should
 // restart it (the service gets restarted as well).
 // TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
 // a separate library? or even for other things, so that we have a small, general library and some
@@ -133,7 +133,7 @@ int main() {
 	// now init the stuff for all other CPUs (using dlmalloc)
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->log_id() != CPU::current().log_id()) {
-			LocalEc *ec = new LocalEc(it->log_id());
+			LocalThread *ec = new LocalThread(it->log_id());
 			it->ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
 			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
 			it->io_pt = new Pt(ec,Hypervisor::portal_io);
@@ -144,7 +144,7 @@ int main() {
 			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 			// register portal for the log service
-			LocalEc *regec = new LocalEc(it->log_id());
+			LocalThread *regec = new LocalThread(it->log_id());
 			UtcbFrameRef reguf(ec->utcb());
 			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
 			it->reg_pt = new Pt(regec,portal_reg);
