@@ -30,40 +30,47 @@ using namespace nul;
  * State: stable
  * Features: IOIn, IOOut
  */
-class DirectIODevice : public StaticReceiver<DirectIODevice>
-{
-  DBus<MessageHwIOIn>  &_bus_hwioin;
-  DBus<MessageHwIOOut> &_bus_hwioout;
-  unsigned _base;
-  unsigned _size;
+class DirectIODevice: public StaticReceiver<DirectIODevice> {
+	DBus<MessageHwIOIn> &_bus_hwioin;
+	DBus<MessageHwIOOut> &_bus_hwioout;
+	unsigned _base;
+	unsigned _size;
 
- public:
-  bool  receive(MessageIOIn &msg)  {  if (in_range(msg.port, _base, _size)) return _bus_hwioin.send(static_cast<MessageHwIOIn&>(msg), true);  return false; }
-  bool  receive(MessageIOOut &msg) {  if (in_range(msg.port, _base, _size)) return _bus_hwioout.send(static_cast<MessageHwIOOut&>(msg), true); return false; }
-  DirectIODevice(DBus<MessageHwIOIn> &bus_hwioin, DBus<MessageHwIOOut> &bus_hwioout, unsigned base, unsigned size)
-  : _bus_hwioin(bus_hwioin), _bus_hwioout(bus_hwioout), _base(base), _size(size) {}
+public:
+	bool receive(MessageIOIn &msg) {
+		if(in_range(msg.port,_base,_size))
+			return _bus_hwioin.send(static_cast<MessageHwIOIn&>(msg),true);
+		return false;
+	}
+	bool receive(MessageIOOut &msg) {
+		if(in_range(msg.port,_base,_size))
+			return _bus_hwioout.send(static_cast<MessageHwIOOut&>(msg),true);
+		return false;
+	}
+	DirectIODevice(DBus<MessageHwIOIn> &bus_hwioin,DBus<MessageHwIOOut> &bus_hwioout,unsigned base,
+			unsigned size)
+		: _bus_hwioin(bus_hwioin), _bus_hwioout(bus_hwioout), _base(base), _size(size) {
+	}
 };
 
-
 PARAM_HANDLER(dio,
-	      "dio:<range> - directly assign ioports to the VM.",
-	      "Example: 'dio:0x3f8+8'.",
-	      "Forward access to given ioports to the hardware ones.",
-	      "Please note that a 'ioio' as backend for this device is needed too.")
-{
-  unsigned short base = argv[0];
-  unsigned short order;
-  if ( argv[1] == ~0UL)
-    order = 1;
-  else
-    order = Math::bit_scan_reverse(argv[1] | 1);
+		"dio:<range> - directly assign ioports to the VM.",
+		"Example: 'dio:0x3f8+8'.",
+		"Forward access to given ioports to the hardware ones.",
+		"Please note that a 'ioio' as backend for this device is needed too.") {
+	unsigned short base = argv[0];
+	unsigned short order;
+	if(argv[1] == ~0UL)
+		order = 1;
+	else
+		order = Math::bit_scan_reverse(argv[1] | 1);
 
-  // request the io ports
-  MessageHostOp msg(MessageHostOp::OP_ALLOC_IOIO_REGION, (base << 8) |  order);
-  if (!mb.bus_hostop.send(msg))
-    Util::panic("%s: failed to allocate ports %x/%u\n", __PRETTY_FUNCTION__, base, order);
+	// request the io ports
+	MessageHostOp msg(MessageHostOp::OP_ALLOC_IOIO_REGION,(base << 8) | order);
+	if(!mb.bus_hostop.send(msg))
+		Util::panic("%s: failed to allocate ports %x/%u\n",__PRETTY_FUNCTION__,base,order);
 
-  DirectIODevice *dev = new DirectIODevice(mb.bus_hwioin, mb.bus_hwioout, base, 1 << order);
-  mb.bus_ioin.add(dev,  DirectIODevice::receive_static<MessageIOIn>);
-  mb.bus_ioout.add(dev, DirectIODevice::receive_static<MessageIOOut>);
+	DirectIODevice *dev = new DirectIODevice(mb.bus_hwioin,mb.bus_hwioout,base,1 << order);
+	mb.bus_ioin.add(dev,DirectIODevice::receive_static<MessageIOIn>);
+	mb.bus_ioout.add(dev,DirectIODevice::receive_static<MessageIOOut>);
 }

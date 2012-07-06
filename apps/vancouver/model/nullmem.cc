@@ -26,26 +26,26 @@ using namespace nul;
  *
  * State: stable
  */
-class NullMemDevice : public StaticReceiver<NullMemDevice>
-{
-  unsigned long _base;
-  unsigned long _size;
+class NullMemDevice : public StaticReceiver<NullMemDevice> {
+	unsigned long _base;
+	unsigned long _size;
 
 public:
-  NullMemDevice(unsigned long base, unsigned long size) : _base(base), _size(size) {}
-  bool  receive(MessageMem &msg)
-  {
-    if (!in_range(msg.phys, _base, _size)) return false;
-    if (msg.read) *msg.ptr = 0xffffffff;
-    return true;
-  }
+	NullMemDevice(unsigned long base,unsigned long size)
+		: _base(base), _size(size) {
+	}
+
+	bool receive(MessageMem &msg) {
+		if(!in_range(msg.phys,_base,_size))
+			return false;
+		if(msg.read)
+			*msg.ptr = 0xffffffff;
+		return true;
+	}
 };
 
-
 PARAM_HANDLER(nullmem,
-      "nullmem:<range> - ignore Memory access to the given physical address range.",
-      "Example: 'nullmem:0xfee00000,0x1000'.")
-{
-  mb.bus_mem.add(new NullMemDevice(argv[0], argv[1]), NullMemDevice::receive_static<MessageMem>);
+		"nullmem:<range> - ignore Memory access to the given physical address range.",
+		"Example: 'nullmem:0xfee00000,0x1000'.") {
+	mb.bus_mem.add(new NullMemDevice(argv[0],argv[1]),NullMemDevice::receive_static<MessageMem>);
 }
-
