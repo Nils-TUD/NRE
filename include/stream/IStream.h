@@ -63,10 +63,21 @@ private:
 
 	template<typename T>
 	IStream &readu(T &u) {
+		uint base = 10;
 		skip_non_numeric();
 		u = 0;
-		while(_last >= '0' && _last <= '9') {
-			u = u * 10 + _last - '0';
+		if(_last == '0' && ((_last = read()) == 'x' || _last == 'X')) {
+			base = 16;
+			_last = read();
+		}
+		while((_last >= '0' && _last <= '9') ||
+				(base == 16 && ((_last >= 'a' && _last <= 'f') || (_last >= 'A' && _last <= 'F')))) {
+			if(_last >= 'a' && _last <= 'f')
+				u = u * base + _last + 10 - 'a';
+			else if(_last >= 'A' && _last <= 'F')
+				u = u * base + _last + 10 - 'A';
+			else
+				u = u * base + _last - '0';
 			_last = read();
 		}
 		return *this;

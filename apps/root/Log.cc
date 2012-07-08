@@ -22,7 +22,7 @@ using namespace nul;
 Log Log::_inst INIT_PRIO_SERIAL;
 Service *Log::_srv;
 const char *Log::_colors[] = {
-	"30","31","32","33","34","35","36","37"
+	"30","31","32","33","34","35","36"
 };
 
 Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1), _to_ser(false), _bufpos(0), _buf() {
@@ -63,7 +63,7 @@ void Log::buffer(char c) {
 void Log::write(uint sessid,const char *line,size_t len) {
 	ScopedLock<UserSm> guard(&_sm);
 	_to_ser = true;
-	*this << "\e[0;" << _colors[sessid % 8] << "m[" << sessid << "] ";
+	*this << "\e[0;" << _colors[sessid % ARRAY_SIZE(_colors)] << "m[" << sessid << "] ";
 	for(size_t i = 0; i < len; ++i) {
 		char c = line[i];
 		if(c != '\n')

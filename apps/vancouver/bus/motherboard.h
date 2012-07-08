@@ -77,6 +77,7 @@ public:
 	DBus<MessageTime>			bus_time;
 	DBus<MessageTimeout>		bus_timeout; ///< Timer expiration notifications
 	DBus<MessageTimer>			bus_timer; ///< Request for timers
+	DBus<MessageConsoleView>	bus_consoleview;
 	//DBus<MessageVesa>			bus_vesa;
 	VCpu *last_vcpu;
 

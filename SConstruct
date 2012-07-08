@@ -45,14 +45,22 @@ else:
 	btype = 'release'
 builddir = 'build/' + target + '-' + btype
 
+guestenv = Environment(
+	BINARYDIR = '#' + builddir + '/bin/guests',
+	ASFLAGS = '--32',
+	CFLAGS = '-Wall -Wextra -ansi -m32',
+	CXXFLAGS = '-Wall -Wextra -ansi -m32',
+	LINKFLAGS = '-m32 -freestanding -nostdlib -Wall -Wextra -ansi'
+)
+
 verbose = ARGUMENTS.get('VERBOSE',0);
 if int(verbose) == 0:
-	hostenv['ASCOMSTR'] = env['ASCOMSTR'] = "AS $TARGET"
-	hostenv['CCCOMSTR'] = env['CCCOMSTR'] = "CC $TARGET"
-	hostenv['CXXCOMSTR'] = env['CXXCOMSTR'] = "CXX $TARGET"
-	hostenv['LINKCOMSTR'] = env['LINKCOMSTR'] = "LD $TARGET"
-	hostenv['ARCOMSTR'] = env['ARCOMSTR'] = "AR $TARGET"
-	hostenv['RANLIBCOMSTR'] = env['RANLIBCOMSTR'] = "RANLIB $TARGET"
+	hostenv['ASCOMSTR'] = guestenv['ASCOMSTR'] = env['ASCOMSTR'] = "AS $TARGET"
+	hostenv['CCCOMSTR'] = guestenv['CCCOMSTR'] = env['CCCOMSTR'] = "CC $TARGET"
+	hostenv['CXXCOMSTR'] = guestenv['CXXCOMSTR'] = env['CXXCOMSTR'] = "CXX $TARGET"
+	hostenv['LINKCOMSTR'] = guestenv['LINKCOMSTR'] = env['LINKCOMSTR'] = "LD $TARGET"
+	hostenv['ARCOMSTR'] = guestenv['ARCOMSTR'] = env['ARCOMSTR'] = "AR $TARGET"
+	hostenv['RANLIBCOMSTR'] = guestenv['RANLIBCOMSTR'] = env['RANLIBCOMSTR'] = "RANLIB $TARGET"
 
 env.Append(
 	ARCH = target,
@@ -68,8 +76,9 @@ env.Append(
 def NulProgram(env, target, source):
 	# for better debugging: put every executable at a different address
 	myenv = env.Clone()
-	myenv.Append(LINKFLAGS = ' -Wl,--section-start=.init=' + ("0x%x" % env['LINK_ADDR']))
-	env['LINK_ADDR'] += 0x100000
+	if target != 'vancouver':
+		myenv.Append(LINKFLAGS = ' -Wl,--section-start=.init=' + ("0x%x" % env['LINK_ADDR']))
+		env['LINK_ADDR'] += 0x100000
 	prog = myenv.Program(
 		target, source,
 		LIBS = ['stdc++','supc++'],
@@ -88,3 +97,4 @@ env.NulProgram = NulProgram
 hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')
 env.SConscript('libs/SConscript', 'env', variant_dir = builddir + '/libs')
 env.SConscript('apps/SConscript', 'env', variant_dir = builddir + '/apps')
+env.SConscript('guests/SConscript', 'guestenv', variant_dir = builddir + '/guests')

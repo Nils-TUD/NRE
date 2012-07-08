@@ -129,7 +129,7 @@ static void test_perf() {
 	tac = Util::tsc();
 	rdtsc = tac - tic;
 	size_t sizes[] = {1,2,4,8,16,32,64,128};
-	for(size_t i = 0; i < sizeof(sizes) / sizeof(sizes[0]); ++i) {
+	for(size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
 		perform_test(sizes[i],rdtsc,min,max,avg);
 		WVPRINTF("Using %u words:",sizes[i]);
 		WVPERF(avg,"cycles");

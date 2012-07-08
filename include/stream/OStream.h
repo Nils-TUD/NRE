@@ -35,6 +35,7 @@ class OStream {
 		LONG		= 1 << 7,
 		SIZE_T		= 1 << 8,
 		INTPTR_T	= 1 << 9,
+		PRECISION	= 1 << 10,
 	};
 
 public:
@@ -77,7 +78,7 @@ public:
 		return *this;
 	}
 	OStream &operator <<(const char *str) {
-		puts(str);
+		puts(str,-1);
 		return *this;
 	}
 	OStream &operator <<(const void *p) {
@@ -102,7 +103,7 @@ private:
 	int printu(ullong n,uint base,char *chars);
 	int printn(llong n);
 	void printptr(uintptr_t u,uint flags);
-	int puts(const char *str);
+	int puts(const char *str,ulong prec);
 
 	static char _hexchars_big[];
 	static char _hexchars_small[];

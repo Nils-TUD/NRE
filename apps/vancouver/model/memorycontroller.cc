@@ -67,7 +67,7 @@ PARAM_HANDLER(mem,
 		Util::panic("%s failed to get physical memory\n",__PRETTY_FUNCTION__);
 	unsigned long start = ~argv[0] ? argv[0] : 0;
 	unsigned long end = argv[1] > msg.len ? msg.len : argv[1];
-	Serial::get().writef("physmem: %lx [%lx, %lx]\n",msg.value,start,end);
+	Serial::get().writef("physmem: %lx %p [%lx, %lx]\n",msg.value,msg.ptr,start,end);
 	MemoryController *dev = new MemoryController(msg.ptr,start,end);
 	// physmem access
 	mb.bus_mem.add(dev,MemoryController::receive_static<MessageMem>);

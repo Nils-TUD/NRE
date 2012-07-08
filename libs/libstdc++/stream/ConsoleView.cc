@@ -22,22 +22,34 @@ char ConsoleView::read() {
 	return c;
 }
 
-void ConsoleView::write(char c) {
-	if(c == '\r')
-		_col = 0;
-	else if(c == '\n' || _col == Console::COLS) {
-		_row++;
-		_col = 0;
-		if(_row == Console::ROWS) {
-			memmove(screen(),screen() + Console::COLS * 2,(Console::ROWS - 1) * Console::COLS * 2);
-			memset(screen() + (Console::ROWS - 1) * Console::COLS * 2,0,Console::COLS * 2);
-			_row--;
-		}
+void ConsoleView::put(ushort value,ushort *base,uint &pos) {
+	bool visible = false;
+	switch(value & 0xff) {
+		// backspace
+		case 8:
+			if(pos)
+				pos--;
+			break;
+		case '\n':
+			pos += Console::COLS - (pos % Console::COLS);
+			break;
+		case '\r':
+			pos -= pos % Console::COLS;
+			break;
+		case '\t':
+			pos += Console::TAB_WIDTH - (pos % Console::TAB_WIDTH);
+			break;
+		default:
+			visible = true;
+			break;
 	}
-	else {
-		char *pos = screen() + _row * Console::COLS * 2 + _col * 2;
-		pos[0] = c;
-		pos[1] = 0 << 4 | 4;
-		_col++;
+
+	// scroll?
+	if(pos >= Console::COLS * Console::ROWS) {
+		memmove(base,base + Console::COLS,(Console::ROWS - 1) * Console::COLS * 2);
+		memset(base + (Console::ROWS - 1) * Console::COLS,0,Console::COLS * 2);
+		pos = Console::COLS * (Console::ROWS - 1);
 	}
+	if(visible)
+		base[pos++] = value;
 }

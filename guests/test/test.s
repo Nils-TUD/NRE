@@ -16,10 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
+.global _start
 
-#define REG(X)				r##X
-#define ARCH_REGIONS_END	0x0000000200000000
-#define ARCH_KERNEL_START	0x0000800000000000
-#define FMT_WORD_HEXLEN		"16"
-#define FMT_WORD_BYTES		"8"
+_start:
+	jmp		_start

@@ -23,6 +23,7 @@ public:
 	enum {
 		COLS		= 80,
 		ROWS		= 25,
+		TAB_WIDTH	= 4,
 		BUF_SIZE	= COLS * 2 + 1
 	};
 

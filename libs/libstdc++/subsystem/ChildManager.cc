@@ -33,7 +33,7 @@ ChildManager::ChildManager() : _child_count(), _childs(),
 	_regecs = new LocalThread*[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalThread **ecs[] = {_ecs,_regecs};
-		for(size_t i = 0; i < sizeof(ecs) / sizeof(ecs[0]); ++i) {
+		for(size_t i = 0; i < ARRAY_SIZE(ecs); ++i) {
 			ecs[i][it->log_id()] = new LocalThread(it->log_id());
 			ecs[i][it->log_id()]->set_tls(Thread::TLS_PARAM,this);
 		}
@@ -738,7 +738,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			uintptr_t *addr,addrs[32];
 			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, bp=%p, error=%#x\n",
 					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),uf->rbp,error);
-			//Serial::get() << c->reglist();
+			Serial::get() << c->reglist();
 			Serial::get().writef("Unable to resolve fault; killing Thread\n");
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 			Serial::get().writef("Backtrace:\n");

@@ -26,7 +26,7 @@ class ConsoleView : public IStream, public OStream {
 
 public:
 	ConsoleView(ConsoleSession &sess)
-		: _sess(sess), _view(), _col(0), _row(0),
+		: _sess(sess), _view(), _pos(0),
 		  _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		  _consumer(&_in_ds,true) {
@@ -39,6 +39,9 @@ public:
 	uint id() const {
 		return _view;
 	}
+	const DataSpace &screen() const {
+		return _out_ds;
+	}
 
 	Console::ReceivePacket receive() {
 		Console::ReceivePacket *pk = _consumer.get();
@@ -50,13 +53,15 @@ public:
 	}
 
 	virtual char read();
-	virtual void write(char c);
+	virtual void write(char c) {
+		put(0x0F00 | c,_pos);
+	}
+	void put(ushort value,uint &pos) {
+		put(value,reinterpret_cast<ushort*>(_out_ds.virt()),pos);
+	}
+	void put(ushort value,ushort *base,uint &pos);
 
 private:
-	char *screen() const {
-		return reinterpret_cast<char*>(_out_ds.virt());
-	}
-
 	void create_view() {
 		UtcbFrame uf;
 		uf << Console::CREATE_VIEW << _in_ds.desc() << _out_ds.desc();
@@ -77,8 +82,7 @@ private:
 
 	ConsoleSession &_sess;
 	uint _view;
-	uint8_t _col;
-	uint8_t _row;
+	uint _pos;
 	DataSpace _in_ds;
 	DataSpace _out_ds;
 	Consumer<Console::ReceivePacket> _consumer;

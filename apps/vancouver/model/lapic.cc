@@ -139,7 +139,7 @@ private:
 	CpuMessage(1,  2, ~(1 << 21), apic_enabled << 21),
 
       };
-      for (unsigned i=0; i < sizeof(msg) / sizeof(*msg); i++)
+      for (unsigned i=0; i < ARRAY_SIZE(msg); i++)
 	_vcpu->executor.send(msg[i]);
     }
 
@@ -764,7 +764,7 @@ public:
     for (_timer_clock_shift=0; _timer_clock_shift < 32; _timer_clock_shift++)
       if ((_mb.clock().source_freq() >> _timer_clock_shift) <= MAX_FREQ) break;
 
-    Serial::get().writef("LAPIC freq %lld\n", _mb.clock().source_freq() >> _timer_clock_shift);
+    Serial::get().writef("LAPIC freq %Ld\n", _mb.clock().source_freq() >> _timer_clock_shift);
     CpuMessage msg[] = {
       // propagate initial APIC id
       CpuMessage(1,  1, 0xffffff, _initial_apic_id << 24),
@@ -772,7 +772,7 @@ public:
       // support for APIC timer that does not sleep in C-states
       CpuMessage(6, 0, ~(1 << 2), 1 << 2),
     };
-    for (unsigned i=0; i < sizeof(msg) / sizeof(*msg); i++)
+    for (unsigned i=0; i < ARRAY_SIZE(msg); i++)
       _vcpu->executor.send(msg[i]);
 
     reset();

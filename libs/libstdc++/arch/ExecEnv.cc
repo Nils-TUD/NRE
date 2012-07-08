@@ -24,10 +24,10 @@
 
 namespace nul {
 
-void *ExecEnv::setup_stack(Pd *pd,Thread *ec,startup_func start,uintptr_t ret,uintptr_t stack) {
+void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uintptr_t stack) {
 	void **sp = reinterpret_cast<void**>(stack);
 	unsigned stack_top = STACK_SIZE / sizeof(void*);
-	sp[--stack_top] = ec;
+	sp[--stack_top] = t;
 	sp[--stack_top] = pd;
 	sp[--stack_top] = reinterpret_cast<void*>(start);
 	sp[--stack_top] = reinterpret_cast<void*>(ret);

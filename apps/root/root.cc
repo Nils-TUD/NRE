@@ -94,6 +94,7 @@ CPU0Init::CPU0Init() {
 // TODO what about different permissions for dataspaces? i.e. client has R, service has W
 // TODO we have to think about mapping device-memory again. it might be necessary to let multiple
 // Pds map one device (e.g. use acpi to find a device and map it).
+// TODO novaboot in tools
 
 int main() {
 	const Hip &hip = Hip::get();
@@ -171,6 +172,9 @@ static void start_childs() {
 			Hypervisor::map_mem(it->addr,virt,it->size);
 			// map command-line, if necessary
 			char *aux = Hypervisor::map_string(it->aux);
+			// TODO temporary. skip guest-binaries
+			if(aux && strstr(aux,"guests"))
+				continue;
 
 			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);

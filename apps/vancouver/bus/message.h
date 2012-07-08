@@ -21,6 +21,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <stream/ConsoleView.h>
 #include <Compiler.h>
 #include <Desc.h>
 
@@ -324,6 +325,7 @@ struct MessageSerial
 
 #if 0
 #include "host/vesa.h"
+#endif
 
 struct VgaRegs
 {
@@ -333,7 +335,17 @@ struct VgaRegs
   unsigned long offset;
 };
 
+struct MessageConsoleView {
+	enum Type {
+		TYPE_GET_INFO
+	} type;
+	nul::ConsoleView *view;
+	MessageConsoleView(Type _type) : type(_type), view() {
+	}
+};
 
+
+#if 0
 typedef Vbe::ModeInfoBlock ConsoleModeInfo;
 
 /**

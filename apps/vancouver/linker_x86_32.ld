@@ -7,7 +7,7 @@ SEARCH_DIR("/home/hrniels/nova/cross/x86_32/dist/i686-pc-nulnova/lib");
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
-  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x1000)); . = SEGMENT_START("text-segment", 0x1000) + SIZEOF_HEADERS;
+  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x80000000)); . = SEGMENT_START("text-segment", 0x80000000) + SIZEOF_HEADERS;
   .interp         : { *(.interp) }
   .note.gnu.build-id : { *(.note.gnu.build-id) }
   .hash           : { *(.hash) }

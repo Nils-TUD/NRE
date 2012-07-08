@@ -21,4 +21,5 @@
 #define REG(X)				e##X
 #define ARCH_REGIONS_END	0x10000000
 #define ARCH_KERNEL_START	0xC0000000
-#define FMT_WORD_LEN		"4"
+#define FMT_WORD_HEXLEN		"8"
+#define FMT_WORD_BYTES		"4"

@@ -75,9 +75,9 @@ private:
 template<uint BITS>
 static inline OStream &operator<<(OStream &os,const BitField<BITS> &bf) {
 	os << "Bitfield[";
-	for(size_t i = 0; i < sizeof(bf._words) / sizeof(bf._words[0]); ++i) {
-		os.writef("%0"FMT_WORD_LEN"x",bf._words[i]);
-		if(i + 1 < sizeof(bf._words) / sizeof(bf._words[0]))
+	for(size_t i = 0; i < ARRAY_SIZE(bf._words); ++i) {
+		os.writef("%0"FMT_WORD_BYTES"x",bf._words[i]);
+		if(i + 1 < ARRAY_SIZE(bf._words))
 			os << ' ';
 	}
 	os << ']';

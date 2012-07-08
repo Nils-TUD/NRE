@@ -7,6 +7,7 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
+#include <arch/Defines.h>
 #include <Errors.h>
 
 namespace nul {
@@ -36,7 +37,7 @@ static const char *msgs[] = {
 };
 
 const char *to_string(ErrorCode code) {
-	if(code < sizeof(msgs) / sizeof(msgs[0]))
+	if(code < ARRAY_SIZE(msgs))
 		return msgs[code];
 	return "Unknown error";
 }

@@ -52,7 +52,7 @@ class GlobalThread : public Thread {
 	 */
 	explicit GlobalThread(uintptr_t uaddr,capsel_t cap,cpu_t cpu,Pd *pd,uintptr_t stack)
 			: Thread(Hip::get().cpu_phys_to_log(cpu),0,cap,stack,uaddr) {
-		ExecEnv::set_current_ec(this);
+		ExecEnv::set_current_thread(this);
 		ExecEnv::set_current_pd(pd);
 	}
 

@@ -31,7 +31,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 	char *s;
 	llong n;
 	ullong u;
-	uint pad,width,base,flags;
+	ulong pad,width,prec,base,flags;
 	bool readFlags;
 
 	// don't try to output something during initialization
@@ -48,6 +48,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 		}
 
 		// read flags
+		prec = -1;
 		flags = 0;
 		pad = 0;
 		readFlags = true;
@@ -73,8 +74,15 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 					flags |= PADZEROS;
 					fmt++;
 					break;
+				case '.':
+					flags |= PRECISION;
+					fmt++;
+					break;
 				case '*':
-					pad = va_arg(ap, ulong);
+					if(flags & PRECISION)
+						prec = va_arg(ap, ulong);
+					else
+						pad = va_arg(ap, ulong);
 					fmt++;
 					break;
 				default:
@@ -163,7 +171,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 					width = strlen(s);
 					printpad(pad - width,flags);
 				}
-				n = puts(s);
+				n = puts(s,prec);
 				if(pad > 0 && (flags & PADRIGHT))
 					printpad(pad - n,flags);
 				break;
@@ -284,10 +292,10 @@ void OStream::printptr(uintptr_t u,uint flags) {
 	}
 }
 
-int OStream::puts(const char *str) {
+int OStream::puts(const char *str,ulong prec) {
 	const char *begin = str;
 	char c;
-	while((c = *str)) {
+	while((prec == (ulong)-1 || prec-- > 0) && (c = *str)) {
 		write(c);
 		str++;
 	}

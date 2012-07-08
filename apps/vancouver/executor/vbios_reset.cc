@@ -87,7 +87,7 @@ class VirtualBiosReset : public StaticReceiver<VirtualBiosReset>, public BiosCom
       MessageMem(false, 0xfee00350, m+1),
       MessageMem(false, 0xfee00360, m+2),
     };
-    for (unsigned j=0; j < sizeof(msg2) / sizeof(*msg2); j++)  vcpu->mem.send(msg2[j], true);
+    for (unsigned j=0; j < ARRAY_SIZE(msg2); j++)  vcpu->mem.send(msg2[j], true);
 
 
     // switch to x2apic mode?

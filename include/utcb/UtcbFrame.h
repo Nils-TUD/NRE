@@ -33,8 +33,11 @@ namespace nul {
 
 class Pt;
 class UtcbFrameRef;
+class UtcbExcFrameRef;
 OStream &operator<<(OStream &os,const Utcb &utcb);
 OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
+OStream &operator<<(OStream &os,const UtcbExc::Descriptor &desc);
+OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm);
 
 class UtcbException : public Exception {
 public:
@@ -47,6 +50,7 @@ class UtcbFrameRef {
 	friend class Utcb;
 	friend OStream &operator<<(OStream &os,const Utcb &utcb);
 	friend 	OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
+	friend OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm);
 
 public:
 	enum DelFlags {
@@ -181,9 +185,8 @@ public:
 		_utcb->crd_translate = crd.value();
 	}
 
-	// TODO for mem and io as well?
-	void translate(capsel_t cap,uint perms = Crd::OBJ_ALL) {
-		add_typed(XltItem(Crd(cap,0,Crd::OBJ | perms)));
+	void translate(capsel_t cap,uint attr = Crd::OBJ_ALL) {
+		add_typed(XltItem(Crd(cap,0,attr)));
 	}
 	void translate(const CapRange& range) {
 		size_t count = range.count();
@@ -195,8 +198,8 @@ public:
 			count -= 1 << minshift;
 		}
 	}
-	void delegate(capsel_t cap,uint hotspot = 0,DelFlags flags = NONE,uint perms = Crd::OBJ_ALL) {
-		add_typed(DelItem(Crd(cap,0,Crd::OBJ | perms),flags,hotspot));
+	void delegate(capsel_t cap,uint hotspot = 0,DelFlags flags = NONE,uint attr = Crd::OBJ_ALL) {
+		add_typed(DelItem(Crd(cap,0,attr),flags,hotspot));
 	}
 	void delegate(const CapRange& range,DelFlags flags = NONE) {
 		uintptr_t hotspot = range.hotspot() ? range.hotspot() : range.start();
@@ -307,6 +310,9 @@ public:
 
 	UtcbExc *operator->() {
 		return reinterpret_cast<UtcbExc*>(_utcb);
+	}
+	const UtcbExc *operator->() const {
+		return reinterpret_cast<const UtcbExc*>(_utcb);
 	}
 };
 

@@ -19,6 +19,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <arch/Defines.h>
 #include <stream/OStream.h>
 
 namespace nul {
@@ -153,7 +154,7 @@ static inline OStream &operator<<(OStream &os,const Mtd &mtd) {
 	};
 	os << "Mtd[";
 	bool first = true;
-	for(size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i) {
+	for(size_t i = 0; i < ARRAY_SIZE(flags); ++i) {
 		if(mtd.value() & (1 << i)) {
 			if(!first)
 				os << " ";

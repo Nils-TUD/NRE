@@ -9,8 +9,12 @@ if vcenv['ARCH'] == 'x86_32':
 	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
 	# an asm constraint is impossible. strange :/
 	if btype == 'debug':
-		vcenv.Append(CXXFLAGS = ' -O1')
-		vcenv.Append(CFLAGS = ' -O1')
+		vcenv.Append(CXXFLAGS = ' -O1 -fno-inline')
+		vcenv.Append(CFLAGS = ' -O1 -fno-inline')
+	# turn off these warnings. vancouver produces too many of them :(
+	vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
+	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
+	# use custom linker script
 	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
 	vcenv.NulProgram(vcenv, 'vancouver', [Glob('*.cc'),Glob('*/*.cc')])
 else:

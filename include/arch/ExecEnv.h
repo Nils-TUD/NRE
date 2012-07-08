@@ -55,15 +55,15 @@ public:
 		set_current(2,pd);
 	}
 
-	static inline Thread *get_current_ec() {
+	static inline Thread *get_current_thread() {
 		return static_cast<Thread*>(get_current(1));
 	}
 
-	static inline void set_current_ec(Thread *ec) {
-		set_current(1,ec);
+	static inline void set_current_thread(Thread *t) {
+		set_current(1,t);
 	}
 
-	static void *setup_stack(Pd *pd,Thread *ec,startup_func start,uintptr_t ret,uintptr_t stack);
+	static void *setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uintptr_t stack);
 	static size_t collect_backtrace(uintptr_t *frames,size_t max);
 	static size_t collect_backtrace(uintptr_t stack,uintptr_t bp,uintptr_t *frames,size_t max);
 

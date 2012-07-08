@@ -163,7 +163,7 @@ static Hip::mem_iterator get_self() {
 static void test_shm() {
 	char cmdline[64];
 	size_t ds_sizes[] = {ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE * 2,ExecEnv::PAGE_SIZE * 4};
-	for(size_t i = 0; i < sizeof(ds_sizes) / sizeof(ds_sizes[0]); ++i) {
+	for(size_t i = 0; i < ARRAY_SIZE(ds_sizes); ++i) {
 		ChildManager *mng = new ChildManager();
 		Hip::mem_iterator self = get_self();
 		// map the memory of the module

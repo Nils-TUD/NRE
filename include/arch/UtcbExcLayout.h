@@ -19,6 +19,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <arch/ExecEnv.h>
 #include <utcb/UtcbHead.h>
 #include <cstring>
 
@@ -46,7 +47,10 @@ public:
 	struct Descriptor {
 		uint16_t sel,ar;
 		uint32_t limit;
-		word_t base;
+		union {
+			uint64_t : 64;
+			word_t base;
+		};
 		void set(uint16_t _sel,uint32_t _base,uint32_t _limit,uint16_t _ar) {
 			sel = _sel;
 			base = _base;
@@ -90,7 +94,7 @@ public:
 	};
 
 	void clear() {
-		memset(words, 0, sizeof(words));
+		memset(words,0,ExecEnv::PAGE_SIZE - sizeof(UtcbHead));
 	}
 };
 

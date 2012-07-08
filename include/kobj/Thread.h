@@ -32,10 +32,11 @@ class RCU;
 class RCULock;
 
 /**
- * Represents an execution context. This class can't be used directly. To create an Ec, use LocalThread
- * or GlobalThread. Note that each Ec contains a few slots for thread local storage (TLS). The index
- * Ec::TLS_PARAM is always available, e.g. to pass a parameter to an Ec. You may create additional
- * ones by Ec::create_tls().
+ * Represents a thread, i.e. an Ec that has a stack and a Utcb. It is the base class for the two
+ * supported thread variants, LocalThread and GlobalThread. This class can't be used directly.
+ * Note that each Thread contains a few slots for thread local storage (TLS). The index
+ * Thread::TLS_PARAM is always available, e.g. to pass a parameter to a Thread. You may create
+ * additional ones by Thread::create_tls().
  */
 class Thread : public Ec {
 	friend class RCU;
@@ -55,14 +56,14 @@ public:
 	 * @return the current execution context
 	 */
 	static Thread *current() {
-		return ExecEnv::get_current_ec();
+		return ExecEnv::get_current_thread();
 	}
 
 protected:
 	/**
 	 * Constructor
 	 *
-	 * @param cpu the logical cpu to bind the Ec to
+	 * @param cpu the logical cpu to bind the Thread to
 	 * @param evb the offset for the event-portals
 	 * @param cap the capability (INVALID if a new one should be used)
 	 * @param stack the stack address (0 = create one automatically)
@@ -77,10 +78,10 @@ protected:
 			  _tls() {
 	}
 	/**
-	 * The actual creation of the Ec.
+	 * The actual creation of the Thread.
 	 *
-	 * @param pd the protection domain the Ec should run in
-	 * @param type the type of Ec
+	 * @param pd the protection domain the Thread should run in
+	 * @param type the type of Thread
 	 * @param sp the stack-pointer
 	 */
 	void create(Pd *pd,Syscalls::ECType type,void *sp);
@@ -108,7 +109,7 @@ public:
 	}
 
 	/**
-	 * Creates a new TLS slot for all Ecs
+	 * Creates a new TLS slot for all Threads
 	 *
 	 * @return the TLS index
 	 */
