@@ -21,12 +21,7 @@
 #include <arch/Elf.h>
 #include <cstring>
 
-/**
- * Check whether X is true, output an error and return RET.
- */
-#define check1(RET, X, ...) ({ unsigned __res; if ((__res = (X))) {	\
-	nul::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, __res); \
-	nul::Serial::get().writef(" " __VA_ARGS__); nul::Serial::get().writef("\n"); return RET; }})
+#include "../bus/helper.h"
 
 struct Elf {
 	static unsigned is_not_elf(const nul::ElfEh *elf,unsigned long modsize) {

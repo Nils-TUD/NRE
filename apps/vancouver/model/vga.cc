@@ -104,6 +104,7 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 		return true;
 	}
 
+	// TODO VESA stuff
 #if 0
 	static unsigned vesa_farptr(CpuState *cpu,void *p,void *base) {
 		return (cpu->es.sel << 16)
@@ -365,6 +366,7 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 						// unsupported
 						break;
 					default:
+						// TODO VESA stuff
 #if 0
 						if(!handle_vesa(cpu))
 #endif
@@ -528,6 +530,7 @@ public:
 		discovery_write_dw("bda",0x62,0,1); // current page address
 		discovery_write_dw("bda",0x63,_iobase + 0x14,2); // crt address
 
+		// TODO
 #if 0
 		MessageConsole msg2(MessageConsole::TYPE_GET_FONT);
 		msg2.ptr = _framebuffer_ptr;
@@ -555,22 +558,10 @@ public:
 			Util::panic("could not get VGA screen");
 		_cview = msg.view;
 		_screen = reinterpret_cast<char*>(_cview->screen().virt());
+		Serial::get().writef("VGA console %lx+%lx @ %p\n",
+				_framebuffer_phys,_framebuffer_size,_framebuffer_ptr);
 
 		handle_reset(false);
-
-#if 0
-		// alloc console
-		MessageConsole msg("VM",_framebuffer_ptr,_framebuffer_size,&_regs);
-		if(!mb.bus_console.send(msg))
-			Logging::panic("could not alloc a VGA backend");
-		_view = msg.view;
-		Logging::printf("VGA console %lx+%lx %p\n",_framebuffer_phys,_framebuffer_size,
-				_framebuffer_ptr);
-
-		// switch to our console
-		msg.type = MessageConsole::TYPE_SWITCH_VIEW;
-		mb.bus_console.send(msg);
-#endif
 	}
 };
 

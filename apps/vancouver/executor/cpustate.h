@@ -23,19 +23,29 @@
 /**
  * A generic cpu state class.
  */
-class CpuState : public nul::UtcbExc
-{
- public:
-  unsigned cpl()   { return (ss.ar >> 5) & 3; }
-  unsigned iopl()  { return (efl >> 12) & 3; }
-  unsigned pm()    { return cr0 & 0x1; }
-  unsigned pg()    { return cr0 & 0x80000000; }
-  unsigned v86()   { return cr0 & 0x1 && efl & (1 << 17); }
-  void edx_eax(unsigned long long value)
-  {
-    eax = value;
-    edx = value >> 32;
-  };
+class CpuState: public nul::UtcbExc {
+public:
+	unsigned cpl() {
+		return (ss.ar >> 5) & 3;
+	}
+	unsigned iopl() {
+		return (efl >> 12) & 3;
+	}
+	unsigned pm() {
+		return cr0 & 0x1;
+	}
+	unsigned pg() {
+		return cr0 & 0x80000000;
+	}
+	unsigned v86() {
+		return (cr0 & 0x1) && (efl & (1 << 17));
+	}
+	void edx_eax(unsigned long long value) {
+		eax = value;
+		edx = value >> 32;
+	}
 
-  unsigned long long edx_eax() {  return union64(edx, eax); };
+	unsigned long long edx_eax() {
+		return union64(edx, eax);
+	}
 };

@@ -62,7 +62,7 @@ public:
 		bool res = true;
 		if(msg.port == _iobase && msg.type == MessageIOIn::TYPE_INL)
 			msg.value = _confaddress;
-		else if(in_range(msg.port,_iobase + 4,4) && _confaddress & 0x80000000)
+		else if(in_range(msg.port,_iobase + 4,4) && (_confaddress & 0x80000000))
 			msg.value = read_pcicfg(res) >> 8 * (msg.port & 0x3);
 		else
 			return false;
