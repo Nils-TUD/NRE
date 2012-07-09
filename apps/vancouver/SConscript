@@ -17,8 +17,6 @@ if vcenv['ARCH'] == 'x86_32':
 		halifax = halienv.Object('executor/halifax.cc')
 	else:
 		halifax = vcenv.Object('executor/halifax.cc')
-	#vcenv.Append(CXXFLAGS = ' -O1 -fno-inline')
-	#vcenv.Append(CFLAGS = ' -O1 -fno-inline')
 	# use custom linker script
 	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
 	files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]
