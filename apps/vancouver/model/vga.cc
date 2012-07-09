@@ -16,6 +16,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <stream/ConsoleStream.h>
 #include <util/Util.h>
 #include <Desc.h>
 
@@ -44,24 +45,19 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 	char * _framebuffer_ptr;
 	unsigned long _framebuffer_phys;
 	unsigned long _framebuffer_size;
-	VgaRegs _regs;
+	Console::Register _regs;
 	unsigned char _crt_index;
 	unsigned _ebda_segment;
 	unsigned _vbe_mode;
-	ConsoleView *_cview;
-	char *_screen;
-
-	void write_byte(uintptr_t offset,uint8_t byte) {
-		_framebuffer_ptr[TEXT_OFFSET + offset] = byte;
-		_screen[offset] = byte;
-	}
+	ConsoleSession *_csess;
+	ConsoleStream _cons;
 
 	void puts_guest(const char *msg) {
 		uint pos = _regs.cursor_pos - TEXT_OFFSET;
 		uint fpos = pos;
 		for(unsigned i = 0; msg[i]; i++) {
-			_cview->put(0x0F00 | msg[i],pos);
-			_cview->put(0x0F00 | msg[i],reinterpret_cast<ushort*>(_framebuffer_ptr) + TEXT_OFFSET,fpos);
+			_cons.put(0x0F00 | msg[i],pos);
+			_cons.put(0x0F00 | msg[i],reinterpret_cast<ushort*>(_framebuffer_ptr) + TEXT_OFFSET,fpos);
 		}
 		update_cursor(0,((pos / 80) << 8) | (pos % 80));
 	}
@@ -74,6 +70,7 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 		write_bda(0x50 + (page & 0x7) * 2,pos,2);
 		pos = read_bda(0x50 + 2 * (read_bda(0x62) & 0x7));
 		_regs.cursor_pos = TEXT_OFFSET + ((pos >> 8) * 80 + (pos & 0xff));
+		_csess->set_regs(_regs);
 	}
 
 	/**
@@ -96,9 +93,9 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 		_regs.mode = 0;
 		_regs.cursor_pos = 24 * 80 + TEXT_OFFSET;
 		_regs.cursor_style = 0x0d0e;
+		_csess->set_regs(_regs);
 		// and clear the screen
 		memset(_framebuffer_ptr,0,_framebuffer_size);
-		memset(_screen,0,25 * 80 * 2);
 		if(show)
 			puts_guest("    VgaBios booting...\n\n\n");
 		return true;
@@ -233,6 +230,7 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 				break;
 			case 0x01: // set cursor shape
 				_regs.cursor_style = cpu->cx;
+				_csess->set_regs(_regs);
 				break;
 			case 0x02: // set cursor
 				update_cursor(cpu->bh,cpu->dx);
@@ -245,6 +243,7 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 			case 0x05: // set current page
 				write_bda(0x62,cpu->al & 7,1);
 				_regs.offset = TEXT_OFFSET + get_page(cpu->al);
+				_csess->set_regs(_regs);
 				break;
 			case 0x06: // scroll up window
 			{
@@ -255,14 +254,10 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 				unsigned maxrow = cpu->dh < 25 ? cpu->dh : 24;
 				for(unsigned row = cpu->ch; row <= maxrow; row++) {
 					for(unsigned col = cpu->cl; col < 80 && col <= cpu->dl; col++) {
-						if((row + rows) > maxrow) {
-							write_byte((row * 80 + col) * 2 + 1,cpu->bh);
-							write_byte((row * 80 + col) * 2,0);
-						}
-						else {
-							write_byte((row * 80 + col) * 2 + 1,base[(row + rows) * 80 + col] >> 8);
-							write_byte((row * 80 + col) * 2,base[(row + rows) * 80 + col] & 0xFF);
-						}
+						if((row + rows) > maxrow)
+							base[row * 80 + col] = cpu->bh << 8;
+						else
+							base[row * 80 + col] = base[(row + rows) * 80 + col];
 					}
 				}
 			}
@@ -299,8 +294,8 @@ class Vga : public StaticReceiver<Vga>, public BiosCommon {
 				unsigned value = ((_framebuffer_ptr[2 * (TEXT_OFFSET + page + pos) + 1] & 0xff) << 8);
 
 				value |= cpu->al;
-				_cview->put(value,pos);
-				_cview->put(value,reinterpret_cast<unsigned short *>(_framebuffer_ptr) + TEXT_OFFSET + page,fpos);
+				_cons.put(value,pos);
+				_cons.put(value,reinterpret_cast<unsigned short *>(_framebuffer_ptr) + TEXT_OFFSET + page,fpos);
 				update_cursor(cpu->bh,((pos / 80) << 8) | (pos % 80));
 			}
 			break;
@@ -423,7 +418,6 @@ public:
 								_regs.cursor_pos = (_regs.cursor_pos & ~0xff) | value;
 								break;
 							case 0x0c: // start address high
-								// TODO we have to copy to screen to switch the page
 								_regs.offset = TEXT_OFFSET + ((value << 8) | (_regs.offset & 0xff));
 								break;
 							case 0x0d: // start address low
@@ -432,6 +426,7 @@ public:
 							default:
 								break;
 						}
+						_csess->set_regs(_regs);
 						break;
 					default:
 						break;
@@ -545,22 +540,16 @@ public:
 		return true;
 	}
 
-	Vga(Motherboard &mb,unsigned short iobase,char *framebuffer_ptr,unsigned long framebuffer_phys,
+	Vga(Motherboard &mb,ConsoleSession *sess,unsigned short iobase,char *framebuffer_ptr,unsigned long framebuffer_phys,
 			unsigned long framebuffer_size)
 			: BiosCommon(mb), _iobase(iobase), _framebuffer_ptr(framebuffer_ptr),
 			  _framebuffer_phys(framebuffer_phys), _framebuffer_size(framebuffer_size),
-			  _crt_index(0) {
+			  _crt_index(0), _csess(sess), _cons(*sess) {
 		assert(!(framebuffer_phys & 0xfff));
 		assert(!(framebuffer_size & 0xfff));
 
-		MessageConsoleView msg(MessageConsoleView::TYPE_GET_INFO);
-		if(!mb.bus_consoleview.send(msg))
-			Util::panic("could not get VGA screen");
-		_cview = msg.view;
-		_screen = reinterpret_cast<char*>(_cview->screen().virt());
 		Serial::get().writef("VGA console %lx+%lx @ %p\n",
 				_framebuffer_phys,_framebuffer_size,_framebuffer_ptr);
-
 		handle_reset(false);
 	}
 };
@@ -578,19 +567,28 @@ PARAM_HANDLER(vga,
 		"The framebuffersize is given in kilobyte and the minimum is 128k.",
 		"This also adds support for VGA and VESA graphics BIOS.") {
 	unsigned long fbsize = argv[1];
-	if(fbsize == ~0ul)
+	/*if(fbsize == ~0ul)
 		fbsize = _default_vga_fbsize;
 
 	// We need at least 128k for 0xa0000-0xbffff.
 	if(fbsize < 128)
-		fbsize = 128;
+		fbsize = 128;*/
+	fbsize = 128;
 	fbsize <<= 10;
-	MessageHostOp msg(MessageHostOp::OP_ALLOC_FROM_GUEST,fbsize);
+
+	MessageHostOp msg1(MessageHostOp::OP_ALLOC_FROM_GUEST,fbsize);
+	MessageConsoleView msg(MessageConsoleView::TYPE_GET_INFO);
+	if(!mb.bus_hostop.send(msg1))
+		Util::panic("%s failed to alloc %ld from guest memory\n",__PRETTY_FUNCTION__,fbsize);
+	if(!mb.bus_consoleview.send(msg))
+		Util::panic("could not get VGA screen");
+	Vga *dev = new Vga(mb,msg.sess,argv[0],reinterpret_cast<char*>(msg.sess->screen().virt()),msg1.phys,fbsize);
+
+	/*MessageHostOp msg(MessageHostOp::OP_ALLOC_FROM_GUEST,fbsize);
 	MessageHostOp msg2(MessageHostOp::OP_GUEST_MEM,0UL);
 	if(!mb.bus_hostop.send(msg) || !mb.bus_hostop.send(msg2))
 		Util::panic("%s failed to alloc %ld from guest memory\n",__PRETTY_FUNCTION__,fbsize);
-
-	Vga *dev = new Vga(mb,argv[0],msg2.ptr + msg.phys,msg.phys,fbsize);
+	Vga *dev = new Vga(mb,argv[0],msg2.ptr + msg.phys,msg.phys,fbsize);*/
 	mb.bus_ioin.add(dev,Vga::receive_static<MessageIOIn>);
 	mb.bus_ioout.add(dev,Vga::receive_static<MessageIOOut>);
 	mb.bus_bios.add(dev,Vga::receive_static<MessageBios>);

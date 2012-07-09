@@ -287,7 +287,7 @@ bool Vancouver::receive(MessageLegacy &msg) {
 bool Vancouver::receive(MessageConsoleView &msg) {
 	if(msg.type != MessageConsoleView::TYPE_GET_INFO)
 		return false;
-	msg.view = &_console;
+	msg.sess = &_conssess;
 	return true;
 }
 

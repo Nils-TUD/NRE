@@ -15,12 +15,13 @@
 #include <kobj/GlobalThread.h>
 #include <mem/DataSpace.h>
 
+#include "Screen.h"
+
 class ConsoleSessionData;
-class ConsoleSessionView;
 
 class ViewSwitcher {
 	enum {
-		DS_SIZE			= nul::ExecEnv::PAGE_SIZE,
+		DS_SIZE			= nul::ExecEnv::PAGE_SIZE * Screen::PAGES,
 		COLOR			= 0x1F,
 		SWITCH_TIME		= 1000,	// ms
 		REFRESH_DELAY	= 25	// ms
@@ -29,8 +30,6 @@ class ViewSwitcher {
 	struct SwitchCommand {
 		size_t oldsessid;
 		size_t sessid;
-		size_t oldviewid;
-		size_t viewid;
 	};
 
 public:
@@ -41,7 +40,6 @@ public:
 	}
 
 	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);
-	void switch_to(ConsoleSessionView *from,ConsoleSessionView *to);
 
 private:
 	static void switch_thread(void*);

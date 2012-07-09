@@ -21,7 +21,7 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <stream/ConsoleView.h>
+#include <dev/Console.h>
 #include <Compiler.h>
 #include <Desc.h>
 
@@ -339,8 +339,8 @@ struct MessageConsoleView {
 	enum Type {
 		TYPE_GET_INFO
 	} type;
-	nul::ConsoleView *view;
-	MessageConsoleView(Type _type) : type(_type), view() {
+	nul::ConsoleSession *sess;
+	MessageConsoleView(Type _type) : type(_type), sess() {
 	}
 };
 

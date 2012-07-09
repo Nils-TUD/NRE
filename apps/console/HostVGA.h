@@ -19,28 +19,27 @@
 
 class HostVGA : public Screen {
 	enum Register {
+		CURSOR_HI		= 0xa,
+		CURSOR_LO		= 0xb,
 		START_ADDR_HI	= 0xc,
-		START_ADDR_LO	= 0xd
+		START_ADDR_LO	= 0xd,
+		CURSOR_LOC_HI	= 0xe,
+		CURSOR_LOC_LO	= 0xf
 	};
 	enum {
-		PAGE_COUNT		= 3,
-		VGA_MEM			= 0xb8000,
+		VGA_MEM			= 0xa0000,
 		VGA_PAGE_SIZE	= nul::ExecEnv::PAGE_SIZE,
 	};
 
 public:
-	explicit HostVGA() : Screen(), _ports(0x3d4,2), _page(0), _ds() {
-		for(uint p = 0; p < PAGE_COUNT; ++p) {
-			_ds[p] = new nul::DataSpace(VGA_PAGE_SIZE,nul::DataSpaceDesc::LOCKED,
-					nul::DataSpaceDesc::RW,VGA_MEM + p * nul::ExecEnv::PAGE_SIZE);
-		}
+	explicit HostVGA() : Screen(), _ports(0x3d4,2),
+		_ds(VGA_PAGE_SIZE * PAGES,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RW,VGA_MEM) {
 	}
 
-	virtual nul::DataSpace &mem(uint page) {
-		assert(page < PAGE_COUNT);
-		return *_ds[page];
+	virtual nul::DataSpace &mem() {
+		return _ds;
 	}
-	virtual void set_page(uint uid,uint page);
+	virtual void set_regs(const nul::Console::Register &regs);
 
 private:
 	void write(Register reg,uint8_t val) {
@@ -49,6 +48,6 @@ private:
 	}
 
 	nul::Ports _ports;
-	uint _page;
-	nul::DataSpace *_ds[PAGE_COUNT];
+	nul::DataSpace _ds;
+	nul::Console::Register _last;
 };

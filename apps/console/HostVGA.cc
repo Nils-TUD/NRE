@@ -11,12 +11,20 @@
 
 using namespace nul;
 
-void HostVGA::set_page(uint uid,uint page) {
-	assert(page < PAGE_COUNT);
-	current(uid);
-	_page = page;
-	// due to odd/even addressing
-	page <<= 11;
-	write(START_ADDR_HI,static_cast<uint8_t>(page >> 8));
-	write(START_ADDR_LO,static_cast<uint8_t>(page));
+void HostVGA::set_regs(const nul::Console::Register &regs) {
+	if(regs.cursor_style != _last.cursor_style) {
+		write(CURSOR_HI,regs.cursor_style >> 8);
+		write(CURSOR_LO,regs.cursor_style);
+	}
+	uint16_t cursor_offset = regs.cursor_pos -  regs.offset;
+	if(regs.cursor_pos != _last.cursor_pos) {
+		write(CURSOR_LOC_HI,3 * 8 + (cursor_offset >> 8));
+		write(CURSOR_LOC_LO,cursor_offset);
+	}
+	if(regs.offset != _last.offset) {
+		uintptr_t offset = regs.offset - (Console::TEXT_OFF >> 1);
+		write(START_ADDR_HI,static_cast<uint8_t>(offset >> 8));
+		write(START_ADDR_LO,static_cast<uint8_t>(offset));
+	}
+	_last = regs;
 }

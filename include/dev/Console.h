@@ -24,12 +24,23 @@ public:
 		COLS		= 80,
 		ROWS		= 25,
 		TAB_WIDTH	= 4,
-		BUF_SIZE	= COLS * 2 + 1
+		BUF_SIZE	= COLS * 2 + 1,
+		PAGES		= 32,
+		TEXT_OFF	= 0x18000,
+		TEXT_PAGES	= 8,
+		PAGE_SIZE	= 0x1000
 	};
 
-	enum ViewCommand {
-		CREATE_VIEW,
-		DESTROY_VIEW
+	enum Command {
+		CREATE,
+		SET_REGS
+	};
+
+	struct Register {
+		uint16_t mode;
+		uint16_t cursor_style;
+		uint32_t cursor_pos;
+		uintptr_t offset;
 	};
 
 	struct ReceivePacket {
@@ -40,24 +51,58 @@ public:
 };
 
 class ConsoleSession : public Session {
+	enum {
+		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
+		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * Console::PAGES
+	};
+
 public:
-	explicit ConsoleSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
-		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			_pts[it->log_id()] = con.available_on(it->log_id()) ? new Pt(caps() + it->log_id()) : 0;
-	}
-	virtual ~ConsoleSession() {
-		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			delete _pts[it->log_id()];
-		delete[] _pts;
+	explicit ConsoleSession(Connection &con,bool show_pages = true)
+			: Session(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
+			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
+		create(show_pages);
 	}
 
-	Pt &pt(cpu_t cpu) const {
-		assert(_pts[cpu] != 0);
-		return *_pts[cpu];
+	const DataSpace &screen() const {
+		return _out_ds;
+	}
+
+	void set_regs(const Console::Register &regs) {
+		UtcbFrame uf;
+		uf << Console::SET_REGS << regs;
+		Pt pt(caps() + CPU::current().log_id());
+		pt.call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+	}
+	Console::ReceivePacket receive() {
+		Console::ReceivePacket *pk = _consumer.get();
+		if(!pk)
+			throw Exception(E_ABORT);
+		Console::ReceivePacket res = *pk;
+		_consumer.next();
+		return res;
 	}
 
 private:
-	Pt **_pts;
+	void create(bool show_pages) {
+		UtcbFrame uf;
+		uf << Console::CREATE << _in_ds.desc() << _out_ds.desc() << show_pages;
+		uf.delegate(_in_ds.sel(),0);
+		uf.delegate(_out_ds.sel(),1);
+		Pt pt(caps() + CPU::current().log_id());
+		pt.call(uf);
+		ErrorCode res;
+		uf >> res;
+		if(res != E_SUCCESS)
+			throw Exception(res);
+	}
+
+	DataSpace _in_ds;
+	DataSpace _out_ds;
+	Consumer<Console::ReceivePacket> _consumer;
 };
 
 }

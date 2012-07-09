@@ -14,71 +14,79 @@
 #include <util/DList.h>
 
 #include "ConsoleService.h"
-#include "ConsoleSessionView.h"
-
-class ConsoleSessionView;
 
 class ConsoleSessionData : public nul::SessionData {
 public:
-	enum {
-		PAGE_BOOT,
-		PAGE_HV,
-		PAGE_USER
-	};
-
-	typedef nul::DList<ConsoleSessionView>::iterator iterator;
-
-	ConsoleSessionData(nul::Service *s,uint page,size_t id,capsel_t caps,nul::Pt::portal_func func);
-	virtual ~ConsoleSessionData();
-
-	ConsoleSessionView *active() {
-		iterator it = _view_cycler.current();
-		return it != _views.end() ? &*it : 0;
+	ConsoleSessionData(nul::Service *s,size_t id,capsel_t caps,nul::Pt::portal_func func)
+			: SessionData(s,id,caps,func), _page(0),  _sm(), _in_ds(), _out_ds(), _prod(), _regs(),
+			  _show_pages(true) {
+		_regs.offset = nul::Console::TEXT_OFF >> 1;
+		_regs.mode = 0;
+		_regs.cursor_pos = (nul::Console::ROWS - 1) * nul::Console::COLS + (nul::Console::TEXT_OFF >> 1);
+		_regs.cursor_style = 0x0d0e;
 	}
-	ConsoleSessionView *get(uint id) {
-		for(iterator it = _views.begin(); it != _views.end(); ++it) {
-			if(it->id() == id)
-				return &*it;
-		}
-		return 0;
-	}
-
-	void prev() {
-		if(_views.length() > 1) {
-			iterator cur = _view_cycler.current();
-			ConsoleService::get()->switcher().switch_to(&*cur,&*_view_cycler.prev());
-		}
-	}
-	void next() {
-		if(_views.length() > 1) {
-			iterator cur = _view_cycler.current();
-			ConsoleService::get()->switcher().switch_to(&*cur,&*_view_cycler.next());
-		}
+	virtual ~ConsoleSessionData() {
+		delete _prod;
+		delete _in_ds;
+		delete _out_ds;
 	}
 
 	uint page() const {
 		return _page;
 	}
-	void set_page() {
-		if(_page == PAGE_USER) {
-			iterator it = _view_cycler.current();
-			if(it != _views.end()) {
-				ConsoleService::get()->screen()->set_page(it->uid(),_page);
-				return;
-			}
-		}
-		ConsoleService::get()->screen()->set_page(_page,_page);
+	nul::Producer<nul::Console::ReceivePacket> *prod() {
+		return _prod;
+	}
+	nul::DataSpace *out_ds() {
+		return _out_ds;
 	}
 
-	ConsoleSessionView *create_view(nul::DataSpace *in_ds,nul::DataSpace *out_ds);
-	bool destroy_view(uint view);
+	void prev() {
+		if(_show_pages) {
+			_page = (_page - 1) % Screen::TEXT_PAGES;
+			ConsoleService::get()->switcher().switch_to(this,this);
+		}
+	}
+	void next() {
+		if(_show_pages) {
+			_page = (_page + 1) % Screen::TEXT_PAGES;
+			ConsoleService::get()->switcher().switch_to(this,this);
+		}
+	}
+
+	void create(nul::DataSpace *in_ds,nul::DataSpace *out_ds,bool show_pages = true);
+
+	void to_front() {
+		swap();
+		activate();
+	}
+	void to_back() {
+		swap();
+	}
+	void activate() {
+		_regs.offset = (nul::Console::TEXT_OFF >> 1) + (_page << 11);
+		set_regs(_regs);
+	}
+
+	void set_regs(const nul::Console::Register &regs) {
+		_page = (_regs.offset - (nul::Console::TEXT_OFF >> 1)) >> 11;
+		_regs = regs;
+		if(ConsoleService::get()->active() == this)
+			ConsoleService::get()->screen()->set_regs(_regs);
+	}
 
 	PORTAL static void portal(capsel_t pid);
 
 private:
+	void swap() {
+		_out_ds->switch_to(ConsoleService::get()->screen()->mem());
+	}
+
 	uint _page;
-	uint _next_id;
 	nul::UserSm _sm;
-	nul::DList<ConsoleSessionView> _views;
-	nul::Cycler<iterator> _view_cycler;
+	nul::DataSpace *_in_ds;
+	nul::DataSpace *_out_ds;
+	nul::Producer<nul::Console::ReceivePacket> *_prod;
+	nul::Console::Register _regs;
+	bool _show_pages;
 };

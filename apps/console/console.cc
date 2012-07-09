@@ -33,15 +33,13 @@ int main() {
 	KeyboardSession kb(con);
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
 		if(!srv->handle_keyevent(*pk)) {
-			if(srv->active()) {
-				ConsoleSessionView *view = srv->active()->active();
-				if(view) {
-					Console::ReceivePacket rpk;
-					rpk.flags = pk->flags;
-					rpk.keycode = pk->keycode;
-					rpk.character = Keymap::translate(*pk);
-					view->prod().produce(rpk);
-				}
+			ConsoleSessionData *sess = srv->active();
+			if(sess && sess->prod()) {
+				Console::ReceivePacket rpk;
+				rpk.flags = pk->flags;
+				rpk.keycode = pk->keycode;
+				rpk.character = Keymap::translate(*pk);
+				sess->prod()->produce(rpk);
 			}
 		}
 	}

@@ -10,13 +10,19 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <arch/ExecEnv.h>
+#include <dev/Console.h>
 
 class Screen {
 public:
 	enum {
-		COLS		= 80,
-		ROWS		= 25,
-		SIZE		= COLS * ROWS * 2
+		COLS		= nul::Console::COLS,
+		ROWS		= nul::Console::ROWS,
+		SIZE		= COLS * ROWS * 2,
+		PAGES		= nul::Console::PAGES,
+		PAGE_SIZE	= nul::Console::PAGE_SIZE,
+		TEXT_OFF	= nul::Console::TEXT_OFF,
+		TEXT_PAGES	= nul::Console::TEXT_PAGES,
 	};
 
 	explicit Screen() {
@@ -31,8 +37,8 @@ public:
 		_current = current;
 	}
 
-	virtual nul::DataSpace &mem(uint page) = 0;
-	virtual void set_page(uint uid,uint page) = 0;
+	virtual nul::DataSpace &mem() = 0;
+	virtual void set_regs(const nul::Console::Register &regs) = 0;
 
 private:
 	uint _current;

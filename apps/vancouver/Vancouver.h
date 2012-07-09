@@ -29,7 +29,7 @@ public:
 	Vancouver(const char *args,size_t ramsize)
 			: _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RWX),
-			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon), _console(_conssess) {
+			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
 		create_devices(args);
 		create_vcpus();
 	}
@@ -54,7 +54,6 @@ private:
 	size_t _guest_size;
 	nul::Connection _conscon;
 	nul::ConsoleSession _conssess;
-	nul::ConsoleView _console;
 };
 
 extern nul::UserSm globalsm;

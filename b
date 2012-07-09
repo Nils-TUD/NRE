@@ -78,8 +78,8 @@ cp $loader $build/bin/apps/chainloader
 
 # run the specified command, if any
 case "$1" in
-	run)
-		./test --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+	run=*)
+		./${1:4} --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;
 	srv=*)
 		./${1:4} --server --build-dir="$PWD/$build"

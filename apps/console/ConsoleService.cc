@@ -28,11 +28,15 @@ void ConsoleService::init() {
 		uf.accept_delegates(1);
 	}
 
-	// add dummy sessions for boot screen and HV screen
-	add_session(new ConsoleSessionData(
-			this,ConsoleSessionData::PAGE_BOOT,0,caps() + 0 * CPU::count(),0));
-	add_session(new ConsoleSessionData(
-			this,ConsoleSessionData::PAGE_HV,1,caps() + 1 * CPU::count(),0));
+	// add dummy session for boot screen and HV screen
+	ConsoleSessionData *sess = new ConsoleSessionData(this,0,caps(),0);
+	DataSpace *ds = new DataSpace(ExecEnv::PAGE_SIZE * Screen::PAGES,DataSpaceDesc::ANONYMOUS,
+			DataSpaceDesc::RW);
+	// copy screen to buffer
+	memcpy(reinterpret_cast<void*>(ds->virt()),reinterpret_cast<void*>(_screen->mem().virt()),
+			ExecEnv::PAGE_SIZE * Screen::PAGES);
+	sess->create(0,ds);
+	add_session(sess);
 	_switcher.start();
 }
 
@@ -49,7 +53,7 @@ void ConsoleService::next() {
 }
 
 SessionData *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-	return new ConsoleSessionData(this,ConsoleSessionData::PAGE_USER,id,caps,func);
+	return new ConsoleSessionData(this,id,caps,func);
 }
 
 void ConsoleService::created_session(size_t idx) {

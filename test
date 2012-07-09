@@ -10,8 +10,6 @@ bin/apps/reboot provides=reboot
 bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
-bin/apps/vancouver
-bin/apps/guest_mini
-#bin/apps/test
+bin/apps/test
 #bin/apps/sub
 

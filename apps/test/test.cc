@@ -25,7 +25,7 @@
 #include <service/Session.h>
 #include <service/Consumer.h>
 #include <stream/OStringStream.h>
-#include <stream/ConsoleView.h>
+#include <stream/ConsoleStream.h>
 #include <dev/Console.h>
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
@@ -106,11 +106,12 @@ static TimerSession *timer;
 static UserSm sm;
 
 static void view0(void*) {
-	ConsoleView view(*conssess);
+	uint page = Thread::current()->get_tls<uint>(Thread::TLS_PARAM);
+	ConsoleStream view(*conssess,page);
 	int i = 0;
 	while(1) {
 		//char c = view.read();
-		view << "Huhu, from view " << view.id() << ": " << i << "\n";
+		view << "Huhu, from page " << view.page() << ": " << i << "\n";
 		i++;
 	}
 }
@@ -135,7 +136,9 @@ int main() {
 	conscon = new Connection("console");
 	conssess = new ConsoleSession(*conscon);
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		Sc *sc = new Sc(new GlobalThread(view0,it->log_id()),Qpd());
+		GlobalThread *gt = new GlobalThread(view0,it->log_id());
+		gt->set_tls<uint>(Thread::TLS_PARAM,it->log_id());
+		Sc *sc = new Sc(gt,Qpd());
 		sc->start();
 	}
 

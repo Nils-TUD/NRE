@@ -29,21 +29,8 @@ ViewSwitcher::ViewSwitcher() : _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDes
 
 void ViewSwitcher::switch_to(ConsoleSessionData *from,ConsoleSessionData *to) {
 	SwitchCommand cmd;
-	ConsoleSessionView *vfrom = from ? from->active() : 0;
-	ConsoleSessionView *vto = to->active();
-	cmd.oldviewid = vfrom ? vfrom->id() : -1;
 	cmd.oldsessid = from ? from->id() : -1;
 	cmd.sessid = to->id();
-	cmd.viewid = vto ? vto->id() : -1;
-	_prod.produce(cmd);
-}
-
-void ViewSwitcher::switch_to(ConsoleSessionView *from,ConsoleSessionView *to) {
-	SwitchCommand cmd;
-	cmd.oldviewid = from ? from->id() : -1;
-	cmd.viewid = to->id();
-	cmd.oldsessid = from ? from->session()->id() : -1;
-	cmd.sessid = to->session()->id();
 	_prod.produce(cmd);
 }
 
@@ -57,7 +44,6 @@ void ViewSwitcher::switch_thread(void*) {
 	TimerSession timer(con);
 	timevalue_t until = 0;
 	size_t sessid = 0;
-	size_t viewid = 0;
 	bool tag_done = false;
 	while(1) {
 		// are we finished?
@@ -65,15 +51,8 @@ void ViewSwitcher::switch_thread(void*) {
 			ScopedLock<RCULock> guard(&RCU::lock());
 			ConsoleSessionData *sess = srv->get_session_by_id<ConsoleSessionData>(sessid);
 			if(sess) {
-				ConsoleSessionView *view = sess->get(viewid);
-				// if we have a view, finally swap to that view. i.e. give him direct screen access
-				if(view)
-					view->swap();
-				// if not, restore the first line
-				else {
-					char *screen = reinterpret_cast<char*>(srv->screen()->mem(sess->page()).virt());
-					memcpy(screen,_backup,Screen::COLS * 2);
-				}
+				// finally swap to that session. i.e. give him direct screen access
+				sess->to_front();
 			}
 			until = 0;
 		}
@@ -87,19 +66,12 @@ void ViewSwitcher::switch_thread(void*) {
 				ScopedLock<RCULock> guard(&RCU::lock());
 				ConsoleSessionData *old = srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
 				if(old) {
-					ConsoleSessionView *view = old->get(cmd->oldviewid);
-					// if there is a view and we have already given him the screen, take it away
-					if(until == 0 && view)
-						view->swap();
-					// if there is no screen, restore the first line
-					else if(!view) {
-						char *screen = reinterpret_cast<char*>(srv->screen()->mem(old->page()).virt());
-						memcpy(screen,_backup,Screen::COLS * 2);
-					}
+					// if we have already given him the screen, take it away
+					if(until == 0)
+						old->to_back();
 				}
 			}
 			sessid = cmd->sessid;
-			viewid = cmd->viewid;
 			// show the tag for 1sec
 			until = clock.source_time(SWITCH_TIME);
 			tag_done = false;
@@ -116,32 +88,27 @@ void ViewSwitcher::switch_thread(void*) {
 			}
 
 			// repaint all lines from the buffer except the first
-			ConsoleSessionView *view = sess->get(viewid);
-			sess->set_page();
-			if(view) {
-				memcpy(reinterpret_cast<void*>(srv->screen()->mem(sess->page()).virt() + Screen::COLS * 2),
-						reinterpret_cast<void*>(view->out_ds().virt() + Screen::COLS * 2),
-						srv->screen()->mem(sess->page()).size() - Screen::COLS * 2);
+			uintptr_t offset = Screen::TEXT_OFF + sess->page() * Screen::PAGE_SIZE;
+			if(sess->out_ds()) {
+				memcpy(reinterpret_cast<void*>(srv->screen()->mem().virt() + offset + Screen::COLS * 2),
+						reinterpret_cast<void*>(sess->out_ds()->virt() + offset + Screen::COLS * 2),
+						Screen::PAGE_SIZE - Screen::COLS * 2);
 			}
 
 			if(!tag_done) {
 				// write tag into buffer
 				memset(_buffer,0,sizeof(_buffer));
 				OStringStream os(_buffer,sizeof(_buffer));
-				os << "Console " << sessid << "," << (viewid == (size_t)-1 ? 0 : viewid);
-
-				char *screen = reinterpret_cast<char*>(srv->screen()->mem(sess->page()).virt());
-				// backup line of screen (this is not necessary if we have a view, since it will be
-				// copied back completely by the swap operation anyway)
-				if(!view)
-					memcpy(_backup,screen,Screen::COLS * 2);
+				os << "Console " << sessid << "," << sess->page();
 
 				// write console tag
+				char *screen = reinterpret_cast<char*>(srv->screen()->mem().virt() + offset);
 				char *s = _buffer;
 				for(uint x = 0; x < Screen::COLS; ++x, ++s) {
 					screen[x * 2] = *s ? *s : ' ';
 					screen[x * 2 + 1] = COLOR;
 				}
+				sess->activate();
 				tag_done = true;
 			}
 		}

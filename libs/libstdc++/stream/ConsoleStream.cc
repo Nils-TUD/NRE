@@ -7,14 +7,14 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
-#include <stream/ConsoleView.h>
+#include <stream/ConsoleStream.h>
 
 using namespace nul;
 
-char ConsoleView::read() {
+char ConsoleStream::read() {
 	char c;
 	while(1) {
-		Console::ReceivePacket pk = receive();
+		Console::ReceivePacket pk = _sess.receive();
 		c = pk.character;
 		if(c != '\0' && (~pk.flags & Keyboard::RELEASE))
 			break;
@@ -22,7 +22,7 @@ char ConsoleView::read() {
 	return c;
 }
 
-void ConsoleView::put(ushort value,ushort *base,uint &pos) {
+void ConsoleStream::put(ushort value,ushort *base,uint &pos) {
 	bool visible = false;
 	switch(value & 0xff) {
 		// backspace

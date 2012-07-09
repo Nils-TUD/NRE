@@ -165,7 +165,9 @@ bool VCPUBackend::handle_memory(bool need_unmap) {
 
 		uf->mtd = 0;
 		uintptr_t delhot = (guestbase + (own.offset() << ExecEnv::PAGE_SHIFT) - hostaddr) >> ExecEnv::PAGE_SHIFT;
-		uf.delegate(CapRange(own.offset(),1 << own.order(),Crd::MEM_ALL,delhot),UtcbFrame::UPD_GPT);
+		CapRange range(own.offset(),1 << own.order(),Crd::MEM_ALL,delhot);
+		Serial::get() << "Mapping " << range << "\n";
+		uf.delegate(range,UtcbFrame::UPD_GPT);
 		// TODO (_dpci ? MAP_DPT : 0)
 
 		// EPT violation during IDT vectoring?
