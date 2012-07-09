@@ -38,6 +38,14 @@ public:
 		);
 	}
 
+	static inline void enable_ints() {
+		asm volatile ("sti");
+	}
+
+	static inline void disable_ints() {
+		asm volatile ("cli");
+	}
+
 	static void copy(void* dst,const void* src,size_t len);
 	static void set(void* addr,int value,size_t count);
 	static void move(void* dest,const void* src,size_t count);

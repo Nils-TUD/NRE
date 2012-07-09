@@ -42,7 +42,7 @@ HostKeyboard::ScanCodeEntry HostKeyboard::scset2[] = {
 	/* 11 */	{0,							Keyboard::VK_RALT,			0},
 	/* 12 */	{Keyboard::VK_LSHIFT,		0,							0},
 	/* 13 */	{0,							0,							0},
-	/* 14 */	{0,							Keyboard::VK_RCTRL,			Keyboard::VK_PAUSE},
+	/* 14 */	{Keyboard::VK_LCTRL,		Keyboard::VK_RCTRL,			Keyboard::VK_PAUSE},
 	/* 15 */	{Keyboard::VK_Q,			0,							0},
 	/* 16 */	{Keyboard::VK_1,			0,							0},
 	/* 17 */	{0,							0,							0},
@@ -191,26 +191,24 @@ uint8_t HostKeyboard::sc1_to_sc2(uint8_t scancode) {
 }
 
 bool HostKeyboard::wait_status(uint8_t mask,uint8_t value) {
-	// TODO timevalue timeout = _clock->abstime(TIMEOUT,FREQ);
-	uint tries = 100000;
+	timevalue_t timeout = _clock.source_time(TIMEOUT);
 	uint8_t status;
 	do
 		status = _port_ctrl.in<uint8_t>();
-	while((status & mask) != value && tries-- > 0/* && _clock->time() < timeout*/);
+	while((status & mask) != value && _clock.source_time() < timeout);
 	return (status & mask) == value;
 }
 
 bool HostKeyboard::wait_ack() {
 	uint8_t status;
-	// TODO timevalue timeout = _clock->abstime(TIMEOUT,FREQ);
-	uint tries = 100000;
+	timevalue_t timeout = _clock.source_time(TIMEOUT);
 	do {
 		status = _port_ctrl.in<uint8_t>();
 		if((status & STATUS_DATA_AVAIL) && _port_data.in<uint8_t>() == ACK
 				/* && (~status & STATUS_MOUSE_DATA_AVAIL)*/)
 			return true;
 	}
-	while(tries-- > 0/*_clock->time() < timeout*/);
+	while(_clock.source_time() < timeout);
 	return false;
 }
 

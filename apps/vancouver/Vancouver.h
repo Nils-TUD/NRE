@@ -19,6 +19,8 @@
 #pragma once
 
 #include <kobj/UserSm.h>
+#include <kobj/GlobalThread.h>
+#include <kobj/Sc.h>
 #include <mem/DataSpace.h>
 
 #include "bus/motherboard.h"
@@ -27,11 +29,14 @@
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	Vancouver(const char *args,size_t ramsize)
-			: _mb(), _timeouts(_mb),
+			: _lt_input(keyboard_thread,nul::CPU::current().log_id()), _sc_input(&_lt_input,nul::Qpd()),
+			  _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RWX),
 			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
 		create_devices(args);
 		create_vcpus();
+		_lt_input.set_tls<Vancouver*>(nul::Thread::TLS_PARAM,this);
+		_sc_input.start();
 	}
 
 	void reset();
@@ -45,9 +50,12 @@ public:
 	bool receive(MessageConsoleView &msg);
 
 private:
+	static void keyboard_thread(void*);
 	void create_devices(const char *args);
 	void create_vcpus();
 
+	nul::GlobalThread _lt_input;
+	nul::Sc _sc_input;
 	Motherboard _mb;
 	Timeouts _timeouts;
 	nul::DataSpace _guest_mem;

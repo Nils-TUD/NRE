@@ -4,6 +4,7 @@ char* const Video::SCREEN = (char* const)0xB8000;
 int Video::col = 0;
 int Video::row = 0;
 int Video::color = BLACK << 4 | WHITE;
+const char *Video::chars = "0123456789ABCDEF";
 
 void Video::clear() {
 	Util::set(SCREEN,0,ROWS * COLS * 2);
@@ -45,6 +46,7 @@ void Video::puts(const char* str) {
 void Video::move() {
 	if(row >= ROWS) {
 		Util::move(SCREEN,SCREEN + COLS * 2,(ROWS - 1) * COLS * 2);
+		Util::set(SCREEN + (ROWS - 1) * COLS * 2,0,COLS * 2);
 		row--;
 	}
 }

@@ -295,6 +295,20 @@ bool Vancouver::receive(MessageConsoleView &msg) {
 	return true;
 }
 
+void Vancouver::keyboard_thread(void*) {
+	Vancouver *vc = Thread::current()->get_tls<Vancouver*>(Thread::TLS_PARAM);
+	while(1) {
+		Console::ReceivePacket pk = vc->_conssess.receive();
+
+		if(pk.keycode == Keyboard::VK_D && (pk.flags & (Keyboard::RELEASE)) && (pk.flags & Keyboard::LCTRL))
+			vc->_mb.dump_counters();
+
+		ScopedLock<UserSm> guard(&globalsm);
+		MessageInput msg(0x10000,pk.keycode | pk.flags);
+		vc->_mb.bus_input.send(msg);
+	}
+}
+
 void Vancouver::create_devices(const char *args) {
 	_mb.bus_hostop.add(this,receive_static<MessageHostOp>);
 	_mb.bus_consoleview.add(this,receive_static<MessageConsoleView>);

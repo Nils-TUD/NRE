@@ -43,5 +43,3 @@ void PIC::eoi(int irq) {
 	    Ports::out<uint8_t>(MASTER_CMD,EOI);
     }
 }
-
-

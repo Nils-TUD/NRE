@@ -38,6 +38,9 @@ public:
 	static void set(size_t irq,callback_t cb);
 
 private:
+	static void dummy();
+	static void setup(size_t irq,callback_t cb);
+
 	IDT();
 	~IDT();
 	IDT(const IDT&);
@@ -45,5 +48,6 @@ private:
 
 private:
 	static Entry idt[];
+	static callback_t callbacks[] asm("idt_callbacks");
 };
 

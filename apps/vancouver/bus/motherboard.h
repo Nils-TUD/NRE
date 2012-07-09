@@ -181,7 +181,7 @@ public:
 		COUNTER_SET("Time",t - orig_time);
 		orig_time = t;
 
-		nul::Serial::get().writef("VMSTAT\n");
+		nul::Serial::get().writef("VMSTAT:\n");
 
 		extern long __profile_table_start,__profile_table_end;
 		long *p = &__profile_table_start;
@@ -189,7 +189,7 @@ public:
 			char *name = reinterpret_cast<char *>(*p++);
 			long v = *p++;
 			if(v && ((v - *p) || full))
-				nul::Serial::get().writef("\t%12s %8ld %8lx  diff %8ld\n",name,v,v,v - *p);
+				nul::Serial::get().writef("\t%12s %16ld %16lx diff %16ld\n",name,v,v,v - *p);
 			*p++ = v;
 		}
 	}

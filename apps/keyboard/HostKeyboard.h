@@ -21,6 +21,7 @@
 
 #include <arch/Types.h>
 #include <kobj/Ports.h>
+#include <util/Clock.h>
 #include <dev/Keyboard.h>
 #include <dev/Mouse.h>
 
@@ -34,6 +35,11 @@
  * Documentation: PS2 hitrc chapter 7+11, scancodes-13.html
  */
 class HostKeyboard {
+	enum {
+		FREQ						= 1000,
+		TIMEOUT						= 50,
+	};
+
 	enum {
 		STATUS_DATA_AVAIL			= 1 << 0,
 		STATUS_BUSY					= 1 << 1,
@@ -84,8 +90,8 @@ public:
 	};
 
 	explicit HostKeyboard(nul::Ports::port_t base = 0x60,int scset = 2,bool mouse = false,bool verbose = false)
-		: _port_ctrl(base + 4,1), _port_data(base,1), _flags(0), _mousestate(), _mouse_enabled(mouse),
-		  _wheel(false), _scset1(scset == 1), _verbose(verbose) {
+		: _clock(FREQ), _port_ctrl(base + 4,1), _port_data(base,1), _flags(0), _mousestate(),
+		  _mouse_enabled(mouse), _wheel(false), _scset1(scset == 1), _verbose(verbose) {
 	}
 
 	bool mouse_enabled() const {
@@ -117,6 +123,7 @@ private:
 
 	static uint8_t sc1_to_sc2(uint8_t scancode);
 
+	nul::Clock _clock;
 	nul::Ports _port_ctrl;
 	nul::Ports _port_data;
 	uint _flags;
