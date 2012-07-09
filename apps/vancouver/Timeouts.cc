@@ -26,7 +26,7 @@ void Timeouts::timer_thread(void*) {
 }
 
 void Timeouts::trigger() {
-	ScopedLock < UserSm > guard(&_sm);
+	ScopedLock<UserSm> guard(&_sm);
 	timevalue_t now = _mb.clock().source_time();
 	// Force time reprogramming. Otherwise, we might not reprogram a
 	// timer, if the timeout event reached us too early.

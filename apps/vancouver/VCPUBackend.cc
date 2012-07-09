@@ -41,9 +41,9 @@ VCPUBackend::Portal VCPUBackend::_portals[] = {
 	{PT_VMX + 48,	vmx_mmio,		Mtd::ALL},
 	{PT_VMX + 0xfe,	vmx_startup,	Mtd::IRQ},
 #ifdef EXPERIMENTAL
-	{PT_VMX + 0xff,	do_recall,		Mtd::IRQ},
-#else
 	{PT_VMX + 0xff,	do_recall,		Mtd::IRQ | Mtd::RIP_LEN | Mtd::GPR_BSD | Mtd::GPR_ACDB},
+#else
+	{PT_VMX + 0xff,	do_recall,		Mtd::IRQ},
 #endif
 	// the SVM portals
 	{PT_SVM + 0x64,	svm_vintr,		Mtd::IRQ},
@@ -90,7 +90,6 @@ void VCPUBackend::handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type) {
 	UtcbExcFrameRef uf;
 	VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
 
-	assert(vcpu);
 	CpuMessage msg(type,reinterpret_cast<CpuState*>(Thread::current()->utcb()),uf->mtd);
 	if(skip)
 		skip_instruction(msg);
@@ -101,8 +100,7 @@ void VCPUBackend::handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type) {
 	 * Send the message to the VCpu.
 	 */
 	if(!vcpu->executor.send(msg,true))
-		Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,msg.cpu->eip,
-				pid);
+		Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,msg.cpu->eip,pid);
 
 	/**
 	 * Check whether we should inject something...
@@ -110,8 +108,7 @@ void VCPUBackend::handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type) {
 	if((msg.mtr_in & Mtd::INJ) && msg.type != CpuMessage::TYPE_CHECK_IRQ) {
 		msg.type = CpuMessage::TYPE_CHECK_IRQ;
 		if(!vcpu->executor.send(msg,true))
-			Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,
-					msg.cpu->eip,pid);
+			Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,msg.cpu->eip,pid);
 	}
 
 	/**
@@ -122,8 +119,7 @@ void VCPUBackend::handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type) {
 
 		msg.type = CpuMessage::TYPE_CALC_IRQWINDOW;
 		if(!vcpu->executor.send(msg,true))
-			Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,
-					msg.cpu->eip,pid);
+			Util::panic("nobody to execute %s at %x:%x pid %d\n",__func__,msg.cpu->cs.sel,msg.cpu->eip,pid);
 	}
 	msg.cpu->mtd = msg.mtr_out;
 }

@@ -71,9 +71,10 @@ class DBus {
 
 	void set_size(unsigned new_size) {
 		Entry *n = new Entry[new_size];
-		memcpy(n,_list,_list_count * sizeof(*_list));
-		if(_list)
+		if(_list) {
+			memcpy(n,_list,_list_count * sizeof(*_list));
 			delete[] _list;
+		}
 		_list = n;
 		_list_size = new_size;
 	}

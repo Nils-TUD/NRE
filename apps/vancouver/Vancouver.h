@@ -26,7 +26,7 @@
 
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
-	Vancouver(const char *args,size_t ramsize = nul::ExecEnv::PAGE_SIZE * 1024 * 8)
+	Vancouver(const char *args,size_t ramsize)
 			: _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RWX),
 			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon), _console(_conssess) {

@@ -43,8 +43,7 @@ PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created" ) {
 	ncpu = argv[0];
 }
-PARAM_HANDLER(vcpus,
-		" vcpus - instantiate the vcpus defined with 'ncpu'") {
+PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
 	for(unsigned count = 0; count < ncpu; count++)
 		mb.parse_args("vcpu halifax vbios lapic");
 }
@@ -140,6 +139,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 		case MessageHostOp::OP_GET_MODULE: {
 			// TODO that's extremly hardcoded here ;)
 			const Hip &hip = Hip::get();
+			uintptr_t destaddr = reinterpret_cast<uintptr_t>(msg.start);
 			uint module = msg.module + 7;
 			Hip::mem_iterator it;
 			for(it = hip.mem_begin(); it != hip.mem_end(); ++it) {
@@ -148,6 +148,14 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			}
 			if(it == hip.mem_end())
 				return false;
+
+			// does it fit in guest mem?
+			if(destaddr >= _guest_mem.virt() + _guest_mem.size() ||
+					destaddr + it->size > _guest_mem.virt() + _guest_mem.size()) {
+				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
+						it->addr,it->addr + it->size,destaddr - _guest_mem.virt(),_guest_size);
+				return false;
+			}
 
 			DataSpace ds(it->size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->addr);
 			memcpy(msg.start,reinterpret_cast<void*>(ds.virt()),ds.size());
@@ -242,11 +250,11 @@ bool Vancouver::receive(MessageHostOp &msg) {
 }
 
 bool Vancouver::receive(MessagePciConfig &msg) {
-	return false;//!Sigma0Base::pcicfg(msg);
+	return false;// TODO !Sigma0Base::pcicfg(msg);
 }
 
 bool Vancouver::receive(MessageAcpi &msg) {
-	return false;//!Sigma0Base::acpi(msg);
+	return false;// TODO !Sigma0Base::acpi(msg);
 }
 
 bool Vancouver::receive(MessageTimer &msg) {
@@ -286,11 +294,11 @@ bool Vancouver::receive(MessageConsoleView &msg) {
 void Vancouver::create_devices(const char *args) {
 	_mb.bus_hostop.add(this,receive_static<MessageHostOp>);
 	_mb.bus_consoleview.add(this,receive_static<MessageConsoleView>);
-	//_mb.bus_console.add(this,receive_static<MessageConsole>);
-	//_mb.bus_disk.add(this,receive_static<MessageDisk>);
+	// TODO _mb.bus_console.add(this,receive_static<MessageConsole>);
+	// TODO _mb.bus_disk.add(this,receive_static<MessageDisk>);
 	_mb.bus_timer.add(this,receive_static<MessageTimer>);
 	_mb.bus_time.add(this,receive_static<MessageTime>);
-	//_mb.bus_network.add(this,receive_static<MessageNetwork>);
+	// TODO _mb.bus_network.add(this,receive_static<MessageNetwork>);
 	_mb.bus_hwpcicfg.add(this,receive_static<MessageHwPciConfig>);
 	_mb.bus_acpi.add(this,receive_static<MessageAcpi>);
 	_mb.bus_legacy.add(this,receive_static<MessageLegacy>);
@@ -320,7 +328,7 @@ void Vancouver::create_vcpus() {
 }
 
 int main(int argc,char *argv[]) {
-	Vancouver *v = new Vancouver("PC_PS2");
+	Vancouver *v = new Vancouver("PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 8);
 	v->reset();
 
 	Sm sm(0);
