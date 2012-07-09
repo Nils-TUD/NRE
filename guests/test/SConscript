@@ -4,5 +4,5 @@ Import('guestenv')
 
 myenv = guestenv.Clone()
 myenv['LINKFLAGS'] += ' -Wl,-T,guests/test/linker.ld'
-prog = myenv.Program('test', Glob('*.s'))
+prog = myenv.Program('guest_test', Glob('*.s'))
 myenv.Install(myenv['BINARYDIR'], prog)

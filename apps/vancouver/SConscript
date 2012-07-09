@@ -5,17 +5,23 @@ Import('env')
 
 vcenv = env.Clone()
 if vcenv['ARCH'] == 'x86_32':
-	btype = os.environ.get('NOVA_BUILD')
-	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
-	# an asm constraint is impossible. strange :/
-	if btype == 'debug':
-		vcenv.Append(CXXFLAGS = ' -O1 -fno-inline')
-		vcenv.Append(CFLAGS = ' -O1 -fno-inline')
 	# turn off these warnings. vancouver produces too many of them :(
 	vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
 	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
+	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
+	# an asm constraint is impossible. strange :/
+	btype = os.environ.get('NOVA_BUILD')
+	if btype == 'debug':
+		halienv = vcenv.Clone()
+		halienv.Append(CXXFLAGS = ' -O1 -fno-inline')
+		halifax = halienv.Object('executor/halifax.cc')
+	else:
+		halifax = vcenv.Object('executor/halifax.cc')
+	#vcenv.Append(CXXFLAGS = ' -O1 -fno-inline')
+	#vcenv.Append(CFLAGS = ' -O1 -fno-inline')
 	# use custom linker script
 	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
-	vcenv.NulProgram(vcenv, 'vancouver', [Glob('*.cc'),Glob('*/*.cc')])
+	files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]
+	vcenv.NulProgram(vcenv, 'vancouver', [files, Glob('*.cc'), halifax])
 else:
 	print "Vancouver has not yet been ported to " + vcenv['ARCH']

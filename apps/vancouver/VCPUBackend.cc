@@ -148,7 +148,7 @@ Crd VCPUBackend::lookup(uintptr_t base,size_t size,uintptr_t hotspot) {
 bool VCPUBackend::handle_memory(bool need_unmap) {
 	UtcbExcFrameRef uf;
 	VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
-	Serial::get().writef("NPT fault @ %#Lx, error %#Lx\n",uf->qual[1],uf->qual[0]);
+	Serial::get().writef("NPT fault @ %p at %#Lx, error %#Lx\n",uf->eip,uf->qual[1],uf->qual[0]);
 
 	MessageMemRegion msg(uf->qual[1] >> ExecEnv::PAGE_SHIFT);
 
@@ -158,7 +158,7 @@ bool VCPUBackend::handle_memory(bool need_unmap) {
 		uintptr_t hostaddr = reinterpret_cast<uintptr_t>(msg.ptr);
 		uintptr_t guestbase = msg.start_page << ExecEnv::PAGE_SHIFT;
 		uintptr_t hotspot = uf->qual[1] - guestbase;
-		Crd own = lookup(hostaddr - hotspot,msg.count << ExecEnv::PAGE_SHIFT,hotspot);
+		Crd own = lookup(hostaddr,msg.count << ExecEnv::PAGE_SHIFT,hotspot);
 
 		if(need_unmap)
 			CapRange(own.offset(),1 << own.order(),Crd::MEM_ALL).revoke(false);

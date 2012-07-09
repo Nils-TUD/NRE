@@ -1,0 +1,10 @@
+# -*- Mode: Python -*-
+
+Import('guestenv')
+
+kenv = guestenv.Clone()
+kenv['LINKFLAGS'] += ' -Wl,-T,guests/mini/src/ld.conf'
+kenv.Append(CPPPATH = '#guests/mini/include')
+
+prog = kenv.Program('guest_mini', ['src/start.s', Glob('src/*.cc')])
+kenv.Install(kenv['BINARYDIR'], prog)

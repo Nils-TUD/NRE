@@ -46,11 +46,11 @@ else:
 builddir = 'build/' + target + '-' + btype
 
 guestenv = Environment(
-	BINARYDIR = '#' + builddir + '/bin/guests',
+	BINARYDIR = '#' + builddir + '/bin/apps',
 	ASFLAGS = '--32',
-	CFLAGS = '-Wall -Wextra -ansi -m32',
-	CXXFLAGS = '-Wall -Wextra -ansi -m32',
-	LINKFLAGS = '-m32 -freestanding -nostdlib -Wall -Wextra -ansi'
+	CFLAGS = '-Wall -Wextra -ansi -m32 -g -O0',
+	CXXFLAGS = '-Wall -Wextra -ansi -m32 -fno-exceptions -fno-rtti -g -O0',
+	LINKFLAGS = '-m32 -freestanding -nostdlib -Wall -Wextra -ansi -Wl,--build-id=none'
 )
 
 verbose = ARGUMENTS.get('VERBOSE',0);
