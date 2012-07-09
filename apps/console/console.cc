@@ -37,6 +37,7 @@ int main() {
 			if(sess && sess->prod()) {
 				Console::ReceivePacket rpk;
 				rpk.flags = pk->flags;
+				rpk.scancode = pk->scancode;
 				rpk.keycode = pk->keycode;
 				rpk.character = Keymap::translate(*pk);
 				sess->prod()->produce(rpk);

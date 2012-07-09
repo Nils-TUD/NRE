@@ -78,14 +78,11 @@ cp $loader $build/bin/apps/chainloader
 
 # run the specified command, if any
 case "$1" in
-	run=*)
-		./${1:4} --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+	run)
+		./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;
-	srv=*)
-		./${1:4} --server --build-dir="$PWD/$build"
-		;;
-	test)
-		./unittests --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+	srv)
+		./$2 --server --build-dir="$PWD/$build"
 		;;
 	dis=*)
 		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1:4} | less
@@ -97,11 +94,7 @@ case "$1" in
 		tools/backtrace $build/bin/apps/${1:6}
 		;;
 	dbg=*)
-		BUILD_DIR="$PWD/$build" $build/tools/debug ./test $build/bin/apps/${1:4}
-		kill `pgrep qemu`
-		;;
-	dbgt=*)
-		BUILD_DIR="$PWD/$build" $build/tools/debug ./unittests $build/bin/apps/${1:5}
+		BUILD_DIR="$PWD/$build" $build/tools/debug ./$2 $build/bin/apps/${1:4}
 		kill `pgrep qemu`
 		;;
 	list)

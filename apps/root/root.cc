@@ -172,12 +172,13 @@ static void start_childs() {
 			Hypervisor::map_mem(it->addr,virt,it->size);
 			// map command-line, if necessary
 			char *aux = Hypervisor::map_string(it->aux);
-			// TODO temporary. skip guest-binaries
-			if(aux && strstr(aux,"guests"))
-				continue;
 
 			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);
+
+			// TODO temporary. skip everything behind vancouver
+			if(aux && strstr(aux,"vancouver"))
+				break;
 		}
 	}
 }

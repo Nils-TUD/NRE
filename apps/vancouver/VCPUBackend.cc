@@ -148,7 +148,7 @@ Crd VCPUBackend::lookup(uintptr_t base,size_t size,uintptr_t hotspot) {
 bool VCPUBackend::handle_memory(bool need_unmap) {
 	UtcbExcFrameRef uf;
 	VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
-	Serial::get().writef("NPT fault @ %p at %#Lx, error %#Lx\n",uf->eip,uf->qual[1],uf->qual[0]);
+	//Serial::get().writef("NPT fault @ %p at %#Lx, error %#Lx\n",uf->eip,uf->qual[1],uf->qual[0]);
 
 	MessageMemRegion msg(uf->qual[1] >> ExecEnv::PAGE_SHIFT);
 
@@ -166,7 +166,7 @@ bool VCPUBackend::handle_memory(bool need_unmap) {
 		uf->mtd = 0;
 		uintptr_t delhot = (guestbase + (own.offset() << ExecEnv::PAGE_SHIFT) - hostaddr) >> ExecEnv::PAGE_SHIFT;
 		CapRange range(own.offset(),1 << own.order(),Crd::MEM_ALL,delhot);
-		Serial::get() << "Mapping " << range << "\n";
+		//Serial::get() << "Mapping " << range << "\n";
 		uf.delegate(range,UtcbFrame::UPD_GPT);
 		// TODO (_dpci ? MAP_DPT : 0)
 

@@ -137,6 +137,6 @@ public:
 		EVENT_HOST = 1 << 20
 	};
 
-	VCpu(VCpu *last) : _last(last), inj_count(0) {
+	VCpu(VCpu *last) : _last(last), executor(), bus_event(), bus_lapic(), mem(), memregion(), inj_count(0) {
 	}
 };

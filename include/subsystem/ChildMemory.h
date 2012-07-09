@@ -34,7 +34,7 @@ class ChildMemory {
 	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
 
 	enum {
-		MAX_REGIONS		= 256,
+		MAX_REGIONS		= 512,
 		MAX_DS			= 64
 	};
 

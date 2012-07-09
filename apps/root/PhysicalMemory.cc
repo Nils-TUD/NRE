@@ -112,11 +112,17 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 		return false;
 	// check if its a module
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(it->type == HipMem::MB_MODULE && phys >= it->addr &&
-				phys + size <= Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE)) {
-			// don't give the user write-access here
-			flags = DataSpaceDesc::R;
-			return true;
+		if(it->type == HipMem::MB_MODULE) {
+			if(phys >= it->addr && phys + size <= Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE)) {
+				// don't give the user write-access here
+				flags = DataSpaceDesc::R;
+				return true;
+			}
+			// TODO temporary. we need a better facility to access modules
+			if(phys == Math::round_dn<uint64_t>(it->aux,ExecEnv::PAGE_SIZE)) {
+				flags = DataSpaceDesc::R;
+				return true;
+			}
 		}
 	}
 	// check if the child wants to request none-device-memory

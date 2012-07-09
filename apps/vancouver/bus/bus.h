@@ -145,6 +145,6 @@ public:
 	}
 
 	/** Default constructor. */
-	DBus() {
+	DBus() : _debug_counter(), _list_count(), _list_size(), _list() {
 	}
 };

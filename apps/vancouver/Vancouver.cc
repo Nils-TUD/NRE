@@ -151,7 +151,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 
 			// does it fit in guest mem?
 			if(destaddr >= _guest_mem.virt() + _guest_mem.size() ||
-					destaddr + it->size > _guest_mem.virt() + _guest_mem.size()) {
+					destaddr + it->size + ExecEnv::PAGE_SIZE * 2 > _guest_mem.virt() + _guest_mem.size()) {
 				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
 						it->addr,it->addr + it->size,destaddr - _guest_mem.virt(),_guest_size);
 				return false;
@@ -160,8 +160,12 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			DataSpace ds(it->size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->addr);
 			memcpy(msg.start,reinterpret_cast<void*>(ds.virt()),ds.size());
 			msg.size = it->size;
-			msg.cmdlen = sizeof("kernel") - 1;
-			msg.cmdline = "kernel";
+			DataSpace cmdds(ExecEnv::PAGE_SIZE * 2,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->aux);
+			uintptr_t offset = it->aux & (ExecEnv::PAGE_SIZE - 1);
+			memcpy(msg.start + it->size,reinterpret_cast<void*>(cmdds.virt() + offset),cmdds.size() - offset);
+			memset(msg.start + it->size + ExecEnv::PAGE_SIZE * 2 - 1,0,1);
+			msg.cmdlen = strlen(msg.start + it->size);
+			msg.cmdline = msg.start + it->size;
 			return true;
 		}
 		break;
@@ -328,7 +332,7 @@ void Vancouver::create_vcpus() {
 }
 
 int main(int argc,char *argv[]) {
-	Vancouver *v = new Vancouver("PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 8);
+	Vancouver *v = new Vancouver("PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 32);
 	v->reset();
 
 	Sm sm(0);

@@ -45,6 +45,7 @@ public:
 
 	struct ReceivePacket {
 		uint flags;
+		uint8_t scancode;
 		uint8_t keycode;
 		char character;
 	};

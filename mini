@@ -2,7 +2,6 @@
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
-#HYPERVISOR_PARAMS=spinner serial
 bin/apps/root
 bin/apps/acpi provides=acpi
 bin/apps/keyboard provides=keyboard
@@ -12,6 +11,4 @@ bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/vancouver
 bin/apps/guest_mini
-#bin/apps/test
-#bin/apps/sub
 
