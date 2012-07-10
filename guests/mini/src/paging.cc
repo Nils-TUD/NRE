@@ -17,7 +17,7 @@ void Paging::init() {
 }
 
 void Paging::map(uintptr_t virt,uintptr_t phys,int flags) {
-	assert(virt < PAGE_SIZE * PAGE_SIZE);
+	assert(virt < PAGE_SIZE * (PAGE_SIZE / sizeof(pte)));
 	assert((virt & (PAGE_SIZE - 1)) == 0);
 	assert((phys & (PAGE_SIZE - 1)) == 0);
 	pt[virt / PAGE_SIZE] = phys | flags;

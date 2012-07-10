@@ -21,26 +21,22 @@ static void gpf() {
 }
 
 static void timer() {
-	Video::puts("Got timer irq ");
-	Video::putn(counter++);
-	Video::putc('\n');
+	Video::printf("Got timer irq %d\n",counter++);
 	PIC::eoi(0x20);
 }
 
 static void keyboard() {
 	Video::puts("Got keyboard irq: ");
 	uint8_t sc;
-	while((sc = Keyb::read())) {
-		Video::puts("0x");
-		Video::putu(sc,16);
-		Video::putc(' ');
-	}
+	while((sc = Keyb::read()))
+		Video::printf("0x%x ",sc);
 	Video::putc('\n');
 	PIC::eoi(0x21);
 }
 
 int main() {
 	GDT::init();
+	Paging::init();
 	PIC::init();
 	IDT::init();
 	IDT::set(0x00,divbyzero);
@@ -49,10 +45,12 @@ int main() {
 	IDT::set(0x21,keyboard);
 	PIT::init();
 	Keyb::init();
-	//Paging::init();
-	//Paging::map(0x200000,0x400000,Paging::PRESENT);
 	Video::clear();
 	Video::puts("\n");
+
+	Paging::map(0x200000,0x400000,Paging::PRESENT | Paging::WRITABLE);
+	int *addr = reinterpret_cast<int*>(0x200000);
+	*addr = 4;
 
 	Util::enable_ints();
 	while(1)

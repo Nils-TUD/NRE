@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util.h"
+#include <stdarg.h>
 
 class Video {
 private:
@@ -36,11 +37,19 @@ public:
 	}
 
 	template<typename T>
-	static void putu(T u,int base) {
+	static void putu(T u,uint base) {
 		if(u >= base)
 			putu<T>(u / base,base);
 		putc(chars[(u % base)]);
 	}
+
+	static void printf(const char *fmt,...) {
+		va_list ap;
+		va_start(ap,fmt);
+		vprintf(fmt,ap);
+		va_end(ap);
+	}
+	static void vprintf(const char *fmt,va_list ap);
 
 private:
 	static void move();
