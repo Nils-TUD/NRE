@@ -26,6 +26,7 @@
 #include <CPU.h>
 #include <util/Math.h>
 #include <Exception.h>
+#include <Logging.h>
 #include <cstring>
 #include <Assert.h>
 
@@ -100,11 +101,12 @@ int main() {
 	const Hip &hip = Hip::get();
 
 	// add all available memory
-	Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
-			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi);
-	Serial::get().writef("Memory:\n");
+	LOG(Logging::RESOURCES,Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
+			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi));
+	LOG(Logging::MEM_MAP,Serial::get().writef("Memory:\n"));
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux);
+		LOG(Logging::MEM_MAP,Serial::get().writef(
+				"\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux));
 		// FIXME: why can't we use the memory above 4G?
 		if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
 			PhysicalMemory::add(it->addr,it->size);
@@ -119,13 +121,13 @@ int main() {
 
 	// now allocate the available memory from the hypervisor
 	PhysicalMemory::map_all();
-	Serial::get() << "Virtual memory:\n" << VirtualMemory::regions();
-	Serial::get() << "Physical memory:\n" << PhysicalMemory::regions();
+	LOG(Logging::MEM_MAP,Serial::get() << "Virtual memory:\n" << VirtualMemory::regions());
+	LOG(Logging::MEM_MAP,Serial::get() << "Physical memory:\n" << PhysicalMemory::regions());
 
-	Serial::get().writef("CPUs:\n");
+	LOG(Logging::CPUS,Serial::get().writef("CPUs:\n"));
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
-				it->package,it->core,it->thread,it->flags);
+		LOG(Logging::CPUS,Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
+				it->package,it->core,it->thread,it->flags));
 	}
 
 	// now we can use dlmalloc (map-pt created and available memory added to pool)
@@ -172,8 +174,6 @@ static void start_childs() {
 			Hypervisor::map_mem(it->addr,virt,it->size);
 			// map command-line, if necessary
 			char *aux = Hypervisor::map_string(it->aux);
-
-			Serial::get().writef("Loading module @ %p .. %p\n",virt,virt + it->size);
 			mng->load(virt,it->size,aux);
 
 			// TODO temporary. skip everything behind vancouver

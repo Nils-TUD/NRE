@@ -23,6 +23,7 @@
 #include <cap/Caps.h>
 #include <arch/Elf.h>
 #include <util/Math.h>
+#include <Logging.h>
 
 namespace nul {
 
@@ -220,8 +221,8 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.sel());
 		}
 
-		Serial::get() << "Starting client '" << c->cmdline() << "'...\n";
-		Serial::get() << *c << "\n";
+		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting client '" << c->cmdline() << "'...\n");
+		LOG(Logging::CHILD_CREATE,Serial::get() << *c << "\n");
 
 		// start child; we have to put the child into the list before that
 		_childs[idx] = c;
@@ -247,10 +248,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 
 		// wait until the service has been registered
 		String name(provides,i);
-		Serial::get().writef("Waiting for '%s'...\n",name.str());
+		LOG(Logging::CHILD_CREATE,Serial::get() << "Waiting for '" << name << "'...\n");
 		while(_registry.find(name) == 0)
 			_regsm.down();
-		Serial::get().writef("Found '%s'!\n",name.str());
+		LOG(Logging::CHILD_CREATE,Serial::get() << "Found '" << name << "'!\n");
 	}
 }
 
@@ -324,6 +325,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		uf >> available;
 		uf.finish_input();
 
+		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
 		cm->reg_service(c,cap,name,available);
 
 		uf.accept_delegates();
@@ -345,6 +347,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		uf >> name;
 		uf.finish_input();
 
+		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' unregs " << name << "\n");
 		cm->unreg_service(c,name);
 
 		uf << E_SUCCESS;
@@ -375,14 +378,16 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 	return caps.release();
 }
 
-void ChildManager::Portals::get_service(capsel_t) {
+void ChildManager::Portals::get_service(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		Child *c = cm->get_child(pid);
 		String name;
 		uf >> name;
 		uf.finish_input();
 
+		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
 		const ServiceRegistry::Service* s = cm->get_service(name);
 
 		uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
@@ -409,8 +414,17 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		uf.finish_input();
 
 		capsel_t cap = 0;
-		ScopedLock<UserSm> guard(&c->_sm);
 		{
+			ScopedLock<UserSm> guard(&c->_sm);
+			if(op == Gsi::ALLOC) {
+				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' allocates GSI %u (PCI %p)\n",
+							c->cmdline().str(),gsi,pcicfg));
+			}
+			else {
+				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' releases GSI %u\n",
+							c->cmdline().str(),gsi));
+			}
+
 			if(gsi >= Hip::MAX_GSIS)
 				throw Exception(E_ARGS_INVALID);
 			// make sure that just the owner can release it
@@ -462,8 +476,17 @@ void ChildManager::Portals::io(capsel_t pid) {
 		uf >> op >> base >> count;
 		uf.finish_input();
 
-		ScopedLock<UserSm> guard(&c->_sm);
 		{
+			ScopedLock<UserSm> guard(&c->_sm);
+			if(op == Ports::ALLOC) {
+				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' allocates ports %#x..%#x\n",
+							c->cmdline().str(),base,base + count - 1));
+			}
+			else {
+				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' releases ports %#x..%#x\n",
+							c->cmdline().str(),base,base + count - 1));
+			}
+
 			// alloc() makes sure that nobody can free something from other childs.
 			if(op == Ports::RELEASE)
 				c->io().alloc(base,count);
@@ -507,7 +530,10 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	if(desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
 		c->reglist().add(addr,desc.size(),desc.perm(),0);
-		uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+		LOG(Logging::DATASPACES,
+				Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
+		uf << E_SUCCESS << desc;
 	}
 	else {
 		// create it or attach to the existing dataspace
@@ -529,10 +555,14 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 
 		// build answer
 		if(type == DataSpace::CREATE) {
+			LOG(Logging::DATASPACES,
+					Serial::get() << "Child '" << c->cmdline() << "' created:\n\t" << ds << "\n");
 			uf.delegate(ds.sel(),0);
 			uf.delegate(ds.unmapsel(),1);
 		}
 		else {
+			LOG(Logging::DATASPACES,
+					Serial::get() << "Child '" << c->cmdline() << "' joined:\n\t" << ds << "\n");
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
@@ -580,6 +610,8 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			DataSpaceDesc src,dst;
 			bool found_src = c->reglist().find(srcsel,src);
 			bool found_dst = c->reglist().find(dstsel,dst);
+			LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
+						<< "' switches:\n\t" << src << "\n\t" << dst << "\n");
 			if(!found_src || !found_dst)
 				throw Exception(E_ARGS_INVALID);
 			if(src.size() != dst.size())
@@ -590,6 +622,13 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 					src.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
 			CapRange(dst.origin() >> ExecEnv::PAGE_SHIFT,
 					dst.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			// we have to reset the last pf information here, because of the revoke. otherwise it
+			// can happen that last time CPU X caused the last fault and this time, CPU X causes
+			// the second fault (the first one will handle it and the second one will find it already
+			// mapped). therefore, it might be the same address and same CPU again which caused an
+			// "already-mapped" fault again and thus, it would be killed.
+			c->_last_fault_addr = 0;
+			c->_last_fault_cpu = 0;
 			// now copy the content
 			memcpy(reinterpret_cast<char*>(dst.origin()),reinterpret_cast<char*>(src.origin()),src.size());
 			// change mapping
@@ -633,9 +672,14 @@ void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
 	uf.finish_input();
 
 	ScopedLock<UserSm> guard(&c->_sm);
-	if(desc.type() == DataSpaceDesc::VIRTUAL)
+	if(desc.type() == DataSpaceDesc::VIRTUAL) {
+		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
+				<< "' destroys virtual ds " << desc << "\n");
 		c->reglist().remove(desc.virt(),desc.size());
+	}
 	else {
+		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
+				<< "' destroys " << sel << ": " << desc << "\n");
 		// destroy (decrease refs) the ds
 		_dsm.release(desc,sel);
 		DataSpaceDesc childdesc = c->reglist().remove(sel);
@@ -693,8 +737,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		unsigned error = uf->qual[0];
 		uintptr_t eip = uf->rip;
 
-		//Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-		//		c->cmdline().str(),pfaddr,eip,cpu,error);
+		LOG(Logging::PFS,Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+				c->cmdline().str(),pfaddr,eip,cpu,error));
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
@@ -720,15 +764,16 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				remap = true;
 			// same fault for same cpu again?
 			else if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
-				Serial::get().writef("Child '%s': Caused fault for %p on cpu %u twice. Killing Thread\n",
-						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id());
+				LOG(Logging::CHILD_KILL,Serial::get().writef(
+						"Child '%s': Caused fault for %p on cpu %u twice. Killing Thread\n",
+						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id()));
 				kill = true;
 			}
 			else {
-				Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error);
-				Serial::get() << "Page already mapped. See regionlist:\n";
-				//Serial::get() << c->reglist();
+				LOG(Logging::PFS,Serial::get().writef(
+						"Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
+						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error));
+				LOG(Logging::PFS_DETAIL,Serial::get() << "See regionlist:\n" << c->reglist());
 				c->_last_fault_addr = pfaddr;
 				c->_last_fault_cpu = cpu;
 			}
@@ -736,15 +781,16 @@ void ChildManager::Portals::pf(capsel_t pid) {
 
 		if(kill) {
 			uintptr_t *addr,addrs[32];
-			Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, bp=%p, error=%#x\n",
-					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),uf->rbp,error);
-			Serial::get() << c->reglist();
-			Serial::get().writef("Unable to resolve fault; killing Thread\n");
+			LOG(Logging::CHILD_KILL,Serial::get().writef(
+					"Child '%s': Pagefault for %p @ %p on cpu %u, bp=%p, error=%#x\n",
+					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),uf->rbp,error));
+			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
+			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing Thread\n"));
 			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
-			Serial::get().writef("Backtrace:\n");
+			LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
 			addr = addrs;
 			while(*addr != 0) {
-				Serial::get().writef("\t%p\n",*addr);
+				LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
 				addr++;
 			}
 		}

@@ -7,6 +7,8 @@
  * Please see the COPYING-GPL-2 file for details.
  */
 
+#include <Logging.h>
+
 #include "PhysicalMemory.h"
 #include "VirtualMemory.h"
 #include "Hypervisor.h"
@@ -113,7 +115,8 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	// check if its a module
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		if(it->type == HipMem::MB_MODULE) {
-			if(phys >= it->addr && phys + size <= Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE)) {
+			uintptr_t end = Math::round_up<size_t>(it->addr + it->size,ExecEnv::PAGE_SIZE);
+			if(phys >= it->addr && phys + size <= end) {
 				// don't give the user write-access here
 				flags = DataSpaceDesc::R;
 				return true;
@@ -149,27 +152,40 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 			case DataSpace::JOIN:
 				if(desc.type() == DataSpaceDesc::VIRTUAL) {
 					uintptr_t addr = VirtualMemory::alloc(desc.size());
-					uf << E_SUCCESS << DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+					desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+					LOG(Logging::DATASPACES,Serial::get() << "Root: Allocated virtual ds " << desc << "\n");
+					uf << E_SUCCESS << desc;
 				}
 				else {
-					const RootDataSpace &ds = type == DataSpace::JOIN ? _dsmng.join(desc,sel) : _dsmng.create(desc);
+					const RootDataSpace &ds = type == DataSpace::JOIN
+							? _dsmng.join(desc,sel)
+							: _dsmng.create(desc);
 
 					if(type == DataSpace::CREATE) {
+						LOG(Logging::DATASPACES,Serial::get() << "Root: Created " << ds << "\n");
 						uf.delegate(ds.sel(),0);
 						uf.delegate(ds.unmapsel(),1);
 					}
-					else
+					else {
+						LOG(Logging::DATASPACES,Serial::get() << "Root: Joined " << ds << "\n");
 						uf.delegate(ds.unmapsel());
+					}
 					// pass back attributes so that the caller has the correct ones
 					uf << E_SUCCESS << ds.desc();
 				}
 				break;
 
 			case DataSpace::DESTROY:
-				if(desc.type() == DataSpaceDesc::VIRTUAL)
+				if(desc.type() == DataSpaceDesc::VIRTUAL) {
+					LOG(Logging::DATASPACES,
+							Serial::get() << "Root: Destroyed virtual ds: " << desc << "\n");
 					VirtualMemory::free(desc.virt(),desc.size());
-				else
+				}
+				else {
+					LOG(Logging::DATASPACES,
+							Serial::get() << "Root: Destroyed ds " << sel << ": " << desc << "\n");
 					_dsmng.release(desc,sel);
+				}
 				uf << E_SUCCESS;
 				break;
 
