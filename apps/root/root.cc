@@ -188,7 +188,7 @@ static void portal_reg(capsel_t) {
 	try {
 		String name;
 		BitField<Hip::MAX_CPUS> available;
-		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).offset();
+		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 		uf >> name;
 		uf >> available;
 		uf.finish_input();
@@ -199,7 +199,7 @@ static void portal_reg(capsel_t) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}

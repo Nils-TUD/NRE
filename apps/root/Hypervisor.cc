@@ -41,7 +41,7 @@ Hypervisor::Hypervisor() {
 
 void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,Crd::MEM_ALL));
+	uf.delegation_window(Crd(0,31,Crd::MEM_ALL));
 	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SIZE);
 	CapRange cr(phys >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM_ALL,virt >> ExecEnv::PAGE_SHIFT);
 	size_t count = pages;

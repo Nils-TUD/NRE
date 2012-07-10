@@ -307,7 +307,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -320,7 +320,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		String name;
 		BitField<Hip::MAX_CPUS> available;
-		capsel_t cap = uf.get_delegated(uf.get_receive_crd().order()).offset();
+		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 		uf >> name;
 		uf >> available;
 		uf.finish_input();
@@ -332,7 +332,7 @@ void ChildManager::Portals::reg(capsel_t pid) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -353,7 +353,7 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -366,7 +366,7 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 
 	UtcbFrame uf;
 	ScopedCapSels caps(CPU::count(),CPU::count());
-	uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
+	uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
 	uf << String(name);
 	CPU::current().get_pt->call(uf);
 
@@ -394,7 +394,7 @@ void ChildManager::Portals::get_service(capsel_t pid) {
 		uf << E_SUCCESS << s->available();
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -439,7 +439,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 				if(op == Gsi::ALLOC) {
 					puf << pcicfg;
 					cap = c->_gsi_next++;
-					puf.set_receive_crd(Crd(c->_gsi_caps + cap,0,Crd::OBJ_ALL));
+					puf.delegation_window(Crd(c->_gsi_caps + cap,0,Crd::OBJ_ALL));
 				}
 				CPU::current().gsi_pt->call(puf);
 				ErrorCode res;
@@ -459,7 +459,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -494,7 +494,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 			{
 				UtcbFrame puf;
 				if(op == Ports::ALLOC)
-					puf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
+					puf.delegation_window(Crd(0,31,Crd::IO_ALL));
 				puf << op << base << count;
 				CPU::current().io_pt->call(puf);
 				ErrorCode res;
@@ -511,7 +511,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -717,7 +717,7 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}

@@ -60,7 +60,7 @@ void ConsoleSessionData::portal(capsel_t pid) {
 		}
 	}
 	catch(const Exception &e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}

@@ -30,6 +30,9 @@ class OStream;
 
 OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
+/**
+ * The base class for the two variants of the UTCB that exist currently.
+ */
 class UtcbBase : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
@@ -54,6 +57,9 @@ protected:
 	UtcbBase& operator=(const UtcbBase&);
 
 public:
+	/**
+	 * Resets the UTCB, i.e. clears the typed and untyped items and resets the receive windows
+	 */
 	void reset() {
 		mtr = 0;
 		crd = 0;

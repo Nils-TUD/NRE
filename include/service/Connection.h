@@ -66,7 +66,7 @@ private:
 	capsel_t connect(const char *service) {
 		UtcbFrame uf;
 		ScopedCapSels caps(CPU::count(),CPU::count());
-		uf.set_receive_crd(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
+		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << String(service);
 		CPU::current().get_pt->call(uf);
 		ErrorCode res;

@@ -43,7 +43,7 @@ static void test_delegate() {
 	tac = Util::tsc();
 	rdtsc = tac - tic;
 	UtcbFrame uf;
-	uf.set_receive_crd(Crd(0,31,Crd::IO_ALL));
+	uf.delegation_window(Crd(0,31,Crd::IO_ALL));
 	for(size_t i = 0; i < tries; i++) {
 		tic = Util::tsc();
 		pt.call(uf);

@@ -151,8 +151,7 @@ class RCUObject {
 	enum State {
 		VALID,
 		INVALID,
-		DELETABLE,
-		DELETED
+		DELETABLE
 	};
 
 public:
@@ -161,9 +160,6 @@ public:
 	virtual ~RCUObject() {
 	}
 
-	bool deleted() const {
-		return _state == DELETED;
-	}
 	bool valid() const {
 		return _state == VALID;
 	}

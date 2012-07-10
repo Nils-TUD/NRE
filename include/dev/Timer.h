@@ -99,7 +99,7 @@ private:
 		UtcbFrame uf;
 		uint order = Math::next_pow2_shift(CPU::count());
 		ScopedCapSels caps(1 << order,1 << order);
-		uf.set_receive_crd(Crd(caps.get(),order,Crd::OBJ_ALL));
+		uf.delegation_window(Crd(caps.get(),order,Crd::OBJ_ALL));
 		uf << Timer::GET_SMS;
 		_pts[CPU::current().log_id()]->call(uf);
 		ErrorCode res;

@@ -78,6 +78,7 @@ public:
 		if(res != E_SUCCESS)
 			throw Exception(res);
 	}
+
 	Console::ReceivePacket receive() {
 		Console::ReceivePacket *pk = _consumer.get();
 		if(!pk)

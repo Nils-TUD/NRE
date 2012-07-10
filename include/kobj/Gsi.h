@@ -82,7 +82,7 @@ private:
 	capsel_t alloc(uint gsi,void *pcicfg,cpu_t cpu) {
 		UtcbFrame uf;
 		ScopedCapSels cap;
-		uf.set_receive_crd(Crd(cap.get(),0,Crd::OBJ_ALL));
+		uf.delegation_window(Crd(cap.get(),0,Crd::OBJ_ALL));
 		uf << ALLOC << gsi << pcicfg;
 		CPU::current().gsi_pt->call(uf);
 

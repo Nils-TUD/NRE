@@ -80,7 +80,7 @@ void ServiceInstance::portal(capsel_t) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.get_receive_crd(),true);
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}

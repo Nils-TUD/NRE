@@ -26,10 +26,8 @@ namespace nul {
 class Pd;
 
 /**
- * Represents an execution context. This class can't be used directly. To create an Ec, use LocalThread
- * or GlobalThread. Note that each Ec contains a few slots for thread local storage (TLS). The index
- * Ec::TLS_PARAM is always available, e.g. to pass a parameter to an Ec. You may create additional
- * ones by Ec::create_tls().
+ * Represents an execution context. This class can't be instantiated directly. To create an Ec, use
+ * LocalThread, GlobalThread or VCPU.
  */
 class Ec : public ObjCap {
 protected:

@@ -31,7 +31,7 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	UtcbFrame uf;
 	// prepare for receiving map and unmap-cap
 	ScopedCapSels caps(2,2);
-	uf.set_receive_crd(Crd(caps.get(),1,Crd::OBJ_ALL));
+	uf.delegation_window(Crd(caps.get(),1,Crd::OBJ_ALL));
 	uf << CREATE << desc;
 	CPU::current().ds_pt->call(uf);
 
@@ -79,7 +79,7 @@ void DataSpace::join() {
 
 	// prepare for receiving unmap-cap
 	ScopedCapSels umcap;
-	uf.set_receive_crd(Crd(umcap.get(),0,Crd::OBJ_ALL));
+	uf.delegation_window(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN << _desc;
 	CPU::current().ds_pt->call(uf);

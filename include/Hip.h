@@ -184,6 +184,9 @@ public:
 	int32_t type;
 	uint32_t aux;
 
+	/**
+	 * @return true if the memory region is reserved
+	 */
 	bool reserved() const {
 		return type != HipMem::AVAILABLE && type != HipMem::HYPERVISOR && type != HipMem::MB_MODULE;
 	}

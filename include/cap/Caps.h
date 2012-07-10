@@ -21,7 +21,7 @@ class Caps {
 public:
 	static void allocate(const CapRange& caps) {
 		UtcbFrame uf;
-		uf.set_receive_crd(Crd(0,31,caps.attr()));
+		uf.delegation_window(Crd(0,31,caps.attr()));
 		CapRange cr = caps;
 		size_t count = cr.count();
 		while(count > 0) {
