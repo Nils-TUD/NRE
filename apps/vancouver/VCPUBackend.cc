@@ -1,16 +1,15 @@
 /*
- * TODO comment me
- *
  * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Copyright (C) 2007-2009, Bernhard Kauer <bk@vmmon.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * This file is part of NUL.
+ * This file is part of Vancouver.
  *
- * NUL is free software: you can redistribute it and/or modify
+ * Vancouver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  *
- * NUL is distributed in the hope that it will be useful, but
+ * Vancouver is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details.
@@ -148,7 +147,7 @@ Crd VCPUBackend::lookup(uintptr_t base,size_t size,uintptr_t hotspot) {
 bool VCPUBackend::handle_memory(bool need_unmap) {
 	UtcbExcFrameRef uf;
 	VCpu *vcpu = Thread::current()->get_tls<VCpu*>(Thread::TLS_PARAM);
-	//Serial::get().writef("NPT fault @ %p at %#Lx, error %#Lx\n",uf->eip,uf->qual[1],uf->qual[0]);
+	//Serial::get().writef("NPT fault @ %p for %#Lx, error %#Lx\n",uf->eip,uf->qual[1],uf->qual[0]);
 
 	MessageMemRegion msg(uf->qual[1] >> ExecEnv::PAGE_SHIFT);
 

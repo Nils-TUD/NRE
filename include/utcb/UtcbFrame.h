@@ -1,16 +1,14 @@
 /*
- * TODO comment me
- *
  * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * This file is part of NUL.
+ * This file is part of NRE (NOVA runtime environment).
  *
- * NUL is free software: you can redistribute it and/or modify
+ * NRE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  *
- * NUL is distributed in the hope that it will be useful, but
+ * NRE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details.
@@ -315,8 +313,9 @@ public:
 	 * @param flags the flags for the delegation (default NONE)
 	 * @param attr the attributes to delegate (default Crd::OBJ_ALL)
 	 */
-	void delegate(capsel_t cap,uint hotspot = 0,DelFlags flags = NONE,uint attr = Crd::OBJ_ALL) {
-		add_typed(DelItem(Crd(cap,0,attr),flags,hotspot));
+	void delegate(capsel_t cap,uint hotspot = CapRange::NO_HOTSPOT,DelFlags flags = NONE,
+			uint attr = Crd::OBJ_ALL) {
+		add_typed(DelItem(Crd(cap,0,attr),flags,hotspot != CapRange::NO_HOTSPOT ? hotspot : cap));
 	}
 	/**
 	 * Puts in as many typed items as required to delegate the given CapRange. Note that the
@@ -326,7 +325,7 @@ public:
 	 * @param flags the flags for the delegation (default NONE)
 	 */
 	void delegate(const CapRange& range,DelFlags flags = NONE) {
-		uintptr_t hotspot = range.hotspot() ? range.hotspot() : range.start();
+		uintptr_t hotspot = range.hotspot() != CapRange::NO_HOTSPOT ? range.hotspot() : range.start();
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {

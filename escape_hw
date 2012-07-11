@@ -11,7 +11,7 @@ bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/vancouver
 bin/apps/escape.bin videomode=vga
-bin/apps/escape_romdisk.bin /dev/romdisk bin/apps/escape.iso
+bin/apps/escape_romdisk.bin /dev/romdisk (nd)/tftpboot/nils/novaboot/bin/apps/escape.iso
 bin/apps/escape_cmos.bin /dev/cmos
 bin/apps/escape_fs.bin /dev/fs /dev/romdisk iso9660
 bin/apps/escape.iso

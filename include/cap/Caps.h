@@ -1,10 +1,17 @@
 /*
- * (c) 2012 Nils Asmussen <nils@os.inf.tu-dresden.de>
- *     economic rights: Technische Universität Dresden (Germany)
+ * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * This file is part of NRE (NOVA runtime environment).
+ *
+ * NRE is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * NRE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details.
  */
 
 #pragma once
@@ -26,7 +33,7 @@ public:
 		size_t count = cr.count();
 		while(count > 0) {
 			uf.clear();
-			if(cr.hotspot()) {
+			if(cr.hotspot() != CapRange::NO_HOTSPOT) {
 				// if start and hotspot are different, we have to check whether it fits in the utcb
 				uintptr_t diff = cr.hotspot() ^ cr.start();
 				if(diff) {
@@ -48,7 +55,7 @@ public:
 
 			// adjust start and hotspot for the next round
 			cr.start(cr.start() + cr.count());
-			if(cr.hotspot())
+			if(cr.hotspot() != CapRange::NO_HOTSPOT)
 				cr.hotspot(cr.hotspot() + cr.count());
 			count -= cr.count();
 			cr.count(count);

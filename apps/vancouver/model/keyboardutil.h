@@ -1,10 +1,16 @@
 /*
- * (c) 2012 Nils Asmussen <nils@os.inf.tu-dresden.de>
- *     economic rights: Technische Universität Dresden (Germany)
+ * Copyright (C) 2011, Bernhard Kauer <bk@vmmon.org>
  *
- * This file is part of TUD:OS and distributed under the terms of the
- * GNU General Public License 2.
- * Please see the COPYING-GPL-2 file for details.
+ * This file is part of Vancouver.
+ *
+ * Vancouver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * Vancouver is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details.
  */
 
 #pragma once

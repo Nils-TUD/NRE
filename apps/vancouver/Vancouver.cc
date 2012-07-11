@@ -1,17 +1,16 @@
 /*
- * Main code and static vars of vancouver.nova.
- *
- * Copyright (C) 2007-2010, Bernhard Kauer <bk@vmmon.org>
+ * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Copyright (C) 2007-2009, Bernhard Kauer <bk@vmmon.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
  * This file is part of Vancouver.
  *
- * Vancouver.nova is free software: you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version
- * 2 as published by the Free Software Foundation.
+ * Vancouver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
  *
- * Vancouver.nova is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * Vancouver is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details.
  */
@@ -304,7 +303,7 @@ void Vancouver::keyboard_thread(void*) {
 			vc->_mb.dump_counters();
 
 		ScopedLock<UserSm> guard(&globalsm);
-		MessageInput msg(0x10000,pk.keycode | pk.flags);
+		MessageInput msg(0x10000,pk.scancode | pk.flags);
 		vc->_mb.bus_input.send(msg);
 	}
 }

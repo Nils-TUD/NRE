@@ -1,4 +1,3 @@
-// -*- Mode: C++ -*-
 /**
  * @file
  * Message Type defintions.
