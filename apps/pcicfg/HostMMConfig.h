@@ -95,7 +95,6 @@ public:
 		return range->addr();
 	}
 	virtual uint32_t read(uint32_t bdf,size_t offset) {
-		nul::Serial::get() << "MMCONFIG: bdf=" << bdf << ", offset=" << offset << "\n";
 		MMConfigRange *range = find(bdf,offset);
 		return range->read(bdf,offset);
 	}

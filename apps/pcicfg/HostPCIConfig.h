@@ -42,7 +42,6 @@ public:
 	}
 	virtual uint32_t read(uint32_t bdf,size_t offset) {
 		nul::ScopedLock<nul::UserSm> guard(&_sm);
-		nul::Serial::get() << "PCICONFIG: bdf=" << bdf << ", offset=" << offset << "\n";
 		select(bdf,offset);
 		return _data.in<uint32_t>();
 	}

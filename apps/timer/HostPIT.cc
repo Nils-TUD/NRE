@@ -17,6 +17,7 @@
  */
 
 #include <stream/Serial.h>
+#include <Logging.h>
 
 #include "HostPIT.h"
 
@@ -25,8 +26,8 @@ using namespace nul;
 HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE,4), _freq() {
 	timevalue_t value = (FREQ * period_us) / 1000000ULL;
 	if(value == 0 || value > 65535) {
-		Serial::get().writef("TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n",period_us,
-				DEFAULT_PERIOD);
+		Serial::get().writef(
+				"TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n",period_us,DEFAULT_PERIOD);
 		period_us = DEFAULT_PERIOD;
 		value = (FREQ * DEFAULT_PERIOD) / 1000000ULL;
 	}

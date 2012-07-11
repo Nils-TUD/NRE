@@ -7,6 +7,8 @@
 * Please see the COPYING-GPL-2 file for details.
 */
 
+#include <Logging.h>
+
 #include "HostReboot.h"
 
 using namespace nul;
@@ -15,7 +17,7 @@ HostRebootKeyboard::HostRebootKeyboard() : HostRebootMethod(), _con("keyboard"),
 }
 
 void HostRebootKeyboard::reboot() {
-	Serial::get() << "Trying reboot via PS2 keyboard...\n";
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via PS2 keyboard...\n");
 	_sess.reboot();
 }
 
@@ -23,7 +25,7 @@ HostRebootFastGate::HostRebootFastGate() : HostRebootMethod(), _port(0x92,1) {
 }
 
 void HostRebootFastGate::reboot() {
-	Serial::get() << "Trying reboot via fastgate...\n";
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via fastgate...\n");
 	_port.out<uint8_t>(0x01);
 }
 
@@ -31,13 +33,13 @@ HostRebootPCIReset::HostRebootPCIReset() : HostRebootMethod(), _con("pcicfg"), _
 }
 
 void HostRebootPCIReset::reboot() {
-	Serial::get() << "Trying reboot via PCI...\n";
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via PCI...\n");
 	_sess.reboot();
 }
 
 HostRebootACPI::HostRebootACPI() : HostRebootMethod(), _method(), _value(), _addr(),
 		_con("acpi"), _sess(_con), _ports(), _ds() {
-	Serial::get() << "Trying reboot via ACPI...\n";
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via ACPI...\n");
 	ACPI::RSDT *rsdt = _sess.find_table(String("FACP"));
 	if(!rsdt)
 		throw Exception(E_NOT_FOUND,"FACP not found");
@@ -57,6 +59,8 @@ HostRebootACPI::HostRebootACPI() : HostRebootMethod(), _method(), _value(), _add
 	_method = table[116];
 	_value = table[128];
 	_addr = *reinterpret_cast<uint64_t*>(table + 120);
+	LOG(Logging::REBOOT,
+			Serial::get().writef("Using method=%#x, value=%#x, addr=%#x\n",_method,_value,_addr));
 	switch(_method) {
 		case 0:
 			_ds = new DataSpace(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::RW,_addr);

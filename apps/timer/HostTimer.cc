@@ -20,6 +20,7 @@
 #include <stream/Serial.h>
 #include <util/Date.h>
 #include <util/Topology.h>
+#include <Logging.h>
 
 #include "HostTimer.h"
 #include "HostHPET.h"
@@ -50,8 +51,8 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	// PIT:  PIT is programmed to run in periodic mode, if HPET didn't work for us.
 
 	_clocks_per_tick = (static_cast<timevalue_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / _timer->freq();
-	Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
-			_clocks_per_tick / CPT_RES,_clocks_per_tick % CPT_RES,CPT_RES);
+	LOG(Logging::TIMER,Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
+			_clocks_per_tick / CPT_RES,_clocks_per_tick % CPT_RES,CPT_RES));
 
 	// Get wallclock time
 	if(slow_rtc)
@@ -59,9 +60,9 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	timevalue_t msecs = _rtc.timestamp();
 	DateInfo date;
 	Date::gmtime(msecs / Timer::WALLCLOCK_FREQ,&date);
-	Serial::get().writef("TIMER: timestamp: %Lu secs\n",msecs / Timer::WALLCLOCK_FREQ);
-	Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
-			date.mday,date.mon,date.year,date.hour,date.min,date.sec);
+	LOG(Logging::TIMER,Serial::get().writef("TIMER: timestamp: %Lu secs\n",msecs / Timer::WALLCLOCK_FREQ));
+	LOG(Logging::TIMER,Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
+			date.mday,date.mon,date.year,date.hour,date.min,date.sec));
 
 	_timer->start(Math::muldiv128(msecs,_timer->freq(),Timer::WALLCLOCK_FREQ));
 
@@ -80,7 +81,7 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	// Bootstrap IRQ handlers. IRQs are disabled. Each worker enables its IRQ when it comes up.
 	for(size_t i = 0; i < parts; i++) {
 		cpu_t cpu = part_cpu[i];
-		Serial::get().writef("TIMER: CPU%u owns Timer%u.\n",cpu,i);
+		LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u owns Timer%u.\n",cpu,i));
 
 		_per_cpu[cpu]->has_timer = true;
 		_per_cpu[cpu]->timer = _timer->timer(i);
@@ -105,8 +106,8 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 			rslot->data.abstimeout = 0;
 			rslot->data.nr = remote.abstimeouts.alloc(&rslot->data);
 
-			Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %u.\n",
-					cpu,cpu_cpu[cpu],remote.slot_count);
+			LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %u.\n",
+					cpu,cpu_cpu[cpu],remote.slot_count));
 			remote.slot_count++;
 		}
 	}
@@ -136,11 +137,11 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	}
 
 	// XXX Do we need those when we have enough timers for all CPUs?
-	Serial::get().writef("TIMER: Waiting for %u XCPU threads to come up.\n",xcpu_threads_started);
+	LOG(Logging::TIMER_DETAIL,Serial::get().writef(
+			"TIMER: Waiting for %u XCPU threads to come up.\n",xcpu_threads_started));
 	while(xcpu_threads_started-- > 0)
 		_xcpu_up.down();
-
-	Serial::get().writef("TIMER: Initialized!\n");
+	LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: Initialized!\n"));
 }
 
 bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {

@@ -18,6 +18,7 @@
 
 #include <service/Service.h>
 #include <dev/PCIConfig.h>
+#include <Logging.h>
 
 #include "HostPCIConfig.h"
 #include "HostMMConfig.h"
@@ -53,6 +54,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
 			case PCIConfig::READ: {
 				uf.finish_input();
 				uint32_t res = cfg->read(bdf,offset);
+				LOG(Logging::PCICFG,Serial::get().writef(
+						"PCIConfig::READ bdf=%#x off=%#x: %#x\n",bdf,offset,res));
 				uf << E_SUCCESS << res;
 			}
 			break;
@@ -62,6 +65,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
 				uf >> value;
 				uf.finish_input();
 				cfg->write(bdf,offset,value);
+				LOG(Logging::PCICFG,Serial::get().writef(
+						"PCIConfig::WRITE bdf=%#x off=%#x: %#x\n",bdf,offset,value));
 				uf << E_SUCCESS;
 			}
 			break;
@@ -69,6 +74,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
 			case PCIConfig::ADDR: {
 				uf.finish_input();
 				uintptr_t res = cfg->addr(bdf,offset);
+				LOG(Logging::PCICFG,Serial::get().writef(
+						"PCIConfig::ADDR bdf=%#x off=%#x: %p\n",bdf,offset,res));
 				uf << E_SUCCESS << res;
 			}
 			break;

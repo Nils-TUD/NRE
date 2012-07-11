@@ -48,9 +48,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 		}
 
 		// read flags
-		prec = -1;
 		flags = 0;
-		pad = 0;
 		readFlags = true;
 		while(readFlags) {
 			switch(*fmt) {
@@ -74,17 +72,6 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 					flags |= PADZEROS;
 					fmt++;
 					break;
-				case '.':
-					flags |= PRECISION;
-					fmt++;
-					break;
-				case '*':
-					if(flags & PRECISION)
-						prec = va_arg(ap, ulong);
-					else
-						pad = va_arg(ap, ulong);
-					fmt++;
-					break;
 				default:
 					readFlags = false;
 					break;
@@ -92,10 +79,31 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 		}
 
 		// read pad-width
-		if(pad == 0) {
+		pad = 0;
+		if(*fmt == '*') {
+			pad = va_arg(ap, ulong);
+			fmt++;
+		}
+		else {
 			while(*fmt >= '0' && *fmt <= '9') {
 				pad = pad * 10 + (*fmt - '0');
 				fmt++;
+			}
+		}
+
+		// read precision
+		prec = 0;
+		if(*fmt == '.') {
+			flags |= PRECISION;
+			if(*++fmt == '*') {
+				prec = va_arg(ap, ulong);
+				fmt++;
+			}
+			else {
+				while(*fmt >= '0' && *fmt <= '9') {
+					prec = prec * 10 + (*fmt - '0');
+					fmt++;
+				}
 			}
 		}
 

@@ -9,6 +9,7 @@
 
 #include <mem/DataSpace.h>
 #include <stream/Serial.h>
+#include <Logging.h>
 #include <String.h>
 #include <cstring>
 
@@ -53,6 +54,7 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
 	for(size_t i = 0; i < count; i++) {
 		_tables[i] = reinterpret_cast<ACPI::RSDT*>(
 				_ds->virt() + (min & (ExecEnv::PAGE_SIZE - 1)) - min + tables[i]);
+		LOG(Logging::ACPI,Serial::get().writef("ACPI: found table %.4s\n",_tables[i]->signature));
 	}
 }
 
@@ -72,8 +74,11 @@ HostACPI::RSDP *HostACPI::get_rsdp() {
 	DataSpace *ds = new DataSpace(BIOS_MEM_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,BIOS_MEM_ADDR);
 	char *area = reinterpret_cast<char*>(ds->virt());
 	for(uintptr_t off = 0; off < BIOS_MEM_SIZE; off += 16) {
-		if(memcmp(area + off,"RSD PTR ",8) == 0 && checksum(area + off,20) == 0)
+		if(memcmp(area + off,"RSD PTR ",8) == 0 && checksum(area + off,20) == 0) {
+			LOG(Logging::ACPI,Serial::get().writef(
+					"ACPI: found RSDP in Bios readonly memory range @ %p\n",area + off));
 			return reinterpret_cast<RSDP*>(area + off);
+		}
 	}
 	delete ds;
 
@@ -83,8 +88,11 @@ HostACPI::RSDP *HostACPI::get_rsdp() {
 	ds = new DataSpace(BIOS_EBDA_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,ebda * 16);
 	area = reinterpret_cast<char*>(ds->virt());
 	for(uintptr_t off = 0; off < BIOS_EBDA_SIZE; off += 16) {
-		if(memcmp(area + off,"RSD PTR ",8) == 0 && checksum(area + off,20) == 0)
+		if(memcmp(area + off,"RSD PTR ",8) == 0 && checksum(area + off,20) == 0) {
+			LOG(Logging::ACPI,Serial::get().writef(
+					"ACPI: found RSDP in Bios EDBA @ %p\n",area + off));
 			return reinterpret_cast<RSDP*>(area + off);
+		}
 	}
 	delete ds;
 

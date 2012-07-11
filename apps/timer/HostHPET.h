@@ -170,5 +170,4 @@ private:
 	HPETTimer _timer[MAX_TIMERS];
 	timevalue_t _freq;
 	volatile timevalue_t _last;
-	static bool _verbose;
 };

@@ -17,6 +17,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <Logging.h>
+
 #include "HostKeyboard.h"
 
 using namespace nul;
@@ -251,7 +253,7 @@ bool HostKeyboard::enable_devices() {
 void HostKeyboard::enable_mouse() {
 	// put mouse in streaming mode
 	if(!write_mouse_ack(MOUSE_CMD_STREAMING))
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 
 	// enable mouse-wheel by setting sample-rate to 200, 100 and 80 and reading the device-id
 	write_mouse_ack(MOUSE_CMD_SETSAMPLE);
@@ -331,8 +333,10 @@ bool HostKeyboard::handle_aux(Mouse::Packet &data,uint8_t byte) {
 		case 0xfe:
 			if(byte == 0xaa)
 				_mousestate++;
-			else
-				Serial::get().writef("kb: %s no reset ack %x\n",__func__,byte);
+			else {
+				LOG(Logging::KEYBOARD,Serial::get().writef(
+						"kb: %s no reset ack %x\n",__func__,byte));
+			}
 			return false;
 
 		// wait for reset id
@@ -341,15 +345,18 @@ bool HostKeyboard::handle_aux(Mouse::Packet &data,uint8_t byte) {
 				_mousestate = 0;
 				enable_mouse();
 			}
-			else
-				Serial::get().writef("kb: %s unknown mouse id %x\n",__func__,byte);
+			else {
+				LOG(Logging::KEYBOARD,Serial::get().writef(
+						"kb: %s unknown mouse id %x\n",__func__,byte));
+			}
 			return false;
 
 		// first byte of packet
 		case 0:
 			// not in sync?
 			if(~byte & 0x8) {
-				Serial::get().writef("kb: %s mouse not in sync - drop %x\n",__func__,byte);
+				LOG(Logging::KEYBOARD,Serial::get().writef(
+						"kb: %s mouse not in sync - drop %x\n",__func__,byte));
 				return false;
 			}
 			data.status = byte;
@@ -484,7 +491,7 @@ void HostKeyboard::reset() {
 		_port_data.in<uint8_t>();
 
 	if(!read_cmd(KBC_CMD_READ_STATUS,cmdbyte))
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 
 	cmdbyte &= ~KBC_CMDBYTE_TRANSPSAUX;
 	// we enable translation if scset == 1
@@ -494,39 +501,41 @@ void HostKeyboard::reset() {
 	// set translation and enable irqs
 	if(!write_cmd(KBC_CMD_SET_STATUS,cmdbyte | KBC_CMDBYTE_IRQ1 | KBC_CMDBYTE_IRQ2) ||
 			!read_cmd(KBC_CMD_READ_STATUS,cmdbyte)) {
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 	}
 	_scset1 |= !!(cmdbyte & KBC_CMDBYTE_TRANSPSAUX);
 
 	if(!enable_devices())
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 
 	// default+disable Keyboard
 	if(!write_keyboard_ack(KB_CMD_DISABLE_SCAN))
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 
 	// switch to our scancode set
 	if(!_scset1) {
 		if(!(write_keyboard_ack(KB_CMD_GETSET_SCANCODE) && write_keyboard_ack(2))) {
-			Serial::get().writef("kb: %s() failed at %d -- buggy keyboard?\n",__func__,__LINE__);
+			LOG(Logging::KEYBOARD,Serial::get().writef(
+					"kb: %s() failed at %d -- buggy keyboard?\n",__func__,__LINE__));
 			_scset1 = true;
 		}
 	}
 
 	// enable Keyboard
 	if(!write_keyboard_ack(KB_CMD_ENABLE_SCAN))
-		Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+		LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 
 	if(_mouse_enabled) {
 		// reset mouse, we enable data reporting later after the reset is completed
 		if(!write_mouse_ack(MOUSE_CMD_RESET)) {
-			Serial::get().writef("kb: %s() failed at %d\nDisabling mouse.\n",__func__,__LINE__);
+			LOG(Logging::KEYBOARD,Serial::get().writef(
+					"kb: %s() failed at %d\nDisabling mouse.\n",__func__,__LINE__));
 			_mouse_enabled = false;
 		}
 
 		// wait until we got response from the mice
 		if(!wait_output_full())
-			Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__);
+			LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
 	}
 
 	// enable receiving
