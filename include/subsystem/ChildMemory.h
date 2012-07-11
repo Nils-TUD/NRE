@@ -17,7 +17,7 @@
 
 extern void test_reglist();
 
-namespace nul {
+namespace nre {
 
 class ChildMemoryException : public Exception {
 public:

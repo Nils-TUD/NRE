@@ -19,7 +19,7 @@
 #include "VCPUBackend.h"
 #include "Vancouver.h"
 
-using namespace nul;
+using namespace nre;
 
 Motherboard *VCPUBackend::_mb = 0;
 bool VCPUBackend::_tsc_offset = false;

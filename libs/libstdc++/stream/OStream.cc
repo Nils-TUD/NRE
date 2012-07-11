@@ -21,7 +21,7 @@
 #include <util/Digits.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 char OStream::_hexchars_big[] = "0123456789ABCDEF";
 char OStream::_hexchars_small[] = "0123456789abcdef";

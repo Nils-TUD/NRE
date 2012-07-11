@@ -9,7 +9,7 @@
 #include <util/Atomic.h>
 #include "dlmalloc-config.h"
 
-using namespace nul;
+using namespace nre;
 
 typedef void *(*malloc_func)(size_t);
 typedef void *(*realloc_func)(void*,size_t);

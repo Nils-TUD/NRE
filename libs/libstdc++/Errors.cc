@@ -10,7 +10,7 @@
 #include <arch/Defines.h>
 #include <Errors.h>
 
-namespace nul {
+namespace nre {
 
 static const char *msgs[] = {
 	/* E_SUCCESS */ 		"Successful Operation",

@@ -32,7 +32,7 @@
 #include <CPU.h>
 #include <util/Atomic.h>
 
-namespace nul {
+namespace nre {
 
 class OStream;
 class Child;

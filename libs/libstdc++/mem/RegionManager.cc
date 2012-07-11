@@ -19,7 +19,7 @@
 #include <mem/RegionManager.h>
 #include <stream/OStream.h>
 
-namespace nul {
+namespace nre {
 
 OStream &operator<<(OStream &os,const RegionManager &rm) {
 	for(size_t i = 0; i < RegionManager::MAX_REGIONS; ++i) {

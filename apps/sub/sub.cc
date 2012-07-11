@@ -20,7 +20,7 @@
 #include <kobj/Sm.h>
 #include <subsystem/ChildManager.h>
 
-using namespace nul;
+using namespace nre;
 
 static char prog[] = {
 #include "../../test.dump"

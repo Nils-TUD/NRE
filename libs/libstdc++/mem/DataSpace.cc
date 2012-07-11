@@ -11,14 +11,14 @@
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <service/Session.h>
-#include <service/Service.h>
+#include <ipc/Session.h>
+#include <ipc/Service.h>
 #include <stream/Serial.h>
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 #include <CPU.h>
 
-namespace nul {
+namespace nre {
 
 void DataSpace::handle_response(UtcbFrameRef& uf) {
 	ErrorCode res;

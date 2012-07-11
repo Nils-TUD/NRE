@@ -38,7 +38,7 @@ static inline void unlock(spinlock_t *val) {
 }
 
 #ifdef __cplusplus
-namespace nul {
+namespace nre {
 
 class SpinLock {
 public:

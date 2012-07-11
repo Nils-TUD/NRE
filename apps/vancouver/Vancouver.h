@@ -29,13 +29,13 @@
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	Vancouver(const char *args,size_t ramsize)
-			: _lt_input(keyboard_thread,nul::CPU::current().log_id()), _sc_input(&_lt_input,nul::Qpd()),
+			: _lt_input(keyboard_thread,nre::CPU::current().log_id()), _sc_input(&_lt_input,nre::Qpd()),
 			  _mb(), _timeouts(_mb),
-			  _guest_mem(ramsize,nul::DataSpaceDesc::ANONYMOUS,nul::DataSpaceDesc::RWX),
+			  _guest_mem(ramsize,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RWX),
 			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
 		create_devices(args);
 		create_vcpus();
-		_lt_input.set_tls<Vancouver*>(nul::Thread::TLS_PARAM,this);
+		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
 		_sc_input.start();
 	}
 
@@ -54,14 +54,14 @@ private:
 	void create_devices(const char *args);
 	void create_vcpus();
 
-	nul::GlobalThread _lt_input;
-	nul::Sc _sc_input;
+	nre::GlobalThread _lt_input;
+	nre::Sc _sc_input;
 	Motherboard _mb;
 	Timeouts _timeouts;
-	nul::DataSpace _guest_mem;
+	nre::DataSpace _guest_mem;
 	size_t _guest_size;
-	nul::Connection _conscon;
-	nul::ConsoleSession _conssess;
+	nre::Connection _conscon;
+	nre::ConsoleSession _conssess;
 };
 
-extern nul::UserSm globalsm;
+extern nre::UserSm globalsm;

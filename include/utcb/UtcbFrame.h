@@ -29,7 +29,7 @@
 #include <Assert.h>
 #include <util/Math.h>
 
-namespace nul {
+namespace nre {
 
 class Pt;
 class UtcbFrameRef;

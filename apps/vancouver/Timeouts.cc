@@ -13,7 +13,7 @@
 #include "bus/profile.h"
 #include "Timeouts.h"
 
-using namespace nul;
+using namespace nre;
 
 void Timeouts::timer_thread(void*) {
 	Timeouts *to = Thread::current()->get_tls<Timeouts*>(Thread::TLS_PARAM);

@@ -1931,7 +1931,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK ;
 {entry->execute = exec_80c2_add_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -1988,7 +1988,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {fetch_code(entry, 2);entry->immediate = *reinterpret_cast<short *>(entry->data+entry->inst_len - 2);entry->execute = exec_81c2_add_1; } else {fetch_code(entry, 4);entry->immediate = *reinterpret_cast<int   *>(entry->data+entry->inst_len - 4);entry->execute = exec_81c2_add_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2045,7 +2045,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_83c2_add_1; } else {entry->execute = exec_83c2_add_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2130,7 +2130,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION|IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_8d_lea_1; } else {entry->execute = exec_8d_lea_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lea not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lea not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0x8e:
@@ -2151,7 +2151,7 @@ entry->flags = IC_MODRM ;
 if (entry->operand_size == 1) {entry->execute = exec_8f00_pop_1; } else {entry->execute = exec_8f00_pop_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2379,7 +2379,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK ;
 {entry->execute = exec_c0c2_rol_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2437,7 +2437,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_c1c2_rol_1; } else {entry->execute = exec_c1c2_rol_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2463,7 +2463,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_c4_les_1; } else {entry->execute = exec_c4_les_2; } ;
 } else  {  ;
-nul::Serial::get().writef("les not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("les not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0xc5:
@@ -2475,7 +2475,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_c5_lds_1; } else {entry->execute = exec_c5_lds_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lds not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lds not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0xc6:
@@ -2489,7 +2489,7 @@ entry->flags = IC_ASM|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_c602_mov_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2504,7 +2504,7 @@ entry->flags = IC_ASM|IC_MODRM ;
 if (entry->operand_size == 1) {fetch_code(entry, 2);entry->immediate = *reinterpret_cast<short *>(entry->data+entry->inst_len - 2);entry->execute = exec_c702_mov_1; } else {fetch_code(entry, 4);entry->immediate = *reinterpret_cast<int   *>(entry->data+entry->inst_len - 4);entry->execute = exec_c702_mov_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2600,7 +2600,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK ;
 {entry->execute = exec_d000_rol_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2651,7 +2651,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_d100_rol_1; } else {entry->execute = exec_d100_rol_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2709,7 +2709,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK ;
 {entry->execute = exec_d200_rol_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2767,7 +2767,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_d300_rol_1; } else {entry->execute = exec_d300_rol_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2799,7 +2799,7 @@ entry->flags = IC_MODRM ;
 {entry->execute = exec_d938_fnstcw_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2818,7 +2818,7 @@ entry->flags = IC_MODRM ;
 {entry->execute = exec_da10_ficom_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2840,7 +2840,7 @@ case 0x20 & 0x38: { ;
 {entry->execute = exec_dd20_frstor_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -2859,7 +2859,7 @@ entry->flags = IC_MODRM ;
 {entry->execute = exec_de10_ficom_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3043,7 +3043,7 @@ entry->flags = IC_ASM|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK ;
 {entry->execute = exec_f610_not_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3088,7 +3088,7 @@ entry->flags = IC_ASM|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_f710_not_1; } else {entry->execute = exec_f710_not_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3137,7 +3137,7 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_LOADFLAGS|IC_RMW|IC_MODRM|IC_BYTE|IC_LOCK 
 {entry->execute = exec_fe00_inc_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3181,13 +3181,13 @@ entry->flags = IC_ASM|IC_SAVEFLAGS|IC_LOADFLAGS|IC_RMW|IC_MODRM|IC_LOCK ;
 if (entry->operand_size == 1) {entry->execute = exec_ff00_inc_1; } else {entry->execute = exec_ff00_inc_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
 default:
 	      fetch_code(entry, 4);
-	      nul::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
+	      nre::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
 	      UNIMPLEMENTED(this);
 	  }
 	}
@@ -3232,7 +3232,7 @@ entry->flags = IC_MODRM ;
 {entry->execute = exec_0f0000_sldt_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3245,7 +3245,7 @@ case 0x38 & 0x38: { ;
 if (~entry->modrminfo & MRM_REG) { ;
 {entry->execute = exec_0f0138_invlpg_0; } ;
 } else  {  ;
-nul::Serial::get().writef("invlpg not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("invlpg not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; } ;
 case 0x30 & 0x38: { ;
@@ -3266,7 +3266,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_0f0118_lidt_1; } else {entry->execute = exec_0f0118_lidt_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lidt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lidt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; } ;
 case 0x10 & 0x38: { ;
@@ -3275,7 +3275,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_0f0110_lgdt_1; } else {entry->execute = exec_0f0110_lgdt_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lgdt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lgdt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; } ;
 case 0x08 & 0x38: { ;
@@ -3283,7 +3283,7 @@ case 0x08 & 0x38: { ;
 if (~entry->modrminfo & MRM_REG) { ;
 if (entry->operand_size == 1) {entry->execute = exec_0f0108_sidt_1; } else {entry->execute = exec_0f0108_sidt_2; } ;
 } else  {  ;
-nul::Serial::get().writef("sidt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("sidt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; } ;
 case 0x00 & 0x38: { ;
@@ -3291,11 +3291,11 @@ case 0x00 & 0x38: { ;
 if (~entry->modrminfo & MRM_REG) { ;
 if (entry->operand_size == 1) {entry->execute = exec_0f0100_sgdt_1; } else {entry->execute = exec_0f0100_sgdt_2; } ;
 } else  {  ;
-nul::Serial::get().writef("sgdt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("sgdt not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3349,7 +3349,7 @@ if (entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_MODRM ;
 {entry->execute = exec_0f20_mov__cr0__edx_0; } ;
 } else  {  ;
-nul::Serial::get().writef("mov %%cr0,%%edx not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("mov %%cr0,%%edx not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0x21:
@@ -3361,7 +3361,7 @@ if (entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_MODRM ;
 {entry->execute = exec_0f21_mov__db0__edx_0; } ;
 } else  {  ;
-nul::Serial::get().writef("mov %%db0,%%edx not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("mov %%db0,%%edx not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0x22:
@@ -3373,7 +3373,7 @@ if (entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_MODRM ;
 {entry->execute = exec_0f22_mov__edx__cr0_0; } ;
 } else  {  ;
-nul::Serial::get().writef("mov %%edx,%%cr0 not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("mov %%edx,%%cr0 not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0x23:
@@ -3385,7 +3385,7 @@ if (entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_MODRM ;
 {entry->execute = exec_0f23_mov__edx__db0_0; } ;
 } else  {  ;
-nul::Serial::get().writef("mov %%edx,%%db0 not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("mov %%edx,%%db0 not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0x30:
@@ -3703,7 +3703,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9000_seto_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3717,7 +3717,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9100_setno_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3731,7 +3731,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9200_setb_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3745,7 +3745,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9300_setae_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3759,7 +3759,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9400_sete_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3773,7 +3773,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9500_setne_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3787,7 +3787,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9600_setbe_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3801,7 +3801,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9700_seta_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3815,7 +3815,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9800_sets_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3829,7 +3829,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9900_setns_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3843,7 +3843,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9a00_setp_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3857,7 +3857,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9b00_setnp_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3871,7 +3871,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9c00_setl_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3885,7 +3885,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9d00_setge_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3899,7 +3899,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9e00_setle_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -3913,7 +3913,7 @@ entry->flags = IC_BYTE|IC_ASM|IC_LOADFLAGS|IC_MODRM|IC_BYTE ;
 {entry->execute = exec_0f9f00_setg_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -4006,7 +4006,7 @@ case 0x00 & 0x38: { ;
 {entry->execute = exec_0fae00_fxsave_0; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -4043,7 +4043,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_0fb2_lss_1; } else {entry->execute = exec_0fb2_lss_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lss not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lss not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0xb3:
@@ -4063,7 +4063,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_0fb4_lfs_1; } else {entry->execute = exec_0fb4_lfs_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lfs not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lfs not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0xb5:
@@ -4075,7 +4075,7 @@ if (~entry->modrminfo & MRM_REG) { ;
 entry->flags = IC_DIRECTION ;
 if (entry->operand_size == 1) {entry->execute = exec_0fb5_lgs_1; } else {entry->execute = exec_0fb5_lgs_2; } ;
 } else  {  ;
-nul::Serial::get().writef("lgs not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
+nre::Serial::get().writef("lgs not implemented at %x - %x instr %02x%02x%02x\n", _cpu->eip, entry->modrminfo, entry->data[0], entry->data[1], entry->data[2]);  ;
 UNIMPLEMENTED(this); } ;
 break; }
 case 0xb6:
@@ -4123,7 +4123,7 @@ entry->flags = IC_READONLY|IC_SAVEFLAGS|IC_ASM|IC_MODRM ;
 if (entry->operand_size == 1) {entry->execute = exec_0fbae2_bt_1; } else {entry->execute = exec_0fbae2_bt_2; } ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -4200,7 +4200,7 @@ case 0x08 & 0x38: { ;
 UNIMPLEMENTED(this) ;
 break; } ;
 default: ;
-nul::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
+nre::Serial::get().writef("unimpl GRP case %02x%02x%02x at %d\n", entry->data[0], entry->data[1], entry->data[2], __LINE__) ;
 UNIMPLEMENTED(this) ;
 } ;
 break; }
@@ -4213,7 +4213,7 @@ entry->flags = IC_ASM ;
 break; }
 default:
 	      fetch_code(entry, 4);
-	      nul::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
+	      nre::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
 	      UNIMPLEMENTED(this);
 	  }
 	}
@@ -4243,7 +4243,7 @@ UNIMPLEMENTED(this) ;
 break; }
 default:
 	      fetch_code(entry, 4);
-	      nul::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
+	      nre::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
 	      UNIMPLEMENTED(this);
 	  }
 	}
@@ -4263,7 +4263,7 @@ case 0xe4:
 break; }
 default:
 	      fetch_code(entry, 4);
-	      nul::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
+	      nre::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
 	      UNIMPLEMENTED(this);
 	  }
 	}
@@ -4279,7 +4279,7 @@ entry->dst = &_cpu->eax ;
 break; }
 default:
 	      fetch_code(entry, 4);
-	      nul::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
+	      nre::Serial::get().writef("unimplemented case %x at line %d code %02x%02x%02x\n", code, __LINE__, entry->data[0], entry->data[1], entry->data[2]);
 	      UNIMPLEMENTED(this);
 	  }
 	}

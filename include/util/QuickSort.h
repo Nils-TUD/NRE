@@ -20,7 +20,7 @@
 
 #include <util/Util.h>
 
-namespace nul {
+namespace nre {
 
 template<typename T>
 class Quicksort {

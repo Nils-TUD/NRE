@@ -24,7 +24,7 @@
 #include <stream/OStringStream.h>
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class Util {
 public:

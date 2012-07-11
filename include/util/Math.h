@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 
-namespace nul {
+namespace nre {
 
 class Math {
 public:

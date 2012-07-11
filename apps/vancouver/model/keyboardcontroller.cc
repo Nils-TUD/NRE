@@ -23,7 +23,7 @@
 #include "../bus/helper.h"
 #include "keyboardutil.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A PS2 keyboard controller.

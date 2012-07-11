@@ -15,14 +15,14 @@
 
 #define LOG(lvl,expr) 	\
 	do { \
-		if(nul::Logging::level & (lvl)) { \
-			ScopedLock<nul::UserSm> guard(&nul::Logging::sm); \
+		if(nre::Logging::level & (lvl)) { \
+			ScopedLock<nre::UserSm> guard(&nre::Logging::sm); \
 			(expr); \
 		} \
 	} \
 	while(0);
 
-namespace nul {
+namespace nre {
 
 class Logging {
 public:

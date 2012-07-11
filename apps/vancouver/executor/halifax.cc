@@ -21,7 +21,7 @@
 #include "cpustate.h"
 #include "instcache.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Halifax: an instruction emulator.

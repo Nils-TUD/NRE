@@ -21,7 +21,7 @@
 #include <util/Math.h>
 #include <Hip.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * A clock can be used to convert time from TSC to a different time domain and vice versa.
@@ -96,12 +96,26 @@ public:
 		return delta(_dst_freq,tsc);
 	}
 
+	/**
+	 * @param freq the frequency
+	 * @return the current time in the given frequency
+	 */
 	timevalue_t time(timevalue_t freq) const {
 		return time_of(freq,source_time());
 	}
+	/**
+	 * @param freq the frequency
+	 * @param tsc the time
+	 * @return the given time in the given frequency
+	 */
 	timevalue_t time_of(timevalue_t freq,timevalue_t tsc) const {
 		return Math::muldiv128(tsc,freq,_src_freq);
 	}
+	/**
+	 * @param freq the frequency
+	 * @param tsc the time
+	 * @return the delta of now and the given time in the given frequency
+	 */
 	timevalue_t delta(timevalue_t freq,timevalue_t tsc) const {
 		timevalue_t now = source_time();
 		if(now > tsc)

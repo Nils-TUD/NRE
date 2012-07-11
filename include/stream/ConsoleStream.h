@@ -11,12 +11,12 @@
 
 #include <stream/OStream.h>
 #include <stream/IStream.h>
-#include <service/Connection.h>
-#include <service/Session.h>
-#include <dev/Console.h>
+#include <ipc/Connection.h>
+#include <ipc/Session.h>
+#include <services/Console.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 class ConsoleStream : public IStream, public OStream {
 public:

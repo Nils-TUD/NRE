@@ -22,7 +22,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A single counter of a PIT.

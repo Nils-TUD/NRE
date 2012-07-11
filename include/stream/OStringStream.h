@@ -21,7 +21,7 @@
 #include <stream/OStream.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 class OStringStream : public OStream {
 public:

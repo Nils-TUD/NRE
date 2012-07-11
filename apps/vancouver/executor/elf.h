@@ -24,14 +24,14 @@
 #include "../bus/helper.h"
 
 struct Elf {
-	static unsigned is_not_elf(const nul::ElfEh *elf,unsigned long modsize) {
-		check1(1,modsize < sizeof(nul::ElfPh));
+	static unsigned is_not_elf(const nre::ElfEh *elf,unsigned long modsize) {
+		check1(1,modsize < sizeof(nre::ElfPh));
 		check1(2,modsize < elf->e_phoff + elf->e_phentsize * elf->e_phnum);
 		check1(3,
 				!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' && elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'));
 		check1(4,!(elf->e_ident[4] == 0x01 && elf->e_ident[5] == 0x01));
 		check1(5,!(elf->e_type==2 && elf->e_machine==0x03 && elf->e_version==1));
-		check1(6,!(sizeof(nul::ElfPh) <= elf->e_phentsize));
+		check1(6,!(sizeof(nre::ElfPh) <= elf->e_phentsize));
 		return 0;
 	}
 
@@ -40,14 +40,14 @@ public:
 	 * Get the size of the PT_LOAD sections.
 	 */
 	static unsigned long loaded_memsize(char *module,unsigned long modsize) {
-		nul::ElfEh *elf = reinterpret_cast<nul::ElfEh*>(module);
+		nre::ElfEh *elf = reinterpret_cast<nre::ElfEh*>(module);
 		if(is_not_elf(elf,modsize))
 			return 0;
 
 		unsigned long start = ~0ul;
 		unsigned long end = 0;
 		for(unsigned j = 0; j < elf->e_phnum; j++) {
-			nul::ElfPh *ph = reinterpret_cast<nul::ElfPh*>(module + elf->e_phoff + j * elf->e_phentsize);
+			nre::ElfPh *ph = reinterpret_cast<nre::ElfPh*>(module + elf->e_phoff + j * elf->e_phentsize);
 			if(ph->p_type != 1)
 				continue;
 			if(start > ph->p_paddr)
@@ -66,11 +66,11 @@ public:
 			unsigned long &maxptr,unsigned long mem_size,unsigned long mem_offset,
 			unsigned long long magic) {
 		unsigned res;
-		nul::ElfEh *elf = reinterpret_cast<nul::ElfEh*>(module);
+		nre::ElfEh *elf = reinterpret_cast<nre::ElfEh*>(module);
 		check1(res,res = is_not_elf(elf, modsize));
 		rip = elf->e_entry;
 		for(unsigned j = 0; j < elf->e_phnum; j++) {
-			nul::ElfPh *ph = reinterpret_cast<nul::ElfPh*>(module + elf->e_phoff + j * elf->e_phentsize);
+			nre::ElfPh *ph = reinterpret_cast<nre::ElfPh*>(module + elf->e_phoff + j * elf->e_phentsize);
 			if(ph->p_type != 1)
 				continue;
 			check1(7,modsize < ph->p_offset + ph->p_filesz);

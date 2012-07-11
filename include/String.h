@@ -13,7 +13,7 @@
 #include <stream/OStream.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 class String {
 public:

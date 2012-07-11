@@ -22,7 +22,7 @@
 #include <Exception.h>
 #include <Assert.h>
 
-namespace nul {
+namespace nre {
 
 class TimeoutListException : public Exception {
 public:

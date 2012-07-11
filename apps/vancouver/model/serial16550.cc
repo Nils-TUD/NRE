@@ -22,7 +22,7 @@
 #include "../bus/discovery.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Implements a 16550 UART.

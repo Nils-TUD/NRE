@@ -14,7 +14,7 @@
 #include <CPU.h>
 #include <util/Math.h>
 
-namespace nul {
+namespace nre {
 
 // TODO what to do with this class?
 class Caps {

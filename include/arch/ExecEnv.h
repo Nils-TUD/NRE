@@ -24,7 +24,7 @@
 
 #define PORTAL	REGPARMS(1)
 
-namespace nul {
+namespace nre {
 
 class Thread;
 class Pd;

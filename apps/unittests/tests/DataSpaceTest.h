@@ -20,4 +20,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase dstest;
+extern const nre::test::TestCase dstest;

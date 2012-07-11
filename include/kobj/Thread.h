@@ -25,7 +25,7 @@
 #include <util/Atomic.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 class Pd;
 class RCU;

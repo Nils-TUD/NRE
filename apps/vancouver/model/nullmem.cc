@@ -19,7 +19,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Device that ignores all operations.

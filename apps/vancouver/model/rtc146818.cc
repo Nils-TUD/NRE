@@ -23,7 +23,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Device model for the MC146818 realtime clock.
@@ -39,7 +39,7 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 
 	DBus<MessageTimer> &_bus_timer;
 	DBus<MessageIrqLines> &_bus_irqlines;
-	nul::Clock &_clock;
+	nre::Clock &_clock;
 	unsigned _timer;
 	unsigned short _iobase;
 	unsigned _irq;

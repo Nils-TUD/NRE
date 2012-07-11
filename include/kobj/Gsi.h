@@ -16,7 +16,7 @@
 #include <Syscalls.h>
 #include <CPU.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Represents a global system interrupt. Creation of a GSI allocates it from the parent and

@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace nul {
+namespace nre {
 
 /**
  * RAII class for dynamic memory.

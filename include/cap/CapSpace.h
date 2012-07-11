@@ -24,7 +24,7 @@
 #include <util/ScopedLock.h>
 #include <Hip.h>
 
-namespace nul {
+namespace nre {
 
 class CapException : public Exception {
 public:

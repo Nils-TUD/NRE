@@ -38,7 +38,7 @@ class VCpu;
  * This also knows the backend devices.
  */
 class Motherboard {
-	nul::Clock _clock;
+	nre::Clock _clock;
 
 	/**
 	 * To avoid bugs we disallow the copy constructor.
@@ -81,7 +81,7 @@ public:
 	//DBus<MessageVesa>			bus_vesa;
 	VCpu *last_vcpu;
 
-	nul::Clock &clock() {
+	nre::Clock &clock() {
 		return _clock;
 	}
 
@@ -142,10 +142,10 @@ public:
 				CreateFunction func = reinterpret_cast<CreateFunction>(*p++);
 				char **strings = reinterpret_cast<char **>(*p++);
 
-				unsigned prefixlen = nul::Math::min(strcspn(current,word_separator()),
+				unsigned prefixlen = nre::Math::min(strcspn(current,word_separator()),
 				        strcspn(current,wordparam_separator()));
 				if(strlen(strings[0]) == prefixlen && !memcmp(current,strings[0],prefixlen)) {
-					nul::Serial::get().writef("\t=> %.*s <=\n",arglen,current);
+					nre::Serial::get().writef("\t=> %.*s <=\n",arglen,current);
 
 					const char *s = current + prefixlen;
 					if(s[0] && strcspn(current + prefixlen,wordparam_separator()) == 0)
@@ -153,10 +153,10 @@ public:
 					const char *start = s;
 					unsigned long argv[16];
 					for(unsigned j = 0; j < 16; j++) {
-						unsigned alen = nul::Math::min(strcspn(s,param_separator()),
+						unsigned alen = nre::Math::min(strcspn(s,param_separator()),
 						        strcspn(s,word_separator()));
 						if(alen)
-							argv[j] = nul::IStringStream::read_from<ulong>(s);
+							argv[j] = nre::IStringStream::read_from<ulong>(s);
 						else
 							argv[j] = ~0UL;
 						s += alen;
@@ -168,7 +168,7 @@ public:
 				}
 			}
 			if(!handled)
-				nul::Serial::get().writef("Ignored parameter: '%.*s'\n",arglen,current);
+				nre::Serial::get().writef("Ignored parameter: '%.*s'\n",arglen,current);
 		}
 	}
 
@@ -181,7 +181,7 @@ public:
 		COUNTER_SET("Time",t - orig_time);
 		orig_time = t;
 
-		nul::Serial::get().writef("VMSTAT:\n");
+		nre::Serial::get().writef("VMSTAT:\n");
 
 		extern long __profile_table_start,__profile_table_end;
 		long *p = &__profile_table_start;
@@ -189,7 +189,7 @@ public:
 			char *name = reinterpret_cast<char *>(*p++);
 			long v = *p++;
 			if(v && ((v - *p) || full))
-				nul::Serial::get().writef("\t%12s %16ld %16lx diff %16ld\n",name,v,v,v - *p);
+				nre::Serial::get().writef("\t%12s %16ld %16lx diff %16ld\n",name,v,v,v - *p);
 			*p++ = v;
 		}
 	}

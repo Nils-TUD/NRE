@@ -20,5 +20,5 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase utcbnest;
-extern const nul::test::TestCase utcbperf;
+extern const nre::test::TestCase utcbnest;
+extern const nre::test::TestCase utcbperf;

@@ -23,7 +23,7 @@
 #include "../bus/dma.h"
 #include "bios.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Virtual Bios disk routines.

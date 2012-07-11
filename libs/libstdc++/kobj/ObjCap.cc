@@ -21,7 +21,7 @@
 #include <cap/CapSpace.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 ObjCap::~ObjCap() {
 	if(_sel != INVALID) {

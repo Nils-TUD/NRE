@@ -13,7 +13,7 @@
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 class VCPU : public Ec {
 public:

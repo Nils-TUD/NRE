@@ -21,7 +21,7 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <dev/Console.h>
+#include <services/Console.h>
 #include <Compiler.h>
 #include <Desc.h>
 
@@ -339,7 +339,7 @@ struct MessageConsoleView {
 	enum Type {
 		TYPE_GET_INFO
 	} type;
-	nul::ConsoleSession *sess;
+	nre::ConsoleSession *sess;
 	MessageConsoleView(Type _type) : type(_type), sess() {
 	}
 };
@@ -438,7 +438,7 @@ struct MessageVesa
 
 class VCpu;
 typedef void (*ServiceThreadFn)(void *) REGPARMS(0) NORETURN;
-typedef void (*ServicePortalFn)(void *, nul::Utcb *) REGPARMS(0);
+typedef void (*ServicePortalFn)(void *, nre::Utcb *) REGPARMS(0);
 
 /**
  * Request to the host, such as notify irq or request IO region.
@@ -527,7 +527,7 @@ struct MessageHostOp
     } _alloc_service_portal;
     struct {
     	cpu_t cpu;
-      nul::Utcb     **utcb_out;
+      nre::Utcb     **utcb_out;
       capsel_t    ec;            // In/Out parameter; if ~0, then a new cap will be allocated by the calee.
     } _create_ec4pt;
   };
@@ -543,7 +543,7 @@ struct MessageHostOp
     return n;
   }
 
-  static MessageHostOp alloc_service_portal(unsigned *pt_out, ServicePortalFn pt, void *pt_arg, nul::Crd crd, cpu_t cpu = ~0U)
+  static MessageHostOp alloc_service_portal(unsigned *pt_out, ServicePortalFn pt, void *pt_arg, nre::Crd crd, cpu_t cpu = ~0U)
   {
     MessageHostOp n(OP_ALLOC_SERVICE_PORTAL, 0UL);
     n._alloc_service_portal.pt  = pt;  n._alloc_service_portal.pt_arg = pt_arg;
@@ -566,7 +566,7 @@ struct MessageHostOp
     return n;
   }
 
-  static MessageHostOp create_ec4pt(capsel_t &ec, void *obj, cpu_t cpu, nul::Utcb **utcb_out) {
+  static MessageHostOp create_ec4pt(capsel_t &ec, void *obj, cpu_t cpu, nre::Utcb **utcb_out) {
     MessageHostOp n(OP_CREATE_EC4PT, obj);
     n._create_ec4pt.ec = ec;
     n._create_ec4pt.cpu = cpu;

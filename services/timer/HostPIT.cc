@@ -1,0 +1,42 @@
+/*
+ * TODO comment me
+ *
+ * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Economic rights: Technische Universitaet Dresden (Germany)
+ *
+ * This file is part of NUL.
+ *
+ * NUL is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * NUL is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details.
+ */
+
+#include <stream/Serial.h>
+#include <Logging.h>
+
+#include "HostPIT.h"
+
+using namespace nre;
+
+HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE,4), _freq() {
+	timevalue_t value = (FREQ * period_us) / 1000000ULL;
+	if(value == 0 || value > 65535) {
+		Serial::get().writef(
+				"TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n",period_us,DEFAULT_PERIOD);
+		period_us = DEFAULT_PERIOD;
+		value = (FREQ * DEFAULT_PERIOD) / 1000000ULL;
+	}
+
+	_ports.out<uint8_t>(0x34,3);
+	_ports.out<uint8_t>(value,0);
+	_ports.out<uint8_t>(value >> 8,0);
+	_freq = 1000000U / period_us;
+
+	Serial::get().writef("TIMER: PIT initalized. Ticks every %uus (period %Lu, %LuHZ).\n",
+			period_us,value,_freq);
+}

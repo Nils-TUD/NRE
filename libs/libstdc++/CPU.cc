@@ -24,7 +24,7 @@
 
 EXTERN_C void dlmalloc_init();
 
-namespace nul {
+namespace nre {
 
 class CPUInit {
 	CPUInit();

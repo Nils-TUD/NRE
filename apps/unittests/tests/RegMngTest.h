@@ -11,4 +11,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase regmng;
+extern const nre::test::TestCase regmng;

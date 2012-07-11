@@ -9,7 +9,7 @@
 
 #include <Hip.h>
 
-namespace nul {
+namespace nre {
 
 cpu_t Hip::cpu_phys_to_log(cpu_t cpu) const {
 	cpu_t phys = 0;

@@ -20,4 +20,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase catchex;
+extern const nre::test::TestCase catchex;

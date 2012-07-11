@@ -71,9 +71,9 @@ static inline void cpu_move(void * tmp_dst,void *tmp_src,unsigned order) {
 #define check0(X, ...) ({ \
 	unsigned __res; \
 	if ((__res = (X))) { \
-		nul::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, __res); \
-		nul::Serial::get().writef(" " __VA_ARGS__); \
-		nul::Serial::get().writef("\n"); \
+		nre::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, __res); \
+		nre::Serial::get().writef(" " __VA_ARGS__); \
+		nre::Serial::get().writef("\n"); \
 		return; \
 	} \
 })
@@ -84,9 +84,9 @@ static inline void cpu_move(void * tmp_dst,void *tmp_src,unsigned order) {
 #define check1(RET, X, ...) ({ \
 	unsigned __res; \
 	if ((__res = (X))) { \
-		nul::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, __res); \
-		nul::Serial::get().writef(" " __VA_ARGS__); \
-		nul::Serial::get().writef("\n"); \
+		nre::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, __res); \
+		nre::Serial::get().writef(" " __VA_ARGS__); \
+		nre::Serial::get().writef("\n"); \
 		return RET; \
 	} \
 })
@@ -96,9 +96,9 @@ static inline void cpu_move(void * tmp_dst,void *tmp_src,unsigned order) {
  */
 #define check2(GOTO, X, ...) ({ \
 	if ((res = (X))) { \
-		nul::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, res); \
-		nul::Serial::get().writef(" " __VA_ARGS__); \
-		nul::Serial::get().writef("\n"); \
+		nre::Serial::get().writef("%s() line %d: '" #X "' error = %x", __func__, __LINE__, res); \
+		nre::Serial::get().writef(" " __VA_ARGS__); \
+		nre::Serial::get().writef("\n"); \
 		goto GOTO; \
 	} \
 })

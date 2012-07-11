@@ -16,13 +16,13 @@
  * General Public License version 2 for more details.
  */
 
-#include <dev/Console.h>
-#include <dev/Keyboard.h>
+#include <services/Console.h>
+#include <services/Keyboard.h>
 
 #include "../bus/motherboard.h"
 #include "keyboardutil.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A PS2 keyboard gets characters on the hostbus as input and outputs

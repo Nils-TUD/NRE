@@ -22,7 +22,7 @@
 #include <util/Math.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 class CapRange {
 public:

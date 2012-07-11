@@ -12,8 +12,8 @@
 
 #include "RegMngTest.h"
 
-using namespace nul;
-using namespace nul::test;
+using namespace nre;
+using namespace nre::test;
 
 static void test_regmng();
 

@@ -20,7 +20,7 @@
 #include "../bus/discovery.h"
 #include "../bus/vcpu.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * I/OxAPIC model.

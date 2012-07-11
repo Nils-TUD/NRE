@@ -25,7 +25,7 @@
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Represents a scheduling context. A Sc can be bound to a GlobalThread to run it with a specified

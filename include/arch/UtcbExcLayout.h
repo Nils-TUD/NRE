@@ -40,7 +40,7 @@
 		word_t r##NAME;					\
 	}
 
-namespace nul {
+namespace nre {
 
 class UtcbExc : public UtcbHead {
 public:

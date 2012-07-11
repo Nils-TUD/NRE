@@ -27,7 +27,7 @@
 #include <CPU.h>
 #include <pthread.h>
 
-using namespace nul;
+using namespace nre;
 
 EXTERN_C void abort();
 

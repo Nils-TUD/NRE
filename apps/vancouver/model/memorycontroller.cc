@@ -21,7 +21,7 @@
 
 #include "../bus/motherboard.h"
 
-using namespace nul;
+using namespace nre;
 
 class MemoryController : public StaticReceiver<MemoryController> {
 	char *_physmem;

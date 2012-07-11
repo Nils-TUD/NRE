@@ -12,7 +12,7 @@
 #include <kobj/UserSm.h>
 #include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
-#include <dev/Timer.h>
+#include <services/Timer.h>
 #include <util/TimeoutList.h>
 #include <util/ScopedLock.h>
 
@@ -25,18 +25,18 @@ class Timeouts {
 
 public:
 	Timeouts(Motherboard &mb) : _mb(mb), _timeouts(), _timercon("timer"), _timer(_timercon),
-		_last_to(NO_TIMEOUT), _ec(timer_thread,nul::CPU::current().log_id()), _sc(&_ec,nul::Qpd()) {
-		_ec.set_tls<Timeouts*>(nul::Thread::TLS_PARAM,this);
+		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()), _sc(&_ec,nre::Qpd()) {
+		_ec.set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
 		_sc.start();
 	}
 
 	size_t alloc() {
-		nul::ScopedLock<nul::UserSm> guard(&_sm);
+		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		return _timeouts.alloc();
 	}
 
 	void request(size_t nr,timevalue_t to) {
-		nul::ScopedLock<nul::UserSm> guard(&_sm);
+		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		_timeouts.request(nr,to);
 		program();
 	}
@@ -51,11 +51,11 @@ private:
 	void program();
 
 	Motherboard &_mb;
-	nul::UserSm _sm;
-	nul::TimeoutList<32,void> _timeouts;
-	nul::Connection _timercon;
-	nul::TimerSession _timer;
+	nre::UserSm _sm;
+	nre::TimeoutList<32,void> _timeouts;
+	nre::Connection _timercon;
+	nre::TimerSession _timer;
 	timevalue_t _last_to;
-	nul::GlobalThread _ec;
-	nul::Sc _sc;
+	nre::GlobalThread _ec;
+	nre::Sc _sc;
 };

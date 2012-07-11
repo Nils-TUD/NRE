@@ -21,7 +21,7 @@
 #include <arch/Startup.h>
 #include <util/Util.h>
 
-namespace nul {
+namespace nre {
 
 class HipCPU;
 class HipMem;

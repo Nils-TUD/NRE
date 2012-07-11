@@ -21,7 +21,7 @@
 #include "../bus/motherboard.h"
 #include "bios.h"
 
-using namespace nul;
+using namespace nre;
 
 class VirtualBiosTime : public StaticReceiver<VirtualBiosTime>, public BiosCommon {
 	unsigned char tobcd(unsigned char v) {

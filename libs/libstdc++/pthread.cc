@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <util/Atomic.h>
 
-using namespace nul;
+using namespace nre;
 
 int pthread_key_create(pthread_key_t* key,void (*)(void*)) {
 	*key = Thread::current()->create_tls();

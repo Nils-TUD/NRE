@@ -24,7 +24,7 @@
 
 #if USE_UTCB_STACKING
 
-namespace nul {
+namespace nre {
 
 class UtcbFrameRef;
 class UtcbFrame;

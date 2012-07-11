@@ -12,7 +12,7 @@
 #include <arch/Types.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 template<uint BITS>
 class BitField;

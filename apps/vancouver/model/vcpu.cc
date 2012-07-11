@@ -26,7 +26,7 @@
 #include "../bus/vcpu.h"
 #include "../executor/bios.h"
 
-using namespace nul;
+using namespace nre;
 
 class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 #define REGBASE "vcpu.cc"

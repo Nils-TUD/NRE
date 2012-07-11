@@ -10,7 +10,7 @@
 #include <arch/Startup.h>
 #include <Logging.h>
 
-namespace nul {
+namespace nre {
 
 UserSm Logging::sm INIT_PRIO_LOGGING (1);
 

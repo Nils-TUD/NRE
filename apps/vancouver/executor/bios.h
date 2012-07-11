@@ -24,7 +24,7 @@
 #include "../bus/vcpu.h"
 
 #define DEBUG(cpu)		\
-	nul::Serial::get().writef("\t%s eax %x ebx %x ecx %x edx %x eip %x efl %x\n", \
+	nre::Serial::get().writef("\t%s eax %x ebx %x ecx %x edx %x eip %x efl %x\n", \
 			__func__, cpu->eax, cpu->ebx, cpu->ecx, cpu->edx, cpu->eip, cpu->efl)
 
 class BiosCommon : public DiscoveryHelper<BiosCommon> {
@@ -66,7 +66,7 @@ protected:
 		msg.cpu->cs.sel = v[1];
 		msg.cpu->cs.base = v[1] << 4;
 		msg.cpu->rip = v[0];
-		msg.mtr_out |= nul::Mtd::RIP_LEN | nul::Mtd::CS_SS;
+		msg.mtr_out |= nre::Mtd::RIP_LEN | nre::Mtd::CS_SS;
 		return true;
 	}
 
@@ -81,7 +81,7 @@ protected:
 	void error(MessageBios &msg,unsigned char errorcode) {
 		msg.cpu->rfl |= 1;
 		msg.cpu->ah = errorcode;
-		msg.mtr_out |= nul::Mtd::RFLAGS | nul::Mtd::GPR_ACDB;
+		msg.mtr_out |= nre::Mtd::RFLAGS | nre::Mtd::GPR_ACDB;
 	}
 
 	/**

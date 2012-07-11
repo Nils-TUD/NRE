@@ -63,7 +63,7 @@ namespace std {
 	bool uncaught_exception() throw ();
 }
 
-namespace nul {
+namespace nre {
 
 /**
  * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and

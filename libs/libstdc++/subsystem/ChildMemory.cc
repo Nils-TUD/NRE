@@ -19,7 +19,7 @@
 #include <subsystem/ChildMemory.h>
 #include <stream/OStream.h>
 
-namespace nul {
+namespace nre {
 
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
 	os << "\tRegions:\n";

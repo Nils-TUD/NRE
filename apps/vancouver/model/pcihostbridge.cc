@@ -25,7 +25,7 @@
 #include "../executor/bios.h"
 #include "pci.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A PCI host bridge.

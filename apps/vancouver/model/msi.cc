@@ -20,7 +20,7 @@
 #include "../bus/helper.h"
 #include "../bus/vcpu.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Forward Message Signaled IRQs to the local APICs.

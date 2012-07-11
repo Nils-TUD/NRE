@@ -11,6 +11,6 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase cyclertest1;
-extern const nul::test::TestCase cyclertest2;
-extern const nul::test::TestCase cyclertest3;
+extern const nre::test::TestCase cyclertest1;
+extern const nre::test::TestCase cyclertest2;
+extern const nre::test::TestCase cyclertest3;

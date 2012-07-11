@@ -12,7 +12,7 @@
 #include <arch/Types.h>
 #include <Assert.h>
 
-namespace nul {
+namespace nre {
 
 class SListItem {
 public:

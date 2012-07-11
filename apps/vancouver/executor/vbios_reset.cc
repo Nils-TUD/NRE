@@ -20,7 +20,7 @@
 #include "../bus/helper.h"
 #include "bios.h"
 
-using namespace nul;
+using namespace nre;
 
 bool use_x2apic_mode;
 PARAM_HANDLER(x2apic_mode,

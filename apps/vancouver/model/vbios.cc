@@ -25,7 +25,7 @@
 #include "../bus/vcpu.h"
 #include "../executor/bios.h"
 
-using namespace nul;
+using namespace nre;
 
 class VBios: public DiscoveryHelper<VBios>,public StaticReceiver<VBios> {
 public:

@@ -18,7 +18,7 @@
 
 #include <utcb/UtcbFrame.h>
 
-namespace nul {
+namespace nre {
 
 OStream &operator<<(OStream &os,const UtcbFrameRef &frm) {
 	os << "UtcbFrame @ " << frm._utcb << ":\n";

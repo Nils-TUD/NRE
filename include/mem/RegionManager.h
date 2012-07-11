@@ -22,7 +22,7 @@
 #include <Exception.h>
 #include <util/Math.h>
 
-namespace nul {
+namespace nre {
 
 class RegionManagerException : public Exception {
 public:

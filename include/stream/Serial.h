@@ -23,7 +23,7 @@
 
 class Log;
 
-namespace nul {
+namespace nre {
 
 // note that we try to include as few headers as possible, because this class is used for debugging.
 // that is, we lack debugging support in every header that we include since we can't include this

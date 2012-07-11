@@ -21,7 +21,7 @@
 #include <arch/ExecEnv.h>
 #include <utcb/UtcbHead.h>
 
-namespace nul {
+namespace nre {
 
 class Utcb;
 class UtcbFrameRef;

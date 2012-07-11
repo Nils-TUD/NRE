@@ -27,7 +27,7 @@
 #include "../bus/helper.h"
 #include "../bus/vcpu.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Lapic model.

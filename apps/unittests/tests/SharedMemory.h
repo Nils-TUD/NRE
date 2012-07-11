@@ -11,4 +11,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase sharedmem;
+extern const nre::test::TestCase sharedmem;

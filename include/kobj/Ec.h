@@ -21,7 +21,7 @@
 #include <kobj/ObjCap.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 class Pd;
 

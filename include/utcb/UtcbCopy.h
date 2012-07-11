@@ -23,7 +23,7 @@
 #include <util/Math.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 class UtcbFrameRef;
 class UtcbFrame;

@@ -22,7 +22,7 @@
 #include <Compiler.h>
 #include <util/Math.h>
 
-namespace nul {
+namespace nre {
 
 void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uintptr_t stack) {
 	void **sp = reinterpret_cast<void**>(stack);

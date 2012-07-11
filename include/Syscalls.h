@@ -21,7 +21,7 @@
 #include <arch/SyscallABI.h>
 #include <Desc.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * The architecture independent API for performing system calls.

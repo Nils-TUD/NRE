@@ -19,7 +19,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/discovery.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Power Management Timer.

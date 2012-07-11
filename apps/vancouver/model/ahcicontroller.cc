@@ -25,7 +25,7 @@
 #include "sata.h"
 #include "pci.h"
 
-using namespace nul;
+using namespace nre;
 
 class ParentIrqProvider {
 public:

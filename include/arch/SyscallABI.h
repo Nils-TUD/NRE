@@ -20,7 +20,7 @@
 
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class SyscallException : public Exception {
 public:

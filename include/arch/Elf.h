@@ -19,7 +19,7 @@
 
 #include <arch/Types.h>
 
-namespace nul {
+namespace nre {
 
 struct ElfEh {
 	uchar e_ident[16];

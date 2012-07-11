@@ -23,7 +23,7 @@
 /**
  * A generic cpu state class.
  */
-class CpuState: public nul::UtcbExc {
+class CpuState: public nre::UtcbExc {
 public:
 	unsigned cpl() {
 		return (ss.ar >> 5) & 3;

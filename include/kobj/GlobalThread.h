@@ -29,7 +29,7 @@
  */
 EXTERN_C void ec_landing_spot(void);
 
-namespace nul {
+namespace nre {
 
 class Utcb;
 

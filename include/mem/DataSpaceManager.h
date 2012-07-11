@@ -13,7 +13,7 @@
 #include <kobj/UserSm.h>
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 template<class DS>
 class DataSpaceManager;

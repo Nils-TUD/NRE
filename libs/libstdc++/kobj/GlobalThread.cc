@@ -20,7 +20,7 @@
 #include <kobj/GlobalThread.h>
 #include <cap/CapSpace.h>
 
-namespace nul {
+namespace nre {
 
 GlobalThread GlobalThread::_cur INIT_PRIO_GEC (
 	_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&Pd::_cur,_startup_info.stack

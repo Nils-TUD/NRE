@@ -96,5 +96,6 @@ def NulProgram(env, target, source):
 env.NulProgram = NulProgram
 hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')
 env.SConscript('libs/SConscript', 'env', variant_dir = builddir + '/libs')
+env.SConscript('services/SConscript', 'env', variant_dir = builddir + '/services')
 env.SConscript('apps/SConscript', 'env', variant_dir = builddir + '/apps')
 env.SConscript('guests/SConscript', 'guestenv', variant_dir = builddir + '/guests')

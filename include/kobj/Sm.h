@@ -23,7 +23,7 @@
 #include <arch/SyscallABI.h>
 #include <util/ScopedCapSels.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Represents a semaphore.

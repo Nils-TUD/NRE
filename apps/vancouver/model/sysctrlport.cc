@@ -20,7 +20,7 @@
 
 #include "../bus/motherboard.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Implements the systemcontrol ports A+B of a PS/2 system.

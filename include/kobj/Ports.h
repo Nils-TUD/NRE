@@ -24,7 +24,7 @@
 #include <CPU.h>
 #include <util/Util.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Represents I/O ports that are allocated from the parent and released again on destruction.

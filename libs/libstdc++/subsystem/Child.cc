@@ -19,7 +19,7 @@
 #include <subsystem/Child.h>
 #include <stream/OStream.h>
 
-namespace nul {
+namespace nre {
 
 OStream &operator<<(OStream &os,const Child &c) {
 	os << "Child[cmdline='" << c.cmdline() << "', refs=" << c.refs() << ", entry=" << c.entry() << "]:\n";

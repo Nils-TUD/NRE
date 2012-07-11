@@ -11,4 +11,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase delegateperf;
+extern const nre::test::TestCase delegateperf;

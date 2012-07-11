@@ -23,7 +23,7 @@
 #include "../bus/motherboard.h"
 #include "../executor/bios.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A VGA compatible device.

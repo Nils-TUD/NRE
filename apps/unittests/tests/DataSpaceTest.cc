@@ -21,8 +21,8 @@
 
 #include "DataSpaceTest.h"
 
-using namespace nul;
-using namespace nul::test;
+using namespace nre;
+using namespace nre::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE,

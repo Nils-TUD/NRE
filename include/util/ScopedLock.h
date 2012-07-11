@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace nul {
+namespace nre {
 
 /**
  * RAII class for locks. Assumes that the used class template has the method down() to acquire

@@ -102,7 +102,7 @@
  */
 #define rcu_assign_pointer(p, v)	STORE_SHARED(p, v)
 
-namespace nul {
+namespace nre {
 
 class RCU;
 

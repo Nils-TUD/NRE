@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * The base class for all object-capabilities. Manages the selector and capability.

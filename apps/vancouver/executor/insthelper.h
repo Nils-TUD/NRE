@@ -54,7 +54,7 @@ int cpl0_test() {
     fault |= ~desc->ar & 0x80 || !write && ((desc->ar & 0xa) == 0x8) || write && (desc->ar & 0xa) != 0x2;
     if (fault)
       {
-	nul::Serial::get().writef("%s() #%x %x+%d desc %x limit %x base %x esp %x\n", __func__, desc - &_cpu->es, virt, length, desc->ar, desc->limit, desc->base, _cpu->esp);
+	nre::Serial::get().writef("%s() #%x %x+%d desc %x limit %x base %x esp %x\n", __func__, desc - &_cpu->es, virt, length, desc->ar, desc->limit, desc->base, _cpu->esp);
 	if (desc == &_cpu->ss) {  SS0; } else { GP0; }
       }
 
@@ -118,9 +118,9 @@ int helper_HLT ()    { return send_message(CpuMessage::TYPE_HLT); }
 int helper_WBINVD () { return send_message(CpuMessage::TYPE_WBINVD); }
 int helper_INVD ()   { return send_message(CpuMessage::TYPE_INVD); }
 int helper_CLTS()    { _cpu->cr0 &= ~(1<<3); return _fault; }
-int helper_INT3() {  _oeip = _cpu->eip; _mtr_out |= nul::Mtd::RIP_LEN; return _fault = 0x80000603; }
+int helper_INT3() {  _oeip = _cpu->eip; _mtr_out |= nre::Mtd::RIP_LEN; return _fault = 0x80000603; }
 int helper_UD2A() {  return _fault = 0x80000606; }
-int helper_INTO() {  _oeip = _cpu->eip; _mtr_out |= nul::Mtd::RIP_LEN; if (_cpu->efl & EFL_OF) _fault = 0x80000604; return _fault; }
+int helper_INTO() {  _oeip = _cpu->eip; _mtr_out |= nre::Mtd::RIP_LEN; if (_cpu->efl & EFL_OF) _fault = 0x80000604; return _fault; }
 
 
   /**
@@ -241,8 +241,8 @@ helper_LOOPS(JECXZ, 3)
 	_mtr_out |= MTD;						\
       }									\
     }
-helper_LDT(LIDT, id, nul::Mtd::IDTR)
-helper_LDT(LGDT, gd, nul::Mtd::GDTR)
+helper_LDT(LIDT, id, nre::Mtd::IDTR)
+helper_LDT(LGDT, gd, nre::Mtd::GDTR)
 #undef helper_LDT
 
   /**
@@ -263,8 +263,8 @@ helper_LDT(LGDT, gd, nul::Mtd::GDTR)
 	move<2>(reinterpret_cast<char *>(addr)+2, &base);		\
       }									\
   }
-helper_SDT(SIDT,id, nul::Mtd::IDTR)
-helper_SDT(SGDT,gd, nul::Mtd::GDTR)
+helper_SDT(SIDT,id, nre::Mtd::IDTR)
+helper_SDT(SGDT,gd, nre::Mtd::GDTR)
 #undef helper_SDT
 
 
@@ -418,14 +418,14 @@ int helper_MOV__EDX__CR0()
     default: UD0;
     }
   *tmp_dst = tmp;
-  _mtr_out |= nul::Mtd::CR;
+  _mtr_out |= nre::Mtd::CR;
 
   // XXX flush only if paging-bits change
   // update TLB
   return init();
 }
 
-int helper_LMSW(unsigned short value) { _cpu->cr0 = _cpu->cr0 & ~0xeu | value & 0xfu; _mtr_out |= nul::Mtd::CR; return _fault; }
+int helper_LMSW(unsigned short value) { _cpu->cr0 = _cpu->cr0 & ~0xeu | value & 0xfu; _mtr_out |= nre::Mtd::CR; return _fault; }
 
 
 
@@ -505,7 +505,7 @@ int load_idt_descriptor(Descriptor &desc, unsigned event)
     memcpy(desc.values, res, 8);
     // is it a trap, intr or task-gate?
     if (!(0xce00 & (1<<(desc.ar0 & 0x1f)))) {
-      nul::Util::panic("%s event %x %x base %x limit %x cr0 %x\n", __func__, event, desc.ar0, _cpu->id.base, _cpu->id.limit, _cpu->cr0);
+      nre::Util::panic("%s event %x %x base %x limit %x cr0 %x\n", __func__, event, desc.ar0, _cpu->id.base, _cpu->id.limit, _cpu->cr0);
       GP(error);
     }
     // and present?
@@ -567,7 +567,7 @@ int helper_LLDT(unsigned short selector)
     }
   else
     _cpu->ld.ar = 0x1000;
-  _mtr_out |= nul::Mtd::LDTR;
+  _mtr_out |= nre::Mtd::LDTR;
   return _fault;
 }
 
@@ -603,7 +603,7 @@ int set_segment(CpuState::Descriptor *seg, unsigned short sel, bool cplcheck = t
 	  if ((is_ss && ((rpl != desc.dpl() || cplcheck && desc.dpl() != _cpu->cpl()) || ((desc.ar0 & 0x1a) != 0x12)))
 	      || !is_ss && ((((desc.ar0 ^ 0x12) & 0x1a) > 2) || (((desc.ar0 & 0xc) != 0xc) && (rpl > desc.dpl() || cplcheck && _cpu->cpl() > desc.dpl()))))
 	    {
-	      nul::Serial::get().writef("set_segment %x sel %x eip %x efl %x ar %x dpl %x rpl %x cpl %x\n", seg - &_cpu->es, sel, _cpu->eip, _cpu->efl, desc.ar0, desc.dpl(), rpl, _cpu->cpl());
+	      nre::Serial::get().writef("set_segment %x sel %x eip %x efl %x ar %x dpl %x rpl %x cpl %x\n", seg - &_cpu->es, sel, _cpu->eip, _cpu->efl, desc.ar0, desc.dpl(), rpl, _cpu->cpl());
 	      GP(sel);
 	    }
 	  if (~desc.ar0 & 0x80) is_ss ? (SS(sel)) : (NP(sel));
@@ -616,7 +616,7 @@ int set_segment(CpuState::Descriptor *seg, unsigned short sel, bool cplcheck = t
 
 int helper_far_jmp(unsigned tmp_cs, unsigned tmp_eip, unsigned tmp_flag)
 {
-  _mtr_out |= nul::Mtd::CS_SS | nul::Mtd::RFLAGS;
+  _mtr_out |= nre::Mtd::CS_SS | nre::Mtd::RFLAGS;
   if (!_cpu->pm() || _cpu->v86())
     // realmode + v86mode
     {
@@ -675,7 +675,7 @@ int helper_LCALL(void *tmp_src)
 template<unsigned operand_size>
 int helper_IRET()
 {
-  _mtr_out |= nul::Mtd::CS_SS | nul::Mtd::DS_ES | nul::Mtd::FS_GS | nul::Mtd::RFLAGS;
+  _mtr_out |= nre::Mtd::CS_SS | nre::Mtd::DS_ES | nre::Mtd::FS_GS | nre::Mtd::RFLAGS;
   if (_cpu->v86())
     {
       if (_cpu->iopl() != 3) GP0;
@@ -749,7 +749,7 @@ int idt_traversal(unsigned event, unsigned error_code)
 {
   assert(event & 0x80000000);
   assert(event != 0x80000b0e || _cpu->pm() && _cpu->pg());
-  _mtr_out |= nul::Mtd::RFLAGS | nul::Mtd::CS_SS;
+  _mtr_out |= nre::Mtd::RFLAGS | nre::Mtd::CS_SS;
 
   // realmode
   if (!_cpu->pm())
@@ -787,12 +787,12 @@ int idt_traversal(unsigned event, unsigned error_code)
 	    if (~desc.ar0 & 0x80) NP(idt.base0 | ext);
 
 	    if (desc.ar0 & 0x8)  newcpl = desc.dpl();
-	    nul::Serial::get().writef("IDT ar %x dpl %x cpl %x sel %x vec %x eip %x/%x/%x\n", desc.ar0, desc.dpl(), _cpu->cpl(), idt.base0, event,
+	    nre::Serial::get().writef("IDT ar %x dpl %x cpl %x sel %x vec %x eip %x/%x/%x\n", desc.ar0, desc.dpl(), _cpu->cpl(), idt.base0, event,
 			    _cpu->eip, _cpu->cs.sel, old_efl);
 
 	    if (!_cpu->v86())
 	      {
-		nul::UtcbExc::Descriptor oldss = _cpu->ss;
+		nre::UtcbExc::Descriptor oldss = _cpu->ss;
 		unsigned short new_ss;
 		unsigned new_esp;
 		if (newcpl != _cpu->cpl())
@@ -861,7 +861,7 @@ int idt_traversal(unsigned event, unsigned error_code)
 		    || set_segment(&_cpu->gs, 0)
 		    )
 		  {
-		    nul::Serial::get().writef("failed to traverse %x!\n", _fault);
+		    nre::Serial::get().writef("failed to traverse %x!\n", _fault);
 		    // rollback efl+SS change
 		    _cpu->efl = old_efl;
 		    set_realmode_segment(&_cpu->ss, old_ss, true);
@@ -949,14 +949,14 @@ int helper_FRSTOR()
 void helper_AAM(unsigned char imm) {
   if (!imm) DE0(this);
   _cpu->ax = ((_cpu->al / imm) << 8) | (_cpu->al % imm);
-  _mtr_out |= nul::Mtd::GPR_ACDB | nul::Mtd::RFLAGS;
+  _mtr_out |= nre::Mtd::GPR_ACDB | nre::Mtd::RFLAGS;
   unsigned zero = 0;
   calc_flags(0, &_cpu->eax, &zero);
 }
 
 void helper_AAD(unsigned char imm) {
   _cpu->ax = (_cpu->al + (_cpu->ah * imm)) & 0xff;
-  _mtr_out |= nul::Mtd::GPR_ACDB | nul::Mtd::RFLAGS;
+  _mtr_out |= nre::Mtd::GPR_ACDB | nre::Mtd::RFLAGS;
   unsigned zero = 0;
   calc_flags(0, &_cpu->eax, &zero);
 }
@@ -965,7 +965,7 @@ void helper_AAD(unsigned char imm) {
 void helper_XLAT() {
   void *dst = 0;
   if (!logical_mem<0>((&_cpu->es) + ((_entry->prefixes >> 8) & 0xf), _cpu->ebx + _cpu->al, false, dst)) {
-    _mtr_out |= nul::Mtd::GPR_ACDB;
+    _mtr_out |= nre::Mtd::GPR_ACDB;
     move<0>(&_cpu->eax, dst);
   }
 }

@@ -9,7 +9,7 @@
 
 #include <stream/ConsoleStream.h>
 
-using namespace nul;
+using namespace nre;
 
 char ConsoleStream::read() {
 	char c;

@@ -22,7 +22,7 @@
 #include <Compiler.h>
 #include <Errors.h>
 
-namespace nul {
+namespace nre {
 
 class SyscallABI {
 public:

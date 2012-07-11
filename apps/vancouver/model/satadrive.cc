@@ -23,7 +23,7 @@
 #include "../bus/helper.h"
 #include "sata.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A SATA drive. It contains the register set of a SATA drive and

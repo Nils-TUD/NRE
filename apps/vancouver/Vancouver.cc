@@ -18,7 +18,7 @@
 
 #include <kobj/Sm.h>
 #include <kobj/Ports.h>
-#include <dev/Reboot.h>
+#include <services/Reboot.h>
 #include <util/TimeoutList.h>
 #include <util/Util.h>
 
@@ -28,10 +28,10 @@
 #include "Timeouts.h"
 #include "VCPUBackend.h"
 
-using namespace nul;
+using namespace nre;
 
 static size_t ncpu = 1;
-nul::UserSm globalsm(0);
+nre::UserSm globalsm(0);
 
 PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 	     " mem:0,0xa0000 mem:0x100000 ioio nullio:0x80 pic:0x20,,0x4d0 pic:0xa0,2,0x4d1"

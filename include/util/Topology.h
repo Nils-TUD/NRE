@@ -22,7 +22,7 @@
 #include <util/QuickSort.h>
 #include <CPU.h>
 
-namespace nul {
+namespace nre {
 
 class Topology {
 	struct SortCPU {

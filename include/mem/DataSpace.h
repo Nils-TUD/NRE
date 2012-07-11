@@ -23,7 +23,7 @@
 #include <mem/DataSpaceDesc.h>
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class DataSpaceException : public Exception {
 public:

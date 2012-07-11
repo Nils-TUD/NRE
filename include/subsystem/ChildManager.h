@@ -25,7 +25,7 @@
 #include <util/Sync.h>
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class ElfException : public Exception {
 public:

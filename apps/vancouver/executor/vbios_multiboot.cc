@@ -22,7 +22,7 @@
 #include "bios.h"
 #include "elf.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Provide Multiboot support for the virtual BIOS.

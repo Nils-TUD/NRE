@@ -24,7 +24,7 @@
 #include <util/SList.h>
 #include <Hip.h>
 
-namespace nul {
+namespace nre {
 
 class Pt;
 class CPUInit;

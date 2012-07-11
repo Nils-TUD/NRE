@@ -12,7 +12,7 @@
 #include <arch/Types.h>
 #include <stream/OStream.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Holds all properties of a dataspace, which can be passed around to describe a dataspace.

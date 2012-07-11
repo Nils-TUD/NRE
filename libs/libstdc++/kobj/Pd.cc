@@ -24,7 +24,7 @@
 #include <utcb/UtcbFrame.h>
 #include <util/ScopedCapSels.h>
 
-namespace nul {
+namespace nre {
 
 Pd Pd::_cur INIT_PRIO_PD (CapSpace::INIT_PD);
 

@@ -25,7 +25,7 @@
 #include <utcb/UtcbFrame.h>
 #include <Errors.h>
 
-namespace nul {
+namespace nre {
 namespace test {
 
 typedef void (*test_func)();

@@ -21,7 +21,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * A PS2 keyboard gets mouse packets the hostbus as input and outputs

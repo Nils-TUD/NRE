@@ -36,7 +36,7 @@
 #define INIT_PRIO_CPU0		INIT_PRIO_SYS(8)
 #define INIT_PRIO_SERIAL	INIT_PRIO_SYS(9)
 
-namespace nul {
+namespace nre {
 
 class Utcb;
 class Hip;
@@ -53,4 +53,4 @@ struct StartupInfo {
 }
 
 EXTERN_C void _post_init();
-extern nul::StartupInfo _startup_info;
+extern nre::StartupInfo _startup_info;

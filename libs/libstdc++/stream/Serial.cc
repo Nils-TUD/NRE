@@ -17,12 +17,12 @@
  */
 
 #include <stream/Serial.h>
-#include <service/Connection.h>
+#include <ipc/Connection.h>
 #include <mem/DataSpace.h>
 #include <kobj/Ports.h>
-#include <dev/Log.h>
+#include <services/Log.h>
 
-namespace nul {
+namespace nre {
 
 BaseSerial *BaseSerial::_inst = 0;
 Serial::Init Serial::Init::init INIT_PRIO_SERIAL;

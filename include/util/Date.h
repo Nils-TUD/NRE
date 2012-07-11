@@ -20,7 +20,7 @@
 
 #include <util/Math.h>
 
-namespace nul {
+namespace nre {
 
 struct DateInfo {
 	int sec;

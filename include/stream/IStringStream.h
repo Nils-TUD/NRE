@@ -12,7 +12,7 @@
 #include <stream/IStream.h>
 #include <cstring>
 
-namespace nul {
+namespace nre {
 
 class IStringStream : public IStream {
 public:

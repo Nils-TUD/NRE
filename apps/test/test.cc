@@ -21,21 +21,21 @@
 #include <kobj/Sc.h>
 #include <kobj/Sm.h>
 #include <kobj/Gsi.h>
-#include <service/Connection.h>
-#include <service/Session.h>
-#include <service/Consumer.h>
+#include <ipc/Connection.h>
+#include <ipc/Session.h>
+#include <ipc/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/ConsoleStream.h>
-#include <dev/Console.h>
-#include <dev/Keyboard.h>
-#include <dev/Mouse.h>
-#include <dev/ACPI.h>
-#include <dev/Timer.h>
+#include <services/Console.h>
+#include <services/Keyboard.h>
+#include <services/Mouse.h>
+#include <services/ACPI.h>
+#include <services/Timer.h>
 #include <cap/Caps.h>
 #include <util/Date.h>
 #include <Exception.h>
 
-using namespace nul;
+using namespace nre;
 
 static Connection *con;
 

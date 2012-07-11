@@ -23,7 +23,7 @@
 #include "../bus/motherboard.h"
 #include "../bus/helper.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Bridge between guest and host memory.

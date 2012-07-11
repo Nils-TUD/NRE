@@ -12,7 +12,7 @@
 #include <util/LockPolicy.h>
 #include <Assert.h>
 
-namespace nul {
+namespace nre {
 
 template<class It,class LockPolicy = LockPolicyNone>
 class BaseCycler : public LockPolicy {

@@ -21,7 +21,7 @@
 #include <CPU.h>
 #include <RCU.h>
 
-namespace nul {
+namespace nre {
 
 void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	ScopedCapSels scs;

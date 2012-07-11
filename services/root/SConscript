@@ -1,0 +1,7 @@
+# -*- Mode: Python -*-
+
+Import('env')
+
+myenv = env.Clone()
+myenv['LINKFLAGS'] += ' -Wl,-T,services/root/linker_' + env['ARCH'] + '.ld'
+myenv.NulProgram(myenv, 'root', Glob('*.cc'))

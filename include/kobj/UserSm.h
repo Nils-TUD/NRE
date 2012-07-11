@@ -13,7 +13,7 @@
 #include <util/Atomic.h>
 #include <stream/Serial.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * A user semaphore optimized for the case where we do not block.

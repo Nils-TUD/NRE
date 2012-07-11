@@ -25,7 +25,7 @@
 #include <util/Math.h>
 #include <Logging.h>
 
-namespace nul {
+namespace nre {
 
 ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),

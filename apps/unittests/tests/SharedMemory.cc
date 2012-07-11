@@ -9,19 +9,19 @@
 
 #include <kobj/Pt.h>
 #include <subsystem/ChildManager.h>
-#include <service/Service.h>
-#include <service/Consumer.h>
-#include <service/Producer.h>
-#include <service/Connection.h>
-#include <service/Session.h>
+#include <ipc/Service.h>
+#include <ipc/Consumer.h>
+#include <ipc/Producer.h>
+#include <ipc/Connection.h>
+#include <ipc/Session.h>
 #include <stream/IStringStream.h>
 #include <Hip.h>
 #include <CPU.h>
 
 #include "SharedMemory.h"
 
-using namespace nul;
-using namespace nul::test;
+using namespace nre;
+using namespace nre::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,

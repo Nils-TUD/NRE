@@ -25,7 +25,7 @@
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Represents a portal. A portal is always bound to a LocalThread.

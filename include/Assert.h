@@ -20,7 +20,7 @@
 
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class AssertException : public Exception {
 public:
@@ -56,7 +56,7 @@ private:
 #ifndef NDEBUG
 
 #	define assert(cond) do { if(!(cond)) { \
-			throw nul::AssertException(#cond,__FILE__,__LINE__); \
+			throw nre::AssertException(#cond,__FILE__,__LINE__); \
 		} } while(0);
 
 #else

@@ -20,4 +20,4 @@
 
 #include <Test.h>
 
-extern const nul::test::TestCase childmem;
+extern const nre::test::TestCase childmem;

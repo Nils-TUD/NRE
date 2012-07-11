@@ -48,10 +48,10 @@ private:
   if ((pte & (bits)) != (bits))						\
     {									\
     if (features & FEATURE_PAE) {					\
-      if (nul::Atomic::cmpxchg8b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
+      if (nre::Atomic::cmpxchg8b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
     }									\
     else								\
-      if (nul::Atomic::cmpxchg4b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
+      if (nre::Atomic::cmpxchg4b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
     }
 
 	template<unsigned features,typename PTE_TYPE>
@@ -99,7 +99,7 @@ private:
 						|| ((~features & FEATURE_LONG) && (features & FEATURE_PAE)
 								&& ((static_cast<unsigned long long>(pte) >> 52) & 0xeff))
 						|| (((static_cast<unsigned long long>(pte) & ~(1ULL << 63))
-								>> nul::ExecEnv::PHYS_ADDR_SIZE)
+								>> nre::ExecEnv::PHYS_ADDR_SIZE)
 								|| (is_sp && ((pte >> 12) & ((1 << (l * 9)) - 1))));
 			}
 			if(reserved_bit)
@@ -170,7 +170,7 @@ protected:
 			for(unsigned i = 0; i < 4; i++) {
 				values[i] = *reinterpret_cast<unsigned long long *>(get((READ(cr3) & ~0x1f) + i * 8,
 						~0xffful,8,TYPE_R)->_ptr);
-				if((values[i] & 0x1e6) || (values[i] >> nul::ExecEnv::PHYS_ADDR_SIZE))
+				if((values[i] & 0x1e6) || (values[i] >> nre::ExecEnv::PHYS_ADDR_SIZE))
 					GP0;
 			}
 			memcpy(_pdpt,values,sizeof(_pdpt));

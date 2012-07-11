@@ -34,7 +34,7 @@
 #define SS0   { EXCEPTION(this, 0xc, 0); return _fault; }
 #define GP(X) { EXCEPTION(this, 0xd, X); return _fault; }
 #define GP0   { EXCEPTION(this, 0xd, 0); return _fault; }
-#define PF(ADDR, ERR) { _cpu->cr2 = ADDR; _mtr_out |= nul::Mtd::CR; EXCEPTION(this, 0xe, ERR); return _fault; }
+#define PF(ADDR, ERR) { _cpu->cr2 = ADDR; _mtr_out |= nre::Mtd::CR; EXCEPTION(this, 0xe, ERR); return _fault; }
 
 /**
  * A cache for physical memory indexed by page number.
@@ -197,7 +197,7 @@ public:
 			 */
 			bool supported = true;
 			if(phys2 != ~0xffful && (((phys1 >> 12) + 1) != (phys2 >> 12))) {
-				nul::Serial::get().writef("joining two non-adjunct pages %lx,%lx is not supported\n",
+				nre::Serial::get().writef("joining two non-adjunct pages %lx,%lx is not supported\n",
 						phys1 >> 12,phys2 >> 12);
 				supported = false;
 			}

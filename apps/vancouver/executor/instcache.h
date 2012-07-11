@@ -25,14 +25,14 @@
  * Reverse MTR mapping.
  */
 enum {
-	RMTR_eip = nul::Mtd::RIP_LEN,
-	RMTR_efl = nul::Mtd::RFLAGS,
-	RMTR_cr0 = nul::Mtd::CR,
-	RMTR_cr2 = nul::Mtd::CR,
-	RMTR_cr3 = nul::Mtd::CR,
-	RMTR_cr4 = nul::Mtd::CR,
-	RMTR_cs = nul::Mtd::CS_SS,
-	RMTR_ss = nul::Mtd::CS_SS,
+	RMTR_eip = nre::Mtd::RIP_LEN,
+	RMTR_efl = nre::Mtd::RFLAGS,
+	RMTR_cr0 = nre::Mtd::CR,
+	RMTR_cr2 = nre::Mtd::CR,
+	RMTR_cr3 = nre::Mtd::CR,
+	RMTR_cr4 = nre::Mtd::CR,
+	RMTR_cs = nre::Mtd::CS_SS,
+	RMTR_ss = nre::Mtd::CS_SS,
 };
 
 /**
@@ -161,7 +161,7 @@ class InstructionCache: public MemTlb {
 	}
 
 	int event_injection() {
-		if((_mtr_in & nul::Mtd::INJ) && (_cpu->inj_info & 0x80000000)
+		if((_mtr_in & nre::Mtd::INJ) && (_cpu->inj_info & 0x80000000)
 				&& !idt_traversal(_cpu->inj_info,_cpu->inj_error)) {
 			_cpu->inj_info &= ~0x80000000;
 			RETRY;
@@ -273,7 +273,7 @@ public:
 			if(_fault) {
 				// invalidate entry
 				_entry->inst_len = 0;
-				nul::Serial::get().writef("decode fault %x\n",_fault);
+				nre::Serial::get().writef("decode fault %x\n",_fault);
 				return _fault;
 			}
 
@@ -283,11 +283,11 @@ public:
 		_entry = _values + index;
 		_cpu->eip += _entry->inst_len;
 		if(debug) {
-			nul::Serial::get().writef("eip %x:%x esp %x eax %x ebp %x prefix %x\n",
+			nre::Serial::get().writef("eip %x:%x esp %x eax %x ebp %x prefix %x\n",
 					_cpu->cs.sel,_oeip,_oesp,_cpu->eax,_cpu->ebp,_entry->prefixes);
-			nul::Serial::get().writef(".byte ");
+			nre::Serial::get().writef(".byte ");
 			for(unsigned i = 0; i < _entry->inst_len; i++)
-				nul::Serial::get().writef("0x%02x%c",_entry->data[i],(i == _entry->inst_len - 1) ? '\n' : ',');
+				nre::Serial::get().writef("0x%02x%c",_entry->data[i],(i == _entry->inst_len - 1) ? '\n' : ',');
 		}
 		return _fault;
 	}
@@ -374,7 +374,7 @@ public:
 						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3), "=g"(tmp_flag)
 						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
-				_mtr_out |= nul::Mtd::RFLAGS;
+				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			case IC_LOADFLAGS:
 				tmp_flag = _cpu->efl & 0x8d5;
@@ -388,7 +388,7 @@ public:
 						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3), "+g"(tmp_flag)
 						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
-				_mtr_out |= nul::Mtd::RFLAGS;
+				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			default:
 				asm volatile ("call *%3;"
@@ -410,7 +410,7 @@ public:
 
 		if(((_entry->prefixes & 0xff) == 0xf0)
 				&& ((~_entry->flags & IC_LOCK) || (_entry->modrminfo & MRM_REG))) {
-			nul::Util::panic("LOCK prefix %02x%02x%02x%02x at eip %x:%x\n",_entry->data[0],
+			nre::Util::panic("LOCK prefix %02x%02x%02x%02x at eip %x:%x\n",_entry->data[0],
 					_entry->data[1],_entry->data[2],_entry->data[3],_cpu->cs.sel,_cpu->eip);
 			UD0;
 		}
@@ -445,7 +445,7 @@ public:
 		 * Do a recall with more state.
 		 */
 		if(_mtr_read & ~_mtr_in) {
-			nul::Util::panic("recall %x out of %x\n",_mtr_read,_mtr_in);
+			nre::Util::panic("recall %x out of %x\n",_mtr_read,_mtr_in);
 			// signal a recall
 			//COUNTER_INC("recall");
 			FAULT(this,FAULT_RECALL);
@@ -461,16 +461,16 @@ public:
 		if(_fault)
 			_cpu->intr_state = _ointr_state;
 		if(_cpu->intr_state != _ointr_state)
-			_mtr_out |= nul::Mtd::STATE;
+			_mtr_out |= nre::Mtd::STATE;
 
 		if(!_fault || _fault == FAULT_RETRY) {
 			// successfull
-			_mtr_out |= nul::Mtd::RIP_LEN | nul::Mtd::GPR_ACDB | nul::Mtd::GPR_BSD;
+			_mtr_out |= nre::Mtd::RIP_LEN | nre::Mtd::GPR_ACDB | nre::Mtd::GPR_BSD;
 			if(_cpu->esp != _oesp)
-				_mtr_out |= nul::Mtd::RSP;
+				_mtr_out |= nre::Mtd::RSP;
 
 			// XXX bugs?
-			_mtr_out |= _mtr_in & ~(nul::Mtd::CR | nul::Mtd::TSC);
+			_mtr_out |= _mtr_in & ~(nre::Mtd::CR | nre::Mtd::TSC);
 		}
 		else {
 			_cpu->eip = _oeip;
@@ -481,18 +481,18 @@ public:
 					_cpu->inst_len = 0;
 				switch(_fault) {
 					case FAULT_UNIMPLEMENTED:
-						nul::Util::panic("unimplemented at line %d eip %x\n",_debug_fault_line,
+						nre::Util::panic("unimplemented at line %d eip %x\n",_debug_fault_line,
 								_cpu->eip);
 						// unimplemented
 						return false;
 					default:
-						nul::Util::panic("internal fault %x at eip %x\n",_fault,_cpu->eip);
+						nre::Util::panic("internal fault %x at eip %x\n",_fault,_cpu->eip);
 						break;
 				}
 			}
 			else {
-				_mtr_out |= nul::Mtd::INJ;
-				nul::Serial::get().writef("fault: %x old %x error %x cr2 %x at eip %x line %d %x\n",
+				_mtr_out |= nre::Mtd::INJ;
+				nre::Serial::get().writef("fault: %x old %x error %x cr2 %x at eip %x line %d %x\n",
 						_fault,_cpu->inj_info,_error_code,_cpu->cr2,_cpu->eip,_debug_fault_line,
 						_cpu->cr2);
 				// consolidate two exceptions

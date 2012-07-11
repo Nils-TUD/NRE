@@ -22,7 +22,7 @@
 #include <util/BitField.h>
 #include <Exception.h>
 
-namespace nul {
+namespace nre {
 
 class ServiceRegistryException : public Exception {
 public:

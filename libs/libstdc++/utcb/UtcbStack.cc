@@ -21,7 +21,7 @@
 
 #if USE_UTCB_STACKING
 
-namespace nul {
+namespace nre {
 
 OStream &operator<<(OStream &os,const Utcb &utcb) {
 	os << "Utcb @ " << &utcb << ":\n";

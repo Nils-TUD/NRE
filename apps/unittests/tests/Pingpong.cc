@@ -23,8 +23,8 @@
 
 #include "Pingpong.h"
 
-using namespace nul;
-using namespace nul::test;
+using namespace nre;
+using namespace nre::test;
 
 PORTAL static void portal_test(capsel_t);
 static void test_pingpong();

@@ -29,7 +29,7 @@
  */
 EXTERN_C void portal_reply_landing_spot(void*);
 
-namespace nul {
+namespace nre {
 
 /**
  * A LocalThread is a thread that is only used to serve portal-calls. Therefore, it doesn't

@@ -22,7 +22,7 @@
 #include <arch/Defines.h>
 #include <stream/OStream.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Base class for all decriptors. Note that we don't support polymorphism here.

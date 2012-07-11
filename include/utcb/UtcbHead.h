@@ -29,7 +29,7 @@
  */
 #define USE_UTCB_KERNEL_EXT		1
 
-namespace nul {
+namespace nre {
 
 class Utcb;
 class UtcbFrame;

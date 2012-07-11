@@ -30,23 +30,23 @@ class VCPUBackend {
 	};
 	struct Portal {
 		capsel_t offset;
-		nul::Pt::portal_func func;
+		nre::Pt::portal_func func;
 		uint mtd;
 	};
 
 public:
 	VCPUBackend(Motherboard *mb,VCpu *vcpu,bool use_svm,cpu_t cpu)
 			: _ec(cpu), _caps(get_portals(use_svm)), _sm(1), _vcpu(cpu,_caps),
-			  _sc(&_vcpu,nul::Qpd()) {
-		_ec.set_tls<VCpu*>(nul::Thread::TLS_PARAM,vcpu);
+			  _sc(&_vcpu,nre::Qpd()) {
+		_ec.set_tls<VCpu*>(nre::Thread::TLS_PARAM,vcpu);
 		_sc.start();
 		_mb = mb;
 	}
 
-	nul::VCPU &vcpu() {
+	nre::VCPU &vcpu() {
 		return _vcpu;
 	}
-	nul::Sm &sm() {
+	nre::Sm &sm() {
 		return _sm;
 	}
 
@@ -55,11 +55,11 @@ private:
 
 	static void handle_io(bool is_in,unsigned io_order,unsigned port);
 	static void handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type);
-	static nul::Crd lookup(uintptr_t base,size_t size,uintptr_t hotspot);
+	static nre::Crd lookup(uintptr_t base,size_t size,uintptr_t hotspot);
 	static bool handle_memory(bool need_unmap);
 
-	static void force_invalid_gueststate_amd(nul::UtcbExcFrameRef &uf);
-	static void force_invalid_gueststate_intel(nul::UtcbExcFrameRef &uf);
+	static void force_invalid_gueststate_amd(nre::UtcbExcFrameRef &uf);
+	static void force_invalid_gueststate_intel(nre::UtcbExcFrameRef &uf);
 	static void skip_instruction(CpuMessage &msg);
 
 	PORTAL static void vmx_triple(capsel_t pid);
@@ -89,11 +89,11 @@ private:
 	PORTAL static void svm_startup(capsel_t pid);
 	PORTAL static void svm_recall(capsel_t pid);
 
-	nul::LocalThread _ec;
+	nre::LocalThread _ec;
 	capsel_t _caps;
-	nul::Sm _sm;
-	nul::VCPU _vcpu;
-	nul::Sc _sc;
+	nre::Sm _sm;
+	nre::VCPU _vcpu;
+	nre::Sc _sc;
 	static Motherboard *_mb;
 	static bool _tsc_offset;
 	static bool _rdtsc_exit;

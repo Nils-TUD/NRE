@@ -20,7 +20,7 @@
 
 #include <cap/CapSpace.h>
 
-namespace nul {
+namespace nre {
 
 /**
  * Allows RAII semantics for capability selectors. The construction of ScopedCapSels reserves the

@@ -18,7 +18,7 @@
 
 #pragma once
 
-namespace nul {
+namespace nre {
 
 enum ErrorCode {
 	// NOVA error codes

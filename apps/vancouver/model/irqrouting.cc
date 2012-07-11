@@ -21,7 +21,7 @@
 
 #include "../bus/motherboard.h"
 
-using namespace nul;
+using namespace nre;
 
 /**
  * Route IRQ messages from host to guest.

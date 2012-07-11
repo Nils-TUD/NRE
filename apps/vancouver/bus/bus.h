@@ -27,7 +27,7 @@ class Device {
 	const char *_debug_name;
 public:
 	void debug_dump() {
-		nul::Serial::get().writef("\t%s\n",_debug_name);
+		nre::Serial::get().writef("\t%s\n",_debug_name);
 	}
 	Device(const char *debug_name) : _debug_name(debug_name) {
 	}
@@ -136,12 +136,12 @@ public:
 	 * Debugging output.
 	 */
 	void debug_dump() {
-		nul::Serial::get().writef("%s: Bus used %ld times.",__PRETTY_FUNCTION__,_debug_counter);
+		nre::Serial::get().writef("%s: Bus used %ld times.",__PRETTY_FUNCTION__,_debug_counter);
 		for(unsigned i = 0; i < _list_count; i++) {
-			nul::Serial::get().writef("\n%2d:\t",i);
+			nre::Serial::get().writef("\n%2d:\t",i);
 			_list[i]._dev->debug_dump();
 		}
-		nul::Serial::get().writef("\n");
+		nre::Serial::get().writef("\n");
 	}
 
 	/** Default constructor. */

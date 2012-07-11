@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace nul {
+namespace nre {
 
 class Sync {
 public:

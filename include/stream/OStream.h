@@ -21,7 +21,7 @@
 #include <arch/Types.h>
 #include <stdarg.h>
 
-namespace nul {
+namespace nre {
 
 class OStream {
 	enum {

@@ -10,7 +10,7 @@
 #include <arch/Startup.h>
 #include <cap/CapSpace.h>
 
-namespace nul {
+namespace nre {
 
 CapSpace CapSpace::_inst INIT_PRIO_CAPSPACE;
 

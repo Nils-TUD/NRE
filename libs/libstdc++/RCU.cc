@@ -10,7 +10,7 @@
 #include <arch/Startup.h>
 #include <RCU.h>
 
-namespace nul {
+namespace nre {
 	class Init {
 		Init() {
 			RCU::announce(Thread::current());
