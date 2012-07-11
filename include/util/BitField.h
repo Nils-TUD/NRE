@@ -17,16 +17,19 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <stream/OStream.h>
 #include <cstring>
 
 namespace nre {
 
 template<uint BITS>
 class BitField;
-class OStream;
 template<uint BITS>
 static inline OStream &operator<<(OStream &os,const BitField<BITS> &bf);
 
+/**
+ * A field of <BITS> bits that is managed in an array of words.
+ */
 template<uint BITS>
 class BitField {
 	template<uint N>
@@ -40,13 +43,23 @@ class BitField {
 	}
 
 public:
-	BitField() : _words() {
+	/**
+	 * Constructor
+	 */
+	explicit BitField() : _words() {
 	}
 
+	/**
+	 * @param bit the bit
+	 * @return true if the bit <bit> is set
+	 */
 	bool is_set(uint bit) const {
 		return (_words[idx(bit)] & bitpos(bit)) != 0;
 	}
 
+	/**
+	 * @return the first set bit in the bitfield
+	 */
 	uint first_set() const {
 		// TODO this can be improved
 		for(uint i = 0; i < BITS; ++i) {
@@ -55,22 +68,38 @@ public:
 		}
 		return BITS;
 	}
+
+	/**
+	 * Sets bit <bit> to 1
+	 */
 	void set(uint bit) {
 		_words[idx(bit)] |= bitpos(bit);
 	}
+	/**
+	 * Sets bit <bit> to <value>
+	 */
 	void set(uint bit,bool value) {
 		if(value)
 			set(bit);
 		else
 			clear(bit);
 	}
+	/**
+	 * Sets bit <bit> to 0
+	 */
 	void clear(uint bit) {
 		_words[idx(bit)] &= ~bitpos(bit);
 	}
 
+	/**
+	 * Sets all bits to 1
+	 */
 	void set_all() {
 		memset(_words,-1,sizeof(_words));
 	}
+	/**
+	 * Sets all bits to 0
+	 */
 	void clear_all() {
 		memset(_words,0,sizeof(_words));
 	}

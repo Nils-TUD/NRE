@@ -98,6 +98,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 				fmt++;
 			}
 			else {
+				prec = 0;
 				while(*fmt >= '0' && *fmt <= '9') {
 					prec = prec * 10 + (*fmt - '0');
 					fmt++;

@@ -18,4 +18,5 @@
 
 #include <Test.h>
 
-extern const nre::test::TestCase childmem;
+extern const nre::test::TestCase maskfield;
+

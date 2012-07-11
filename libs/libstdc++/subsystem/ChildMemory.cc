@@ -14,35 +14,24 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Defines.h>
 #include <subsystem/ChildMemory.h>
 #include <stream/OStream.h>
 
 namespace nre {
 
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
-	os << "\tRegions:\n";
-	for(size_t i = 0; i < ChildMemory::MAX_REGIONS; ++i) {
-		const ChildMemory::Region *r = cm._regs + i;
-		if(r->size > 0) {
-			os.writef(
-				"\t\t%zu: %p .. %p (%zu bytes) : %c%c%c%c, src=%p\n",i,r->begin,
-					r->begin + r->size,r->size,
-					(r->flags & ChildMemory::R) ? 'r' : '-',
-					(r->flags & ChildMemory::W) ? 'w' : '-',
-					(r->flags & ChildMemory::X) ? 'x' : '-',
-					(r->flags & ChildMemory::M) ? 'm' : '-',
-					r->src
-			);
-		}
-	}
-	os << "\tDataSpaces:\n";
-	for(size_t i = 0; i < ChildMemory::MAX_DS; ++i) {
-		if(cm._ds[i].unmapsel != 0) {
-			const ChildMemory::DS *ds = cm._ds + i;
-			os.writef("\t\t%u: %p .. %p (type %u, phys %p, org %p)\n",
-					ds->unmapsel,ds->desc.virt(),ds->desc.virt() + ds->desc.size(),ds->desc.type(),
-					ds->desc.phys(),ds->desc.origin());
-		}
+	os << "\tDataspaces:\n";
+	for(ChildMemory::iterator it = cm.begin(); it != cm.end(); ++it) {
+		uint flags = it->desc().perm();
+		os.writef(
+			"\t\t%p .. %p (%#0"FMT_WORD_HEXLEN"x bytes) %c%c%c <- %p\n",it->desc().virt(),
+				it->desc().virt() + it->desc().size(),it->desc().size(),
+				(flags & ChildMemory::R) ? 'r' : '-',
+				(flags & ChildMemory::W) ? 'w' : '-',
+				(flags & ChildMemory::X) ? 'x' : '-',
+				it->desc().origin()
+		);
 	}
 	return os;
 }

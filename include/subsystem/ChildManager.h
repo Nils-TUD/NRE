@@ -126,6 +126,7 @@ private:
 		Child *c = _childs[i];
 		c->decrease_refs();
 		if(c->refs() == 0) {
+			Util::write_backtrace(Serial::get());
 			Serial::get() << "Destroying child '" << c->cmdline() << "'\n";
 			// note that we're safe here because we only get here if there is only one Ec left and
 			// this one has just caused a fault. thus, there can't be somebody else using this

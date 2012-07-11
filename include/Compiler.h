@@ -16,18 +16,23 @@
 
 #pragma once
 
-#define REGPARMS(X)			__attribute__((regparm(X)))
-#define ALIGNED(X)			__attribute__((aligned(X)))
-#define PACKED				__attribute__((packed))
-#define NORETURN			__attribute__((__noreturn__))
-#define INIT_PRIORITY(X)	__attribute__((init_priority((X))))
-#define WEAK				__attribute__((weak))
-#define EXPECT_FALSE(X)		__builtin_expect(!!(X),0)
-#define EXPECT_TRUE(X)		__builtin_expect(!!(X),1)
-#define UNUSED				__attribute__((unused))
+#define REGPARMS(X)				__attribute__((regparm(X)))
+#define ALIGNED(X)				__attribute__((aligned(X)))
+#define PACKED					__attribute__((packed))
+#define NORETURN				__attribute__((__noreturn__))
+#define INIT_PRIORITY(X)		__attribute__((init_priority((X))))
+#define WEAK					__attribute__((weak))
+#define EXPECT_FALSE(X)			__builtin_expect(!!(X),0)
+#define EXPECT_TRUE(X)			__builtin_expect(!!(X),1)
+#define UNUSED					__attribute__((unused))
+
+#define STATIC_ASSERT(X)		({ \
+	extern int __attribute__((error("static assert failed: '" #X "'"))) check(); \
+	((X) ? 0 : check()); \
+})
 
 #ifdef __cplusplus
-#define EXTERN_C			extern "C"
+#	define EXTERN_C				extern "C"
 #else
-#define EXTERN_C
+#	define EXTERN_C
 #endif

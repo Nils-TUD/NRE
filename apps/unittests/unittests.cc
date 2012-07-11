@@ -18,7 +18,6 @@
 
 #include "tests/Pingpong.h"
 #include "tests/UtcbTest.h"
-#include "tests/ChildMemoryTest.h"
 #include "tests/DelegatePerf.h"
 #include "tests/CatchEx.h"
 #include "tests/SharedMemory.h"
@@ -27,6 +26,7 @@
 #include "tests/DListTest.h"
 #include "tests/CyclerTest.h"
 #include "tests/RegMngTest.h"
+#include "tests/MaskFieldTest.h"
 
 using namespace nre;
 using namespace nre::test;
@@ -34,17 +34,17 @@ using namespace nre::test;
 const TestCase testcases[] = {
 	pingpong,
 	catchex,
-	delegateperf,
+	//delegateperf,
 	utcbnest,
-	utcbperf,
-	childmem,
-	dstest,
+	//utcbperf,
+	//dstest,
 	slisttest,
 	dlisttest,
 	cyclertest1,
 	cyclertest2,
 	cyclertest3,
 	regmng,
+	maskfield,
 	/*sharedmem,*/
 };
 

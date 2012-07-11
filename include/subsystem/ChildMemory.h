@@ -19,6 +19,8 @@
 #include <arch/Types.h>
 #include <Exception.h>
 #include <mem/DataSpaceDesc.h>
+#include <util/MaskField.h>
+#include <util/SList.h>
 #include <util/Math.h>
 #include <Assert.h>
 
@@ -36,207 +38,224 @@ class OStream;
 class ChildMemory;
 OStream &operator<<(OStream &os,const ChildMemory &cm);
 
+/**
+ * Manages the virtual memory of a child process
+ */
 class ChildMemory {
 	friend void ::test_reglist();
 	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
 
-	enum {
-		MAX_REGIONS		= 1024,
-		MAX_DS			= 64
-	};
-
-	struct Region {
-		uintptr_t src;
-		uintptr_t begin;
-		size_t size;
-		uint flags;
-	};
-
 public:
-	struct DS {
-		DataSpaceDesc desc;
-		capsel_t unmapsel;
-	};
-
-	typedef const DS *ds_iterator;
-
 	enum Perm {
 		R	= DataSpaceDesc::R,
 		W	= DataSpaceDesc::W,
 		X	= DataSpaceDesc::X,
-		M	= 1 << 3,	// mapped
 		RW	= R | W,
 		RX	= R | X,
 		RWX	= R | W | X,
 	};
 
-	explicit ChildMemory() : _regs(), _ds() {
-	}
-
-	ds_iterator ds_begin() const {
-		return _ds;
-	}
-	ds_iterator ds_end() const {
-		return _ds + MAX_DS;
-	}
-
-	size_t regcount() const {
-		size_t count = 0;
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size > 0)
-				count++;
+	/**
+	 * A dataspace in the address space of the child including administrative information.
+	 */
+	class DS : public SListItem {
+	public:
+		/**
+		 * Creates the dataspace with given descriptor and cap
+		 */
+		explicit DS(const DataSpaceDesc &desc,capsel_t cap)
+			: SListItem(), _desc(desc), _cap(cap),
+			  _perms(Math::blockcount<size_t>(desc.size(),ExecEnv::PAGE_SIZE) * 4) {
 		}
-		return count;
+
+		/**
+		 * @return the permission masks for all pages
+		 */
+		const MaskField<4> &perms() const {
+			return _perms;
+		}
+		/**
+		 * @return the dataspace descriptor
+		 */
+		DataSpaceDesc &desc() {
+			return _desc;
+		}
+		/**
+		 * @return the dataspace descriptor
+		 */
+		const DataSpaceDesc &desc() const {
+			return _desc;
+		}
+		/**
+		 * @return the dataspace (unmap) capability
+		 */
+		capsel_t cap() const {
+			return _cap;
+		}
+		/**
+		 * @param addr the virtual address (is expected to be in this dataspace)
+		 * @return the origin for the given address
+		 */
+		uintptr_t origin(uintptr_t addr) const {
+			return _desc.origin() + (addr - _desc.virt());
+		}
+		/**
+		 * @param addr the virtual address (is expected to be in this dataspace)
+		 * @return the permissions of the given page
+		 */
+		uint page_perms(uintptr_t addr) const {
+			return _perms.get((addr - _desc.virt()) / ExecEnv::PAGE_SIZE);
+		}
+		/**
+		 * Sets the permissions of the given page range to <perms>. It sets all pages until it
+		 * encounters a page that already has the given permissions. Additionally, it makes sure
+		 * not to leave this dataspace.
+		 *
+		 * @param addr the virtual address where to start
+		 * @param pages the number of pages
+		 * @param perms the permissions to set
+		 * @return the actual number of pages that have been changed
+		 */
+		size_t page_perms(uintptr_t addr,size_t pages,uint perms) {
+			uintptr_t off = addr - _desc.virt();
+			pages = Math::min<size_t>(pages,(_desc.size() - off) / ExecEnv::PAGE_SIZE);
+			for(size_t i = 0, o = off / ExecEnv::PAGE_SIZE; i < pages; ++i, ++o) {
+				uint oldperms = _perms.get(o);
+				if(oldperms == perms)
+					return i;
+				_perms.set(o,perms);
+			}
+			return pages;
+		}
+		/**
+		 * Sets the permissions of all pages to <perms>
+		 *
+		 * @param perms the new permissions
+		 */
+		void all_perms(uint perms) {
+			_perms.set_all(perms);
+		}
+
+	private:
+		DataSpaceDesc _desc;
+		capsel_t _cap;
+		MaskField<4> _perms;
+	};
+
+	typedef SListIterator<DS> iterator;
+
+	/**
+	 * Constructor
+	 */
+	explicit ChildMemory() : _list() {
 	}
 
-	bool find(capsel_t sel,DataSpaceDesc &ds) {
-		size_t i = get(sel);
-		if(i == MAX_DS)
-			return false;
-		ds = _ds[i].desc;
-		return true;
+	/**
+	 * @return the first dataspace
+	 */
+	iterator begin() const {
+		return _list.begin();
+	}
+	/**
+	 * @return end of dataspaces
+	 */
+	iterator end() const {
+		return _list.end();
 	}
 
-	uint find(uintptr_t addr,uintptr_t &src,size_t &size) const {
-		addr &= ~(ExecEnv::PAGE_SIZE - 1);
-		const Region *r = get(addr,1);
-		if(r) {
-			src = r->src + (addr - r->begin);
-			size = r->size - (addr - r->begin);
-			return r->flags;
+	/**
+	 * Finds the dataspace with given selector
+	 *
+	 * @param sel the selector
+	 * @return the dataspace or 0 if not found
+	 */
+	DS *find(capsel_t sel) {
+		return get(sel);
+	}
+	/**
+	 * Finds the dataspace with given address
+	 *
+	 * @param addr the virtual address
+	 * @return the dataspace or 0 if not found
+	 */
+	DS *find_by_addr(uintptr_t addr) {
+		for(iterator it = begin(); it != end(); ++it) {
+			if(addr >= it->desc().virt() && addr < it->desc().virt() + it->desc().size())
+				return &*it;
 		}
 		return 0;
 	}
 
+	/**
+	 * Finds a free position in the address space to put in <size> bytes.
+	 *
+	 * @param size the number of bytes to map
+	 * @return the address where it can be mapped
+	 * @throw ChildMemoryException if there is not enough space
+	 */
 	uintptr_t find_free(size_t size) const {
 		// find the end of the "highest" region
-		uintptr_t end = 0;
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size > 0 && _regs[i].begin + _regs[i].size > end)
-				end = _regs[i].begin + _regs[i].size;
+		uintptr_t e = 0;
+		for(iterator it = begin(); it != end(); ++it) {
+			if(it->desc().virt() + it->desc().size() > e)
+				e = it->desc().virt() + it->desc().size();
 		}
-		// round up to next page
-		end = (end + ExecEnv::PAGE_SIZE - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+		// leave one page space (earlier error detection)
+		e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
-		if(end + size < end || end + size > ExecEnv::KERNEL_START)
+		if(e + size < e || e + size > ExecEnv::KERNEL_START)
 			throw ChildMemoryException(E_CAPACITY);
-		return end;
+		return e;
 	}
 
-	void map(uintptr_t addr,size_t size = ExecEnv::PAGE_SIZE) {
-		const Region *r = get(addr,1);
-		assert(r);
-		add(addr,size,r->src + addr - r->begin,r->flags | M);
+	/**
+	 * Adds the given dataspace to the address space
+	 *
+	 * @param desc the dataspace descriptor (desc.virt() is expected to contain the address where
+	 * 	the memory is located in the parent (=us))
+	 * @param addr the virtual address where to map it to in the child
+	 * @param perm the permissions to use (desc.perm() is ignored)
+	 * @param sel the selector for the dataspace
+	 */
+	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t sel) {
+		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),perm,desc.phys(),addr,desc.virt()),sel);
+		_list.append(ds);
 	}
 
-	void unmap(uintptr_t addr,size_t size = ExecEnv::PAGE_SIZE) {
-		const Region *r = get(addr,1);
-		assert(r);
-		add(addr,size,r->src + addr - r->begin,r->flags & ~M);
+	/**
+	 * Removes the dataspace with given selector
+	 *
+	 * @param sel the selector
+	 */
+	void remove(capsel_t sel) {
+		remove(get(sel));
 	}
 
-	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t ds) {
-		for(size_t i = 0; i < MAX_DS; ++i) {
-			if(_ds[i].unmapsel == 0) {
-				_ds[i].unmapsel = ds;
-				_ds[i].desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),desc.phys(),addr,desc.virt());
-				add(addr,desc.size(),desc.virt(),perm);
-				return;
-			}
-		}
-		throw ChildMemoryException(E_CAPACITY);
-	}
-
-	DataSpaceDesc remove(capsel_t ds) {
-		size_t i = get(ds);
-		if(i == MAX_DS)
-			throw ChildMemoryException(E_NOT_FOUND);
-		_ds[i].unmapsel = 0;
-		remove(_ds[i].desc.virt(),_ds[i].desc.size());
-		return _ds[i].desc;
-	}
-
-	void add(uintptr_t addr,size_t size,uintptr_t src,uint flags) {
-		Region *r = get(addr,size);
-		if(r) {
-			// if its the simple case that it matches the complete region, just exchange the attributes
-			if(addr == r->begin && size == r->size) {
-				r->src = src;
-				r->flags = flags;
-				return;
-			}
-			// otherwise remove this range and add it again with updated flags
-			remove(addr,size);
-		}
-
-		r = get_free();
-		r->src = src;
-		r->begin = addr;
-		r->size = size;
-		r->flags = flags;
-	}
-
-	void remove(uintptr_t addr,size_t size) {
-		Region *r;
-		while((r = get(addr,size))) {
-			// at the beginning?
-			if(addr <= r->begin) {
-				// complete region
-				if(addr + size >= r->begin + r->size)
-					r->size = 0;
-				// beginning of region
-				else {
-					r->size = r->begin + r->size - (addr + size);
-					r->src += (addr + size) - r->begin;
-					r->begin = addr + size;
-				}
-			}
-			else {
-				// complete end of region
-				if(addr + size >= r->begin + r->size)
-					r->size = addr - r->begin;
-				// somewhere in the middle
-				else {
-					Region *nr = get_free();
-					nr->begin = addr + size;
-					nr->size = r->begin + r->size - nr->begin;
-					nr->flags = r->flags;
-					nr->src = r->src + (nr->begin - r->begin);
-					r->size = addr - r->begin;
-				}
-			}
-		}
+	/**
+	 * Removes the dataspace that contains the given address
+	 *
+	 * @param addr the virtual address
+	 */
+	void remove_by_addr(uintptr_t addr) {
+		remove(find(addr));
 	}
 
 private:
-	size_t get(capsel_t ds) {
-		for(size_t i = 0; i < MAX_DS; ++i) {
-			if(_ds[i].unmapsel == ds)
-				return i;
-		}
-		return MAX_DS;
-	}
-	Region *get(uintptr_t addr,size_t size) {
-		return const_cast<Region*>(const_cast<const ChildMemory*>(this)->get(addr,size));
-	}
-	const Region *get(uintptr_t addr,size_t size) const {
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			// TODO overlapped is wrong here?
-			if(_regs[i].size > 0 && Math::overlapped(addr,size,_regs[i].begin,_regs[i].size))
-				return _regs + i;
+	DS *get(capsel_t sel) {
+		for(iterator it = begin(); it != end(); ++it) {
+			if(it->cap() == sel)
+				return &*it;
 		}
 		return 0;
 	}
-	Region *get_free() {
-		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size == 0)
-				return _regs + i;
-		}
-		throw ChildMemoryException(E_CAPACITY);
+	void remove(DS *ds) {
+		if(!ds)
+			throw ChildMemoryException(E_NOT_FOUND);
+		_list.remove(ds);
+		delete ds;
 	}
 
-	Region _regs[MAX_REGIONS];
-	DS _ds[MAX_DS];
+	SList<DS> _list;
 };
 
 }

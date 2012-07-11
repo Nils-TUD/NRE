@@ -3,5 +3,4 @@
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner keyb serial
 bin/apps/root
-bin/apps/log provides=log
 bin/apps/unittests

@@ -105,13 +105,13 @@ public:
 		T *t = _head, *p = 0;
 		while(t != e) {
 			p = t;
-			t = t->next();
+			t = static_cast<T*>(t->next());
 		}
 		assert(t == e);
 		if(p)
 			p->next(e->next());
 		else
-			_head = e->next();
+			_head = static_cast<T*>(e->next());
 		if(!e->next())
 			_tail = p;
 		_len--;

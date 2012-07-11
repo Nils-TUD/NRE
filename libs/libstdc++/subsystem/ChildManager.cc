@@ -199,15 +199,13 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		// utcb
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
-		c->reglist().add(c->_utcb,Utcb::SIZE,0,0);
+		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::ANONYMOUS,0),c->_utcb,0,0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),0,0,c->_pd,c->_utcb);
 
-		// he needs a stack; use guards around it
-		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE + ExecEnv::PAGE_SIZE * 2);
-		c->reglist().add(c->stack(),ExecEnv::PAGE_SIZE,0,0);
-		c->reglist().add(c->stack() + ExecEnv::PAGE_SIZE,ExecEnv::STACK_SIZE,c->_ec->stack(),ChildMemory::RW);
-		c->reglist().add(c->stack() + ExecEnv::PAGE_SIZE * 2,ExecEnv::PAGE_SIZE,0,0);
-		c->_stack += ExecEnv::PAGE_SIZE;
+		// he needs a stack
+		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
+		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
+				c->stack(),ChildMemory::RW,0);
 
 		// and a HIP
 		{
@@ -259,11 +257,12 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	try {
 		Child *c = cm->get_child(pid);
 		if(c->_started) {
-			uintptr_t src;
-			size_t size;
-			if(!c->reglist().find(uf->rsp,src,size))
+			uintptr_t stack = uf->rsp & ~(ExecEnv::PAGE_SIZE - 1);
+			ChildMemory::DS *ds = c->reglist().find_by_addr(stack);
+			if(!ds)
 				throw ChildMemoryException(E_NOT_FOUND);
-			uf->rip = *reinterpret_cast<word_t*>(src + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
+			uf->rip = *reinterpret_cast<word_t*>(
+					ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = Mtd::RIP_LEN;
 			c->increase_refs();
 		}
@@ -357,7 +356,6 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 	}
 }
 
-// TODO code-duplication; we already have that in the Session class
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	if(!CPU::current().get_pt)
 		throw ServiceRegistryException(E_NOT_FOUND);
@@ -527,8 +525,9 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	uintptr_t addr = 0;
 	if(desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
-		c->reglist().add(addr,desc.size(),desc.perm(),0);
-		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm());
+		c->reglist().add(desc,addr,desc.perm(),0);
+		desc.virt(addr);
 		LOG(Logging::DATASPACES,
 				Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
 		uf << E_SUCCESS << desc;
@@ -539,12 +538,8 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 
 		// add it to the regions of the child
 		try {
-			// use guard-pages around the dataspace
-			addr = c->reglist().find_free(ds.size() + ExecEnv::PAGE_SIZE * 2);
-			c->reglist().add(addr,ExecEnv::PAGE_SIZE,0,0);
-			c->reglist().add(ds.desc(),addr + ExecEnv::PAGE_SIZE,ds.perm(),ds.unmapsel());
-			c->reglist().add(addr + ExecEnv::PAGE_SIZE + ds.size(),ExecEnv::PAGE_SIZE,0,0);
-			addr += ExecEnv::PAGE_SIZE;
+			addr = c->reglist().find_free(ds.size());
+			c->reglist().add(ds.desc(),addr,ds.perm(),ds.unmapsel());
 		}
 		catch(...) {
 			_dsm.release(desc,ds.unmapsel());
@@ -568,28 +563,6 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	}
 }
 
-// TODO especially this usecase shows that ChildMemory is a really bad datastructure for this
-// way too much linear searches and so on
-static void remap(Child *ch,DataSpaceDesc &src,DataSpaceDesc &dst,
-		uintptr_t srcorg,uintptr_t dstorg,capsel_t srcsel,capsel_t dstsel) {
-	// remove them from child-regions
-	if(srcsel != ObjCap::INVALID)
-		ch->reglist().remove(srcsel);
-	if(dstsel != ObjCap::INVALID)
-		ch->reglist().remove(dstsel);
-
-	// swap origins (add expects them in virt)
-	uintptr_t vsrc = src.virt();
-	uintptr_t vdst = dst.virt();
-	src.virt(dstorg);
-	dst.virt(srcorg);
-	// and map them again; the next pagefault will handle the rest
-	if(srcsel != ObjCap::INVALID)
-		ch->reglist().add(src,vsrc,src.perm(),srcsel);
-	if(dstsel != ObjCap::INVALID)
-		ch->reglist().add(dst,vdst,dst.perm(),dstsel);
-}
-
 void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 	capsel_t srcsel = uf.get_translated(0).offset();
 	capsel_t dstsel = uf.get_translated(0).offset();
@@ -605,21 +578,21 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 		{
 			// first do the stuff for the child that requested the switch
 			ScopedLock<UserSm> guard_regs(&c->_sm);
-			DataSpaceDesc src,dst;
-			bool found_src = c->reglist().find(srcsel,src);
-			bool found_dst = c->reglist().find(dstsel,dst);
+			ChildMemory::DS *src,*dst;
+			src = c->reglist().find(srcsel);
+			dst = c->reglist().find(dstsel);
 			LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
-						<< "' switches:\n\t" << src << "\n\t" << dst << "\n");
-			if(!found_src || !found_dst)
+						<< "' switches:\n\t" << src->desc() << "\n\t" << dst->desc() << "\n");
+			if(!src || !dst)
 				throw Exception(E_ARGS_INVALID);
-			if(src.size() != dst.size())
+			if(src->desc().size() != dst->desc().size())
 				throw Exception(E_ARGS_INVALID);
 
 			// first revoke the memory to prevent further accesses
-			CapRange(src.origin() >> ExecEnv::PAGE_SHIFT,
-					src.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
-			CapRange(dst.origin() >> ExecEnv::PAGE_SHIFT,
-					dst.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			CapRange(src->desc().origin() >> ExecEnv::PAGE_SHIFT,
+					src->desc().size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			CapRange(dst->desc().origin() >> ExecEnv::PAGE_SHIFT,
+					dst->desc().size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
 			// we have to reset the last pf information here, because of the revoke. otherwise it
 			// can happen that last time CPU X caused the last fault and this time, CPU X causes
 			// the second fault (the first one will handle it and the second one will find it already
@@ -628,11 +601,16 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			c->_last_fault_addr = 0;
 			c->_last_fault_cpu = 0;
 			// now copy the content
-			memcpy(reinterpret_cast<char*>(dst.origin()),reinterpret_cast<char*>(src.origin()),src.size());
+			memcpy(reinterpret_cast<char*>(dst->desc().origin()),
+					reinterpret_cast<char*>(src->desc().origin()),
+					src->desc().size());
 			// change mapping
-			srcorg = src.origin();
-			dstorg = dst.origin();
-			remap(c,src,dst,srcorg,dstorg,srcsel,dstsel);
+			srcorg = src->desc().origin();
+			dstorg = dst->desc().origin();
+			src->desc().origin(dstorg);
+			dst->desc().origin(srcorg);
+			src->all_perms(0);
+			dst->all_perms(0);
 		}
 
 		// now change the mapping for all other childs that have one of these dataspaces
@@ -642,14 +620,21 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 
 			Child *ch = _childs[i];
 			ScopedLock<UserSm> guard_regs(&ch->_sm);
-			DataSpaceDesc chsrc,chdst;
-			bool found_src = ch->reglist().find(srcsel,chsrc);
-			bool found_dst = ch->reglist().find(dstsel,chdst);
-			if(!found_src && !found_dst)
+			DataSpaceDesc dummy;
+			ChildMemory::DS *src,*dst;
+			src = ch->reglist().find(srcsel);
+			dst = ch->reglist().find(dstsel);
+			if(!src && !dst)
 				continue;
 
-			remap(ch,chsrc,chdst,srcorg,dstorg,found_src ? srcsel : ObjCap::INVALID,
-					found_dst ? dstsel : ObjCap::INVALID);
+			if(src) {
+				src->desc().origin(dstorg);
+				src->all_perms(0);
+			}
+			if(dst) {
+				dst->desc().origin(srcorg);
+				src->all_perms(0);
+			}
 			x++;
 		}
 
@@ -673,16 +658,14 @@ void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
 	if(desc.type() == DataSpaceDesc::VIRTUAL) {
 		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
 				<< "' destroys virtual ds " << desc << "\n");
-		c->reglist().remove(desc.virt(),desc.size());
+		c->reglist().remove_by_addr(desc.virt());
 	}
 	else {
 		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
 				<< "' destroys " << sel << ": " << desc << "\n");
 		// destroy (decrease refs) the ds
 		_dsm.release(desc,sel);
-		DataSpaceDesc childdesc = c->reglist().remove(sel);
-		c->reglist().remove(childdesc.virt() - ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE);
-		c->reglist().remove(childdesc.virt() + childdesc.size(),ExecEnv::PAGE_SIZE);
+		c->reglist().remove(sel);
 	}
 	uf << E_SUCCESS;
 }
@@ -740,26 +723,38 @@ void ChildManager::Portals::pf(capsel_t pid) {
 
 		// TODO different handlers (cow, ...)
 		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
-		uintptr_t src;
-		size_t size;
 		bool remap = false;
-		uint flags = c->reglist().find(pfaddr,src,size);
-		kill = !flags;
+		ChildMemory::DS *ds = c->reglist().find_by_addr(pfaddr);
+		uint perms = 0;
+		uint flags = 0;
+		kill = !ds || !ds->desc().perm();
+		if(!kill) {
+			flags = ds->page_perms(pfaddr);
+			perms = ds->desc().perm();
+		}
 		// check if the access rights are violated
-		if(flags & ChildMemory::M) {
-			if((error & 0x2) && !(flags & ChildMemory::W))
+		if(flags) {
+			if((error & 0x2) && !(perms & ChildMemory::W))
 				kill = true;
-			if((error & 0x4) && !(flags & ChildMemory::R))
+			if((error & 0x4) && !(perms & ChildMemory::R))
 				kill = true;
 		}
 
 		// is the page already mapped (may be ok if two cpus accessed the page at the same time)
-		if(!kill && (flags & ChildMemory::M)) {
+		if(!kill && flags) {
 			// first check if our parent has unmapped the memory
-			Crd res = Syscalls::lookup(Crd(src >> ExecEnv::PAGE_SHIFT,0,Crd::MEM));
+			Crd res = Syscalls::lookup(Crd(ds->origin(pfaddr) >> ExecEnv::PAGE_SHIFT,0,Crd::MEM));
 			// if so, remap it
-			if(res.is_null())
+			if(res.is_null()) {
+				// reset it here as well. this is necessary for subsystems (where our parent has
+				// revoked the memory)
+				c->_last_fault_addr = 0;
+				c->_last_fault_cpu = 0;
+				// reset all permissions since we want to remap it completely.
+				// note that this assumes that we're revoking always complete dataspaces.
+				ds->all_perms(0);
 				remap = true;
+			}
 			// same fault for same cpu again?
 			else if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
@@ -792,13 +787,12 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				addr++;
 			}
 		}
-		else if(remap || !(flags & ChildMemory::M)) {
-			uint perms = flags & ChildMemory::RWX;
+		else if(remap || !flags) {
+			uintptr_t src = ds->origin(pfaddr);
 			// try to map the next 32 pages
-			size_t msize = Math::min<size_t>(Math::round_up<size_t>(size,ExecEnv::PAGE_SIZE),32 << ExecEnv::PAGE_SHIFT);
-			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,msize >> ExecEnv::PAGE_SHIFT,
+			size_t pages = ds->page_perms(pfaddr,32,perms);
+			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,pages,
 					Crd::MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
-			c->reglist().map(pfaddr,msize);
 			// ensure that we have the memory (if we're a subsystem this might not be true)
 			// TODO this is not sufficient, in general
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this
