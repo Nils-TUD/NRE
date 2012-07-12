@@ -81,7 +81,8 @@ public:
 
 	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
-		registry().reg(ServiceRegistry::Service(c,name,cap,available));
+		uint count = Math::next_pow2<size_t>(CPU::count());
+		registry().reg(c,name,cap,count,available);
 		_regsm.up();
 	}
 
@@ -91,7 +92,8 @@ public:
 		if(!s) {
 			BitField<Hip::MAX_CPUS> available;
 			capsel_t caps = get_parent_service(name.str(),available);
-			s = registry().reg(ServiceRegistry::Service(0,name,caps,available));
+			uint count = Math::next_pow2<size_t>(CPU::count());
+			s = registry().reg(0,name,caps,count,available);
 			_regsm.up();
 		}
 		return s;
@@ -126,7 +128,6 @@ private:
 		Child *c = _childs[i];
 		c->decrease_refs();
 		if(c->refs() == 0) {
-			Util::write_backtrace(Serial::get());
 			Serial::get() << "Destroying child '" << c->cmdline() << "'\n";
 			// note that we're safe here because we only get here if there is only one Ec left and
 			// this one has just caused a fault. thus, there can't be somebody else using this

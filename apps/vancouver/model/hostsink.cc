@@ -58,7 +58,7 @@ public:
 		return true;
 	}
 
-	HostSink(unsigned hdev,size_t size,char head_char,char cont_char)
+	HostSink(unsigned hdev,size_t size,ulong head_char,ulong cont_char)
 			: _hdev(hdev), _size(size), _count(0), _overflow(false) {
 		if((size == ~0UL) || (size < 1))
 			size = 1;

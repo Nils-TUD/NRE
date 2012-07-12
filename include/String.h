@@ -66,6 +66,13 @@ private:
 	size_t _len;
 };
 
+static inline bool operator==(const String &s1,const String &s2) {
+	return s1.length() == s2.length() && strcmp(s1.str(),s2.str()) == 0;
+}
+static inline bool operator!=(const String &s1,const String &s2) {
+	return !operator==(s1,s2);
+}
+
 static inline OStream &operator <<(OStream &os,const String &str) {
 	return os << str.str();
 }
