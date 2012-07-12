@@ -237,7 +237,7 @@ public:
 	 * @param addr the virtual address
 	 */
 	void remove_by_addr(uintptr_t addr) {
-		remove(find(addr));
+		remove(find_by_addr(addr));
 	}
 
 private:
