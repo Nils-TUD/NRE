@@ -63,6 +63,9 @@ namespace std {
 
 namespace nre {
 
+class Exception;
+static inline OStream &operator<<(OStream &os,const Exception &e);
+
 /**
  * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and
  * have optionally a message (string).

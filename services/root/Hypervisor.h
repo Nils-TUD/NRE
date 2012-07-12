@@ -25,6 +25,8 @@
 
 class Hypervisor {
 public:
+	static void init();
+
 	PORTAL static void portal_mem(capsel_t pid);
 	PORTAL static void portal_gsi(capsel_t pid);
 	PORTAL static void portal_io(capsel_t pid);
@@ -58,7 +60,7 @@ private:
 	Hypervisor();
 
 	static uchar _stack[];
-	static nre::Pt *_mem_pt;
+	static nre::Pt *_mem_pts[];
 	static nre::RegionManager _io;
 	static nre::BitField<nre::Hip::MAX_GSIS> _gsis;
 	static nre::UserSm _io_sm;

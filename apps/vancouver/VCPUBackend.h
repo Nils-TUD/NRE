@@ -44,7 +44,7 @@ class VCPUBackend {
 
 public:
 	VCPUBackend(Motherboard *mb,VCpu *vcpu,bool use_svm,cpu_t cpu)
-			: _ec(cpu), _caps(get_portals(use_svm)), _sm(1), _vcpu(cpu,_caps),
+			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
 			  _sc(&_vcpu,nre::Qpd()) {
 		_ec.set_tls<VCpu*>(nre::Thread::TLS_PARAM,vcpu);
 		_sc.start();

@@ -189,7 +189,8 @@ bool Vancouver::receive(MessageHostOp &msg) {
 		break;
 
 		case MessageHostOp::OP_VCPU_CREATE_BACKEND: {
-			VCPUBackend *v = new VCPUBackend(&_mb,msg.vcpu,Hip::get().has_svm(),CPU::current().log_id());
+			cpu_t cpu = CPU::current().log_id();
+			VCPUBackend *v = new VCPUBackend(&_mb,msg.vcpu,Hip::get().has_svm(),cpu);
 			msg.value = reinterpret_cast<ulong>(v);
 			msg.vcpu->executor.add(this,receive_static<CpuMessage>);
 		}
@@ -214,7 +215,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 		break;
 
 		case MessageHostOp::OP_ALLOC_SEMAPHORE: {
-			Sm *sm = new Sm(1);
+			Sm *sm = new Sm(0);
 			msg.value = sm->sel();
 		}
 		break;
@@ -345,7 +346,7 @@ void Vancouver::create_vcpus() {
 }
 
 int main(int argc,char *argv[]) {
-	Vancouver *v = new Vancouver("PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 32);
+	Vancouver *v = new Vancouver("ncpu:1 PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 32);
 	v->reset();
 
 	Sm sm(0);

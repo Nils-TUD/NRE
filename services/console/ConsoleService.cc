@@ -71,29 +71,28 @@ void ConsoleService::created_session(size_t idx) {
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
+	if((~pk.flags & Keyboard::LWIN) || (~pk.flags & Keyboard::RELEASE))
+		return false;
 	switch(pk.keycode) {
 		case Keyboard::VK_END:
-			if((pk.flags & Keyboard::RCTRL) && (pk.flags & Keyboard::RELEASE))
-				_reboot.reboot();
+			_reboot.reboot();
 			return true;
 
 		case Keyboard::VK_LEFT:
-			if(~pk.flags & Keyboard::RELEASE)
-				prev();
+			prev();
 			return true;
 
 		case Keyboard::VK_RIGHT:
-			if(~pk.flags & Keyboard::RELEASE)
-				next();
+			next();
 			return true;
 
 		case Keyboard::VK_UP:
-			if(active() && (~pk.flags & Keyboard::RELEASE))
+			if(active())
 				active()->prev();
 			return true;
 
 		case Keyboard::VK_DOWN:
-			if(active() && (~pk.flags & Keyboard::RELEASE))
+			if(active())
 				active()->next();
 			return true;
 	}

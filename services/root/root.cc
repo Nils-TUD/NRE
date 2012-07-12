@@ -131,6 +131,9 @@ int main() {
 	// now we can use dlmalloc (map-pt created and available memory added to pool)
 	dlmalloc_init();
 
+	// create memory mapping portals for the other CPUs
+	Hypervisor::init();
+
 	// now init the stuff for all other CPUs (using dlmalloc)
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->log_id() != CPU::current().log_id()) {
