@@ -17,6 +17,7 @@
 #pragma once
 
 #include <utcb/UtcbFrame.h>
+#include <ipc/Service.h>
 #include <cap/CapSpace.h>
 #include <kobj/Pt.h>
 #include <util/BitField.h>
@@ -74,8 +75,8 @@ private:
 		UtcbFrame uf;
 		ScopedCapSels caps(CPU::count(),CPU::count());
 		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
-		uf << String(service);
-		CPU::current().get_pt->call(uf);
+		uf << Service::GET << String(service);
+		CPU::current().srv_pt->call(uf);
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)

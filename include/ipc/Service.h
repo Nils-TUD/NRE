@@ -82,9 +82,9 @@ class Service {
 
 public:
 	enum Command {
-		OPEN_SESSION,
-		SHARE_DATASPACE,
-		CLOSE_SESSION
+		REGISTER,
+		GET,
+		UNREGISTER
 	};
 
 	enum {
@@ -147,11 +147,12 @@ public:
 	LocalThread *get_ec(cpu_t cpu) const {
 		return _insts[cpu] != 0 ? &_insts[cpu]->ec() : 0;
 	}
+
 	void reg() {
 		UtcbFrame uf;
 		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
-		uf << String(_name) << _reg_cpus;
-		CPU::current().reg_pt->call(uf);
+		uf << REGISTER << String(_name) << _reg_cpus;
+		CPU::current().srv_pt->call(uf);
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)
@@ -159,8 +160,8 @@ public:
 	}
 	void unreg() {
 		UtcbFrame uf;
-		uf << String(_name);
-		CPU::current().unreg_pt->call(uf);
+		uf << UNREGISTER << String(_name);
+		CPU::current().srv_pt->call(uf);
 		ErrorCode res;
 		uf >> res;
 		if(res != E_SUCCESS)

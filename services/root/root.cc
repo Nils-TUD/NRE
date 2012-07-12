@@ -41,7 +41,7 @@ class CPU0Init {
 };
 
 EXTERN_C void dlmalloc_init();
-PORTAL static void portal_reg(capsel_t);
+PORTAL static void portal_service(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
 static void start_childs();
@@ -77,7 +77,7 @@ CPU0Init::CPU0Init() {
 			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
 	UtcbFrameRef reguf(regec->utcb());
 	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
-	cpu.reg_pt = new Pt(regec,portal_reg);
+	cpu.srv_pt = new Pt(regec,portal_service);
 }
 
 // TODO clang!
@@ -151,7 +151,7 @@ int main() {
 			LocalThread *regec = new LocalThread(it->log_id());
 			UtcbFrameRef reguf(ec->utcb());
 			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
-			it->reg_pt = new Pt(regec,portal_reg);
+			it->srv_pt = new Pt(regec,portal_service);
 		}
 	}
 
@@ -184,20 +184,31 @@ static void start_childs() {
 	}
 }
 
-static void portal_reg(capsel_t) {
+static void portal_service(capsel_t) {
 	UtcbFrameRef uf;
 	try {
+		Service::Command cmd;
 		String name;
-		BitField<Hip::MAX_CPUS> available;
 		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
-		uf >> name;
-		uf >> available;
-		uf.finish_input();
+		uf >> cmd >> name;
+		switch(cmd) {
+			case Service::REGISTER: {
+				BitField<Hip::MAX_CPUS> available;
+				uf >> available;
+				uf.finish_input();
 
-		mng->reg_service(0,cap,name,available);
+				mng->reg_service(0,cap,name,available);
+				uf.accept_delegates();
+				uf << E_SUCCESS;
+			}
+			break;
 
-		uf.accept_delegates();
-		uf << E_SUCCESS;
+			case Service::UNREGISTER:
+			case Service::GET:
+				uf.clear();
+				uf << E_NOT_FOUND;
+				break;
+		}
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);

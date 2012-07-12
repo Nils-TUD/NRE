@@ -31,6 +31,12 @@ namespace nre {
  */
 class Session {
 public:
+	enum Command {
+		OPEN,
+		SHARE_DATASPACE,
+		CLOSE
+	};
+
 	/**
 	 * Opens the session at the service specified by the given connection
 	 *
@@ -65,7 +71,7 @@ private:
 		UtcbFrame uf;
 		ScopedCapSels caps(CPU::count(),CPU::count());
 		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
-		uf << Service::OPEN_SESSION;
+		uf << OPEN;
 		con.pt(CPU::current().log_id())->call(uf);
 
 		ErrorCode res;
@@ -78,7 +84,7 @@ private:
 	void close() {
 		UtcbFrame uf;
 		uf.translate(_caps);
-		uf << Service::CLOSE_SESSION;
+		uf << CLOSE;
 		_con.pt(CPU::current().log_id())->call(uf);
 	}
 

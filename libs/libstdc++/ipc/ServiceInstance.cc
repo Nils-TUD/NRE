@@ -16,6 +16,7 @@
 
 #include <ipc/ServiceInstance.h>
 #include <ipc/Service.h>
+#include <ipc/Session.h>
 #include <utcb/UtcbFrame.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
@@ -38,10 +39,10 @@ void ServiceInstance::portal(capsel_t) {
 	UtcbFrameRef uf;
 	Service *s = Thread::current()->get_tls<Service*>(Thread::TLS_PARAM);
 	try {
-		Service::Command cmd;
+		Session::Command cmd;
 		uf >> cmd;
 		switch(cmd) {
-			case Service::OPEN_SESSION: {
+			case Session::OPEN: {
 				uf.finish_input();
 
 				SessionData *sess = s->new_session();
@@ -49,7 +50,7 @@ void ServiceInstance::portal(capsel_t) {
 			}
 			break;
 
-			case Service::SHARE_DATASPACE: {
+			case Session::SHARE_DATASPACE: {
 				// the translated cap of the client identifies his session
 				capsel_t sid = uf.get_translated().offset();
 				capsel_t dssel = uf.get_delegated(0).offset();
@@ -67,7 +68,7 @@ void ServiceInstance::portal(capsel_t) {
 			}
 			break;
 
-			case Service::CLOSE_SESSION: {
+			case Session::CLOSE: {
 				capsel_t sid = uf.get_translated().offset();
 				uf.finish_input();
 

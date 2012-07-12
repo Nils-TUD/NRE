@@ -58,12 +58,10 @@ public:
 		INIT_SC			= 0x22,
 
 		SRV_INIT		= 0x23,		// get initial caps
-		SRV_REG			= 0x24,		// register service
-		SRV_UNREG		= 0x25,		// unregister service
-		SRV_GET			= 0x26,		// get service
-		SRV_IO			= 0x27,		// alloc/release io ports
-		SRV_GSI			= 0x28,		// alloc/release global system interrupt
-		SRV_DS			= 0x29,		// dataspace portal
+		SRV_SERVICE		= 0x24,		// service portal
+		SRV_IO			= 0x25,		// io ports portal
+		SRV_GSI			= 0x26,		// global system interrupt portal
+		SRV_DS			= 0x27,		// dataspace portal
 	};
 
 	static CapSpace& get() {

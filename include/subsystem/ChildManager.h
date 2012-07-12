@@ -44,14 +44,12 @@ class ChildManager {
 	class Portals {
 	public:
 		enum {
-			COUNT	= 9
+			COUNT	= 7
 		};
 
 		PORTAL static void startup(capsel_t pid);
 		PORTAL static void init_caps(capsel_t pid);
-		PORTAL static void reg(capsel_t pid);
-		PORTAL static void unreg(capsel_t pid);
-		PORTAL static void get_service(capsel_t pid);
+		PORTAL static void service(capsel_t pid);
 		PORTAL static void io(capsel_t);
 		PORTAL static void gsi(capsel_t);
 		PORTAL static void dataspace(capsel_t pid);

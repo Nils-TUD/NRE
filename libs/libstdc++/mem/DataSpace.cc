@@ -72,7 +72,7 @@ void DataSpace::share(Session &s) {
 	UtcbFrame uf;
 	// for the service protocol (identifies our session)
 	uf.translate(s.caps());
-	uf << Service::SHARE_DATASPACE;
+	uf << Session::SHARE_DATASPACE;
 	// for the dataspace protocol
 	uf << SHARE << _desc;
 	uf.delegate(_sel);

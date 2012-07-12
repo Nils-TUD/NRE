@@ -65,9 +65,7 @@ CPUInit::CPUInit() {
 		if(_startup_info.child) {
 			capsel_t off = cpu.log_id() * Hip::get().service_caps();
 			cpu.ds_pt = new Pt(off + CapSpace::SRV_DS);
-			cpu.reg_pt = new Pt(off + CapSpace::SRV_REG);
-			cpu.unreg_pt = new Pt(off + CapSpace::SRV_UNREG);
-			cpu.get_pt = new Pt(off + CapSpace::SRV_GET);
+			cpu.srv_pt = new Pt(off + CapSpace::SRV_SERVICE);
 			cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
 			cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
 			if(cpu.phys_id() == _startup_info.cpu) {

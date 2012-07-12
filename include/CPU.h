@@ -59,9 +59,7 @@ public:
 	Pt *ds_pt;
 	Pt *io_pt;
 	Pt *gsi_pt;
-	Pt *reg_pt;
-	Pt *unreg_pt;
-	Pt *get_pt;
+	Pt *srv_pt;
 
 	cpu_t phys_id() const {
 		return _logtophys[_id];
@@ -75,7 +73,7 @@ public:
 	}
 
 private:
-	CPU() : ds_pt(), io_pt(), gsi_pt(), reg_pt(), unreg_pt(), get_pt(), _id(), _next() {
+	CPU() : ds_pt(), io_pt(), gsi_pt(), srv_pt(), _id(), _next() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);

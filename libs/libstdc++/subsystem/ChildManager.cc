@@ -16,6 +16,7 @@
 
 #include <subsystem/ChildManager.h>
 #include <stream/Serial.h>
+#include <ipc/Service.h>
 #include <kobj/Gsi.h>
 #include <kobj/Ports.h>
 #include <cap/Caps.h>
@@ -155,12 +156,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
 					Mtd(Mtd::RSP));
 			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,Mtd(0));
-			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_REG,Portals::reg,Mtd(0));
-			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_UNREG,Portals::unreg,Mtd(0));
-			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GET,Portals::get_service,Mtd(0));
-			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
-			c->_pts[idx + 7] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
-			c->_pts[idx + 8] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_DS,Portals::dataspace,Mtd(0));
+			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_SERVICE,Portals::service,Mtd(0));
+			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
+			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
+			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_DS,Portals::dataspace,Mtd(0));
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
@@ -310,44 +309,48 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 	}
 }
 
-void ChildManager::Portals::reg(capsel_t pid) {
+void ChildManager::Portals::service(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
 		Child *c = cm->get_child(pid);
 		String name;
-		BitField<Hip::MAX_CPUS> available;
-		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
-		uf >> name;
-		uf >> available;
-		uf.finish_input();
+		Service::Command cmd;
+		uf >> cmd >> name;
+		switch(cmd) {
+			case Service::REGISTER: {
+				BitField<Hip::MAX_CPUS> available;
+				capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
+				uf >> available;
+				uf.finish_input();
 
-		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
-		cm->reg_service(c,cap,name,available);
+				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
+				cm->reg_service(c,cap,name,available);
+				uf.accept_delegates();
+				uf << E_SUCCESS;
+			}
+			break;
 
-		uf.accept_delegates();
-		uf << E_SUCCESS;
-	}
-	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
-		uf.clear();
-		uf << e.code();
-	}
-}
+			case Service::UNREGISTER: {
+				uf.finish_input();
 
-void ChildManager::Portals::unreg(capsel_t pid) {
-	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
-	UtcbFrameRef uf;
-	try {
-		Child *c = cm->get_child(pid);
-		String name;
-		uf >> name;
-		uf.finish_input();
+				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' unregs " << name << "\n");
+				cm->unreg_service(c,name);
+				uf << E_SUCCESS;
+			}
+			break;
 
-		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' unregs " << name << "\n");
-		cm->unreg_service(c,name);
+			case Service::GET: {
+				uf.finish_input();
 
-		uf << E_SUCCESS;
+				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
+				const ServiceRegistry::Service* s = cm->get_service(name);
+
+				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
+				uf << E_SUCCESS << s->available();
+			}
+			break;
+		}
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
@@ -357,14 +360,11 @@ void ChildManager::Portals::unreg(capsel_t pid) {
 }
 
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
-	if(!CPU::current().get_pt)
-		throw ServiceRegistryException(E_NOT_FOUND);
-
 	UtcbFrame uf;
 	ScopedCapSels caps(CPU::count(),CPU::count());
 	uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
-	uf << String(name);
-	CPU::current().get_pt->call(uf);
+	uf << Service::GET << String(name);
+	CPU::current().srv_pt->call(uf);
 
 	ErrorCode res;
 	uf >> res;
@@ -372,28 +372,6 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 		throw ServiceRegistryException(res);
 	uf >> available;
 	return caps.release();
-}
-
-void ChildManager::Portals::get_service(capsel_t pid) {
-	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
-	UtcbFrameRef uf;
-	try {
-		Child *c = cm->get_child(pid);
-		String name;
-		uf >> name;
-		uf.finish_input();
-
-		LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
-		const ServiceRegistry::Service* s = cm->get_service(name);
-
-		uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
-		uf << E_SUCCESS << s->available();
-	}
-	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
-		uf.clear();
-		uf << e.code();
-	}
 }
 
 void ChildManager::Portals::gsi(capsel_t pid) {
