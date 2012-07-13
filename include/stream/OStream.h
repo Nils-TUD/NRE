@@ -21,6 +21,24 @@
 
 namespace nre {
 
+template<typename T>
+class Format {
+public:
+	Format(const char *fmt,const T &value) : _fmt(fmt), _value(value) {
+	}
+
+	const char *fmt() const {
+		return _fmt;
+	}
+	const T &value() const {
+		return _value;
+	}
+
+private:
+	const char *_fmt;
+	const T &_value;
+};
+
 class OStream {
 	enum {
 		PADRIGHT	= 1 << 0,
@@ -42,6 +60,11 @@ public:
 	virtual ~OStream() {
 	}
 
+	template<typename T>
+	OStream &operator <<(const Format<T>& fmt) {
+		writef(fmt.fmt(),fmt.value());
+		return *this;
+	}
 	OStream &operator <<(char c) {
 		write(c);
 		return *this;
