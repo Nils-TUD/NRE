@@ -14,11 +14,11 @@
  * General Public License version 2 for more details.
  */
 
-.extern abort
+.extern thread_exit
 
 # called by a return of a global Thread.
 .global ec_landing_spot
 ec_landing_spot:
-	call	abort
+	call	thread_exit
 	# just to be sure
 	1:		jmp 1b

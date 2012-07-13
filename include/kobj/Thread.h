@@ -88,10 +88,7 @@ public:
 	/**
 	 * Destructor
 	 */
-	virtual ~Thread() {
-		delete _stack;
-		delete _utcb;
-	}
+	virtual ~Thread();
 
 	/**
 	 * @return the stack-address

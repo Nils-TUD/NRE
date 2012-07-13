@@ -30,7 +30,7 @@ class Pd;
 class ExecEnv {
 	enum {
 		// the x86-call instruction is 5 bytes long
-		CALL_INSTR_SIZE	= 5
+		CALL_INSTR_SIZE		= 5,
 	};
 
 public:
@@ -38,12 +38,32 @@ public:
 	typedef void (*startup_func)(void *);
 
 	enum {
-		PAGE_SHIFT		= 12,
-		PAGE_SIZE		= 1 << PAGE_SHIFT,
-		STACK_SIZE		= PAGE_SIZE,
-		KERNEL_START	= ARCH_KERNEL_START,
-		PHYS_ADDR_SIZE	= 40
+		PAGE_SHIFT			= 12,
+		PAGE_SIZE			= 1 << PAGE_SHIFT,
+		STACK_SIZE			= PAGE_SIZE,
+		KERNEL_START		= ARCH_KERNEL_START,
+		PHYS_ADDR_SIZE		= 40,
+		EXIT_CODE_NUM		= 0x20,
+		// use something in the middle of the first page. this way, we reduce the propability of
+		// pagefaults interpreted as voluntary exits
+		EXIT_START			= 0x800,
+		EXIT_END			= EXIT_START + EXIT_CODE_NUM - 1,
+		THREAD_EXIT			= EXIT_END + 1,
+		EXIT_SUCCESS		= 0,
+		EXIT_FAILURE		= 1,
 	};
+
+	NORETURN static void exit(int code) {
+		// jump to that address to cause a pagefault. this way, we tell our parent that we exited
+		// voluntarily with given exit code
+		void (*target)() = reinterpret_cast<void (*)()>(EXIT_START + (code & (EXIT_CODE_NUM - 1)));
+		target();
+	}
+
+	NORETURN static void thread_exit() {
+		void (*target)() = reinterpret_cast<void (*)()>(THREAD_EXIT);
+		target();
+	}
 
 	static inline Pd *get_current_pd() {
 		return static_cast<Pd*>(get_current(2));

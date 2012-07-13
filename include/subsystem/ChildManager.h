@@ -44,7 +44,7 @@ class ChildManager {
 	class Portals {
 	public:
 		enum {
-			COUNT	= 7
+			COUNT	= 8
 		};
 
 		PORTAL static void startup(capsel_t pid);
@@ -54,6 +54,7 @@ class ChildManager {
 		PORTAL static void gsi(capsel_t);
 		PORTAL static void dataspace(capsel_t pid);
 		PORTAL static void pf(capsel_t pid);
+		PORTAL static void exception(capsel_t pid);
 	};
 
 	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
@@ -61,12 +62,17 @@ class ChildManager {
 		MAX_CHILDS		= 32,
 		MAX_CMDLINE_LEN	= 256
 	};
+	enum ExitType {
+		THREAD_EXIT,
+		PROC_EXIT,
+		FAULT
+	};
 
 public:
 	explicit ChildManager();
 	~ChildManager();
 
-	ServiceRegistry &registry() {
+	const ServiceRegistry &registry() const {
 		return _registry;
 	}
 
@@ -80,26 +86,13 @@ public:
 	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
 		uint count = Math::next_pow2<size_t>(CPU::count());
-		registry().reg(c,name,cap,count,available);
+		_registry.reg(c,name,cap,count,available);
 		_regsm.up();
-	}
-
-	const ServiceRegistry::Service *get_service(const String &name) {
-		ScopedLock<UserSm> guard(&_sm);
-		const ServiceRegistry::Service* s = registry().find(name);
-		if(!s) {
-			BitField<Hip::MAX_CPUS> available;
-			capsel_t caps = get_parent_service(name.str(),available);
-			uint count = Math::next_pow2<size_t>(CPU::count());
-			s = registry().reg(0,name,caps,count,available);
-			_regsm.up();
-		}
-		return s;
 	}
 
 	void unreg_service(Child *c,const String& name) {
 		ScopedLock<UserSm> guard(&_sm);
-		registry().unreg(c,name);
+		_registry.unreg(c,name);
 	}
 
 private:
@@ -111,40 +104,42 @@ private:
 		return MAX_CHILDS;
 	}
 
+	const ServiceRegistry::Service *get_service(const String &name) {
+		ScopedLock<UserSm> guard(&_sm);
+		const ServiceRegistry::Service* s = registry().find(name);
+		if(!s) {
+			BitField<Hip::MAX_CPUS> available;
+			capsel_t caps = get_parent_service(name.str(),available);
+			uint count = Math::next_pow2<size_t>(CPU::count());
+			s = _registry.reg(0,name,caps,count,available);
+			_regsm.up();
+		}
+		return s;
+	}
+
+	static inline size_t per_child_caps() {
+		return Math::next_pow2(Hip::get().service_caps() * CPU::count());
+	}
 	cpu_t get_cpu(capsel_t pid) const {
 		size_t off = (pid - _portal_caps) % per_child_caps();
 		return off / Hip::get().service_caps();
 	}
 	Child *get_child(capsel_t pid) const {
-		Child *c = _childs[((pid - _portal_caps) / per_child_caps())];
+		Child *c = rcu_dereference(_childs[((pid - _portal_caps) / per_child_caps())]);
 		if(!c)
 			throw ChildException(E_NOT_FOUND);
 		return c;
 	}
-	void destroy_child(capsel_t pid) {
-		size_t i = (pid - _portal_caps) / per_child_caps();
-		Child *c = _childs[i];
-		c->decrease_refs();
-		if(c->refs() == 0) {
-			Serial::get() << "Destroying child '" << c->cmdline() << "'\n";
-			// note that we're safe here because we only get here if there is only one Ec left and
-			// this one has just caused a fault. thus, there can't be somebody else using this
-			// client instance
-			_childs[i] = 0;
-			_registry.remove(c);
-			delete c;
-			_child_count--;
-			Sync::memory_barrier();
-			_diesm.up();
-		}
+	uint get_vector(capsel_t pid) const {
+		return (pid - _portal_caps) % Hip::get().service_caps();
 	}
-	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
+	void term_child(capsel_t pid,UtcbExcFrameRef &uf);
+	void kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type);
+	void destroy_child(capsel_t pid);
 
-	static inline size_t per_child_caps() {
-		return Math::next_pow2(Hip::get().service_caps() * CPU::count());
-	}
 	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
 
+	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
 	void map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type);
 	void switch_to(UtcbFrameRef &uf,Child *c);
 	void unmap(UtcbFrameRef &uf,Child *c);

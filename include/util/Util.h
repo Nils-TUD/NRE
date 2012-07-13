@@ -43,6 +43,12 @@ public:
 		t2 = tmp;
 	}
 
+	static void write_dump(OStream& os,void *p,size_t size) {
+		word_t *ws = reinterpret_cast<word_t*>(p);
+		for(size_t i = 0; i < size / sizeof(word_t); ++i)
+			os.writef("%p: %#0"FMT_WORD_HEXLEN"x\n",ws + i,ws[i]);
+	}
+
 	static void write_backtrace(OStream& os) {
 		uintptr_t addrs[32];
 		ExecEnv::collect_backtrace(addrs,sizeof(addrs));

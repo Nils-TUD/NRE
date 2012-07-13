@@ -179,13 +179,33 @@ private:
 class RCU {
 public:
 	/**
-	 * Adds the given Thread to the list of known Ecs. Will be called by the Thread class automatically.
+	 * Adds the given Thread to the list of known Threads. Will be called by the Thread class
+	 * automatically.
 	 */
-	static void announce(Thread *ec) {
-		ScopedLock<UserSm> guard(&_sm);
+	static void add(Thread *ec) {
+		ScopedLock<UserSm> guard(&_ecsm);
 		ec->_next = _ecs;
 		_ecs = ec;
 		_ec_count++;
+	}
+	/**
+	 * Removes the given thread from the list of known Threads. Will be called by the Thread class
+	 * automatically.
+	 */
+	static void remove(Thread *ec) {
+		ScopedLock<UserSm> guard(&_ecsm);
+		Thread *p = 0,*t = _ecs;
+		while(t != 0 && t != ec) {
+			p = t;
+			t = t->_next;
+		}
+		if(t == ec) {
+			if(p)
+				p->_next = ec->_next;
+			else
+				_ecs = ec->_next;
+			_ec_count--;
+		}
 	}
 
 	/**
@@ -269,6 +289,7 @@ private:
 		if(_versions_count < _ec_count)
 			store_versions();
 
+		ScopedLock<UserSm> guard(&_ecsm);
 		Thread *ec = _ecs;
 		for(size_t i = 0; i < _ec_count; ++i) {
 			// it's safe to delete it when either the Thread has re-entered the critical section
@@ -291,6 +312,7 @@ private:
 		}
 
 		// update the version-numbers for all Ecs
+		ScopedLock<UserSm> guard(&_ecsm);
 		Thread *ec = _ecs;
 		for(size_t i = 0; i < _ec_count; ++i) {
 			_versions[i] = ec->_rcu_counter;
@@ -309,6 +331,10 @@ private:
 	static size_t _ec_count;
 	static RCUObject *_objs;
 	static UserSm _sm;
+	// note that we use a separate lock for the ec list, because it might happen that someone
+	// destroys a thread with the destructor of an RCUObject. so, when we used the same Sm,
+	// it would cause a deadlock.
+	static UserSm _ecsm;
 	static RCULock _lock;
 };
 

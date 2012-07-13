@@ -48,8 +48,11 @@ ChildManager::ChildManager() : _child_count(), _childs(),
 }
 
 ChildManager::~ChildManager() {
-	for(size_t i = 0; i < CPU::count(); ++i)
-		delete _childs[i];
+	for(size_t i = 0; i < CPU::count(); ++i) {
+		Child *c = rcu_dereference(_childs[i]);
+		if(c)
+			RCU::invalidate(c);
+	}
 	for(size_t i = 0; i < CPU::count(); ++i) {
 		delete _ecs[i];
 		delete _regecs[i];
@@ -57,6 +60,7 @@ ChildManager::~ChildManager() {
 	delete[] _ecs;
 	delete[] _regecs;
 	CapSpace::get().free(MAX_CHILDS * per_child_caps());
+	RCU::gc(true);
 }
 
 void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
@@ -140,26 +144,40 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
 		throw ElfException(E_ELF_SIG);
 
+	static int exc[] = {
+		CapSpace::EV_DIVIDE,CapSpace::EV_DEBUG,CapSpace::EV_BREAKPOINT,CapSpace::EV_OVERFLOW,
+		CapSpace::EV_BOUNDRANGE,CapSpace::EV_UNDEFOP,CapSpace::EV_NOMATHPROC,
+		CapSpace::EV_DBLFAULT,CapSpace::EV_TSS,CapSpace::EV_INVSEG,CapSpace::EV_STACK,
+		CapSpace::EV_GENPROT,CapSpace::EV_MATHFAULT,CapSpace::EV_ALIGNCHK,CapSpace::EV_MACHCHK,
+		CapSpace::EV_SIMD
+	};
+
 	// create child
 	Child *c = new Child(this,cmdline);
 	size_t idx = free_slot();
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
 		capsel_t pts = _portal_caps + idx * per_child_caps();
-		c->_ptcount = CPU::count() * Portals::COUNT;
+		c->_ptcount = CPU::count() * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
 		c->_pts = new Pt*[c->_ptcount];
+		memset(c->_pts,0,c->_ptcount * sizeof(Pt*));
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
 			size_t idx = cpu * Portals::COUNT;
 			size_t off = cpu * Hip::get().service_caps();
-			c->_pts[idx + 0] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
+			size_t i = 0;
+			for(; i < ARRAY_SIZE(exc); ++i) {
+				c->_pts[idx + i] = new Pt(_ecs[cpu],pts + off + exc[i],Portals::exception,
+						Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
+			}
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
 					Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
-			c->_pts[idx + 1] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
 					Mtd(Mtd::RSP));
-			c->_pts[idx + 2] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,Mtd(0));
-			c->_pts[idx + 3] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_SERVICE,Portals::service,Mtd(0));
-			c->_pts[idx + 4] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
-			c->_pts[idx + 5] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
-			c->_pts[idx + 6] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_DS,Portals::dataspace,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_SERVICE,Portals::service,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_DS,Portals::dataspace,Mtd(0));
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
@@ -220,13 +238,13 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		LOG(Logging::CHILD_CREATE,Serial::get() << *c << "\n");
 
 		// start child; we have to put the child into the list before that
-		_childs[idx] = c;
+		rcu_assign_pointer(_childs[idx],c);
 		c->_sc = new Sc(c->_ec,Qpd(),c->_pd);
 		c->_sc->start();
 	}
 	catch(...) {
 		delete c;
-		_childs[idx] = 0;
+		rcu_assign_pointer(_childs[idx],0);
 		throw;
 	}
 
@@ -254,6 +272,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbExcFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = cm->get_child(pid);
 		if(c->_started) {
 			uintptr_t stack = uf->rsp & ~(ExecEnv::PAGE_SIZE - 1);
@@ -263,7 +282,6 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			uf->rip = *reinterpret_cast<word_t*>(
 					ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = Mtd::RIP_LEN;
-			c->increase_refs();
 		}
 		else {
 			uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
@@ -293,6 +311,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = cm->get_child(pid);
 		// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
 		// grabs them afterwards with this portal
@@ -313,6 +332,7 @@ void ChildManager::Portals::service(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = cm->get_child(pid);
 		String name;
 		Service::Command cmd;
@@ -378,6 +398,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = cm->get_child(pid);
 		uint gsi;
 		void *pcicfg = 0;
@@ -443,6 +464,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = cm->get_child(pid);
 		Ports::port_t base;
 		uint count;
@@ -593,10 +615,10 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 
 		// now change the mapping for all other childs that have one of these dataspaces
 		for(size_t x = 0,i = 0; i < MAX_CHILDS && x < _child_count; ++i) {
-			if(_childs[i] == 0 || _childs[i] == c)
+			Child *ch = rcu_dereference(_childs[i]);
+			if(ch == 0 || ch == c)
 				continue;
 
-			Child *ch = _childs[i];
 			ScopedLock<UserSm> guard_regs(&ch->_sm);
 			DataSpaceDesc dummy;
 			ChildMemory::DS *src,*dst;
@@ -652,6 +674,7 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbFrameRef uf;
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
 		DataSpace::RequestType type;
 		Child *c = cm->get_child(pid);
 		uf >> type;
@@ -685,22 +708,30 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 void ChildManager::Portals::pf(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbExcFrameRef uf;
-	Child *c = cm->get_child(pid);
 	cpu_t cpu = cm->get_cpu(pid);
 
 	bool kill = false;
+	uintptr_t pfaddr = uf->qual[1];
+	unsigned error = uf->qual[0];
+	uintptr_t eip = uf->rip;
+
+	// voluntary exit?
+	if(pfaddr == eip && pfaddr >= ExecEnv::EXIT_START && pfaddr <= ExecEnv::THREAD_EXIT) {
+		cm->term_child(pid,uf);
+		return;
+	}
+
 	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
+		Child *c = cm->get_child(pid);
 		ScopedLock<UserSm> guard_switch(&cm->_switchsm);
 		ScopedLock<UserSm> guard_regs(&c->_sm);
-		uintptr_t pfaddr = uf->qual[1];
-		unsigned error = uf->qual[0];
-		uintptr_t eip = uf->rip;
 
 		LOG(Logging::PFS,Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
 				c->cmdline().str(),pfaddr,eip,cpu,error));
 
 		// TODO different handlers (cow, ...)
-		pfaddr &= ~(ExecEnv::PAGE_SIZE - 1);
+		uintptr_t pfpage = pfaddr & ~(ExecEnv::PAGE_SIZE - 1);
 		bool remap = false;
 		ChildMemory::DS *ds = c->reglist().find_by_addr(pfaddr);
 		uint perms = 0;
@@ -734,9 +765,9 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				remap = true;
 			}
 			// same fault for same cpu again?
-			else if(pfaddr == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
+			else if(pfpage == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
-						"Child '%s': Caused fault for %p on cpu %u twice. Killing Thread\n",
+						"Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
 						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id()));
 				kill = true;
 			}
@@ -745,30 +776,15 @@ void ChildManager::Portals::pf(capsel_t pid) {
 						"Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
 						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error));
 				LOG(Logging::PFS_DETAIL,Serial::get() << "See regionlist:\n" << c->reglist());
-				c->_last_fault_addr = pfaddr;
+				c->_last_fault_addr = pfpage;
 				c->_last_fault_cpu = cpu;
 			}
 		}
 
-		if(kill) {
-			uintptr_t *addr,addrs[32];
-			LOG(Logging::CHILD_KILL,Serial::get().writef(
-					"Child '%s': Pagefault for %p @ %p on cpu %u, bp=%p, error=%#x\n",
-					c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),uf->rbp,error));
-			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
-			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing Thread\n"));
-			ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
-			LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
-			addr = addrs;
-			while(*addr != 0) {
-				LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
-				addr++;
-			}
-		}
-		else if(remap || !flags) {
-			uintptr_t src = ds->origin(pfaddr);
+		if(!kill && (remap || !flags)) {
+			uintptr_t src = ds->origin(pfpage);
 			// try to map the next 32 pages
-			size_t pages = ds->page_perms(pfaddr,32,perms);
+			size_t pages = ds->page_perms(pfpage,32,perms);
 			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,pages,
 					Crd::MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
 			// ensure that we have the memory (if we're a subsystem this might not be true)
@@ -786,11 +802,103 @@ void ChildManager::Portals::pf(capsel_t pid) {
 	// because there can't be any running Ecs anyway since we only destroy it when there are no
 	// other Ecs left)
 	if(kill) {
-		// let the kernel kill the Thread by causing it a pagefault in kernel-area
+		try {
+			{
+				ScopedLock<RCULock> guard(&RCU::lock());
+				Child *c = cm->get_child(pid);
+				LOG(Logging::CHILD_KILL,Serial::get().writef(
+						"Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
+						c->cmdline().str(),pfaddr,uf->rip,CPU::get(cpu).phys_id(),error));
+			}
+			cm->kill_child(pid,uf,FAULT);
+		}
+		catch(...) {
+			// just let the kernel kill the Ec here
+			uf->mtd = Mtd::RIP_LEN;
+			uf->rip = ExecEnv::KERNEL_START;
+		}
+	}
+}
+
+void ChildManager::Portals::exception(capsel_t pid) {
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
+	UtcbExcFrameRef uf;
+	cm->kill_child(pid,uf,FAULT);
+}
+
+void ChildManager::term_child(capsel_t pid,UtcbExcFrameRef &uf) {
+	try {
+		bool pd = uf->eip != ExecEnv::THREAD_EXIT;
+		{
+			ScopedLock<RCULock> guard(&RCU::lock());
+			Child *c = get_child(pid);
+			int exitcode = uf->eip - (pd ? ExecEnv::EXIT_START : ExecEnv::THREAD_EXIT);
+			LOG(Logging::CHILD_KILL,Serial::get().writef(
+					"Child '%s': %s terminated with exit code %d on cpu %u\n",
+					c->cmdline().str(),pd ? "Pd" : "Thread",exitcode,get_cpu(pid)));
+		}
+
+		kill_child(pid,uf,pd ? PROC_EXIT : THREAD_EXIT);
+	}
+	catch(...) {
+		// just let the kernel kill the Ec here
 		uf->mtd = Mtd::RIP_LEN;
 		uf->rip = ExecEnv::KERNEL_START;
-		cm->destroy_child(pid);
 	}
+}
+
+void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
+	bool dead = false;
+	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
+		Child *c = get_child(pid);
+		uintptr_t *addr,addrs[32];
+		if(type == FAULT) {
+			LOG(Logging::CHILD_KILL,Serial::get().writef(
+					"Child '%s': caused exception %u @ %p on cpu %u\n",
+					c->cmdline().str(),get_vector(pid),uf->rip,CPU::get(get_cpu(pid)).phys_id()));
+			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
+			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing child\n"));
+		}
+		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
+		LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
+		addr = addrs;
+		while(*addr != 0) {
+			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
+			addr++;
+		}
+	}
+	catch(...) {
+		// ignore the exception here. this may happen if the child is already gone
+		dead = true;
+	}
+
+	// let the kernel kill the Thread by causing it a pagefault in kernel-area
+	uf->mtd = Mtd::RIP_LEN;
+	uf->rip = ExecEnv::KERNEL_START;
+	if(!dead && type != THREAD_EXIT)
+		destroy_child(pid);
+}
+
+void ChildManager::destroy_child(capsel_t pid) {
+	static UserSm sm;
+	Child *c;
+	{
+		ScopedLock<UserSm> guard(&sm);
+		size_t i = (pid - _portal_caps) / per_child_caps();
+		c = rcu_dereference(_childs[i]);
+		if(!c)
+			return;
+		rcu_assign_pointer(_childs[i],0);
+	}
+	_registry.remove(c);
+	RCU::invalidate(c);
+	// we have to wait until its deleted here because before that we can't reuse the slot.
+	// (we need new portals at the same place, so that they have to be revoked first)
+	RCU::gc(true);
+	_child_count--;
+	Sync::memory_barrier();
+	_diesm.up();
 }
 
 }

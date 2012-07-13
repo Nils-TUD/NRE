@@ -27,6 +27,7 @@
 #include <mem/RegionManager.h>
 #include <utcb/UtcbFrame.h>
 #include <util/BitField.h>
+#include <RCU.h>
 #include <CPU.h>
 #include <util/Atomic.h>
 
@@ -38,16 +39,13 @@ class ChildManager;
 
 OStream &operator<<(OStream &os,const Child &c);
 
-class Child {
+class Child : public RCUObject {
 	friend class ChildManager;
 	friend OStream &operator<<(OStream &os,const Child &c);
 
 public:
 	const String &cmdline() const {
 		return _cmdline;
-	}
-	unsigned refs() const {
-		return _refs;
 	}
 	ChildMemory &reglist() {
 		return _regs;
@@ -82,12 +80,12 @@ public:
 
 private:
 	explicit Child(ChildManager *cm,const char *cmdline)
-			: _cm(cm), _cmdline(cmdline), _refs(1), _started(), _pd(), _ec(), _sc(), _pts(),
-			  _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
+			: RCUObject(), _cm(cm), _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
+			  _pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
 			  _last_fault_addr(), _last_fault_cpu(), _gsis(),
 			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _sm() {
 	}
-	~Child() {
+	virtual ~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
 			delete _pts[i];
 		delete[] _pts;
@@ -100,13 +98,6 @@ private:
 		release_gsis();
 		release_ports();
 		CapSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
-	}
-
-	void increase_refs() {
-		Atomic::add(&_refs,+1);
-	}
-	void decrease_refs() {
-		Atomic::add(&_refs,-1);
 	}
 
 	void release_gsis() {
@@ -136,7 +127,6 @@ private:
 
 	ChildManager *_cm;
 	String _cmdline;
-	unsigned _refs;
 	bool _started;
 	Pd *_pd;
 	GlobalThread *_ec;

@@ -45,7 +45,7 @@ const TestCase testcases[] = {
 	cyclertest3,
 	regmng,
 	maskfield,
-	/*sharedmem,*/
+	sharedmem,
 };
 
 int main() {

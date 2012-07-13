@@ -26,7 +26,8 @@ namespace nre {
 
 Pd Pd::_cur INIT_PRIO_PD (CapSpace::INIT_PD);
 
-Pd::Pd(capsel_t cap) : ObjCap(cap) {
+// don't revoke our own Pd
+Pd::Pd(capsel_t cap) : ObjCap(cap,ObjCap::KEEP_CAP_BIT) {
 	if(_startup_info.child) {
 		// grab our initial caps (pd, ec, sc) from parent
 		UtcbFrame uf;

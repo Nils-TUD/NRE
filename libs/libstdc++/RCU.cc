@@ -20,7 +20,7 @@
 namespace nre {
 	class Init {
 		Init() {
-			RCU::announce(Thread::current());
+			RCU::add(Thread::current());
 		}
 		static Init init;
 	};
@@ -32,5 +32,6 @@ namespace nre {
 	RCUObject *RCU::_objs = 0;
 	RCULock RCU::_lock;
 	UserSm RCU::_sm INIT_PRIO_RCU;
+	UserSm RCU::_ecsm INIT_PRIO_RCU;
 	Init Init::init INIT_PRIO_RCU;
 }

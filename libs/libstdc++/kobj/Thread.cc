@@ -25,8 +25,14 @@ void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	ScopedCapSels scs;
 	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(cpu()).phys_id(),event_base(),type,pd->sel());
 	if(pd == Pd::current())
-		RCU::announce(this);
+		RCU::add(this);
 	sel(scs.release());
+}
+
+Thread::~Thread() {
+	RCU::remove(this);
+	delete _stack;
+	delete _utcb;
 }
 
 // slot 0 is reserved

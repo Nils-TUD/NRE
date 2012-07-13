@@ -32,7 +32,7 @@ using namespace nre::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,
-	ITEM_COUNT	= 10000000,
+	ITEM_COUNT	= 1000000,
 	WORD_COUNT	= 1,
 };
 
@@ -124,9 +124,10 @@ void ShmSessionData::receiver(void*) {
 		cons->next();
 	}
 	WVPASSEQ(count,static_cast<size_t>(ITEM_COUNT));
+	srv->notify();
 }
 
-static void shm_service(int argc,char *argv[]) {
+static int shm_service(int argc,char *argv[]) {
 	for(int i = 0; i < argc; ++i)
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
@@ -135,9 +136,10 @@ static void shm_service(int argc,char *argv[]) {
 	srv->reg();
 	srv->wait();
 	srv->unreg();
+	return 0;
 }
 
-static void shm_client(int,char *argv[]) {
+static int shm_client(int,char *argv[]) {
 	size_t ds_size = IStringStream::read_from<size_t>(argv[1]);
 	Connection con("shm");
 	Session sess(con);
@@ -154,6 +156,7 @@ static void shm_client(int,char *argv[]) {
 	WVPRINTF("Transfered %u items",ITEM_COUNT);
 	WVPERF(total,"Cycles");
 	WVPERF(avg,"Cycles");
+	return 0;
 }
 
 static Hip::mem_iterator get_self() {

@@ -14,13 +14,22 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/ExecEnv.h>
 #include <cstdlib>
 
+using namespace nre;
+
+EXTERN_C void __cxa_finalize(void *d);
+
 void abort() {
-	// TODO we have to call destructors
-	*(char*)0 = 4;
+	ExecEnv::exit(ExecEnv::EXIT_FAILURE);
 }
 
-void exit(int x) {
-	abort();
+void thread_exit() {
+	ExecEnv::thread_exit();
+}
+
+void exit(int code) {
+	__cxa_finalize(0);
+	ExecEnv::exit(code);
 }

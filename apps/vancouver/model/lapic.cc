@@ -447,7 +447,7 @@ private:
    */
   bool trigger_lvt(unsigned num){
     assert(num < NUM_LVT);
-    unsigned lvt;
+    unsigned lvt = 0;
     Lapic_read(num + LVT_BASE, lvt);
     if (!num) COUNTER_INC("LVT0");
 
