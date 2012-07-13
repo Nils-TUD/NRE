@@ -33,11 +33,11 @@ using namespace nre::test;
 
 const TestCase testcases[] = {
 	pingpong,
-	//catchex,
-	//delegateperf,
+	catchex,
+	delegateperf,
 	utcbnest,
-	//utcbperf,
-	//dstest,
+	utcbperf,
+	dstest,
 	slisttest,
 	dlisttest,
 	cyclertest1,
