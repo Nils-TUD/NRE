@@ -313,7 +313,7 @@ public:
 	 * @param flags the flags for the delegation (default NONE)
 	 * @param attr the attributes to delegate (default Crd::OBJ_ALL)
 	 */
-	void delegate(capsel_t cap,uint hotspot = CapRange::NO_HOTSPOT,DelFlags flags = NONE,
+	void delegate(capsel_t cap,uintptr_t hotspot = CapRange::NO_HOTSPOT,DelFlags flags = NONE,
 			uint attr = Crd::OBJ_ALL) {
 		add_typed(DelItem(Crd(cap,0,attr),flags,hotspot != CapRange::NO_HOTSPOT ? hotspot : cap));
 	}

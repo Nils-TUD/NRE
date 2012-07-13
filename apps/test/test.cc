@@ -104,7 +104,7 @@ static TimerSession *timer;
 static UserSm sm;
 
 static void view0(void*) {
-	uint page = Thread::current()->get_tls<uint>(Thread::TLS_PARAM);
+	uint page = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
 	ConsoleStream view(*conssess,page);
 	int i = 0;
 	while(1) {
