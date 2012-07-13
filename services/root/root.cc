@@ -19,10 +19,11 @@
 #include <utcb/UtcbFrame.h>
 #include <subsystem/ChildManager.h>
 #include <ipc/Service.h>
+#include <util/Math.h>
+#include <util/Cycler.h>
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
-#include <util/Math.h>
 #include <Exception.h>
 #include <Logging.h>
 #include <cstring>
@@ -166,6 +167,7 @@ int main() {
 
 static void start_childs() {
 	int i = 0;
+	ForwardCycler<CPU::iterator> cpus(CPU::begin(),CPU::end());
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		// we are the first one :)
@@ -175,7 +177,7 @@ static void start_childs() {
 			Hypervisor::map_mem(it->addr,virt,it->size);
 			// map command-line, if necessary
 			char *aux = Hypervisor::map_string(it->aux);
-			mng->load(virt,it->size,aux);
+			mng->load(virt,it->size,aux,0,cpus.next()->log_id());
 
 			// TODO temporary. skip everything behind vancouver
 			if(aux && strstr(aux,"vancouver"))

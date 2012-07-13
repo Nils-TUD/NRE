@@ -21,6 +21,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <util/ScopedCapSels.h>
+#include <CPU.h>
 
 namespace nre {
 
@@ -32,7 +33,7 @@ Pd::Pd(capsel_t cap) : ObjCap(cap,ObjCap::KEEP_CAP_BIT) {
 		// grab our initial caps (pd, ec, sc) from parent
 		UtcbFrame uf;
 		uf.delegation_window(Crd(CapSpace::INIT_PD,2,Crd::OBJ_ALL));
-		Pt initpt(CapSpace::SRV_INIT);
+		Pt initpt(_startup_info.cpu * Hip::get().service_caps() + CapSpace::SRV_INIT);
 		initpt.call(uf);
 	}
 }

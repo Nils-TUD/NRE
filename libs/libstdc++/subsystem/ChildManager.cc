@@ -133,7 +133,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	*ptrs++ = 0;
 }
 
-void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main) {
+void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main,cpu_t eccpu) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
@@ -217,7 +217,8 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
 		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::ANONYMOUS,0),c->_utcb,0,0);
-		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),0,0,c->_pd,c->_utcb);
+		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
+				eccpu,c->_pd,c->_utcb);
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);

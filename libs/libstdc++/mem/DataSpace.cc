@@ -70,8 +70,10 @@ void DataSpace::switch_to(DataSpace &dest) {
 
 void DataSpace::share(Session &s) {
 	UtcbFrame uf;
-	// for the service protocol (identifies our session)
-	uf.translate(s.caps());
+	// for the service protocol (identifies our session); note that we add the current cpu-id
+	// because the service might not be available on all CPUs, which means that not all selectors
+	// actually point to a capability. this way, the translation can't fail.
+	uf.translate(s.caps() + CPU::current().log_id());
 	uf << Session::SHARE_DATASPACE;
 	// for the dataspace protocol
 	uf << SHARE << _desc;

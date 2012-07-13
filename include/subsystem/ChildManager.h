@@ -76,7 +76,8 @@ public:
 		return _registry;
 	}
 
-	void load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main = 0);
+	void load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main = 0,
+			cpu_t cpu = CPU::current().log_id());
 
 	void wait_for_all() {
 		while(_child_count > 0)

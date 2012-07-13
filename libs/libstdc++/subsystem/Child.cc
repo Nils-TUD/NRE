@@ -20,7 +20,8 @@
 namespace nre {
 
 OStream &operator<<(OStream &os,const Child &c) {
-	os << "Child[cmdline='" << c.cmdline() << "', entry=" << Format<uintptr_t>("%p",c.entry()) << "]:\n";
+	os << "Child[cmdline='" << c.cmdline() << "' cpu=" << c._ec->cpu();
+	os << " entry=" << Format<uintptr_t>("%p",c.entry()) << "]:\n";
 	os << "\tGSIs: " << c.gsis() << "\n";
 	os << c.reglist();
 	os << "\tPorts:\n" << c.io();

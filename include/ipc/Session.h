@@ -83,7 +83,7 @@ private:
 
 	void close() {
 		UtcbFrame uf;
-		uf.translate(_caps);
+		uf.translate(_caps + CPU::current().log_id());
 		uf << CLOSE;
 		_con.pt(CPU::current().log_id())->call(uf);
 	}
