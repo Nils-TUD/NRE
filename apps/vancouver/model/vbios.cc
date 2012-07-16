@@ -32,7 +32,7 @@ public:
 	Motherboard &_mb;
 
 private:
-	VCpu *_vcpu;
+	VCVCpu *_vcpu;
 	unsigned char _resetvector[16];
 	enum {
 		BIOS_BASE = 0xf0000
@@ -107,7 +107,7 @@ public:
 		return true;
 	}
 
-	VBios(Motherboard &mb,VCpu *vcpu) : _mb(mb), _vcpu(vcpu) {
+	VBios(Motherboard &mb,VCVCpu *vcpu) : _mb(mb), _vcpu(vcpu) {
 		// initialize the reset vector with noops
 		memset(_resetvector,0x90,sizeof(_resetvector));
 		// realmode longjump to reset code

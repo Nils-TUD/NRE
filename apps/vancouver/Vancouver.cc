@@ -325,7 +325,7 @@ void Vancouver::create_devices(const char *args) {
 
 void Vancouver::create_vcpus() {
 	// init VCPUs
-	for(VCpu *vcpu = _mb.last_vcpu; vcpu; vcpu = vcpu->get_last()) {
+	for(VCVCpu *vcpu = _mb.last_vcpu; vcpu; vcpu = vcpu->get_last()) {
 		// init CPU strings
 		const char *short_name = "NOVA microHV";
 		vcpu->set_cpuid(0,1,reinterpret_cast<const unsigned *>(short_name)[0]);

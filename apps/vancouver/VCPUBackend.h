@@ -22,7 +22,7 @@
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <kobj/Sc.h>
-#include <kobj/VCPU.h>
+#include <kobj/VCpu.h>
 #include <utcb/UtcbFrame.h>
 #include <Assert.h>
 #include <Compiler.h>
@@ -43,15 +43,15 @@ class VCPUBackend {
 	};
 
 public:
-	VCPUBackend(Motherboard *mb,VCpu *vcpu,bool use_svm,cpu_t cpu)
+	VCPUBackend(Motherboard *mb,VCVCpu *vcpu,bool use_svm,cpu_t cpu)
 			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
 			  _sc(&_vcpu,nre::Qpd()) {
-		_ec.set_tls<VCpu*>(nre::Thread::TLS_PARAM,vcpu);
+		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
 		_sc.start();
 		_mb = mb;
 	}
 
-	nre::VCPU &vcpu() {
+	nre::VCpu &vcpu() {
 		return _vcpu;
 	}
 	nre::Sm &sm() {
@@ -100,7 +100,7 @@ private:
 	nre::LocalThread _ec;
 	capsel_t _caps;
 	nre::Sm _sm;
-	nre::VCPU _vcpu;
+	nre::VCpu _vcpu;
 	nre::Sc _sc;
 	static Motherboard *_mb;
 	static bool _tsc_offset;

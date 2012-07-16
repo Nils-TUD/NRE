@@ -28,7 +28,7 @@
 
 using namespace nre;
 
-class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
+class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 #define REGBASE "vcpu.cc"
 #include "reg.h"
 
@@ -212,14 +212,14 @@ class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 		}
 
 		if(old_event & EVENT_RESET) {
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_RESET);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_RESET);
 			handle_cpu_init(msg,true);
 			// fall through as we could have got an INIT or SIPI already
 		}
 
 		// INIT
 		if(old_event & EVENT_INIT) {
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_INIT);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_INIT);
 			handle_cpu_init(msg,false);
 			cpu->actv_state = 3;
 			// fall through as we could have got an SIPI already
@@ -232,7 +232,7 @@ class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 			cpu->cs.base = cpu->cs.sel << 4;
 			cpu->actv_state = 0;
 			msg.mtr_out |= Mtd::CS_SS;
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_SIPI);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_SIPI);
 			return;
 		}
 
@@ -243,7 +243,7 @@ class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 		// SMI
 		if((old_event & EVENT_SMI) && (~cpu->intr_state & 4)) {
 			dprintf("SMI received\n");
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_SMI);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_SMI);
 			cpu->actv_state = 0;
 			// fall trough
 		}
@@ -259,7 +259,7 @@ class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 			Serial::get().writef("inject NMI %x\n",old_event);
 			cpu->inj_info = 0x80000202;
 			cpu->actv_state = 0;
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_NMI);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_NMI);
 			return;
 		}
 
@@ -270,7 +270,7 @@ class VirtualCpu : public VCpu, public StaticReceiver<VirtualCpu> {
 		LapicEvent msg2(LapicEvent::INTA);
 		if(old_event & EVENT_EXTINT) {
 			// EXTINT IRQ via MSI or IPI: INTA directly from the PIC
-			Atomic::bit_and<volatile unsigned>(&_event,~VCpu::EVENT_EXTINT);
+			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_EXTINT);
 			receive(msg2);
 		}
 		else if(old_event & EVENT_INTR) {
@@ -476,7 +476,7 @@ public:
 		return true;
 	}
 
-	VirtualCpu(VCpu *_last,Motherboard &mb) : VCpu(_last), _mb(mb), _event(0), _sipi(~0u) {
+	VirtualCpu(VCVCpu *_last,Motherboard &mb) : VCVCpu(_last), _mb(mb), _event(0), _sipi(~0u) {
 		MessageHostOp msg(this);
 		if(!mb.bus_hostop.send(msg))
 			Util::panic("could not create VCpu backend.");

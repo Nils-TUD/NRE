@@ -93,6 +93,30 @@ static void test_nesting() {
 	WVPASSEQ(c,4);
 }
 
+static void perform_test_unnested(uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
+	uint64_t tic,tac,duration;
+	min = ~0ull;
+	max = 0;
+	for(uint i = 0; i < tries; i++) {
+		tic = Util::tsc();
+		{
+			UtcbFrame uf;
+			uf << 1;
+		}
+		tac = Util::tsc();
+
+		duration = tac - tic;
+		duration = duration > rdtsc ? duration - rdtsc : 0;
+		min = Math::min(min,duration);
+		max = Math::max(max,duration);
+		results[i] = duration;
+	}
+	avg = 0;
+	for(uint i = 0; i < tries; i++)
+		avg += results[i];
+	avg = avg / tries;
+}
+
 static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
 	uint64_t tic,tac,duration;
 	min = ~0ull;
@@ -127,6 +151,14 @@ static void test_perf() {
 	tic = Util::tsc();
 	tac = Util::tsc();
 	rdtsc = tac - tic;
+
+	perform_test_unnested(rdtsc,min,max,avg);
+	WVPRINTF("Without nesting:");
+	WVPERF(avg,"cycles");
+	WVPRINTF("avg: %Lu",avg);
+	WVPRINTF("min: %Lu",min);
+	WVPRINTF("max: %Lu",max);
+
 	size_t sizes[] = {1,2,4,8,16,32,64,128};
 	for(size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
 		perform_test(sizes[i],rdtsc,min,max,avg);

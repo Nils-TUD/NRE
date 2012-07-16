@@ -18,7 +18,7 @@
 
 #include <kobj/ObjCap.h>
 #include <kobj/GlobalThread.h>
-#include <kobj/VCPU.h>
+#include <kobj/VCpu.h>
 #include <kobj/Pd.h>
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
@@ -50,7 +50,7 @@ public:
 	 * @param vcpu the VCPU to bind it to
 	 * @param qpd the quantum-priority descriptor for the Sc
 	 */
-	explicit Sc(VCPU *vcpu,Qpd qpd) : ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
+	explicit Sc(VCpu *vcpu,Qpd qpd) : ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
 	}
 
 	/**

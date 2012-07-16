@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # config
-jobs="-j8"
+cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]:' | wc -l`
+jobs=-j$cpus
 opts=""
 hvdir="../nova-intel"
 loader="../morbo/tftp/farnsworth"
@@ -10,7 +11,7 @@ bochscfg="bochs.cfg"
 if [ "$NOVA_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom -m 256 -smp 1 -enable-kvm"
+	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	export QEMU="qemu-system-x86_64"
@@ -33,7 +34,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
 	exit 0
 fi
 
-echo "Building for $NOVA_TARGET in $NOVA_BUILD mode..."
+echo "Building for $NOVA_TARGET in $NOVA_BUILD mode using $cpus jobs..."
 
 if [ ! -f $build/test.dump ]; then
 	mkdir -p $build

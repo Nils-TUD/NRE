@@ -68,7 +68,7 @@ class VirtualBiosReset : public StaticReceiver<VirtualBiosReset>, public BiosCom
 	 */
 	bool reset_helper(MessageBios &msg) {
 		CpuState *state = msg.cpu;
-		VCpu *vcpu = msg.vcpu;
+		VCVCpu *vcpu = msg.vcpu;
 
 		bool bsp = !vcpu->get_last();
 

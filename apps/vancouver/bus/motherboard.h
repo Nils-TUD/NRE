@@ -27,7 +27,7 @@
 #include "params.h"
 #include "profile.h"
 
-class VCpu;
+class VCVCpu;
 
 /**
  * A virtual motherboard is a collection of busses.
@@ -79,7 +79,7 @@ public:
 	DBus<MessageTimer>			bus_timer; ///< Request for timers
 	DBus<MessageConsoleView>	bus_consoleview;
 	//DBus<MessageVesa>			bus_vesa;
-	VCpu *last_vcpu;
+	VCVCpu *last_vcpu;
 
 	nre::Clock &clock() {
 		return _clock;

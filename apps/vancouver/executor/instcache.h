@@ -145,7 +145,7 @@ class InstructionCache: public MemTlb {
 	}
 
 	// cpu state
-	VCpu * _vcpu;
+	VCVCpu * _vcpu;
 	InstructionCacheEntry *_entry;
 	unsigned _oeip;
 	unsigned _oesp;
@@ -541,6 +541,6 @@ public:
 		msg.mtr_out = _mtr_out;
 	}
 
-	InstructionCache(VCpu *vcpu) : MemTlb(vcpu->mem,vcpu->memregion), _values(), _vcpu(vcpu) {
+	InstructionCache(VCVCpu *vcpu) : MemTlb(vcpu->mem,vcpu->memregion), _values(), _vcpu(vcpu) {
 	}
 };

@@ -56,7 +56,7 @@ class Lapic : public DiscoveryHelper<Lapic>, public StaticReceiver<Lapic>
 public:
   Motherboard &_mb;
 private:
-  VCpu *    _vcpu;
+  VCVCpu *    _vcpu;
   unsigned  _initial_apic_id;
   unsigned  _timer;
   unsigned  _timer_clock_shift;
@@ -207,25 +207,25 @@ private:
     if (shorthand) icr &= ~MessageApic::ICR_DM;
 
     // LOWEST does not work in x2apic mode
-    if (event == VCpu::EVENT_LOWEST && x2apic_mode()) return set_error(4);
+    if (event == VCVCpu::EVENT_LOWEST && x2apic_mode()) return set_error(4);
 
     // self IPIs can only be fixed
-    if (self && event != VCpu::EVENT_FIXED
+    if (self && event != VCVCpu::EVENT_FIXED
 	// we can not send EXTINT and RRD
-	|| event & (VCpu::EVENT_EXTINT | VCpu::EVENT_RRD)
+	|| event & (VCVCpu::EVENT_EXTINT | VCVCpu::EVENT_RRD)
 	//  and INIT deassert messages
-	|| event == VCpu::EVENT_INIT && ~icr & MessageApic::ICR_ASSERT
+	|| event == VCVCpu::EVENT_INIT && ~icr & MessageApic::ICR_ASSERT
 
 	/**
 	 * This is a strange thing in the manual: lowest priority with
 	 * a broadcast shorthand is invalid. But what about physical
 	 * destination mode with dst=0xff?
 	 */
-	|| event == VCpu::EVENT_LOWEST && shorthand == 2)
+	|| event == VCVCpu::EVENT_LOWEST && shorthand == 2)
       return false;
 
     // send vector error check
-    if ((event & (VCpu::EVENT_FIXED | VCpu::EVENT_LOWEST)) && (icr & 0xff) < 16)
+    if ((event & (VCVCpu::EVENT_FIXED | VCVCpu::EVENT_LOWEST)) && (icr & 0xff) < 16)
       return set_error(5);
 
     // self IPI?
@@ -238,7 +238,7 @@ private:
 
     // level triggered IRQs are treated as edge triggered
     icr = icr & 0x4fff;
-    if (event == VCpu::EVENT_LOWEST) {
+    if (event == VCVCpu::EVENT_LOWEST) {
 
       // we send them round-robin as EVENT_FIXED
       MessageApic msg((icr & ~0x700u), dst, 0);
@@ -282,7 +282,7 @@ private:
     for (unsigned i=0; i < NUM_LVT; i++) {
       unsigned lvt;
       Lapic_read(i + LVT_BASE, lvt);
-      if (_lvtds[i] && ((1 << ((lvt >> 8) & 7)) == VCpu::EVENT_EXTINT))
+      if (_lvtds[i] && ((1 << ((lvt >> 8) & 7)) == VCVCpu::EVENT_EXTINT))
 	return 0x100 | i;
     }
 
@@ -302,8 +302,8 @@ private:
     if (hw_disabled()) return;
 
     // send our output line level upstream
-    CpuEvent msg(VCpu::EVENT_INTR);
-    if (!prioritize_irq()) msg.value = VCpu::DEASS_INTR;
+    CpuEvent msg(VCVCpu::EVENT_INTR);
+    if (!prioritize_irq()) msg.value = VCVCpu::DEASS_INTR;
     _vcpu->bus_event.send(msg);
   }
 
@@ -453,7 +453,7 @@ private:
 
 
     unsigned event = 1 << ((lvt >> 8) & 7);
-    bool level =  (lvt & MessageApic::ICR_LEVEL && event == VCpu::EVENT_FIXED) || (event == VCpu::EVENT_EXTINT);
+    bool level =  (lvt & MessageApic::ICR_LEVEL && event == VCVCpu::EVENT_FIXED) || (event == VCVCpu::EVENT_EXTINT);
 
     // do not accept more IRQs if no EOI was performed
     if (_rirr[num]) return true;
@@ -468,7 +468,7 @@ private:
     // perf IRQs are auto masked
     if (num == (_PERF_offset - LVT_BASE)) Atomic::set_bit(&_PERF, LVT_MASK_BIT);
 
-    if (event == VCpu::EVENT_FIXED) {
+    if (event == VCVCpu::EVENT_FIXED) {
       // set Remote IRR on level triggered IRQs
       _rirr[num] = level;
       accept_vector(lvt, level, true);
@@ -477,10 +477,10 @@ private:
       // XXX what about level triggered LVT0 DS?
       _lvtds[num] = false;
     }
-    else if (event & VCpu::EVENT_EXTINT)
+    else if (event & VCVCpu::EVENT_EXTINT)
       // _lvtds is set, thus update_irqs will propagate this upstream
       update_irqs();
-    else if (event & (VCpu::EVENT_SMI | VCpu::EVENT_NMI | VCpu::EVENT_INIT)) {
+    else if (event & (VCVCpu::EVENT_SMI | VCVCpu::EVENT_NMI | VCVCpu::EVENT_INIT)) {
       CpuEvent msg(event);
       _vcpu->bus_event.send(msg);
     }
@@ -581,13 +581,13 @@ public:
     assert(!(msg.icr & ~0xcfff));
     unsigned event = 1 << ((msg.icr >> 8) & 7);
 
-    assert(event != VCpu::EVENT_RRD);
-    assert(event != VCpu::EVENT_LOWEST);
+    assert(event != VCVCpu::EVENT_RRD);
+    assert(event != VCVCpu::EVENT_LOWEST);
 
-    if (event == VCpu::EVENT_FIXED)
+    if (event == VCVCpu::EVENT_FIXED)
       accept_vector(msg.icr, msg.icr & MessageApic::ICR_LEVEL, msg.icr & MessageApic::ICR_ASSERT);
     else {
-      if (event == VCpu::EVENT_SIPI) event |= (msg.icr & 0xff) << 8;
+      if (event == VCVCpu::EVENT_SIPI) event |= (msg.icr & 0xff) << 8;
 
       // forward INIT, SIPI, SMI, NMI and EXTINT directly to the CPU core
       CpuEvent msg(event);
@@ -758,7 +758,7 @@ public:
   }
 
 
-  Lapic(Motherboard &mb, VCpu *vcpu, unsigned initial_apic_id, unsigned timer) : _mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer)
+  Lapic(Motherboard &mb, VCVCpu *vcpu, unsigned initial_apic_id, unsigned timer) : _mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer)
   {
     // find a FREQ that is not too high
     for (_timer_clock_shift=0; _timer_clock_shift < 32; _timer_clock_shift++)

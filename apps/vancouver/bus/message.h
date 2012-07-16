@@ -435,7 +435,7 @@ struct MessageVesa
 /* HOST messages                                    */
 /****************************************************/
 
-class VCpu;
+class VCVCpu;
 typedef void (*ServiceThreadFn)(void *) REGPARMS(0) NORETURN;
 typedef void (*ServicePortalFn)(void *, nre::Utcb *) REGPARMS(0);
 
@@ -508,7 +508,7 @@ struct MessageHostOp
       unsigned long long mac;
     };
     struct {
-      VCpu *vcpu;
+      VCVCpu *vcpu;
     };
     struct {
       ServiceThreadFn work;
@@ -573,7 +573,7 @@ struct MessageHostOp
     return n;
   }
 
-  explicit MessageHostOp(VCpu *_vcpu) : type(OP_VCPU_CREATE_BACKEND), value(0), vcpu(_vcpu) {}
+  explicit MessageHostOp(VCVCpu *_vcpu) : type(OP_VCPU_CREATE_BACKEND), value(0), vcpu(_vcpu) {}
   explicit MessageHostOp(unsigned _module, char * _start, unsigned long _size=0) : type(OP_GET_MODULE), module(_module), start(_start), size(_size), cmdlen(0)  {}
   explicit MessageHostOp(Type _type, unsigned long _value, unsigned long _len=0, unsigned _cpu=~0U) : type(_type), value(_value),
                                                                                                       ptr(0), len(_len), cpu(_cpu) {}
@@ -705,11 +705,11 @@ class CpuState;
 
 struct MessageBios
 {
-  VCpu *vcpu;
+  VCVCpu *vcpu;
   CpuState *cpu;
   unsigned irq;
   unsigned mtr_out;
-  MessageBios(VCpu *_vcpu, CpuState *_cpu, unsigned _irq) : vcpu(_vcpu), cpu(_cpu), irq(_irq), mtr_out() {}
+  MessageBios(VCVCpu *_vcpu, CpuState *_cpu, unsigned _irq) : vcpu(_vcpu), cpu(_cpu), irq(_irq), mtr_out() {}
 };
 
 

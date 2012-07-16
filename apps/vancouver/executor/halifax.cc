@@ -35,7 +35,7 @@ public:
 		return true;
 	}
 
-	Halifax(VCpu *vcpu) : InstructionCache(vcpu) {
+	Halifax(VCVCpu *vcpu) : InstructionCache(vcpu) {
 		vcpu->executor.add(this,receive_static);
 	}
 	void *operator new(size_t size) {

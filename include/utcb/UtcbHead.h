@@ -21,7 +21,7 @@
 /**
  * Whether the UtcbStack variant should be used (requires a NOVA change)
  */
-#define USE_UTCB_STACKING		1
+#define USE_UTCB_STACKING		0
 /**
  * Whether the NOVA change exists (changes the UTCB layout)
  */

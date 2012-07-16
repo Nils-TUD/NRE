@@ -43,7 +43,7 @@ public:
 		unsigned event = 1 << ((icr >> 8) & 7);
 
 		// do not forward RRD and SIPI
-		if(event & (VCpu::EVENT_RRD | VCpu::EVENT_SIPI))
+		if(event & (VCVCpu::EVENT_RRD | VCVCpu::EVENT_SIPI))
 			return false;
 
 		// set logical destination mode
@@ -51,7 +51,7 @@ public:
 			icr |= MessageApic::ICR_DM;
 
 		// lowest prio mode?
-		if((msg.phys & MessageMem::MSI_RH) || (event & VCpu::EVENT_LOWEST)) {
+		if((msg.phys & MessageMem::MSI_RH) || (event & VCVCpu::EVENT_LOWEST)) {
 			// we send them round-robin as EVENT_FIXED
 			MessageApic msg1(icr & ~0x700,dst,0);
 			return _bus_apic.send_rr(msg1,_lowest_rr);

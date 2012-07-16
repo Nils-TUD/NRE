@@ -96,8 +96,8 @@ struct LapicEvent {
 	}
 };
 
-class VCpu {
-	VCpu *_last;
+class VCVCpu {
+	VCVCpu *_last;
 public:
 	DBus<CpuMessage> executor;
 	DBus<CpuEvent> bus_event;
@@ -106,7 +106,7 @@ public:
 	DBus<MessageMemRegion> memregion;
 	unsigned long long inj_count;
 
-	VCpu *get_last() {
+	VCVCpu *get_last() {
 		return _last;
 	}
 	bool is_ap() {
@@ -137,6 +137,6 @@ public:
 		EVENT_HOST = 1 << 20
 	};
 
-	VCpu(VCpu *last) : _last(last), executor(), bus_event(), bus_lapic(), mem(), memregion(), inj_count(0) {
+	VCVCpu(VCVCpu *last) : _last(last), executor(), bus_event(), bus_lapic(), mem(), memregion(), inj_count(0) {
 	}
 };
