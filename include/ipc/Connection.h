@@ -77,10 +77,7 @@ private:
 		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << Service::GET << String(service);
 		CPU::current().srv_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uf >> _available;
 		return caps.release();
 	}

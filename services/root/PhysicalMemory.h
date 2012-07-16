@@ -27,12 +27,8 @@ public:
 	friend class RootDataSpace;
 
 	class RootDataSpace {
-		enum {
-			MAX_SLOTS = 256
-		};
-
 	public:
-		RootDataSpace() : _desc(), _sel(), _unmapsel() {
+		RootDataSpace() : _desc(), _sel(), _unmapsel(), _next() {
 		}
 		RootDataSpace(const nre::DataSpaceDesc &desc);
 		RootDataSpace(const nre::DataSpaceDesc &,capsel_t);
@@ -59,7 +55,8 @@ public:
 		nre::DataSpaceDesc _desc;
 		capsel_t _sel;
 		capsel_t _unmapsel;
-		static RootDataSpace _slots[MAX_SLOTS];
+		RootDataSpace *_next;
+		static RootDataSpace *_free;
 	};
 
 	static void add(uintptr_t addr,size_t size);

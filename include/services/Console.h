@@ -80,10 +80,7 @@ public:
 		uf << Console::SET_REGS << regs;
 		Pt pt(caps() + CPU::current().log_id());
 		pt.call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 	}
 
 	Console::ReceivePacket receive() {
@@ -103,10 +100,7 @@ private:
 		uf.delegate(_out_ds.sel(),1);
 		Pt pt(caps() + CPU::current().log_id());
 		pt.call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 	}
 
 	DataSpace _in_ds;

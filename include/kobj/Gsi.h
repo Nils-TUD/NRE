@@ -93,10 +93,7 @@ private:
 		uf << ALLOC << gsi << pcicfg;
 		CPU::current().gsi_pt->call(uf);
 
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uf >> _gsi;
 		Syscalls::assign_gsi(cap.get(),CPU::get(cpu).phys_id(),pcicfg,&_msi_addr,&_msi_value);
 		return cap.release();

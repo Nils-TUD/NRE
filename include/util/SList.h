@@ -90,6 +90,9 @@ public:
 	iterator end() const {
 		return iterator();
 	}
+	iterator tail() const {
+		return iterator(_tail);
+	}
 
 	iterator append(T *e) {
 		if(_head == 0)
@@ -98,6 +101,17 @@ public:
 			_tail->next(e);
 		_tail = e;
 		e->next(0);
+		_len++;
+		return iterator(e);
+	}
+	iterator insert(T *p,T *e) {
+		e->next(p ? p->next() : _head);
+		if(p)
+			p->next(e);
+		else
+			_head = e;
+		if(!e->next())
+			_tail = e;
 		_len++;
 		return iterator(e);
 	}

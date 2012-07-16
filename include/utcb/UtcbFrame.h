@@ -241,6 +241,18 @@ public:
 	}
 
 	/**
+	 * Reads an ErrorCode from this UTCB
+	 *
+	 * @throws UtcbException if the reply is not E_SUCCESS
+	 */
+	void check_reply() {
+		ErrorCode res;
+		*this >> res;
+		if(res != E_SUCCESS)
+			throw UtcbException(res);
+	}
+
+	/**
 	 * @return the number of still free untyped items
 	 */
 	size_t free_untyped() const {

@@ -5,11 +5,12 @@ jobs="-j8"
 opts=""
 hvdir="../nova-intel"
 loader="../morbo/tftp/farnsworth"
+bochscfg="bochs.cfg"
 
 if [ "$NOVA_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
+	export QEMU_FLAGS="-cpu phenom -m 256 -smp 1 -enable-kvm"
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	export QEMU="qemu-system-x86_64"
@@ -78,6 +79,18 @@ cp $loader $build/bin/apps/chainloader
 
 # run the specified command, if any
 case "$1" in
+	prof=*)
+		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1:5} > result.xml
+		#gdbtui --args $build/tools/conv/conv i586 log.txt $build/bin/apps/${1:5}
+		;;
+	bochs)
+		mkdir -p $build/bin/boot/grub
+		cp $root/tools/stage2_eltorito $build/bin/boot/grub
+		novaboot --build-dir="$PWD/$build" --iso -- $2
+		sed --in-place -e \
+			's/\(ata0-master:.*\?path\)=.*\?,/\1='`echo $build/$2.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
+		bochs -f $bochscfg -q
+		;;
 	run)
 		./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;

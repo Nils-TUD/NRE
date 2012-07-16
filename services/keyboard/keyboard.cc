@@ -40,8 +40,9 @@ public:
 		return _prod;
 	}
 
-protected:
-	virtual void accept_ds(DataSpace *ds) {
+	void set_ds(DataSpace *ds) {
+		if(_ds != 0)
+			throw Exception(E_EXISTS);
 		_ds = ds;
 		_prod = new Producer<T>(ds,false,false);
 	}
@@ -59,6 +60,18 @@ public:
 	KeyboardService(const char *name,Pt::portal_func func = 0) : Service(name,func) {
 	}
 
+	void init() {
+		// we want to accept one dataspaces
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+			LocalThread *ec = get_ec(it->log_id());
+			UtcbFrameRef uf(ec->utcb());
+			uf.accept_delegates(0);
+		}
+	}
+
+	KeyboardSessionData<T> *get_session(capsel_t pid) {
+		return Service::get_session<KeyboardSessionData<T> >(pid);
+	}
 	iterator sessions_begin() {
 		return Service::sessions_begin<KeyboardSessionData<T> >();
 	}
@@ -107,16 +120,44 @@ static void mousehandler(void*) {
 	}
 }
 
-PORTAL static void portal_keyboard(capsel_t) {
+template<class T>
+static void handle_share(UtcbFrameRef &uf,KeyboardService<typename T::Packet> *srv,capsel_t pid) {
+	typedef KeyboardSessionData<typename T::Packet> sessdata_t;
+	sessdata_t *sess = srv->get_session(pid);
+	DataSpaceDesc desc;
+	capsel_t sel = uf.get_delegated(0).offset();
+	uf >> desc;
+	uf.finish_input();
+	sess->set_ds(new DataSpace(desc,sel));
+}
+
+PORTAL static void portal_keyboard(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
 		Keyboard::Command cmd;
 		uf >> cmd;
 		switch(cmd) {
 			case Keyboard::REBOOT:
+				uf.finish_input();
 				hostkb->reboot();
 				break;
+
+			case Keyboard::SHARE_DS:
+				handle_share<Keyboard>(uf,kbsrv,pid);
+				break;
 		}
+		uf << E_SUCCESS;
+	}
+	catch(const Exception &e) {
+		uf.clear();
+		uf << e.code();
+	}
+}
+
+PORTAL static void portal_mouse(capsel_t pid) {
+	UtcbFrameRef uf;
+	try {
+		handle_share<Mouse>(uf,mousesrv,pid);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception &e) {
@@ -132,12 +173,14 @@ int main() {
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 		kbsrv->provide_on(it->log_id());
+	kbsrv->init();
 	kbsrv->reg();
 
 	if(hostkb->mouse_enabled()) {
-		mousesrv = new KeyboardService<Mouse::Packet>("mouse");
+		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 			mousesrv->provide_on(it->log_id());
+		mousesrv->init();
 		mousesrv->reg();
 
 		Sc *sc = new Sc(new GlobalThread(mousehandler,CPU::current().log_id()),Qpd());

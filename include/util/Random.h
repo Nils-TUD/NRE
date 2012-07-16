@@ -17,34 +17,39 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <ipc/Connection.h>
-#include <ipc/Session.h>
-#include <utcb/UtcbFrame.h>
-#include <Exception.h>
-#include <CPU.h>
 
 namespace nre {
 
-class RebootSession : public Session {
+/**
+ * Simple way of "random" number generation.
+ *
+ * Source: http://en.wikipedia.org/wiki/Linear_congruential_generator
+ */
+class Random {
 public:
-	explicit RebootSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	virtual ~RebootSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	/**
+	 * Inits the random number generator with given seed
+	 *
+	 * @param seed the seed
+	 */
+	static void init(uint seed) {
+		_last = seed;
 	}
 
-	void reboot() {
-		UtcbFrame uf;
-		_pts[CPU::current().log_id()]->call(uf);
-		uf.check_reply();
+	/**
+	 * @return the next random number
+	 */
+	static int get() {
+		_last = _randa * _last + _randc;
+		return (_last / 65536) % 32768;
 	}
 
 private:
-	Pt **_pts;
+	Random();
+
+	static uint _randa;
+	static uint _randc;
+	static uint _last;
 };
 
 }

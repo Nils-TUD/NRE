@@ -149,21 +149,10 @@ public:
 	 */
 	void switch_to(DataSpace &dest);
 
-	/**
-	 * Shares this dataspace with the given session. That is, it passes this dataspace to the
-	 * service where you have the given session. The service will then map the dataspace for himself
-	 * and attach them to the session, so that you can communicate with the service
-	 *
-	 * @param s the session
-	 * @throws DataSpaceException if sharing failed
-	 */
-	void share(Session &s);
-
 private:
 	void create();
 	void join();
 	void destroy();
-	static void handle_response(UtcbFrameRef& uf);
 
 	DataSpace(const DataSpace&);
 	DataSpace& operator=(const DataSpace&);

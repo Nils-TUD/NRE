@@ -22,12 +22,12 @@
 
 using namespace nre;
 
-PhysicalMemory::RootDataSpace PhysicalMemory::RootDataSpace::_slots[MAX_SLOTS] INIT_PRIO_PMEM;
+PhysicalMemory::RootDataSpace *PhysicalMemory::RootDataSpace::_free = 0;
 RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
 
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
-		: _desc(desc), _sel(), _unmapsel() {
+		: _desc(desc), _sel(), _unmapsel(), _next() {
 	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
 	uint flags = _desc.perm();
@@ -57,7 +57,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 }
 
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
-		: _desc(), _sel(), _unmapsel() {
+		: _desc(), _sel(), _unmapsel(), _next() {
 	// if we want to join a dataspace that does not exist in the root-task, its always an error
 	throw DataSpaceException(E_NOT_FOUND);
 }
@@ -80,16 +80,26 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 }
 
 void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {
-	for(size_t i = 0; i < MAX_SLOTS; ++i) {
-		if(_slots[i]._desc.size() == 0)
-			return _slots + i;
+	RootDataSpace *res;
+	if(_free == 0) {
+		uintptr_t phys = PhysicalMemory::_mem.alloc(ExecEnv::PAGE_SIZE);
+		uintptr_t virt = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
+		Hypervisor::map_mem(phys,virt,ExecEnv::PAGE_SIZE);
+		RootDataSpace *ds = reinterpret_cast<RootDataSpace*>(virt);
+		for(size_t i = 0; i < ExecEnv::PAGE_SIZE / sizeof(RootDataSpace); ++i) {
+			ds->_next = _free;
+			_free = ds;
+		}
 	}
-	return 0;
+	res = _free;
+	_free = _free->_next;
+	return res;
 }
 
 void PhysicalMemory::RootDataSpace::operator delete (void *ptr) throw() {
 	RootDataSpace *ds = static_cast<RootDataSpace*>(ptr);
-	ds->_desc.size(0);
+	ds->_next = _free;
+	_free = ds;
 }
 
 void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size,bool self) {

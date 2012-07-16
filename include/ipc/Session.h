@@ -33,7 +33,6 @@ class Session {
 public:
 	enum Command {
 		OPEN,
-		SHARE_DATASPACE,
 		CLOSE
 	};
 
@@ -73,11 +72,7 @@ private:
 		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << OPEN;
 		con.pt(CPU::current().log_id())->call(uf);
-
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		return caps.release();
 	}
 

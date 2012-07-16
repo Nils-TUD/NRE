@@ -54,10 +54,7 @@ public:
 		UtcbFrame uf;
 		uf << PCIConfig::READ << bdf << offset;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uint32_t value;
 		uf >> value;
 		return value;
@@ -67,20 +64,14 @@ public:
 		UtcbFrame uf;
 		uf << PCIConfig::WRITE << bdf << offset << value;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 	}
 
 	uintptr_t addr(uint32_t bdf,size_t offset) {
 		UtcbFrame uf;
 		uf << PCIConfig::ADDR << bdf << offset;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uintptr_t addr;
 		uf >> addr;
 		return addr;
@@ -90,10 +81,7 @@ public:
 		UtcbFrame uf;
 		uf << PCIConfig::REBOOT;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 	}
 
 private:

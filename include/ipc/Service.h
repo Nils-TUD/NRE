@@ -65,10 +65,6 @@ protected:
 	virtual void invalidate() {
 	}
 
-	virtual void accept_ds(DataSpace *) {
-		throw ServiceException(E_ARGS_INVALID);
-	}
-
 private:
 	size_t _id;
 	capsel_t _caps;
@@ -153,19 +149,13 @@ public:
 		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
 		uf << REGISTER << String(_name) << _reg_cpus;
 		CPU::current().srv_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw ServiceException(res);
+		uf.check_reply();
 	}
 	void unreg() {
 		UtcbFrame uf;
 		uf << UNREGISTER << String(_name);
 		CPU::current().srv_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw ServiceException(res);
+		uf.check_reply();
 	}
 
 	// TODO wrong place?

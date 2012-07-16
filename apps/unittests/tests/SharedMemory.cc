@@ -67,8 +67,7 @@ public:
 		return _cons;
 	}
 
-protected:
-	virtual void accept_ds(DataSpace *ds) {
+	void set_ds(DataSpace *ds) {
 		_ds = ds;
 		_cons = new Consumer<Item>(ds);
 		_sc = new Sc(&_ec,Qpd());
@@ -86,7 +85,10 @@ private:
 
 class ShmService : public Service {
 public:
-	ShmService() : Service("shm"), _sm(0) {
+	ShmService() : Service("shm",portal), _sm(0) {
+		provide_on(CPU::current().log_id());
+		UtcbFrameRef uf(get_ec(CPU::current().log_id())->utcb());
+		uf.accept_delegates(0);
 	}
 
 	void wait() {
@@ -97,12 +99,31 @@ public:
 	}
 
 private:
+	PORTAL static void portal(capsel_t pid);
+
 	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 		return new ShmSessionData(this,id,caps,func);
 	}
 
 	Sm _sm;
 };
+
+void ShmService::portal(capsel_t pid) {
+	UtcbFrameRef uf;
+	try {
+		ShmSessionData *sess = srv->get_session<ShmSessionData>(pid);
+		DataSpaceDesc desc;
+		capsel_t sel = uf.get_delegated(0).offset();
+		uf >> desc;
+		uf.finish_input();
+		sess->set_ds(new DataSpace(desc,sel));
+		uf << E_SUCCESS;
+	}
+	catch(const Exception &e) {
+		uf.clear();
+		uf << e.code();
+	}
+}
 
 void ShmSessionData::invalidate() {
 	srv->notify();
@@ -132,7 +153,6 @@ static int shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
-	srv->provide_on(CPU::current().log_id());
 	srv->reg();
 	srv->wait();
 	srv->unreg();
@@ -145,7 +165,14 @@ static int shm_client(int,char *argv[]) {
 	Session sess(con);
 	DataSpace ds(ds_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 	Producer<Item> prod(&ds,true,true);
-	ds.share(sess);
+	{
+		UtcbFrame uf;
+		uf.delegate(ds.sel());
+		uf << ds.desc();
+		Pt pt(sess.caps() + CPU::current().log_id());
+		pt.call(uf);
+		uf.check_reply();
+	}
 	Item i;
 	uint64_t start = Util::tsc();
 	for(uint x = 0; x < ITEM_COUNT; ++x)

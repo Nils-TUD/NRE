@@ -69,10 +69,7 @@ public:
 		uf << ACPI::FIND_TABLE << name << instance;
 		_pts[CPU::current().log_id()]->call(uf);
 
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uintptr_t offset;
 		uf >> offset;
 		return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
@@ -84,10 +81,7 @@ private:
 		uf << ACPI::GET_MEM;
 		_pts[CPU::current().log_id()]->call(uf);
 
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		DataSpaceDesc desc;
 		uf >> desc;
 		_ds = new DataSpace(desc);

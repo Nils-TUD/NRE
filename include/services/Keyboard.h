@@ -28,7 +28,8 @@ public:
 	typedef uint keycode_t;
 
 	enum Command {
-		REBOOT
+		REBOOT,
+		SHARE_DS
 	};
 
 	struct Packet {
@@ -182,7 +183,7 @@ public:
 			_pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-		_ds.share(*this);
+		share();
 	}
 	virtual ~KeyboardSession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
@@ -198,9 +199,18 @@ public:
 		UtcbFrame uf;
 		uf << Keyboard::REBOOT;
 		_pts[CPU::current().log_id()]->call(uf);
+		uf.check_reply();
 	}
 
 private:
+	void share() {
+		UtcbFrame uf;
+		uf.delegate(_ds.sel());
+		uf << Keyboard::SHARE_DS << _ds.desc();
+		_pts[CPU::current().log_id()]->call(uf);
+		uf.check_reply();
+	}
+
 	DataSpace _ds;
 	Consumer<Keyboard::Packet> _consumer;
 	Pt **_pts;

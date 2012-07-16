@@ -27,6 +27,8 @@
 #include "tests/CyclerTest.h"
 #include "tests/RegMngTest.h"
 #include "tests/MaskFieldTest.h"
+#include "tests/TreapTest.h"
+#include "tests/SortedSListTest.h"
 
 using namespace nre;
 using namespace nre::test;
@@ -39,6 +41,7 @@ const TestCase testcases[] = {
 	utcbperf,
 	dstest,
 	slisttest,
+	sortedslisttest,
 	dlisttest,
 	cyclertest1,
 	cyclertest2,
@@ -46,6 +49,10 @@ const TestCase testcases[] = {
 	regmng,
 	maskfield,
 	sharedmem,
+	treaptest_inorder,
+	treaptest_revorder,
+	treaptest_randorder,
+	treaptest_perf,
 };
 
 int main() {

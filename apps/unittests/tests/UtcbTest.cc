@@ -110,7 +110,8 @@ static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uin
 			}
 			tac = Util::tsc();
 		}
-		duration = tac - tic - rdtsc;
+		duration = tac - tic;
+		duration = duration > rdtsc ? duration - rdtsc : 0;
 		min = Math::min(min,duration);
 		max = Math::max(max,duration);
 		results[i] = duration;

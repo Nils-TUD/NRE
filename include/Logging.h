@@ -56,7 +56,7 @@ public:
 #ifndef NDEBUG
 		CHILD_CREATE | MEM_MAP | CPUS | CHILD_KILL | ACPI | PCICFG | REBOOT | TIMER | KEYBOARD
 #else
-		0
+		CHILD_KILL
 #endif
 	;
 

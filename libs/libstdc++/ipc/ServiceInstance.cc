@@ -29,8 +29,6 @@ ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
 		: _s(s), _session_ec(cpu), _service_ec(cpu), _pt(&_service_ec,pt,portal), _sm() {
 	_service_ec.set_tls<Service*>(Thread::TLS_PARAM,s);
 	UtcbFrameRef ecuf(_service_ec.utcb());
-	// for dataspace sharing
-	ecuf.accept_delegates(0);
 	// for session-identification
 	ecuf.accept_translates(s->_caps,Math::next_pow2_shift(Service::MAX_SESSIONS * CPU::count()));
 }
@@ -47,24 +45,6 @@ void ServiceInstance::portal(capsel_t) {
 
 				SessionData *sess = s->new_session();
 				uf.delegate(CapRange(sess->caps(),CPU::count(),Crd::OBJ_ALL));
-			}
-			break;
-
-			case Session::SHARE_DATASPACE: {
-				// the translated cap of the client identifies his session
-				capsel_t sid = uf.get_translated().offset();
-				capsel_t dssel = uf.get_delegated(0).offset();
-				DataSpaceDesc desc;
-				DataSpace::RequestType type;
-				uf >> type >> desc;
-				uf.finish_input();
-
-				SessionData *sess = s->get_session<SessionData>(sid);
-				ScopedPtr<DataSpace> ds(new DataSpace(desc,dssel));
-				sess->accept_ds(ds.get());
-				ds.release();
-
-				uf.accept_delegates();
 			}
 			break;
 

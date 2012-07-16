@@ -16,35 +16,47 @@
 
 #pragma once
 
-#include <arch/Types.h>
-#include <ipc/Connection.h>
-#include <ipc/Session.h>
-#include <utcb/UtcbFrame.h>
-#include <Exception.h>
-#include <CPU.h>
+#include <util/SList.h>
 
 namespace nre {
 
-class RebootSession : public Session {
+template<class T>
+class SortedSList {
 public:
-	explicit RebootSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	virtual ~RebootSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	typedef typename SList<T>::iterator iterator;
+	typedef bool (*cmp_func)(const T &a,const T &b);
+
+	explicit SortedSList(cmp_func isless) : _isless(isless), _list() {
 	}
 
-	void reboot() {
-		UtcbFrame uf;
-		_pts[CPU::current().log_id()]->call(uf);
-		uf.check_reply();
+	size_t length() const {
+		return _list.length();
+	}
+
+	iterator begin() const {
+		return _list.begin();
+	}
+	iterator end() const {
+		return _list.end();
+	}
+	iterator tail() const {
+		return _list.tail();
+	}
+
+	iterator insert(T *e) {
+		T *p = 0;
+		iterator it;
+		for(it = begin(); it != end() && _isless(*it,*e); ++it)
+			p = &*it;
+		return _list.insert(p,e);
+	}
+	void remove(T *e) {
+		_list.remove(e);
 	}
 
 private:
-	Pt **_pts;
+	cmp_func _isless;
+	SList<T> _list;
 };
 
 }

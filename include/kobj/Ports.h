@@ -99,10 +99,7 @@ private:
 		uf.delegation_window(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
 		uf << ALLOC << _base << _count;
 		CPU::current().io_pt->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
     }
     void release() {
 		try {

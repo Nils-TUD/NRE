@@ -15,7 +15,7 @@ crossdir = os.path.abspath('../cross/' + target + '/dist')
 
 hostenv = Environment(
 	ENV = os.environ,
-	CXXFLAGS = '-Wall -Wextra -ansi'
+	CXXFLAGS = '-Wall -Wextra -ansi -g'
 )
 env = Environment(
 	CXXFLAGS = '-Wall -Wextra -ansi -mno-sse',

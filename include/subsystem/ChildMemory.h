@@ -20,7 +20,7 @@
 #include <Exception.h>
 #include <mem/DataSpaceDesc.h>
 #include <util/MaskField.h>
-#include <util/SList.h>
+#include <util/SortedSList.h>
 #include <util/Math.h>
 #include <Assert.h>
 
@@ -147,7 +147,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	explicit ChildMemory() : _list() {
+	explicit ChildMemory() : _list(isless) {
 	}
 
 	/**
@@ -194,12 +194,8 @@ public:
 	 * @throw ChildMemoryException if there is not enough space
 	 */
 	uintptr_t find_free(size_t size) const {
-		// find the end of the "highest" region
-		uintptr_t e = 0;
-		for(iterator it = begin(); it != end(); ++it) {
-			if(it->desc().virt() + it->desc().size() > e)
-				e = it->desc().virt() + it->desc().size();
-		}
+		// the list is sorted, so use the last ds
+		uintptr_t e = _list.length() > 0 ? _list.tail()->desc().virt() + _list.tail()->desc().size() : 0;
 		// leave one page space (earlier error detection)
 		e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
@@ -219,7 +215,7 @@ public:
 	 */
 	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t sel) {
 		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),perm,desc.phys(),addr,desc.virt()),sel);
-		_list.append(ds);
+		_list.insert(ds);
 	}
 
 	/**
@@ -255,7 +251,11 @@ private:
 		delete ds;
 	}
 
-	SList<DS> _list;
+	static bool isless(const DS &a,const DS &b) {
+		return a.desc().virt() < b.desc().virt();
+	}
+
+	SortedSList<DS> _list;
 };
 
 }

@@ -45,7 +45,7 @@ class MouseSession : public Session {
 public:
 	explicit MouseSession(Connection &con) : Session(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
-		_ds.share(*this);
+		share();
 	}
 
 	Consumer<Mouse::Packet> &consumer() {
@@ -53,6 +53,15 @@ public:
 	}
 
 private:
+	void share() {
+		UtcbFrame uf;
+		uf.delegate(_ds.sel());
+		uf << _ds.desc();
+		Pt pt(caps() + CPU::current().log_id());
+		pt.call(uf);
+		uf.check_reply();
+	}
+
 	DataSpace _ds;
 	Consumer<Mouse::Packet> _consumer;
 };

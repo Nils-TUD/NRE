@@ -75,20 +75,14 @@ public:
 		UtcbFrame uf;
 		uf << Timer::PROG_TIMER << cycles;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 	}
 
 	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
 		UtcbFrame uf;
 		uf << Timer::GET_TIME;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		uf >> uptime >> unixts;
 	}
 
@@ -100,10 +94,7 @@ private:
 		uf.delegation_window(Crd(caps.get(),order,Crd::OBJ_ALL));
 		uf << Timer::GET_SMS;
 		_pts[CPU::current().log_id()]->call(uf);
-		ErrorCode res;
-		uf >> res;
-		if(res != E_SUCCESS)
-			throw Exception(res);
+		uf.check_reply();
 		_caps = caps.release();
 		_sms = new Sm*[CPU::count()];
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)

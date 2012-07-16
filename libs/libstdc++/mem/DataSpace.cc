@@ -27,13 +27,6 @@
 
 namespace nre {
 
-void DataSpace::handle_response(UtcbFrameRef& uf) {
-	ErrorCode res;
-	uf >> res;
-	if(res != E_SUCCESS)
-		throw DataSpaceException(res);
-}
-
 void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	UtcbFrame uf;
 	// prepare for receiving map and unmap-cap
@@ -42,7 +35,7 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	uf << CREATE << desc;
 	CPU::current().ds_pt->call(uf);
 
-	handle_response(uf);
+	uf.check_reply();
 	uf >> desc;
 	if(sel)
 		*sel = caps.get();
@@ -62,24 +55,10 @@ void DataSpace::switch_to(DataSpace &dest) {
 	uf.translate(dest.unmapsel());
 	uf << SWITCH_TO;
 	CPU::current().ds_pt->call(uf);
-	handle_response(uf);
+	uf.check_reply();
 	uintptr_t tmp = _desc.origin();
 	_desc.origin(dest._desc.origin());
 	dest._desc.origin(tmp);
-}
-
-void DataSpace::share(Session &s) {
-	UtcbFrame uf;
-	// for the service protocol (identifies our session); note that we add the current cpu-id
-	// because the service might not be available on all CPUs, which means that not all selectors
-	// actually point to a capability. this way, the translation can't fail.
-	uf.translate(s.caps() + CPU::current().log_id());
-	uf << Session::SHARE_DATASPACE;
-	// for the dataspace protocol
-	uf << SHARE << _desc;
-	uf.delegate(_sel);
-	s.con().pt(CPU::current().log_id())->call(uf);
-	handle_response(uf);
 }
 
 void DataSpace::join() {
@@ -93,7 +72,7 @@ void DataSpace::join() {
 	uf << JOIN << _desc;
 	CPU::current().ds_pt->call(uf);
 
-	handle_response(uf);
+	uf.check_reply();
 	uf >> _desc;
 	_unmapsel = umcap.release();
 }

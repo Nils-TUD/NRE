@@ -1,0 +1,38 @@
+*** /home/hrniels/Applications/bochs/bochs-2.4.6/iodev/ioapic.cc	2012-07-13 22:09:40.000000000 +0200
+--- /home/hrniels/Applications/bochs/bochs-2.4.6/iodev/ioapic.cc.old	2012-07-13 22:09:14.000000000 +0200
+***************
+*** 72,79 ****
+  
+  static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
+  {
+!   // register IOREGSEL can be byte-accessed
+!   if ((a20addr & 0xFF) != 0 && len != 4) {
+      BX_PANIC(("I/O apic write with len=%d (should be 4)", len));
+      return 1;
+    }
+--- 72,78 ----
+  
+  static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
+  {
+!   if (len != 4) {
+      BX_PANIC(("I/O apic write with len=%d (should be 4)", len));
+      return 1;
+    }
+***************
+*** 179,186 ****
+    BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
+    address &= 0xff;
+    if (address == 0x00)  {
+!     // bits 31:8 are reserved
+!     ioregsel = value & 0xff;
+      return;
+    } else {
+      if (address != 0x10)
+--- 178,184 ----
+    BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
+    address &= 0xff;
+    if (address == 0x00)  {
+!     ioregsel = value;
+      return;
+    } else {
+      if (address != 0x10)

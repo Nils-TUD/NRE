@@ -18,6 +18,7 @@
 
 #include <mem/DataSpace.h>
 #include <kobj/UserSm.h>
+#include <util/Treap.h>
 #include <Exception.h>
 
 namespace nre {
@@ -39,16 +40,33 @@ class DataSpaceManager {
 	friend OStream &operator<<(OStream &os,const DataSpaceManager<DS2> &mng);
 
 	enum {
-		MAX_SLOTS	= 256
+		MAX_SLOTS	= 512
 	};
 
-	struct Slot {
+	/**
+	 * We use a treap here and use the unmap selector as key. this way, we can quickly find a ds
+	 * by the unmap selector. unfortunatly, we have to be able to find a ds by its selector as
+	 * well. we do that by linear searching. but we need the first one more often, therefore
+	 * its better to do it this way, I think.
+	 * TODO an idea would be to define that both selectors are always directly together.
+	 * That is, sel=X, unmapsel=X+1. this way we could use _tree.find() here as well. but I'm not
+	 * sure if we should do that, because it should be transparent for the user and I think its
+	 * difficult to achieve that.
+	 */
+	struct Slot : public TreapNode<capsel_t> {
+		Slot() : TreapNode<capsel_t>(0) {
+		}
 		DS *ds;
 		unsigned refs;
+		Slot *next;
 	};
 
 public:
-	explicit DataSpaceManager() : _sm(), _slots() {
+	explicit DataSpaceManager() : _sm(), _tree(), _free(0), _slots() {
+		for(size_t i = 0; i < MAX_SLOTS; ++i) {
+			_slots[i].next = _free;
+			_free = _slots + i;
+		}
 	}
 
 	/**
@@ -65,6 +83,8 @@ public:
 		slot = find_free();
 		slot->ds = new DS(desc);
 		slot->refs = 1;
+		slot->key(slot->ds->unmapsel());
+		_tree.insert(slot);
 		return *slot->ds;
 	}
 
@@ -85,6 +105,8 @@ public:
 			slot = find_free();
 			slot->ds = new DS(desc,sel);
 			slot->refs = 1;
+			slot->key(slot->ds->unmapsel());
+			_tree.insert(slot);
 		}
 		else
 			slot->refs++;
@@ -125,7 +147,9 @@ public:
 		if(--s->refs == 0) {
 			desc = s->ds->desc();
 			delete s->ds;
-			s->ds = 0;
+			_tree.remove(s);
+			s->next = _free;
+			_free = s;
 		}
 	}
 
@@ -138,21 +162,19 @@ private:
 		return 0;
 	}
 	Slot *find_unmap(capsel_t sel) {
-		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds->unmapsel() == sel)
-				return _slots + i;
-		}
-		return 0;
+		return _tree.find(sel);
 	}
 	Slot *find_free() {
-		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs == 0)
-				return _slots + i;
-		}
-		throw DataSpaceException(E_CAPACITY);
+		if(!_free)
+			throw DataSpaceException(E_CAPACITY);
+		Slot *s = _free;
+		_free = _free->next;
+		return s;
 	}
 
 	UserSm _sm;
+	Treap<Slot> _tree;
+	Slot *_free;
 	Slot _slots[MAX_SLOTS];
 };
 

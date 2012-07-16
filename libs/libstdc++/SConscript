@@ -2,13 +2,16 @@
 
 Import('env')
 
-crt0 = env.Object('crt0.o', 'arch/' + env['ARCH'] + '/crt0.s')
-crt1 = env.Object('crt1.o', 'arch/' + env['ARCH'] + '/crt1.s')
-crtn = env.Object('crtn.o', 'arch/' + env['ARCH'] + '/crtn.s')
-env.Install(env['SYSGCCLIBPATH'], [crt0, crt1, crtn])
+myenv = env.Clone()
+#myenv.Append(CXXFLAGS = ' -finstrument-functions -DPROFILE')
 
-ccsrc = [Glob('*.cc'), Glob('*/*.cc'), Glob('*/' + env['ARCH'] + '/*.cc')]
-csrc = [Glob('*.c'), Glob('*/*.c'), Glob('*/' + env['ARCH'] + '/*.c')]
-ssrc = [Glob('arch/*.s'), Glob('*/' + env['ARCH'] + '/*.s')]
-lib = env.StaticLibrary('libstdc++', ccsrc + csrc + ssrc)
-env.Install(env['LIBPATH'], lib)
+crt0 = myenv.Object('crt0.o', 'arch/' + myenv['ARCH'] + '/crt0.s')
+crt1 = myenv.Object('crt1.o', 'arch/' + myenv['ARCH'] + '/crt1.s')
+crtn = myenv.Object('crtn.o', 'arch/' + myenv['ARCH'] + '/crtn.s')
+myenv.Install(myenv['SYSGCCLIBPATH'], [crt0, crt1, crtn])
+
+ccsrc = [Glob('*.cc'), Glob('*/*.cc'), Glob('*/' + myenv['ARCH'] + '/*.cc')]
+csrc = [Glob('*.c'), Glob('*/*.c'), Glob('*/' + myenv['ARCH'] + '/*.c')]
+ssrc = [Glob('arch/*.s'), Glob('*/' + myenv['ARCH'] + '/*.s')]
+lib = myenv.StaticLibrary('libstdc++', ccsrc + csrc + ssrc)
+myenv.Install(myenv['LIBPATH'], lib)
