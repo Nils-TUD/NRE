@@ -21,11 +21,22 @@
 
 namespace nre {
 
+template<class T>
+class SList;
+template<class T>
+class SListIterator;
+
 class SListItem {
+	template<class T>
+	friend class SList;
+	template<class T>
+	friend class SListIterator;
+
 public:
 	SListItem() : _next() {
 	}
 
+private:
 	SListItem *next() {
 		return _next;
 	}
@@ -33,7 +44,6 @@ public:
 		_next = i;
 	}
 
-private:
 	SListItem *_next;
 };
 
@@ -117,11 +127,12 @@ public:
 	}
 	void remove(T *e) {
 		T *t = _head, *p = 0;
-		while(t != e) {
+		while(t && t != e) {
 			p = t;
 			t = static_cast<T*>(t->next());
 		}
-		assert(t == e);
+		if(!t)
+			return;
 		if(p)
 			p->next(e->next());
 		else

@@ -20,6 +20,7 @@
 #include <kobj/Ec.h>
 #include <mem/DataSpace.h>
 #include <utcb/Utcb.h>
+#include <util/SList.h>
 #include <util/Atomic.h>
 #include <Syscalls.h>
 
@@ -36,7 +37,7 @@ class RCULock;
  * Thread::TLS_PARAM is always available, e.g. to pass a parameter to a Thread. You may create
  * additional ones by Thread::create_tls().
  */
-class Thread : public Ec {
+class Thread : public Ec, public SListItem {
 	friend class RCU;
 	friend class RCULock;
 
@@ -68,7 +69,7 @@ protected:
 	 * @param uaddr the utcb address (0 = create one automatically)
 	 */
 	explicit Thread(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t uaddr = 0)
-			: Ec(cpu,evb,cap), _next(0), _rcu_counter(0),
+			: Ec(cpu,evb,cap), SListItem(), _rcu_counter(0),
 			  _utcb(uaddr == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
 			  _utcb_addr(uaddr == 0 ? _utcb->virt() : uaddr),
 			  _stack(stack == 0 ? new DataSpace(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW) : 0),
@@ -136,7 +137,6 @@ private:
 	Thread(const Thread&);
 	Thread& operator=(const Thread&);
 
-	Thread *_next;
 	uint32_t _rcu_counter;
 	DataSpace *_utcb;
 	uintptr_t _utcb_addr;

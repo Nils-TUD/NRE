@@ -148,6 +148,7 @@ public:
 			desc = s->ds->desc();
 			delete s->ds;
 			_tree.remove(s);
+			s->ds = 0;
 			s->next = _free;
 			_free = s;
 		}
@@ -156,7 +157,7 @@ public:
 private:
 	Slot *find(capsel_t sel) {
 		for(size_t i = 0; i < MAX_SLOTS; ++i) {
-			if(_slots[i].refs && _slots[i].ds->sel() == sel)
+			if(_slots[i].ds && _slots[i].ds->sel() == sel)
 				return _slots + i;
 		}
 		return 0;

@@ -92,7 +92,7 @@ public:
 	};
 
 	void clear() {
-		memset(words,0,ExecEnv::PAGE_SIZE - sizeof(UtcbHead));
+		memset(words,0,sizeof(UtcbExc) - sizeof(UtcbHead));
 	}
 };
 

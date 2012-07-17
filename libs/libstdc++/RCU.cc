@@ -27,8 +27,7 @@ namespace nre {
 
 	uint32_t *RCU::_versions = 0;
 	size_t RCU::_versions_count = 0;
-	Thread *RCU::_ecs = 0;
-	size_t RCU::_ec_count = 0;
+	SList<Thread> RCU::_ecs;
 	RCUObject *RCU::_objs = 0;
 	RCULock RCU::_lock;
 	UserSm RCU::_sm INIT_PRIO_RCU;

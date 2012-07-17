@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <arch/Startup.h>
+#include <stream/Serial.h>
 #include <utcb/UtcbBase.h>
 #include <Assert.h>
 #include <util/Math.h>

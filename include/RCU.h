@@ -21,6 +21,7 @@
 #include <util/ScopedLock.h>
 #include <util/Sync.h>
 #include <util/Util.h>
+#include <util/SList.h>
 
 /**
  * Usage:
@@ -184,9 +185,7 @@ public:
 	 */
 	static void add(Thread *ec) {
 		ScopedLock<UserSm> guard(&_ecsm);
-		ec->_next = _ecs;
-		_ecs = ec;
-		_ec_count++;
+		_ecs.append(ec);
 	}
 	/**
 	 * Removes the given thread from the list of known Threads. Will be called by the Thread class
@@ -194,18 +193,7 @@ public:
 	 */
 	static void remove(Thread *ec) {
 		ScopedLock<UserSm> guard(&_ecsm);
-		Thread *p = 0,*t = _ecs;
-		while(t != 0 && t != ec) {
-			p = t;
-			t = t->_next;
-		}
-		if(t == ec) {
-			if(p)
-				p->_next = ec->_next;
-			else
-				_ecs = ec->_next;
-			_ec_count--;
-		}
+		_ecs.remove(ec);
 	}
 
 	/**
@@ -286,38 +274,35 @@ private:
 	static bool deletable() {
 		// if new Ecs have been added since the last invalidation, we don't know whether this one
 		// is currently accessing an object. So, store all version-numbers again.
-		if(_versions_count < _ec_count)
+		if(_versions_count != _ecs.length())
 			store_versions();
 
 		ScopedLock<UserSm> guard(&_ecsm);
-		Thread *ec = _ecs;
-		for(size_t i = 0; i < _ec_count; ++i) {
+		size_t i = 0;
+		for(SList<Thread>::iterator it = _ecs.begin(); it != _ecs.end(); ++it, ++i) {
 			// it's safe to delete it when either the Thread has re-entered the critical section
 			// or if it's out of its critical section. in both cases the Thread would re-read the
 			// pointer and thus, can't get the object again we're about to delete.
-			uint32_t counter = ec->_rcu_counter;
+			uint32_t counter = it->_rcu_counter;
 			if(!((counter >> 16) != (_versions[i] >> 16) || (counter & 0xFFFF) == 0))
 				return false;
-			ec = ec->_next;
 		}
 		return true;
 	}
 
 	static void store_versions() {
 		// new Ecs added?
-		if(_versions_count < _ec_count) {
+		if(_versions_count != _ecs.length()) {
 			delete[] _versions;
-			_versions_count = _ec_count;
-			_versions = new uint32_t[_ec_count];
+			_versions_count = _ecs.length();
+			_versions = new uint32_t[_ecs.length()];
 		}
 
 		// update the version-numbers for all Ecs
 		ScopedLock<UserSm> guard(&_ecsm);
-		Thread *ec = _ecs;
-		for(size_t i = 0; i < _ec_count; ++i) {
-			_versions[i] = ec->_rcu_counter;
-			ec = ec->_next;
-		}
+		size_t i = 0;
+		for(SList<Thread>::iterator it = _ecs.begin(); it != _ecs.end(); ++it, ++i)
+			_versions[i] = it->_rcu_counter;
 	}
 
 	RCU();
@@ -327,8 +312,7 @@ private:
 
 	static uint32_t *_versions;
 	static size_t _versions_count;
-	static Thread *_ecs;
-	static size_t _ec_count;
+	static SList<Thread> _ecs;
 	static RCUObject *_objs;
 	static UserSm _sm;
 	// note that we use a separate lock for the ec list, because it might happen that someone
