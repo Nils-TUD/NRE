@@ -85,8 +85,7 @@ public:
 	 *
 	 * @throws DataSpaceException if the attachment failed
 	 */
-	explicit DataSpace(const DataSpaceDesc &desc,capsel_t sel) : _desc(desc), _sel(sel),
-			_unmapsel(ObjCap::INVALID) {
+	explicit DataSpace(capsel_t sel) : _desc(), _sel(sel), _unmapsel(ObjCap::INVALID) {
 		join();
 	}
 	~DataSpace() throw() {

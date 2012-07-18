@@ -112,11 +112,9 @@ void ShmService::portal(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
 		ShmSessionData *sess = srv->get_session<ShmSessionData>(pid);
-		DataSpaceDesc desc;
 		capsel_t sel = uf.get_delegated(0).offset();
-		uf >> desc;
 		uf.finish_input();
-		sess->set_ds(new DataSpace(desc,sel));
+		sess->set_ds(new DataSpace(sel));
 		uf << E_SUCCESS;
 	}
 	catch(const Exception &e) {
@@ -168,7 +166,6 @@ static int shm_client(int,char *argv[]) {
 	{
 		UtcbFrame uf;
 		uf.delegate(ds.sel());
-		uf << ds.desc();
 		Pt pt(sess.caps() + CPU::current().log_id());
 		pt.call(uf);
 		uf.check_reply();

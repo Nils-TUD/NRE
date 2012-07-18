@@ -95,7 +95,7 @@ public:
 private:
 	void create(bool show_pages) {
 		UtcbFrame uf;
-		uf << Console::CREATE << _in_ds.desc() << _out_ds.desc() << show_pages;
+		uf << Console::CREATE << show_pages;
 		uf.delegate(_in_ds.sel(),0);
 		uf.delegate(_out_ds.sel(),1);
 		Pt pt(caps() + CPU::current().log_id());

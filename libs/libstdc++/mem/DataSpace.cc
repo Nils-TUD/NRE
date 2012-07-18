@@ -69,7 +69,7 @@ void DataSpace::join() {
 	ScopedCapSels umcap;
 	uf.delegation_window(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
-	uf << JOIN << _desc;
+	uf << JOIN;
 	CPU::current().ds_pt->call(uf);
 
 	uf.check_reply();

@@ -206,7 +206,7 @@ private:
 	void share() {
 		UtcbFrame uf;
 		uf.delegate(_ds.sel());
-		uf << Keyboard::SHARE_DS << _ds.desc();
+		uf << Keyboard::SHARE_DS;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
 	}

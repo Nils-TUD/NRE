@@ -89,21 +89,18 @@ public:
 	}
 
 	/**
-	 * Joins the dataspace identified by the given selector. The descriptor is more or less ignored
-	 * since the properties are fetched from the already created dataspace. But might be used for
-	 * verification.
+	 * Joins the dataspace identified by the given selector.
 	 *
-	 * @param desc the descriptor
 	 * @param sel the selector
 	 * @return the dataspace
 	 * @throws DataSpaceException if there are no free slots anymore
 	 */
-	const DS &join(const DataSpaceDesc &desc,capsel_t sel) {
+	const DS &join(capsel_t sel) {
 		ScopedLock<UserSm> guard(&_sm);
 		Slot *slot = find(sel);
 		if(!slot) {
 			slot = find_free();
-			slot->ds = new DS(desc,sel);
+			slot->ds = new DS(sel);
 			slot->refs = 1;
 			slot->key(slot->ds->unmapsel());
 			_tree.insert(slot);

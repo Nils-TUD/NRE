@@ -124,11 +124,9 @@ template<class T>
 static void handle_share(UtcbFrameRef &uf,KeyboardService<typename T::Packet> *srv,capsel_t pid) {
 	typedef KeyboardSessionData<typename T::Packet> sessdata_t;
 	sessdata_t *sess = srv->get_session(pid);
-	DataSpaceDesc desc;
 	capsel_t sel = uf.get_delegated(0).offset();
-	uf >> desc;
 	uf.finish_input();
-	sess->set_ds(new DataSpace(desc,sel));
+	sess->set_ds(new DataSpace(sel));
 }
 
 PORTAL static void portal_keyboard(capsel_t pid) {

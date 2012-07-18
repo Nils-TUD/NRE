@@ -31,7 +31,7 @@ public:
 		RootDataSpace() : _desc(), _sel(), _unmapsel(), _next() {
 		}
 		RootDataSpace(const nre::DataSpaceDesc &desc);
-		RootDataSpace(const nre::DataSpaceDesc &,capsel_t);
+		RootDataSpace(capsel_t);
 		~RootDataSpace();
 
 		capsel_t sel() const {

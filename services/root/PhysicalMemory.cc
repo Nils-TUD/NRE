@@ -56,7 +56,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 	cap.release();
 }
 
-PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &,capsel_t)
+PhysicalMemory::RootDataSpace::RootDataSpace(capsel_t)
 		: _desc(), _sel(), _unmapsel(), _next() {
 	// if we want to join a dataspace that does not exist in the root-task, its always an error
 	throw DataSpaceException(E_NOT_FOUND);
@@ -159,15 +159,17 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 		capsel_t sel = 0;
 		DataSpaceDesc desc;
 		DataSpace::RequestType type;
-		uf >> type >> desc;
+		uf >> type;
 		if(type == DataSpace::JOIN || type == DataSpace::DESTROY)
 			sel = uf.get_translated(0).offset();
+		if(type != DataSpace::JOIN)
+			uf >> desc;
 		uf.finish_input();
 
 		switch(type) {
 			case DataSpace::CREATE:
 			case DataSpace::JOIN:
-				if(desc.type() == DataSpaceDesc::VIRTUAL) {
+				if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 					uintptr_t addr = VirtualMemory::alloc(desc.size());
 					desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
 					LOG(Logging::DATASPACES,Serial::get() << "Root: Allocated virtual ds " << desc << "\n");
@@ -175,7 +177,7 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 				}
 				else {
 					const RootDataSpace &ds = type == DataSpace::JOIN
-							? _dsmng.join(desc,sel)
+							? _dsmng.join(sel)
 							: _dsmng.create(desc);
 
 					if(type == DataSpace::CREATE) {

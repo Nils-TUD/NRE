@@ -43,13 +43,12 @@ void ConsoleSessionData::portal(capsel_t pid) {
 		switch(cmd) {
 			case Console::CREATE: {
 				bool show_pages;
-				DataSpaceDesc indesc,outdesc;
 				capsel_t insel = uf.get_delegated(0).offset();
 				capsel_t outsel = uf.get_delegated(0).offset();
-				uf >> indesc >> outdesc >> show_pages;
+				uf >> show_pages;
 				uf.finish_input();
 
-				sess->create(new DataSpace(indesc,insel),new DataSpace(outdesc,outsel),show_pages);
+				sess->create(new DataSpace(insel),new DataSpace(outsel),show_pages);
 				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}

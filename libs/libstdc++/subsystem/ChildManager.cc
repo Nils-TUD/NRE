@@ -507,14 +507,15 @@ void ChildManager::Portals::io(capsel_t pid) {
 void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	capsel_t sel = 0;
 	DataSpaceDesc desc;
-	uf >> desc;
 	if(type == DataSpace::JOIN)
 		sel = uf.get_translated(0).offset();
+	else
+		uf >> desc;
 	uf.finish_input();
 
 	ScopedLock<UserSm> guard(&c->_sm);
 	uintptr_t addr = 0;
-	if(desc.type() == DataSpaceDesc::VIRTUAL) {
+	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
 		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm());
 		c->reglist().add(desc,addr,desc.perm(),0);
@@ -525,7 +526,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	}
 	else {
 		// create it or attach to the existing dataspace
-		const DataSpace &ds = type == DataSpace::JOIN ? _dsm.join(desc,sel) : _dsm.create(desc);
+		const DataSpace &ds = type == DataSpace::JOIN ? _dsm.join(sel) : _dsm.create(desc);
 
 		// add it to the regions of the child
 		try {
