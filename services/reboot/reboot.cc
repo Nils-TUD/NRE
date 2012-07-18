@@ -45,7 +45,6 @@ PORTAL static void portal_reboot(capsel_t) {
 		uf << E_FAILURE;
 	}
 	catch(const Exception &e) {
-		Serial::get() << e << "\n";
 		uf.clear();
 		uf << e.code();
 	}
