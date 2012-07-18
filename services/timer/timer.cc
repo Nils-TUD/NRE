@@ -90,10 +90,10 @@ PORTAL static void portal_timer(capsel_t pid) {
 				uf.finish_input();
 
 				timevalue_t uptime,unixts;
-		        timer->get_time(uptime,unixts);
+				timer->get_time(uptime,unixts);
 				LOG(Logging::TIMER_DETAIL,Serial::get().writef(
 						"TIMER: (%u) Getting time up=%#Lx unix=%#Lx\n",sess->id(),uptime,unixts));
-		        uf << E_SUCCESS << uptime << unixts;
+				uf << E_SUCCESS << uptime << unixts;
 			}
 			break;
 		}
