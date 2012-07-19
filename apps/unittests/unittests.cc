@@ -29,12 +29,14 @@
 #include "tests/MaskFieldTest.h"
 #include "tests/TreapTest.h"
 #include "tests/SortedSListTest.h"
+#include "tests/PingpongXPd.h"
 
 using namespace nre;
 using namespace nre::test;
 
 const TestCase testcases[] = {
 	pingpong,
+	pingpongxpd,
 	catchex,
 	delegateperf,
 	utcbnest,
