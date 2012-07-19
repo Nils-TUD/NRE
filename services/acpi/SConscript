@@ -1,5 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('env')
-
-env.NulProgram(env, 'acpi', Glob('*.cc'))

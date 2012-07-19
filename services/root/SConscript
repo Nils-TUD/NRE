@@ -1,9 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('env')
-
-myenv = env.Clone()
-myenv['LINKFLAGS'] += ' -Wl,-T,services/root/linker_' + env['ARCH'] + '.ld'
-#myenv.Append(CXXFLAGS = ' -finstrument-functions -DPROFILE')
-
-myenv.NulProgram(myenv, 'root', Glob('*.cc'))

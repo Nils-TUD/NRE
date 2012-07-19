@@ -1,6 +1,0 @@
-#!/usr/bin/env novaboot
-# -*-sh-*-
-KERNEL=bin/apps/chainloader
-bin/apps/hypervisor spinner keyb serial
-bin/apps/root
-bin/apps/unittests

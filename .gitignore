@@ -1,1 +1,9 @@
-build
+nre/build
+kernel/nova
+loader/morbo
+cross/x86_32/build
+cross/x86_32/dist
+cross/x86_32/src
+cross/x86_64/build
+cross/x86_64/dist
+cross/x86_64/src

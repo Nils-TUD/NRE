@@ -1,6 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('env')
-
-lib = env.StaticLibrary('libg', Glob('*.c'))
-env.Install(env['LIBPATH'], lib)

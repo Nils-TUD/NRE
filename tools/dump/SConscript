@@ -1,5 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('hostenv')
-
-hostenv.Program('dump', Glob('*.cc'))

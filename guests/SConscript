@@ -1,4 +1,0 @@
-# -*- Mode: Python -*-
-
-Import('guestenv')
-guestenv.SConscript(Glob('*/SConscript'), 'guestenv')
