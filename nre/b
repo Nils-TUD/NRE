@@ -102,7 +102,7 @@ cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
 case "$1" in
 	clean)
 		scons -c
-		rm -Rf $novadir
+		rm -Rf $novadir $morbodir
 		;;
 	prof=*)
 		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1:5} > result.xml
