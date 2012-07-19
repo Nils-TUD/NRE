@@ -1,0 +1,97 @@
+diff -rcN src/binutils-2.21.1//bfd/config.bfd src/binutils/bfd/config.bfd
+*** src/binutils-2.21.1//bfd/config.bfd	2011-04-01 14:02:42.000000000 +0200
+--- src/binutils/bfd/config.bfd	2012-03-25 09:20:35.000000000 +0200
+***************
+*** 604,609 ****
+--- 604,613 ----
+      targ_selvecs="i386linux_vec i386pei_vec"
+      targ64_selvecs="bfd_elf64_x86_64_vec bfd_elf64_l1om_vec"
+      ;;
++   i[3-7]86-*-nulnova)
++     targ_defvec=bfd_elf32_i386_vec
++     targ_selvecs=bfd_elf32_i386_vec
++     ;;
+  #ifdef BFD64
+    x86_64-*-darwin*)
+      targ_defvec=mach_o_x86_64_vec
+diff -rcN src/binutils-2.21.1//config.sub src/binutils/config.sub
+*** src/binutils-2.21.1//config.sub	2010-06-01 19:53:40.000000000 +0200
+--- src/binutils/config.sub	2012-03-25 09:21:45.000000000 +0200
+***************
+*** 1301,1307 ****
+  	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+  	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+  	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
+! 	      | -openbsd* | -solidbsd* \
+  	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
+  	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+  	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
+--- 1301,1307 ----
+  	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+  	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+  	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
+! 	      | -openbsd* | -solidbsd* | -nulnova* \
+  	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
+  	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+  	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
+diff -rcN src/binutils-2.21.1//gas/configure.tgt src/binutils/gas/configure.tgt
+*** src/binutils-2.21.1//gas/configure.tgt	2011-04-01 14:02:42.000000000 +0200
+--- src/binutils/gas/configure.tgt	2012-03-25 09:22:50.000000000 +0200
+***************
+*** 192,197 ****
+--- 192,198 ----
+        x86_64)				fmt=elf em=nbsd ;;
+        *)				fmt=aout em=nbsd ;;
+      esac ;;
++   i386-*-nulnova*)			fmt=elf ;;
+    i386-*-openbsd[0-2].* | \
+    i386-*-openbsd3.[0-2])		fmt=aout em=nbsd ;;
+    i386-*-openbsd*)			fmt=elf em=nbsd ;;
+diff -rcN src/binutils-2.21.1//ld/configure.tgt src/binutils/ld/configure.tgt
+*** src/binutils-2.21.1//ld/configure.tgt	2011-04-01 14:03:54.000000000 +0200
+--- src/binutils/ld/configure.tgt	2012-03-25 09:23:46.000000000 +0200
+***************
+*** 241,246 ****
+--- 241,247 ----
+  				        sed -e 's/netbsd/netbsdelf/'`;;
+  			esac ;;
+  i[3-7]86-*-netware)	targ_emul=i386nw ;;
++ i[3-7]86-*-nulnova*)	targ_emul=nulnova_i386 ;;
+  i[3-7]86-*-elf*)	targ_emul=elf_i386 ;;
+  x86_64-*-elf*)		targ_emul=elf_x86_64
+  			targ_extra_emuls="elf_i386 elf_l1om"
+diff -rcN src/binutils-2.21.1//ld/emulparams/nulnova_i386.sh src/binutils/ld/emulparams/nova_i386.sh
+*** src/binutils-2.21.1//ld/emulparams/nulnova_i386.sh	1970-01-01 01:00:00.000000000 +0100
+--- src/binutils/ld/emulparams/nulnova_i386.sh	2012-03-25 09:25:03.000000000 +0200
+***************
+*** 0 ****
+--- 1,15 ----
++ SCRIPT_NAME=elf
++ OUTPUT_FORMAT=elf32-i386
++ TEXT_START_ADDR=0x1000
++ MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
++ COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
++ ARCH=i386
++ MACHINE=
++ NOP=0x90909090
++ TEMPLATE_NAME=elf32
++ GENERATE_SHLIB_SCRIPT=yes
++ GENERATE_PIE_SCRIPT=yes
++ NO_SMALL_DATA=yes
++ SEPARATE_GOTPLT=12
++ DATA_ADDR="ALIGN(${MAXPAGESIZE})"
++ SHLIB_DATA_ADDR="ALIGN(${MAXPAGESIZE})"
+diff -rcN src/binutils-2.21.1//ld/Makefile.in src/binutils/ld/Makefile.in
+*** src/binutils-2.21.1//ld/Makefile.in	2011-03-16 09:37:30.000000000 +0100
+--- src/binutils/ld/Makefile.in	2012-03-25 09:26:27.000000000 +0200
+***************
+*** 2059,2064 ****
+--- 2059,2066 ----
+  
+  @TDIRS@
+  
++ enulnova_i386.c: $(srcdir)/emulparams/nulnova_i386.sh $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
++ 	${GENSCRIPTS} nulnova_i386 "$(tdir_nulnova_i386)"
+  eaix5ppc.c: $(srcdir)/emulparams/aix5ppc.sh \
+    $(srcdir)/emultempl/aix.em $(srcdir)/scripttempl/aix.sc ${GEN_DEPENDS}
+  	${GENSCRIPTS} aix5ppc "$(tdir_aixppc)"

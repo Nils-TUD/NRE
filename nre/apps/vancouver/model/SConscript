@@ -1,0 +1,8 @@
+# -*- Mode: Python -*-
+
+import nul
+Import('target_env')
+
+nul.Lib(target_env, 'model', SOURCES = Glob('*.cc'))
+
+# EOF

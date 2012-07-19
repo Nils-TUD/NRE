@@ -1,0 +1,7 @@
+Next at t=0
+(0) [0x00000000fffffff0] f000:fff0 (no symbol): jmp far f000:e05b         ; ea5be000f0
+<bochs:1> c
+Next at t=4152580406
+(0) [0x0000000000403270] 0008:c0003270 (KernelStart+bff03264): cli                       ; fa
+<bochs:2> q
+(0).[4152580406] [0x0000000000403270] 0008:c0003270 (KernelStart+bff03264): cli                       ; fa

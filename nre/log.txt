@@ -1,0 +1,45 @@
+novaboot: Entering directory `/home/hrniels/nova/myul/nre/build/x86_32-release'
+novaboot: Running: 'qemu-system-i386' '-name' 'test' '-cpu' 'phenom' '-m' '256' '-smp' '4' '-kernel' 'bin/apps/chainloader' '-append' '' '-initrd' 'bin/apps/hypervisor spinner serial,bin/apps/root,bin/apps/acpi provides=acpi,bin/apps/keyboard provides=keyboard,bin/apps/reboot provides=reboot,bin/apps/pcicfg provides=pcicfg,bin/apps/timer provides=timer,bin/apps/console provides=console,bin/apps/test,bin/apps/sub' '-serial' 'stdio'
+
+Farnsworth Version 0.9-beta7-1-ge4fae69
+Blame Julian Stecklina <jsteckli@os.inf.tu-dresden.de> for bugs.
+
+MBI Modules List:
+  00: start 00181000 end 00192dc8 cmd 001800a0 'bin/apps/hypervisor spinner serial'
+  01: start 00193000 end 00212c5c cmd 001800c3 'bin/apps/root'
+  02: start 00213000 end 0026864b cmd 001800d1 'bin/apps/acpi provides=acpi'
+  03: start 00269000 end 002c5674 cmd 001800ed 'bin/apps/keyboard provides=keyboard'
+  04: start 002c6000 end 0032613c cmd 00180111 'bin/apps/reboot provides=reboot'
+  05: start 00327000 end 00380bbf cmd 00180131 'bin/apps/pcicfg provides=pcicfg'
+  06: start 00381000 end 003e83a1 cmd 00180151 'bin/apps/timer provides=timer'
+  07: start 003e9000 end 00449824 cmd 0018016f 'bin/apps/console provides=console'
+  08: start 0044a000 end 0049e2fd cmd 00180191 'bin/apps/test'
+  09: start 0049f000 end 00552890 cmd 0018019f 'bin/apps/sub'
+
+MBI Memory Map:
+ type 01 start 000000 end 09f3ff len 09f400
+ type 02 start 09f400 end 09ffff len 000c00
+ type 02 start 0f0000 end 0fffff len 010000
+ type 01 start 100000 end fffcfff len fefd000
+ type 02 start fffd000 end fffffff len 003000
+
+Need 003d2000 bytes to relocate modules.
+Relocating to 0fc2b000: 
+Copying 735376 bytes...
+Copying 344829 bytes...
+Copying 395300 bytes...
+Copying 422817 bytes...
+Copying 367551 bytes...
+Copying 393532 bytes...
+Copying 378484 bytes...
+Copying 349771 bytes...
+Copying 523356 bytes...
+Copying 73160 bytes...
+
+NOVA Microhypervisor v5 (x86_32): Jul 19 2012 16:21:16 [gcc 4.6.3]
+
+[ 0] CORE:0:0:0 10:2:3:0 [0] AMD Phenom(tm) 9550 Quad-Core Processor
+[ 1] CORE:1:0:0 10:2:3:0 [0] AMD Phenom(tm) 9550 Quad-Core Processor
+[ 2] CORE:2:0:0 10:2:3:0 [0] AMD Phenom(tm) 9550 Quad-Core Processor
+[ 3] CORE:3:0:0 10:2:3:0 [0] AMD Phenom(tm) 9550 Quad-Core Processor
+[0;34m[4] Object not found: No MCFG table found[0m

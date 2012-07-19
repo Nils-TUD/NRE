@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# config
+cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+opts="-j$cpus"
+bochscfg="bochs.cfg"
+crossdir="$PWD/../cross/$NOVA_TARGET/dist"
+
+if [ "$NOVA_TARGET" = "x86_32" ]; then
+	cross="i686-pc-nulnova"
+	export QEMU="qemu-system-i386"
+	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
+elif [ "$NOVA_TARGET" = "x86_64" ]; then
+	cross="x86_64-pc-nulnova"
+	export QEMU="qemu-system-x86_64"
+	export QEMU_FLAGS="-m 256 -smp 4"
+else
+	echo 'Please define $NOVA_TARGET to x86_32 or x86_64 first!' >&2
+	exit 1
+fi
+
+if [ "$NOVA_BUILD" != "debug" ]; then
+	NOVA_BUILD="release"
+fi
+
+build="build/$NOVA_TARGET-$NOVA_BUILD"
+root=$(dirname $(readlink -f $0))
+kerndir="../kernel"
+novadir="../kernel/nova"
+loaderdir="../loader"
+morbodir="../loader/morbo"
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
+	echo "Usage: $0 (dis=<app>|elf=<app>|debug=<app>|run|test)"
+	exit 0
+fi
+
+echo "Building for $NOVA_TARGET in $NOVA_BUILD mode using $cpus jobs..."
+
+# prevent build-error because of not-existing test.dump
+if [ ! -f $build/test.dump ]; then
+	mkdir -p $build
+	echo "" > $build/test.dump
+fi
+
+# build userland
+scons $opts
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+
+# update dump of test-app and rebuild to include the updated version in sub again, if necessary
+mv $build/test.dump $build/test_old.dump
+$build/tools/dump/dump $build/bin/apps/test > $build/test.dump
+if [ "`diff $build/test.dump $build/test_old.dump`" != "" ]; then
+	scons $opts
+fi
+rm -f $build/test_old.dump
+
+# checkout nova, if not already done
+if [ ! -d "$novadir" ]; then
+	$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
+		$root/$kerndir/patches/*
+fi
+
+cd $novadir/build
+# adjust build-flags depending on build-type
+if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
+	if [ "$NOVA_BUILD" != "debug" ]; then
+		# it should be release, but isn't
+		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
+	fi
+else
+	if [ "$NOVA_BUILD" != "release" ]; then
+		# it should be debug, but isn't
+		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
+	fi
+fi
+# build NOVA
+ARCH=$NOVA_TARGET make $jobs
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+cp hypervisor-$NOVA_TARGET $root/$build/bin/apps/hypervisor
+cd $root
+
+# checkout morbo, if not already done
+if [ ! -d "$morbodir" ]; then
+	$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
+		$root/$loaderdir/patches/*
+fi
+
+# build morbo
+cd $morbodir && scons $jobs
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+cd $root
+cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
+
+# run the specified command, if any
+case "$1" in
+	clean)
+		scons -c
+		rm -Rf $novadir
+		;;
+	prof=*)
+		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1:5} > result.xml
+		;;
+	bochs)
+		mkdir -p $build/bin/boot/grub
+		cp $root/tools/stage2_eltorito $build/bin/boot/grub
+		novaboot --build-dir="$PWD/$build" --iso -- $2
+		sed --in-place -e \
+			's/\(ata0-master:.*\?path\)=.*\?,/\1='`echo $build/$2.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
+		bochs -f $bochscfg -q
+		;;
+	run)
+		./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+		;;
+	srv)
+		./$2 --server --build-dir="$PWD/$build"
+		;;
+	dis=*)
+		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1:4} | less
+		;;
+	elf=*)
+		$crossdir/bin/$cross-readelf -a $build/bin/apps/${1:4} | less
+		;;
+	trace=*)
+		tools/backtrace $build/bin/apps/${1:6}
+		;;
+	dbg=*)
+		BUILD_DIR="$PWD/$build" $build/tools/debug ./$2 $build/bin/apps/${1:4}
+		kill `pgrep qemu`
+		;;
+	list)
+		ls -1 $build/bin/apps | while read l; do	
+			$crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
+				grep "\.init" | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
+		done
+		;;
+esac
+

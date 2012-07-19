@@ -1,0 +1,6 @@
+# -*- Mode: Python -*-
+
+Import('hostenv')
+
+hostenv.Program('ignoreint', Glob('*.c'))
+
