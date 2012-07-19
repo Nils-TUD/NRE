@@ -1,0 +1,20 @@
+*** iodev/ioapic.cc.old	2012-07-19 14:31:13.048616744 +0200
+--- iodev/ioapic.cc	2012-07-19 14:31:41.068755691 +0200
+***************
+*** 179,185 ****
+    BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
+    address &= 0xff;
+    if (address == 0x00)  {
+!     ioregsel = value;
+      return;
+    } else {
+      if (address != 0x10)
+--- 179,186 ----
+    BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
+    address &= 0xff;
+    if (address == 0x00)  {
+!     // bits 31:8 are reserved
+!     ioregsel = value & 0xFF;
+      return;
+    } else {
+      if (address != 0x10)
