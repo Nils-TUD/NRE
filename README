@@ -1,18 +1,22 @@
-This is the NOVA runtime environment (NRE). To get started, please take the following steps:
+This is the NOVA runtime environment (NRE). To get started, please take the
+following steps:
 
 1. Go into the directory cross/.
-2. Execute the download.sh. It will download binutils, gcc and newlib into the current directory.
-3. Execute build.sh <arch>, where <arch> is either x86_32 or x86_64. This builds the cross compiler.
-   Thus, it will take a few minutes :) Unfortunatly, the cross compiler does only compile with
-   gcc < 4.7.
+2. Execute the download.sh. It will download binutils, gcc and newlib into the
+   current directory.
+3. Execute build.sh <arch>, where <arch> is either x86_32 or x86_64. This builds
+   the cross compiler. Thus, it will take a few minutes :) Unfortunatly, the
+   cross compiler does only compile with gcc < 4.7.
 4. Before you continue, choose the target and build-type that you want to use:
    export NRE_TARGET=(x86_32|x86_64) NRE_BUILD=(debug|release)
-5. Go into the directory nre. You'll find the convenience-script b, which is responsible for building
-   everything that needs to be build and executing the specified command. So, simply do a "./b"
-   (it might be convenient to put "." into $PATH, if not already done) to build everything. It will
-   checkout and build NOVA, checkout and build the chainloader and - of course - build NRE as well.
-   Please take a look at the very end of b to see the commands that are supported. For a quick start,
-   use "b run test" to run the test application in qemu.
+5. Go into the directory nre. You'll find the convenience-script b, which is
+   responsible for building everything that needs to be build and executing the
+   specified command. So, simply do a "./b" (it might be convenient to put "."
+   into $PATH, if not already done) to build everything. It will checkout and
+   build NOVA, checkout and build the chainloader and - of course - build NRE
+   as well. Please take a look at the very end of b to see the commands that
+   are supported. For a quick start, use "b run test" to run the test
+   application in qemu.
 6. To use "b srv <script>", you have to generate the novaboot-config by:
    ./tools/novaboot --dump-config > ~/.novaboot
    You might want to adjust it afterwards
