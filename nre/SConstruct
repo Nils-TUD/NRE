@@ -50,7 +50,7 @@ guestenv = Environment(
 	ASFLAGS = '--32',
 	CFLAGS = '-Wall -Wextra -ansi -m32 -g -O0',
 	CXXFLAGS = '-Wall -Wextra -ansi -m32 -fno-exceptions -fno-rtti -g -O0',
-	LINKFLAGS = '-m32 -freestanding -nostdlib -Wall -Wextra -ansi -Wl,--build-id=none'
+	LINKFLAGS = '-m32 -fno-hosted -nostdlib -Wall -Wextra -ansi -Wl,--build-id=none'
 )
 
 verbose = ARGUMENTS.get('VERBOSE',0);
