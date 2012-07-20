@@ -3,7 +3,8 @@ This is the NOVA runtime environment (NRE). To get started, please take the foll
 1. Go into the directory cross/.
 2. Execute the download.sh. It will download binutils, gcc and newlib into the current directory.
 3. Execute build.sh <arch>, where <arch> is either x86_32 or x86_64. This builds the cross compiler.
-   Thus, it will take a few minutes :)
+   Thus, it will take a few minutes :) Unfortunatly, the cross compiler does only compile with
+   gcc < 4.7.
 4. Before you continue, choose the target and build-type that you want to use:
    export NRE_TARGET=(x86_32|x86_64) NRE_BUILD=(debug|release)
 5. Go into the directory nre. You'll find the convenience-script b, which is responsible for building
