@@ -4,14 +4,15 @@
 cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
 opts="-j$cpus"
 bochscfg="bochs.cfg"
-crossdir="$PWD/../cross/$NOVA_TARGET/dist"
 
 if [ "$NOVA_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
+	gdb=gdbtui
 	export QEMU="qemu-system-i386"
 	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
 elif [ "$NOVA_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
+	gdb=x86_64-linux-gnu-gdbtui
 	export QEMU="qemu-system-x86_64"
 	export QEMU_FLAGS="-m 256 -smp 4"
 else
@@ -19,10 +20,12 @@ else
 	exit 1
 fi
 
+# don't change anything below!
 if [ "$NOVA_BUILD" != "debug" ]; then
 	NOVA_BUILD="release"
 fi
 
+crossdir="$PWD/../cross/$NOVA_TARGET/dist"
 build="build/$NOVA_TARGET-$NOVA_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
@@ -131,8 +134,18 @@ case "$1" in
 		tools/backtrace $build/bin/apps/${1:6}
 		;;
 	dbg=*)
-		BUILD_DIR="$PWD/$build" $build/tools/debug ./$2 $build/bin/apps/${1:4}
-		kill `pgrep qemu`
+		tmp=$(tempfile)
+		echo "target remote localhost:1234" >> $tmp
+		echo "display/i \$pc" >> $tmp
+		# the problem is that qemu terminates if it receives SIGINT. so, if we want to
+		# interrupt the execution and examine the state in gdb by pressing ^C, qemu
+		# terminates. to prevent that we use a small program (ignoreint) no block SIGINT,
+		# which replaces itself with the given program afterwards
+		$build/tools/ignoreint/ignoreint ./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" \
+			--build-dir="$PWD/$build" --qemu-append='-S -s' > log.txt &
+		$gdb $build/bin/apps/${1:4} --command=$tmp
+		rm -f $tmp
+		kill `pgrep qemu` 2>/dev/null
 		;;
 	list)
 		ls -1 $build/bin/apps | while read l; do	

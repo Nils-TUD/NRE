@@ -1,4 +1,4 @@
-#!/usr/bin/env novaboot
+#!tools/novaboot
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
