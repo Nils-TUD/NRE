@@ -10,7 +10,7 @@ if vcenv['ARCH'] == 'x86_32':
 	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
 	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
 	# an asm constraint is impossible. strange :/
-	btype = os.environ.get('NOVA_BUILD')
+	btype = os.environ.get('NRE_BUILD')
 	if btype == 'debug':
 		halienv = vcenv.Clone()
 		halienv.Append(CXXFLAGS = ' -O1 -fno-inline')

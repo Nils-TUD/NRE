@@ -5,7 +5,7 @@ This is the NOVA runtime environment (NRE). To get started, please take the foll
 3. Execute build.sh <arch>, where <arch> is either x86_32 or x86_64. This builds the cross compiler.
    Thus, it will take a few minutes :)
 4. Before you continue, choose the target and build-type that you want to use:
-   export NOVA_TARGET=(x86_32|x86_64) NOVA_BUILD=(debug|release)
+   export NRE_TARGET=(x86_32|x86_64) NRE_BUILD=(debug|release)
 5. Go into the directory nre. You'll find the convenience-script b, which is responsible for building
    everything that needs to be build and executing the specified command. So, simply do a "./b"
    (it might be convenient to put "." into $PATH, if not already done) to build everything. It will

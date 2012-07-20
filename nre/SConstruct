@@ -2,13 +2,13 @@
 
 import sys, os
 
-target = os.environ.get('NOVA_TARGET')
+target = os.environ.get('NRE_TARGET')
 if target == 'x86_32':
 	cross = 'i686-pc-nulnova'
 elif target == 'x86_64':
 	cross = 'x86_64-pc-nulnova'
 else:
-	print "Please define NOVA_TARGET to x86_32 or x86_64 first!"
+	print "Please define NRE_TARGET to x86_32 or x86_64 first!"
 	Exit(1)
 crossver = '4.6.1'
 crossdir = os.path.abspath('../cross/' + target + '/dist')
@@ -33,7 +33,7 @@ env = Environment(
 	RANLIB = cross + '-ranlib',
 )
 
-btype = os.environ.get('NOVA_BUILD')
+btype = os.environ.get('NRE_BUILD')
 if btype == 'debug':
 	env.Append(CXXFLAGS = ' -O0 -g')
 	env.Append(CFLAGS = ' -O0 -g')

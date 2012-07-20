@@ -5,28 +5,28 @@ cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
 opts="-j$cpus"
 bochscfg="bochs.cfg"
 
-if [ "$NOVA_TARGET" = "x86_32" ]; then
+if [ "$NRE_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	gdb=gdbtui
 	export QEMU="qemu-system-i386"
 	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
-elif [ "$NOVA_TARGET" = "x86_64" ]; then
+elif [ "$NRE_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	gdb=x86_64-linux-gnu-gdbtui
 	export QEMU="qemu-system-x86_64"
 	export QEMU_FLAGS="-m 256 -smp 4"
 else
-	echo 'Please define $NOVA_TARGET to x86_32 or x86_64 first!' >&2
+	echo 'Please define $NRE_TARGET to x86_32 or x86_64 first!' >&2
 	exit 1
 fi
 
 # don't change anything below!
-if [ "$NOVA_BUILD" != "debug" ]; then
-	NOVA_BUILD="release"
+if [ "$NRE_BUILD" != "debug" ]; then
+	NRE_BUILD="release"
 fi
 
-crossdir="$PWD/../cross/$NOVA_TARGET/dist"
-build="build/$NOVA_TARGET-$NOVA_BUILD"
+crossdir="$PWD/../cross/$NRE_TARGET/dist"
+build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
 novadir="../kernel/nova"
@@ -38,7 +38,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
 	exit 0
 fi
 
-echo "Building for $NOVA_TARGET in $NOVA_BUILD mode using $cpus jobs..."
+echo "Building for $NRE_TARGET in $NRE_BUILD mode using $cpus jobs..."
 
 # prevent build-error because of not-existing test.dump
 if [ ! -f $build/test.dump ]; then
@@ -69,22 +69,22 @@ fi
 cd $novadir/build
 # adjust build-flags depending on build-type
 if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
-	if [ "$NOVA_BUILD" != "debug" ]; then
+	if [ "$NRE_BUILD" != "debug" ]; then
 		# it should be release, but isn't
 		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
 	fi
 else
-	if [ "$NOVA_BUILD" != "release" ]; then
+	if [ "$NRE_BUILD" != "release" ]; then
 		# it should be debug, but isn't
 		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
 	fi
 fi
 # build NOVA
-ARCH=$NOVA_TARGET make $jobs
+ARCH=$NRE_TARGET make $jobs
 if [ $? -ne 0 ]; then
 	exit 1
 fi
-cp hypervisor-$NOVA_TARGET $root/$build/bin/apps/hypervisor
+cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
 cd $root
 
 # checkout morbo, if not already done
