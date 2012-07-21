@@ -48,5 +48,5 @@ void PIC::eoi(int irq) {
 
 	    /* notify the master */
 	    Ports::out<uint8_t>(MASTER_CMD,EOI);
-    }
+	}
 }

@@ -19,6 +19,7 @@
 #include <kobj/Ec.h>
 #include <util/ScopedCapSels.h>
 #include <Syscalls.h>
+#include <CPU.h>
 
 namespace nre {
 
@@ -33,7 +34,8 @@ public:
 	 */
 	explicit VCpu(cpu_t cpu,capsel_t evb) : Ec(cpu,evb,INVALID) {
 		ScopedCapSels cap;
-		Syscalls::create_ec(cap.get(),0,0,cpu,evb,Syscalls::EC_GLOBAL,Pd::current()->sel());
+		Syscalls::create_ec(cap.get(),0,0,CPU::get(cpu).phys_id(),evb,
+				Syscalls::EC_GLOBAL,Pd::current()->sel());
 		sel(cap.release());
 	}
 };

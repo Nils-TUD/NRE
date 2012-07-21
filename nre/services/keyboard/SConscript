@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'keyboard', Glob('*.cc'))
+env.NREProgram(env, 'keyboard', Glob('*.cc'))

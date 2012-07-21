@@ -60,27 +60,27 @@ public:
 
 		// object capabilities for Pd
 		PD_PD	= 1 << 2,		// create_pd
-        PD_EC	= 1 << 3,		// create_ec
-        PD_SC	= 1 << 4,		// create_sc
-        PD_PT	= 1 << 5,		// create_pt
-        PD_SM	= 1 << 6,		// create_sm
+		PD_EC	= 1 << 3,		// create_ec
+		PD_SC	= 1 << 4,		// create_sc
+		PD_PT	= 1 << 5,		// create_pt
+		PD_SM	= 1 << 6,		// create_sm
 
 		// object capabilities for Ec
-        EC_CT	= 1 << 2,		// ec_ctrl
-        EC_SC	= 1 << 4,		// create_sc
-        EC_PT	= 1 << 5,		// create_pt
+		EC_CT	= 1 << 2,		// ec_ctrl
+		EC_SC	= 1 << 4,		// create_sc
+		EC_PT	= 1 << 5,		// create_pt
 
-        // object capabilities for Sc
-        SC_CT	= 1 << 2,		// sc_ctrl
+		// object capabilities for Sc
+		SC_CT	= 1 << 2,		// sc_ctrl
 
-        // object capabilities for Sm
-        SM_UP	= 1 << 2,		// sm_ctrl[up]
-        SM_DN	= 1 << 3,		// sm_ctrl[down]
+		// object capabilities for Sm
+		SM_UP	= 1 << 2,		// sm_ctrl[up]
+		SM_DN	= 1 << 3,		// sm_ctrl[down]
 
-        // abbreviations
-        MEM_ALL		= MEM | RWX,
-        IO_ALL		= IO | A,
-        OBJ_ALL		= OBJ | (0x1F << 2)
+		// abbreviations
+		MEM_ALL		= MEM | RWX,
+		IO_ALL		= IO | A,
+		OBJ_ALL		= OBJ | (0x1F << 2)
 	};
 
 	bool is_null() const {

@@ -81,21 +81,6 @@ CPU0Init::CPU0Init() {
 	cpu.srv_pt = new Pt(regec,portal_service);
 }
 
-// TODO clang!
-// TODO KObjects reference-counted? copying, ...
-// TODO what about resource-release when terminating entire subsystems?
-// TODO when a service dies, the client will notice it as soon as it tries to access the service
-// again. then it will throw an exception and call abort(). this in turn will kill this Thread. but
-// what if the client has more than one Thread? I mean, the client is basically dead and we should
-// restart it (the service gets restarted as well).
-// TODO perhaps it makes sense to separate the virtualization-stuff from the rest by putting it in
-// a separate library? or even for other things, so that we have a small, general library and some
-// more advanced libs on top of that
-// TODO what about different permissions for dataspaces? i.e. client has R, service has W
-// TODO we have to think about mapping device-memory again. it might be necessary to let multiple
-// Pds map one device (e.g. use acpi to find a device and map it).
-// TODO novaboot in tools
-
 int main() {
 	const Hip &hip = Hip::get();
 

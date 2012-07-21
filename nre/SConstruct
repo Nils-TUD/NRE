@@ -73,7 +73,7 @@ env.Append(
 	LINK_ADDR = 0x100000
 )
 
-def NulProgram(env, target, source):
+def NREProgram(env, target, source):
 	# for better debugging: put every executable at a different address
 	myenv = env.Clone()
 	if target != 'vancouver':
@@ -93,7 +93,7 @@ def NulProgram(env, target, source):
 	myenv.Depends(prog, myenv['LIBPATH'] + '/libg.a')
 	myenv.Install(env['BINARYDIR'], prog)
 
-env.NulProgram = NulProgram
+env.NREProgram = NREProgram
 hostenv.SConscript('tools/SConscript', 'hostenv', variant_dir = builddir + '/tools')
 env.SConscript('libs/SConscript', 'env', variant_dir = builddir + '/libs')
 env.SConscript('services/SConscript', 'env', variant_dir = builddir + '/services')

@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'reboot', Glob('*.cc'))
+env.NREProgram(env, 'reboot', Glob('*.cc'))

@@ -61,7 +61,7 @@ private:
 		_addr.out<uint32_t>(addr);
 	}
 
-    nre::UserSm _sm;
+	nre::UserSm _sm;
 	nre::Ports _addr;
 	nre::Ports _data;
 };

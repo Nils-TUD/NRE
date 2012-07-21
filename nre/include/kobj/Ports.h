@@ -86,22 +86,22 @@ public:
 	 * @param val the value to write
 	 * @param offset the offset within the port-range
 	 */
-    template<typename T>
+	template<typename T>
 	inline void out(T val,port_t offset = 0) {
 		assert(offset < _count);
 		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
 	}
 
 private:
-    void alloc() {
+	void alloc() {
     	UtcbFrame uf;
 		ScopedCapSels cap;
 		uf.delegation_window(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
 		uf << ALLOC << _base << _count;
 		CPU::current().io_pt->call(uf);
 		uf.check_reply();
-    }
-    void release() {
+	}
+	void release() {
 		try {
 			UtcbFrame uf;
 			uf << RELEASE << _base << _count;
@@ -110,13 +110,13 @@ private:
 		catch(...) {
 			// ignore
 		}
-    }
+	}
 
-    Ports(const Ports&);
-    Ports& operator=(const Ports&);
+	Ports(const Ports&);
+	Ports& operator=(const Ports&);
 
-    port_t _base;
-    uint _count;
+	port_t _base;
+	uint _count;
 };
 
 }

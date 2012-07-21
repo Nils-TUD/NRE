@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'timer', Glob('*.cc'))
+env.NREProgram(env, 'timer', Glob('*.cc'))

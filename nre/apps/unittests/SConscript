@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'unittests', [Glob('*.cc'), Glob('*/*.cc')])
+env.NREProgram(env, 'unittests', [Glob('*.cc'), Glob('*/*.cc')])

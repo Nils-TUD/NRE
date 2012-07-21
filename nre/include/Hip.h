@@ -63,7 +63,6 @@ public:
 	uint32_t cfg_utcb;		// UTCB sizes
 	uint32_t freq_tsc;		// TSC freq in khz
 	uint32_t freq_bus;		// BUS freq in khz
-	uint64_t last_sched;
 
 	/**
 	 * @return the number of capabilities used by the HV for exceptions and for service-portals

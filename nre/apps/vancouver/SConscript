@@ -20,6 +20,6 @@ if vcenv['ARCH'] == 'x86_32':
 	# use custom linker script
 	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
 	files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]
-	vcenv.NulProgram(vcenv, 'vancouver', [files, Glob('*.cc'), halifax])
+	vcenv.NREProgram(vcenv, 'vancouver', [files, Glob('*.cc'), halifax])
 else:
 	print "Vancouver has not yet been ported to " + vcenv['ARCH']

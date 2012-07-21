@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'cycleburner', Glob('*.cc'))
+env.NREProgram(env, 'cycleburner', Glob('*.cc'))

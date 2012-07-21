@@ -144,7 +144,7 @@ HostHPET::HostHPET(bool force_legacy)
 		_usable_timers = irqs;
 	}
 
-    // TODO Can this happen?
+	// TODO Can this happen?
 	if(_usable_timers == 0)
 		throw Exception(E_NOT_FOUND,"No suitable HPET timer");
 

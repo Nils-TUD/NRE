@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'acpi', Glob('*.cc'))
+env.NREProgram(env, 'acpi', Glob('*.cc'))

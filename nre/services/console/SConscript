@@ -2,4 +2,4 @@
 
 Import('env')
 
-env.NulProgram(env, 'console', Glob('*.cc'))
+env.NREProgram(env, 'console', Glob('*.cc'))
