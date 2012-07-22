@@ -20,6 +20,8 @@ if [ "$ARCH" != "x86_32" ] && [ "$ARCH" != "x86_64" ]; then
 fi
 
 ROOT=`dirname $(readlink -f $0)`
+source ${ROOT}/config.sh
+
 BUILD=$ROOT/$ARCH/build
 DIST=$ROOT/$ARCH/dist
 SRC=$ROOT/$ARCH/src
@@ -31,13 +33,9 @@ else
 	REBUILD=0
 fi
 
-BINVER=2.21.1
-GCCVER=4.6.1
-NEWLVER=1.20.0
-
 GCCCORE_ARCH=gcc-core-$GCCVER.tar.bz2
 GCCGPP_ARCH=gcc-g++-$GCCVER.tar.bz2
-BINUTILS_ARCH=binutils-"$BINVER"a.tar.bz2
+BINUTILS_ARCH=binutils-$BINVER.tar.bz2
 NEWLIB_ARCH=newlib-$NEWLVER.tar.gz
 
 # setup
