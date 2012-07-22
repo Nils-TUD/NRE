@@ -45,14 +45,14 @@ void test_regmng() {
 		rm->free(addr3,0x2000);
 
 		RegionManager::iterator it = rm->begin();
-		WVPASSEQ(it->addr,0x100000UL);
-		WVPASSEQ(it->size,0x3000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x100000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x3000));
 		++it;
-		WVPASSEQ(it->addr,0x200000UL);
-		WVPASSEQ(it->size,0x1000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x200000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x1000));
 		++it;
-		WVPASSEQ(it->addr,0x280000UL);
-		WVPASSEQ(it->size,0x2000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x280000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x2000));
 	}
 
 	{
@@ -70,13 +70,13 @@ void test_regmng() {
 		rm->free(addr2,0x1000);
 
 		RegionManager::iterator it = rm->begin();
-		WVPASSEQ(it->addr,0x100000UL);
-		WVPASSEQ(it->size,0x3000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x100000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x3000));
 		++it;
-		WVPASSEQ(it->addr,0x200000UL);
-		WVPASSEQ(it->size,0x1000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x200000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x1000));
 		++it;
-		WVPASSEQ(it->addr,0x280000UL);
-		WVPASSEQ(it->size,0x2000UL);
+		WVPASSEQ(it->addr,static_cast<uintptr_t>(0x280000));
+		WVPASSEQ(it->size,static_cast<size_t>(0x2000));
 	}
 }

@@ -31,13 +31,13 @@ static void test_slist() {
 	SListItem e1,e2,e3;
 	SList<SListItem>::iterator it;
 	SList<SListItem> l;
-	WVPASSEQ(l.length(),0UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(0));
 	WVPASS(l.begin() == l.end());
 
 	l.append(&e1);
 	l.append(&e2);
 	l.append(&e3);
-	WVPASSEQ(l.length(),3UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(3));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -48,7 +48,7 @@ static void test_slist() {
 	WVPASS(it == l.end());
 
 	l.remove(&e2);
-	WVPASSEQ(l.length(),2UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(2));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -57,14 +57,14 @@ static void test_slist() {
 	WVPASS(it == l.end());
 
 	l.remove(&e3);
-	WVPASSEQ(l.length(),1UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(1));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
 	WVPASS(it == l.end());
 
 	l.append(&e3);
-	WVPASSEQ(l.length(),2UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(2));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -74,11 +74,11 @@ static void test_slist() {
 
 	l.remove(&e1);
 	l.remove(&e3);
-	WVPASSEQ(l.length(),0UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(0));
 	WVPASS(l.begin() == l.end());
 
 	l.append(&e2);
-	WVPASSEQ(l.length(),1UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(1));
 	it = l.begin();
 	WVPASS(&*it == &e2);
 	++it;

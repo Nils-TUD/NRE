@@ -409,7 +409,7 @@ public:
 		return *this;
 	}
 	UtcbFrameRef &operator <<(const String& value) {
-		const size_t words = Math::blockcount(value.length(),sizeof(word_t)) + 1;
+		const size_t words = Math::blockcount<size_t>(value.length(),sizeof(word_t)) + 1;
 		check_untyped_write(words);
 		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
 		*reinterpret_cast<size_t*>(_utcb->msg + untyped()) = value.length();
@@ -437,7 +437,7 @@ public:
 	UtcbFrameRef &operator >>(String &value) {
 		check_untyped_read(1);
 		size_t len = *reinterpret_cast<size_t*>(_utcb->msg + _upos);
-		const size_t words = Math::blockcount(len,sizeof(word_t)) + 1;
+		const size_t words = Math::blockcount<size_t>(len,sizeof(word_t)) + 1;
 		check_untyped_read(words);
 		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1),len);
 		_upos += words;

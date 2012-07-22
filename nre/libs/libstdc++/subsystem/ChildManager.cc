@@ -87,7 +87,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	// first, simply copy the command-line to the stack
 	const String &cmdline = c->cmdline();
 	size_t len = Math::min<size_t>(MAX_CMDLINE_LEN,cmdline.length());
-	char *bottom = reinterpret_cast<char*>(sp - Math::round_up(len + 1,sizeof(word_t)));
+	char *bottom = reinterpret_cast<char*>(sp - Math::round_up<size_t>(len + 1,sizeof(word_t)));
 	memcpy(bottom,cmdline.str(),len + 1);
 
 	// count number of arguments

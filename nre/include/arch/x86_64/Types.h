@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
@@ -28,9 +30,6 @@ typedef unsigned long uint64_t;
 
 typedef long ssize_t;
 typedef long intptr_t;
-typedef long ptrdiff_t;
-
-typedef unsigned long size_t;
 typedef unsigned long uintptr_t;
 typedef long off_t;
 

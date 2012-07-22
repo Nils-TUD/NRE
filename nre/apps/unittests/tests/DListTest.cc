@@ -31,13 +31,13 @@ static void test_dlist() {
 	DListItem e1,e2,e3;
 	DList<DListItem>::iterator it;
 	DList<DListItem> l;
-	WVPASSEQ(l.length(),0UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(0));
 	WVPASS(l.begin() == l.end());
 
 	l.append(&e1);
 	l.append(&e2);
 	l.append(&e3);
-	WVPASSEQ(l.length(),3UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(3));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -55,7 +55,7 @@ static void test_dlist() {
 	WVPASS(it == l.begin());
 
 	l.remove(&e2);
-	WVPASSEQ(l.length(),2UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(2));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -69,7 +69,7 @@ static void test_dlist() {
 	WVPASS(it == l.begin());
 
 	l.remove(&e3);
-	WVPASSEQ(l.length(),1UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(1));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -79,7 +79,7 @@ static void test_dlist() {
 	WVPASS(it == l.begin());
 
 	l.append(&e3);
-	WVPASSEQ(l.length(),2UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(2));
 	it = l.begin();
 	WVPASS(&*it == &e1);
 	++it;
@@ -94,11 +94,11 @@ static void test_dlist() {
 
 	l.remove(&e1);
 	l.remove(&e3);
-	WVPASSEQ(l.length(),0UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(0));
 	WVPASS(l.begin() == l.end());
 
 	l.append(&e2);
-	WVPASSEQ(l.length(),1UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(1));
 	it = l.begin();
 	WVPASS(&*it == &e2);
 	++it;

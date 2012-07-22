@@ -56,7 +56,7 @@ public:
 	 * @param total the total number of bits
 	 */
 	explicit MaskField(size_t total)
-			: _bits(total), _count(Math::blockcount(total,(sizeof(word_t) * 8))),
+			: _bits(total), _count(Math::blockcount<size_t>(total,(sizeof(word_t) * 8))),
 			  _words(new word_t[_count]) {
 		STATIC_ASSERT((BITS & (BITS - 1)) == 0);
 	}

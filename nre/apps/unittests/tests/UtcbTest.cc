@@ -72,8 +72,8 @@ static void test_nesting() {
 			WVPASSEQ(b,5);
 			WVPASSEQ(c,4);
 		}
-		WVPASSEQ(uf1.typed(),0UL);
-		WVPASSEQ(uf1.untyped(),3UL);
+		WVPASSEQ(uf1.typed(),static_cast<size_t>(0));
+		WVPASSEQ(uf1.untyped(),static_cast<size_t>(3));
 
 		pt.call(uf1);
 
@@ -82,8 +82,8 @@ static void test_nesting() {
 		WVPASSEQ(b,2);
 		WVPASSEQ(c,1);
 	}
-	WVPASSEQ(uf.typed(),2UL);
-	WVPASSEQ(uf.untyped(),3UL);
+	WVPASSEQ(uf.typed(),static_cast<size_t>(2));
+	WVPASSEQ(uf.untyped(),static_cast<size_t>(3));
 
 	pt.call(uf);
 

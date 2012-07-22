@@ -41,7 +41,7 @@ static void test_sortedslist() {
 	ListItem e1(10),e2(1),e3(-5),e4(8),e5(12);
 	SortedSList<ListItem>::iterator it;
 	SortedSList<ListItem> l(isless);
-	WVPASSEQ(l.length(),0UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(0));
 	WVPASS(l.begin() == l.end());
 
 	l.insert(&e1);
@@ -49,7 +49,7 @@ static void test_sortedslist() {
 	l.insert(&e3);
 	l.insert(&e4);
 	l.insert(&e5);
-	WVPASSEQ(l.length(),5UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(5));
 	it = l.begin();
 	WVPASS(&*it == &e3);
 	++it;
@@ -66,7 +66,7 @@ static void test_sortedslist() {
 	l.remove(&e2);
 	l.remove(&e1);
 	l.remove(&e5);
-	WVPASSEQ(l.length(),2UL);
+	WVPASSEQ(l.length(),static_cast<size_t>(2));
 	it = l.begin();
 	WVPASS(&*it == &e3);
 	++it;
