@@ -19,5 +19,6 @@
 #define REG(X)				r##X
 #define ARCH_REGIONS_END	0x0000000200000000
 #define ARCH_KERNEL_START	0x00007ffffffff000
+#define ARCH_PAGE_SIZE		0x1000
 #define FMT_WORD_HEXLEN		"16"
 #define FMT_WORD_BYTES		"8"

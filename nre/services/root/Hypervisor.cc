@@ -26,7 +26,7 @@
 
 using namespace nre;
 
-uchar Hypervisor::_stack[ExecEnv::PAGE_SIZE] ALIGNED(ExecEnv::PAGE_SIZE);
+uchar Hypervisor::_stack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 Pt *Hypervisor::_mem_pts[Hip::MAX_CPUS];
 RegionManager Hypervisor::_io INIT_PRIO_HV;
 BitField<Hip::MAX_GSIS> Hypervisor::_gsis INIT_PRIO_HV;
