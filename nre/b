@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # config
 cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
