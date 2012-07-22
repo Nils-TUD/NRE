@@ -1,7 +1,11 @@
 #!/bin/sh
 
 # config
-cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+if [ -f /proc/cpuinfo ]; then
+    cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+else
+    cpus=1
+fi
 opts="-j$cpus"
 bochscfg="bochs.cfg"
 
