@@ -1,5 +1,6 @@
 #!/bin/sh
 
+SUDO=sudo
 MAKE_ARGS=-j8
 BUILD_BINUTILS=true
 BUILD_GCC=true
@@ -21,7 +22,7 @@ fi
 
 ROOT=`dirname $(readlink -f $0)`
 BUILD=$ROOT/$ARCH/build
-DIST=$ROOT/$ARCH/dist
+DIST=/opt/nre-cross-$ARCH
 SRC=$ROOT/$ARCH/src
 HEADER=$ROOT/include
 
@@ -41,6 +42,7 @@ BINUTILS_ARCH=binutils-"$BINVER"a.tar.bz2
 NEWLIB_ARCH=newlib-$NEWLVER.tar.gz
 
 # setup
+
 export PREFIX=$DIST
 if [ "$ARCH" = "x86_32" ]; then
 	export TARGET=i686-pc-nulnova
@@ -48,6 +50,12 @@ else
 	export TARGET=x86_64-pc-nulnova
 fi
 mkdir -p $BUILD/gcc $BUILD/binutils $BUILD/newlib
+
+# create dist-dir and chown it to the current user. without this we would need sudo to change anything
+# which becomes a problem when "make install" wants to use the just built cross-compiler which does
+# not by default reside in $PATH. and we can't always change $PATH for sudo (might be forbidden).
+$SUDO mkdir -p $DIST
+$SUDO chown -R $USER $DIST
 
 # cleanup
 if [ $REBUILD -eq 1 ]; then

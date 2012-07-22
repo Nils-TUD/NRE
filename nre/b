@@ -34,7 +34,7 @@ if [ "$NRE_BUILD" != "debug" ]; then
 	NRE_BUILD="release"
 fi
 
-crossdir="$PWD/../cross/$NRE_TARGET/dist"
+crossdir="/opt/nre-cross-$NRE_TARGET"
 build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
