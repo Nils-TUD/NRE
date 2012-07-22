@@ -2,7 +2,7 @@
 
 import sys, os
 
-target = os.environ.get('NRE_TARGET')
+target = os.environ.get('NRE_TARGET') or 'x86_64'
 if target == 'x86_32':
 	cross = 'i686-pc-nulnova'
 elif target == 'x86_64':
