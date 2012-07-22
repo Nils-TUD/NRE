@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <stddef.h>
 
 typedef char int8_t;
 typedef short int16_t;

@@ -58,11 +58,13 @@ public:
 		// voluntarily with given exit code
 		void (*target)() = reinterpret_cast<void (*)()>(EXIT_START + (code & (EXIT_CODE_NUM - 1)));
 		target();
+		UNREACHED;
 	}
 
 	NORETURN static void thread_exit() {
 		void (*target)() = reinterpret_cast<void (*)()>(THREAD_EXIT);
 		target();
+		UNREACHED;
 	}
 
 	static inline Pd *get_current_pd() {

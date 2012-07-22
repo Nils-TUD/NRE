@@ -159,8 +159,8 @@ char *strstr(const char *str1,const char *str2) {
 	return 0;
 }
 
-int strcspn(const char *s,const char *reject) {
-	int res = 0;
+size_t strcspn(const char *s,const char *reject) {
+	size_t res = 0;
 	while(s[res] && !strchr(reject,s[res]))
 		res++;
 	return res;

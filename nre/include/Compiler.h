@@ -25,11 +25,17 @@
 #define EXPECT_FALSE(X)			__builtin_expect(!!(X),0)
 #define EXPECT_TRUE(X)			__builtin_expect(!!(X),1)
 #define UNUSED					__attribute__((unused))
+#define UNREACHED				__builtin_unreachable()
 
-#define STATIC_ASSERT(X)		({ \
-	extern int __attribute__((error("static assert failed: '" #X "'"))) check(); \
-	((X) ? 0 : check()); \
-})
+#ifdef __clang__
+#	define _STATIC_ASSERT(X,M)	typedef char static_assertion_##M[(!!(X)) * 2 - 1]
+#	define STATIC_ASSERT(X)		_STATIC_ASSERT(X,__LINE__)
+#else
+#	define STATIC_ASSERT(X)		({ \
+		extern int __attribute__((error("static assert failed: '" #X "'"))) check(); \
+		((X) ? 0 : check()); \
+	})
+#endif
 
 #ifdef __cplusplus
 #	define EXTERN_C				extern "C"

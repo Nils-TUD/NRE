@@ -45,8 +45,8 @@ public:
 	}
 
 private:
-	uint32_t signature;
-	uint16_t checksum;		// HIP checksum
+	uint32_t : 32;			// HIP signature
+	uint16_t : 16;			// HIP checksum
 	uint16_t length;		// HIP length
 	uint16_t cpu_offs;		// Offset of first CPU descriptor
 	uint16_t cpu_size;
@@ -149,7 +149,7 @@ public:
 	uint8_t core;
 	uint8_t package;
 private:
-	uint32_t reserved;
+	uint32_t : 32;
 
 public:
 	/**
