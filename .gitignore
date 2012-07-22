@@ -1,3 +1,5 @@
+*~
+.scons*
 nre/build
 kernel/nova
 loader/morbo
