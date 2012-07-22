@@ -1,5 +1,11 @@
-#!/bin/bash
-wget -c http://ftp.gnu.org/gnu/binutils/binutils-2.21.1a.tar.bz2
-wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-core-4.6.1.tar.bz2
-wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-g++-4.6.1.tar.bz2
-wget -c ftp://sources.redhat.com/pub/newlib/newlib-1.20.0.tar.gz
+#!/bin/sh
+
+ROOT=`dirname $(readlink -f $0)`
+source ${ROOT}/config.sh
+
+wget -c ${GNU_MIRROR}/binutils/binutils-${BINVER}.tar.bz2
+wget -c ${GNU_MIRROR}/gcc/gcc-${GCCVER}/gcc-core-${GCCVER}.tar.bz2
+wget -c ${GNU_MIRROR}/gcc/gcc-${GCCVER}/gcc-g++-${GCCVER}.tar.bz2
+wget -c ftp://sources.redhat.com/pub/newlib/newlib-${NEWLVER}.tar.gz
+
+# EOF

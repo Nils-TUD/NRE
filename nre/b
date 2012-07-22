@@ -1,9 +1,18 @@
-#!/bin/bash
+#!/bin/sh
 
 # config
-cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+if [ -f /proc/cpuinfo ]; then
+    cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+else
+    cpus=1
+fi
 opts="-j$cpus"
 bochscfg="bochs.cfg"
+
+if [ -z "$NRE_TARGET" ]; then
+    echo "Defaulting to NRE_TARGET=x86_64"
+    export NRE_TARGET=x86_64
+fi
 
 if [ "$NRE_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
@@ -16,7 +25,7 @@ elif [ "$NRE_TARGET" = "x86_64" ]; then
 	export QEMU="qemu-system-x86_64"
 	export QEMU_FLAGS="-m 256 -smp 4"
 else
-	echo 'Please define $NRE_TARGET to x86_32 or x86_64 first!' >&2
+	echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
 	exit 1
 fi
 

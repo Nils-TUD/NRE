@@ -2,15 +2,17 @@
 
 import sys, os
 
-target = os.environ.get('NRE_TARGET')
-if target == 'x86_32':
+target = os.environ.get('NRE_TARGET') or 'x86_64'
+if  target == 'x86_32':
 	cross = 'i686-pc-nulnova'
 elif target == 'x86_64':
 	cross = 'x86_64-pc-nulnova'
 else:
 	print "Please define NRE_TARGET to x86_32 or x86_64 first!"
 	Exit(1)
-crossver = '4.6.1'
+
+# TODO Suck this in from ../cross/config.sh or use gcc -print-libgcc-file-name
+crossver = '4.6.2'
 crossdir = os.path.abspath('../cross/' + target + '/dist')
 
 hostenv = Environment(
