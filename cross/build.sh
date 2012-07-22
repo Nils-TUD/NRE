@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 MAKE_ARGS=-j8
 BUILD_BINUTILS=true
