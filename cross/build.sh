@@ -1,10 +1,16 @@
 #!/bin/sh
 
 SUDO=sudo
-MAKE_ARGS=-j8
 BUILD_BINUTILS=true
 BUILD_GCC=true
 BUILD_CPP=true
+
+if [ -f /proc/cpuinfo ]; then
+	cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+else
+	cpus=1
+fi
+MAKE_ARGS="-j$cpus"
 
 usage() {
 	echo "Usage: $1 (x86_32|x86_64) [--rebuild]" >&2
@@ -26,11 +32,17 @@ DIST=/opt/nre-cross-$ARCH
 SRC=$ROOT/$ARCH/src
 HEADER=$ROOT/include
 
-if [ "$2" == "--rebuild" ] || [ ! -d $DIST ]; then
+if [ "$2" = "--rebuild" ] || [ ! -d $DIST ] || [ ! -d $SRC ]; then
 	REBUILD=1
 else
 	REBUILD=0
 fi
+
+echo "Downloading binutils, gcc and newlib..."
+wget -c http://ftp.gnu.org/gnu/binutils/binutils-2.21.1a.tar.bz2
+wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-core-4.6.1.tar.bz2
+wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-g++-4.6.1.tar.bz2
+wget -c ftp://sources.redhat.com/pub/newlib/newlib-1.20.0.tar.gz
 
 BINVER=2.21.1
 GCCVER=4.6.1
