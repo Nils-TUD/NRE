@@ -28,7 +28,7 @@ using namespace nre;
 Log Log::_inst INIT_PRIO_SERIAL;
 Service *Log::_srv;
 const char *Log::_colors[] = {
-	"30","31","32","33","34","35","36"
+	"31","32","33","34","35","36"
 };
 
 Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1), _to_ser(false), _bufpos(0), _buf() {
