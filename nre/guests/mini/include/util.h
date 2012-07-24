@@ -16,13 +16,19 @@
 
 #pragma once
 
-#include <stdint.h>
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+typedef unsigned long long uint64_t;
 
 typedef unsigned long int size_t;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
+
+typedef unsigned long uintptr_t;
+typedef unsigned long size_t;
 
 #define assert(x)
 #define ARRAY_SIZE(a)	(sizeof((a)) / sizeof((a)[0]))
