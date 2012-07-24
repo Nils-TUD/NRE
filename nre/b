@@ -117,7 +117,7 @@ case "$1" in
 		rm -Rf $novadir $morbodir
 		;;
 	prof=*)
-		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1:5} > result.xml
+		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1#prof=} > result.xml
 		;;
 	bochs)
 		mkdir -p $build/bin/boot/grub
@@ -134,13 +134,13 @@ case "$1" in
 		./$2 --server --build-dir="$PWD/$build"
 		;;
 	dis=*)
-		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1:4} | less
+		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1#dis=} | less
 		;;
 	elf=*)
-		$crossdir/bin/$cross-readelf -a $build/bin/apps/${1:4} | less
+		$crossdir/bin/$cross-readelf -a $build/bin/apps/${1#elf=} | less
 		;;
 	trace=*)
-		tools/backtrace $build/bin/apps/${1:6}
+		tools/backtrace $build/bin/apps/${1#trace=}
 		;;
 	dbg=*)
 		tmp=$(tempfile)
@@ -152,7 +152,7 @@ case "$1" in
 		# which replaces itself with the given program afterwards
 		$build/tools/ignoreint/ignoreint ./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" \
 			--build-dir="$PWD/$build" --qemu-append='-S -s' > log.txt &
-		$gdb $build/bin/apps/${1:4} --command=$tmp
+		$gdb $build/bin/apps/${1#dbg=} --command=$tmp
 		rm -f $tmp
 		kill `pgrep qemu` 2>/dev/null
 		;;
