@@ -16,8 +16,8 @@
 
 #include "paging.h"
 
-static Paging::pde_t pd[Paging::PAGE_SIZE / sizeof(Paging::pde_t)] A_ALIGNED(Paging::PAGE_SIZE);
-static Paging::pte_t pt[Paging::PAGE_SIZE / sizeof(Paging::pte_t)] A_ALIGNED(Paging::PAGE_SIZE);
+static Paging::pde_t pd[PAGE_SIZE / sizeof(Paging::pde_t)] A_ALIGNED(PAGE_SIZE);
+static Paging::pte_t pt[PAGE_SIZE / sizeof(Paging::pte_t)] A_ALIGNED(PAGE_SIZE);
 
 void Paging::init() {
 	uintptr_t addr = 0;

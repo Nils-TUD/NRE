@@ -18,6 +18,9 @@
 
 #include "util.h"
 
+#define PAGE_SHIFT		12
+#define PAGE_SIZE		(1 << PAGE_SHIFT)
+
 class Paging {
 private:
 	enum {
@@ -28,11 +31,6 @@ private:
 public:
 	typedef uint32_t pde_t;
 	typedef uint32_t pte_t;
-
-	enum {
-		PAGE_SHIFT		= 12,
-		PAGE_SIZE		= 1 << PAGE_SHIFT
-	};
 
 	enum {
 		PRESENT			= 1 << 0,

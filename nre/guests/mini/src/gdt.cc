@@ -24,8 +24,8 @@ void GDT::init() {
 	table.offset = (uintptr_t)gdt;
 	table.size = sizeof(gdt) - 1;
 
-	set(gdt,1,0,0xFFFFFFFF >> Paging::PAGE_SHIFT,TYPE_CODE | PRESENT | CODE_READ,DPL_KERNEL);
-	set(gdt,2,0,0xFFFFFFFF >> Paging::PAGE_SHIFT,TYPE_DATA | PRESENT | DATA_WRITE,DPL_KERNEL);
+	set(gdt,1,0,0xFFFFFFFF >> PAGE_SHIFT,TYPE_CODE | PRESENT | CODE_READ,DPL_KERNEL);
+	set(gdt,2,0,0xFFFFFFFF >> PAGE_SHIFT,TYPE_DATA | PRESENT | DATA_WRITE,DPL_KERNEL);
 	flush(&table);
 }
 
