@@ -16,7 +16,7 @@
 
 #include <arch/Startup.h>
 #include <kobj/GlobalThread.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 
 namespace nre {
 

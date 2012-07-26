@@ -19,7 +19,7 @@
 #include <arch/UtcbExcLayout.h>
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <Exception.h>
 #include <kobj/Thread.h>
 #include <String.h>

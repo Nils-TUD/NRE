@@ -16,7 +16,7 @@
 
 #include <arch/Startup.h>
 #include <kobj/Pt.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <CPU.h>
 #include <Hip.h>
 

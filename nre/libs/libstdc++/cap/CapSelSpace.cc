@@ -15,7 +15,7 @@
  */
 
 #include <arch/Startup.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 
 namespace nre {
 

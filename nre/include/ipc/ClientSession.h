@@ -19,7 +19,7 @@
 #include <utcb/UtcbFrame.h>
 #include <ipc/Connection.h>
 #include <ipc/Service.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <kobj/Pt.h>
 #include <CPU.h>
 

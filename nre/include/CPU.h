@@ -17,7 +17,7 @@
 #pragma once
 
 #include <kobj/Thread.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <Assert.h>
 #include <util/SList.h>
 #include <Hip.h>

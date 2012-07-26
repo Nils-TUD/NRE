@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 
 namespace nre {
 

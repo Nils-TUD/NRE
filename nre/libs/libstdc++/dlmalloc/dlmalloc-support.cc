@@ -16,7 +16,7 @@
 
 // -*- Mode: C++ -*-
 
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <mem/DataSpace.h>
 #include <kobj/Pd.h>
 #include <stream/Serial.h>

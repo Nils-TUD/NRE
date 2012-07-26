@@ -16,7 +16,7 @@
 
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
-#include <cap/CapSpace.h>
+#include <cap/CapSelSpace.h>
 #include <Syscalls.h>
 
 namespace nre {
