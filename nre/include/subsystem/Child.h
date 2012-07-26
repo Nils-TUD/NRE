@@ -83,7 +83,7 @@ private:
 			: RCUObject(), _cm(cm), _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
 			  _pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
 			  _last_fault_addr(), _last_fault_cpu(), _gsis(),
-			  _gsi_caps(CapSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _sm() {
+			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _sm() {
 	}
 	virtual ~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
@@ -97,7 +97,7 @@ private:
 			delete _pd;
 		release_gsis();
 		release_ports();
-		CapSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
+		CapSelSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
 	}
 
 	void release_gsis() {

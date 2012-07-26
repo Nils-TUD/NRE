@@ -58,7 +58,7 @@ VCPUBackend::Portal VCPUBackend::_portals[] = {
 };
 
 capsel_t VCPUBackend::get_portals(bool use_svm) {
-	capsel_t caps = CapSpace::get().allocate(0x100);
+	capsel_t caps = CapSelSpace::get().allocate(0x100);
 	for(size_t i = 0; i < ARRAY_SIZE(_portals); ++i) {
 		// if VMX is used, just create the VMX-portals. the same for SVM
 		if(use_svm == (_portals[i].offset < PT_SVM))

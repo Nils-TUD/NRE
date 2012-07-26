@@ -26,14 +26,22 @@
 
 namespace nre {
 
+/**
+ * Types for the ACPI service
+ */
 class ACPI {
 public:
+	/**
+	 * The available commands
+	 */
 	enum Command {
 		GET_MEM,
 		FIND_TABLE
 	};
 
-	  /* root system descriptor table */
+	/**
+	 * Root system descriptor table
+	 */
 	struct RSDT {
 		char signature[4];
 		uint32_t length;
@@ -50,13 +58,24 @@ private:
 	ACPI();
 };
 
+/**
+ * Represents a session at the ACPI service
+ */
 class ACPISession : public ClientSession {
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit ACPISession(Connection &con) : ClientSession(con), _ds(), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		get_mem();
 	}
+	/**
+	 * Destroys this session
+	 */
 	virtual ~ACPISession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _pts[cpu];
@@ -64,6 +83,13 @@ public:
 		delete _ds;
 	}
 
+	/**
+	 * Finds the ACPI table with given name
+	 *
+	 * @param name the name of the table
+	 * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
+	 * @return the RSDT or 0 if not found
+	 */
 	ACPI::RSDT *find_table(const String &name,uint instance = 0) const {
 		UtcbFrame uf;
 		uf << ACPI::FIND_TABLE << name << instance;

@@ -24,8 +24,14 @@
 
 namespace nre {
 
+/**
+ * Types for the mouse service
+ */
 class Mouse {
 public:
+	/**
+	 * A packet that we receive from the service
+	 */
 	struct Packet {
 		uint8_t status;
 		uint8_t x;
@@ -37,17 +43,28 @@ private:
 	Mouse();
 };
 
+/**
+ * Represents a session at the mouse service
+ */
 class MouseSession : public ClientSession {
 	enum {
 		DS_SIZE	= ExecEnv::PAGE_SIZE
 	};
 
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit MouseSession(Connection &con) : ClientSession(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
 		share();
 	}
 
+	/**
+	 * @return the consumer to receive packets from the mouse service
+	 */
 	Consumer<Mouse::Packet> &consumer() {
 		return _consumer;
 	}

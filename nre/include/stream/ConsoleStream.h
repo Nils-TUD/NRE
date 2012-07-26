@@ -25,23 +25,61 @@
 
 namespace nre {
 
+/**
+ * This class provides means to read from or write to the console.
+ */
 class ConsoleStream : public IStream, public OStream {
 public:
-	ConsoleStream(ConsoleSession &sess,uint page = 0) : _sess(sess), _page(page), _pos(0) {
+	/**
+	 * Constructor
+	 *
+	 * @param sess your console-session
+	 * @param page the console-page to write to
+	 */
+	explicit ConsoleStream(ConsoleSession &sess,uint page = 0) : _sess(sess), _page(page), _pos(0) {
 	}
 
+	/**
+	 * @return the page
+	 */
 	uint page() const {
 		return _page;
 	}
 
+	/**
+	 * Reads one character from the console
+	 *
+	 * @return the character
+	 */
 	virtual char read();
+
+	/**
+	 * Writes the given character to the console
+	 *
+	 * @param c the character
+	 */
 	virtual void write(char c) {
 		put(0x0F00 | c,_pos);
 	}
+
+	/**
+	 * Writes the given character+colorcode to the given position and updates <pos> accordingly.
+	 *
+	 * @param value the character+color to write
+	 * @param pos the position (will be updated)
+	 */
 	void put(ushort value,uint &pos) {
 		uintptr_t addr = _sess.screen().virt() + Console::TEXT_OFF + _page * Console::PAGE_SIZE;
 		put(value,reinterpret_cast<ushort*>(addr),pos);
 	}
+
+	/**
+	 * Writes the given character+colorcode to the given position and updates <pos> accordingly.
+	 *
+	 * @param value the character+color to write
+	 * @param base the base address of the console-page
+	 * @param pos the position (will be updated)
+	 */
 	void put(ushort value,ushort *base,uint &pos);
 
 private:

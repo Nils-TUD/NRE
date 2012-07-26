@@ -23,6 +23,9 @@
 
 namespace nre {
 
+/**
+ * This class allows to divide given CPUs according the distance on the chip/board.
+ */
 class Topology {
 	struct SortCPU {
 		cpu_t id;
@@ -33,6 +36,13 @@ class Topology {
 
 public:
 	/**
+	 * Takes the CPUs from <begin>..<end> and splits them in <part> paritions, depending on their
+	 * distance. Afterwards you have two arrays:
+	 * 1. part_cpu which maps from a parition to a CPU id
+	 * 2. cpu_cpu which maps from a CPU to a CPU nearby
+	 *
+	 * @param begin the beginning of the CPUs
+	 * @param end the end of the CPUs
 	 * @param n
 	 * 	IN: Number of Hip_cpu descriptors
 	 * 	OUT: Number of CPUs in mappings

@@ -33,7 +33,7 @@ ObjCap::~ObjCap() {
 			}
 		}
 		if(!(_sel & KEEP_SEL_BIT))
-			CapSpace::get().free(_sel);
+			CapSelSpace::get().free(_sel);
 	}
 }
 

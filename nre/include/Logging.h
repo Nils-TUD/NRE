@@ -20,6 +20,12 @@
 #include <kobj/UserSm.h>
 #include <util/ScopedLock.h>
 
+/**
+ * Executes the given expression (which should to the logging) if the log-level <lvl> is enabled.
+ * A UserSm is used to make sure that different log-statements in one program don't get mixed.
+ * The nice thing is that the compiler is able to completely eliminate this code, if the log-level
+ * is disabled.
+ */
 #define LOG(lvl,expr) 	\
 	do { \
 		if(nre::Logging::level & (lvl)) { \
@@ -31,6 +37,9 @@
 
 namespace nre {
 
+/**
+ * This class is used to control debugging-output
+ */
 class Logging {
 public:
 	enum {

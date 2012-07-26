@@ -69,8 +69,8 @@ CPU0Init::CPU0Init() {
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.accept_translates();
-	new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
-	new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
+	new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
+	new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 	// register portal for the log service
 	uintptr_t regec_utcb = VirtualMemory::alloc(Utcb::SIZE);
@@ -130,8 +130,8 @@ int main() {
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.accept_translates();
-			new Pt(ec,ec->event_base() + CapSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
-			new Pt(ec,ec->event_base() + CapSpace::EV_PAGEFAULT,portal_pagefault,
+			new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
+			new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 			// register portal for the log service
 			LocalThread *regec = new LocalThread(it->log_id());

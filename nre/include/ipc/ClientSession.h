@@ -49,7 +49,7 @@ public:
 	 */
 	virtual ~ClientSession() {
 		close();
-		CapSpace::get().free(_caps,CPU::count());
+		CapSelSpace::get().free(_caps,CPU::count());
 	}
 
 	/**

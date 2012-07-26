@@ -25,18 +25,32 @@
 
 namespace nre {
 
+/**
+ * Represents a session at the reboot service
+ */
 class RebootSession : public ClientSession {
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit RebootSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 	}
+	/**
+	 * Destroys the session
+	 */
 	virtual ~RebootSession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _pts[cpu];
 		delete[] _pts;
 	}
 
+	/**
+	 * Tries to reboot the PC with various methods
+	 */
 	void reboot() {
 		UtcbFrame uf;
 		_pts[CPU::current().log_id()]->call(uf);

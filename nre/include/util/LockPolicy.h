@@ -18,6 +18,9 @@
 
 namespace nre {
 
+/**
+ * Empty lock-policy that does nothing
+ */
 class LockPolicyNone {
 public:
 	explicit LockPolicyNone() {
@@ -34,6 +37,9 @@ private:
 	LockPolicyNone& operator=(const LockPolicyNone&);
 };
 
+/**
+ * A lock policy that takes an arbitrary lock-class and expects an up() and down() method.
+ */
 template<class T>
 class LockPolicyDefault {
 public:

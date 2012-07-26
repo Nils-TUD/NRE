@@ -49,7 +49,7 @@ public:
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _pts[i];
 		delete[] _pts;
-		CapSpace::get().free(_caps,CPU::count());
+		CapSelSpace::get().free(_caps,CPU::count());
 	}
 
 	/**

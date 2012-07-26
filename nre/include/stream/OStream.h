@@ -21,15 +21,30 @@
 
 namespace nre {
 
+/**
+ * This class can be written into an OStream to apply formatting while using the stream operators
+ */
 template<typename T>
 class Format {
 public:
-	Format(const char *fmt,const T &value) : _fmt(fmt), _value(value) {
+	/**
+	 * Constructor
+	 *
+	 * @param fmt the format to use
+	 * @param value the value
+	 */
+	explicit Format(const char *fmt,const T &value) : _fmt(fmt), _value(value) {
 	}
 
+	/**
+	 * @return the format
+	 */
 	const char *fmt() const {
 		return _fmt;
 	}
+	/**
+	 * @return the value
+	 */
 	const T &value() const {
 		return _value;
 	}
@@ -39,6 +54,11 @@ private:
 	const T &_value;
 };
 
+/**
+ * The output-stream is used to write formatted output to various destinations. Subclasses have
+ * to implement the method to actually write a character. This class provides the higher-level
+ * stuff around it.
+ */
 class OStream {
 	enum {
 		PADRIGHT	= 1 << 0,

@@ -21,7 +21,7 @@
 namespace nre {
 
 GlobalThread GlobalThread::_cur INIT_PRIO_GEC (
-	_startup_info.utcb,CapSpace::INIT_EC,_startup_info.cpu,&Pd::_cur,_startup_info.stack
+	_startup_info.utcb,CapSelSpace::INIT_EC,_startup_info.cpu,&Pd::_cur,_startup_info.stack
 );
 
 }

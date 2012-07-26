@@ -23,21 +23,33 @@
 
 namespace nre {
 
+/**
+ * Types for the keyboard service
+ */
 class Keyboard {
 public:
 	typedef uint keycode_t;
 
+	/**
+	 * The available commands
+	 */
 	enum Command {
 		REBOOT,
 		SHARE_DS
 	};
 
+	/**
+	 * A packet that we receive from the keyboard service
+	 */
 	struct Packet {
 		uint8_t scancode;
 		keycode_t keycode;
 		uint flags;
 	};
 
+	/**
+	 * The keycodes
+	 */
 	enum Keys {
 		VK_ACCENT		= 1,
 		VK_0			= 2,
@@ -150,8 +162,7 @@ public:
 	};
 
 	/**
-	 * We send set2 scancodes over the keycode bus including the following
-	 * flags.
+	 * Flags that are set by the keyboard service
 	 */
 	enum Flags {
 		RELEASE			= 1 << 8,
@@ -172,12 +183,20 @@ private:
 	Keyboard();
 };
 
+/**
+ * Represents a session at the keyboard service
+ */
 class KeyboardSession : public ClientSession {
 	enum {
 		DS_SIZE = ExecEnv::PAGE_SIZE
 	};
 
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit KeyboardSession(Connection &con) : ClientSession(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true),
 			_pts(new Pt*[CPU::count()]) {
@@ -185,16 +204,40 @@ public:
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		share();
 	}
+	/**
+	 * Destroys the session
+	 */
 	virtual ~KeyboardSession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _pts[cpu];
 		delete[] _pts;
 	}
 
+	/**
+	 * @return the consumer to receive packets from the keyboard
+	 */
 	Consumer<Keyboard::Packet> &consumer() {
 		return _consumer;
 	}
 
+	/**
+	 * Receives the next packet from the keyboard. I.e. it waits until the next packet arrives.
+	 *
+	 * @return the received packet
+	 * @throws Exception if it failed
+	 */
+	Keyboard::Packet receive() {
+		Keyboard::Packet *pk = _consumer.get();
+		if(!pk)
+			throw Exception(E_ABORT);
+		Keyboard::Packet res = *pk;
+		_consumer.next();
+		return res;
+	}
+
+	/**
+	 * Trys to reboot the PC with the keyboard
+	 */
 	void reboot() {
 		UtcbFrame uf;
 		uf << Keyboard::REBOOT;

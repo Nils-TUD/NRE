@@ -19,6 +19,6 @@
 
 namespace nre {
 
-CapSpace CapSpace::_inst INIT_PRIO_CAPSPACE;
+CapSelSpace CapSelSpace::_inst INIT_PRIO_CAPSPACE;
 
 }

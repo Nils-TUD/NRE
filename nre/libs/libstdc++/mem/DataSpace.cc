@@ -96,8 +96,8 @@ void DataSpace::destroy() {
 	uf << DESTROY << _desc;
 	CPU::current().ds_pt().call(uf);
 
-	CapSpace::get().free(_unmapsel);
-	CapSpace::get().free(_sel);
+	CapSelSpace::get().free(_unmapsel);
+	CapSelSpace::get().free(_sel);
 }
 
 }

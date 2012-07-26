@@ -21,8 +21,18 @@
 
 namespace nre {
 
+/**
+ * Inputstream that read from a string
+ */
 class IStringStream : public IStream {
 public:
+	/**
+	 * Reads a value of type <T> from the given string
+	 *
+	 * @param str the string
+	 * @param len the length or -1 for "use strlen()"
+	 * @return the read value
+	 */
 	template<typename T>
 	static T read_from(const char *str,size_t len = (size_t)-1) {
 		IStringStream is(str,len);
@@ -31,6 +41,12 @@ public:
 		return t;
 	}
 
+	/**
+	 * Constructor
+	 *
+	 * @param str the string
+	 * @param len the length or -1 for "use strlen()"
+	 */
 	explicit IStringStream(const char *str,size_t len = (size_t)-1) : IStream(),
 			_str(str), _len(len == (size_t)-1 ? strlen(str) : len), _pos() {
 	}

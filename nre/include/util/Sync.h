@@ -18,6 +18,9 @@
 
 namespace nre {
 
+/**
+ * Synchronization primitives.
+ */
 class Sync {
 public:
 	/**

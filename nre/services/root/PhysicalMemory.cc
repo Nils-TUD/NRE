@@ -74,9 +74,9 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 
 	// revoke caps and free selectors
 	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);
-	CapSpace::get().free(_sel);
+	CapSelSpace::get().free(_sel);
 	Syscalls::revoke(Crd(_unmapsel,0,Crd::OBJ_ALL),true);
-	CapSpace::get().free(_unmapsel);
+	CapSelSpace::get().free(_unmapsel);
 }
 
 void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {

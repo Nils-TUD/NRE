@@ -20,8 +20,16 @@
 
 namespace nre {
 
+/**
+ * Helper class to count the number of digits in a number
+ */
 class Digits {
 public:
+	/**
+	 * @param n the unsigned number
+	 * @param base the base to use for digit-counting
+	 * @return the number of digits the number has when represented in base <base>
+	 */
 	template<typename T>
 	static uint count_unsigned(T n,uint base) {
 		uint width = 1;
@@ -32,6 +40,11 @@ public:
 		return width;
 	}
 
+	/**
+	 * @param n the signed number
+	 * @param base the base to use for digit-counting
+	 * @return the number of digits the number has when represented in base <base>
+	 */
 	template<typename T>
 	static uint count_signed(T n,uint base) {
 		// we have at least one char

@@ -29,7 +29,6 @@
 #include <services/Mouse.h>
 #include <services/ACPI.h>
 #include <services/Timer.h>
-#include <cap/Caps.h>
 #include <util/Date.h>
 #include <Exception.h>
 

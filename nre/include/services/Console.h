@@ -25,8 +25,14 @@
 
 namespace nre {
 
+/**
+ * Types for the console service
+ */
 class Console {
 public:
+	/**
+	 * Basic attributes
+	 */
 	enum {
 		COLS		= 80,
 		ROWS		= 25,
@@ -38,11 +44,17 @@ public:
 		PAGE_SIZE	= 0x1000
 	};
 
+	/**
+	 * The available commands
+	 */
 	enum Command {
 		CREATE,
 		SET_REGS
 	};
 
+	/**
+	 * Specifies attributes for the console
+	 */
 	struct Register {
 		uint16_t mode;
 		uint16_t cursor_style;
@@ -50,6 +62,9 @@ public:
 		uintptr_t offset;
 	};
 
+	/**
+	 * A packet that we receive from the console
+	 */
 	struct ReceivePacket {
 		uint flags;
 		uint8_t scancode;
@@ -58,6 +73,9 @@ public:
 	};
 };
 
+/**
+ * Represents a session at the console service
+ */
 class ConsoleSession : public ClientSession {
 	enum {
 		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
@@ -65,16 +83,30 @@ class ConsoleSession : public ClientSession {
 	};
 
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 * @param show_pages whether the console should allow the user to switch between different pages
+	 */
 	explicit ConsoleSession(Connection &con,bool show_pages = true)
 			: ClientSession(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
 		create(show_pages);
 	}
 
+	/**
+	 * @return the screen memory (might be directly mapped or buffered)
+	 */
 	const DataSpace &screen() const {
 		return _out_ds;
 	}
 
+	/**
+	 * Sets the given registers
+	 *
+	 * @param regs the registers
+	 */
 	void set_regs(const Console::Register &regs) {
 		UtcbFrame uf;
 		uf << Console::SET_REGS << regs;
@@ -83,6 +115,19 @@ public:
 		uf.check_reply();
 	}
 
+	/**
+	 * @return the consumer to receive packets from the console
+	 */
+	Consumer<Console::ReceivePacket> &consumer() {
+		return _consumer;
+	}
+
+	/**
+	 * Receives the next packet from the console. I.e. it waits until the next packet arrives.
+	 *
+	 * @return the received packet
+	 * @throws Exception if it failed
+	 */
 	Console::ReceivePacket receive() {
 		Console::ReceivePacket *pk = _consumer.get();
 		if(!pk)

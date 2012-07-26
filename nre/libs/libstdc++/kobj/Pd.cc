@@ -25,15 +25,15 @@
 
 namespace nre {
 
-Pd Pd::_cur INIT_PRIO_PD (CapSpace::INIT_PD);
+Pd Pd::_cur INIT_PRIO_PD (CapSelSpace::INIT_PD);
 
 // don't revoke our own Pd
 Pd::Pd(capsel_t cap) : ObjCap(cap,ObjCap::KEEP_CAP_BIT) {
 	if(_startup_info.child) {
 		// grab our initial caps (pd, ec, sc) from parent
 		UtcbFrame uf;
-		uf.delegation_window(Crd(CapSpace::INIT_PD,2,Crd::OBJ_ALL));
-		Pt initpt(_startup_info.cpu * Hip::get().service_caps() + CapSpace::SRV_INIT);
+		uf.delegation_window(Crd(CapSelSpace::INIT_PD,2,Crd::OBJ_ALL));
+		Pt initpt(_startup_info.cpu * Hip::get().service_caps() + CapSelSpace::SRV_INIT);
 		initpt.call(uf);
 	}
 }

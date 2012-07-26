@@ -22,16 +22,38 @@
 
 namespace nre {
 
+/**
+ * An object of CapRange represents a range of capabilities that can be passed around (not in the
+ * sense that they are delegated!). This way, you can e.g. specify when using the Utcb what
+ * capabilies you want to delegate and the Utcb figures out how to actually do that by making
+ * sure that all typed items are naturally aligned.
+ */
 class CapRange {
 public:
 	static const uintptr_t NO_HOTSPOT	= -1;
 
+	/**
+	 * Constructor. Creates an empty range
+	 */
 	explicit CapRange() : _start(), _count(), _attr(), _hotspot() {
 	}
+	/**
+	 * Constructor
+	 *
+	 * @param start the start of the range
+	 * @param count the length of the range (not the order, as required by NOVA)
+	 * @param attr the attributes
+	 * @param hotspot the hotspot (default: no hotspot)
+	 */
 	explicit CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = NO_HOTSPOT)
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
 	}
 
+	/**
+	 * Revokes this range of capabilities
+	 *
+	 * @param self whether to revoke it from yourself as well
+	 */
 	void revoke(bool self) {
 		uintptr_t start = _start;
 		size_t count = _count;
@@ -43,24 +65,36 @@ public:
 		}
 	}
 
+	/**
+	 * The start of this range
+	 */
 	uintptr_t start() const {
 		return _start;
 	}
 	void start(uintptr_t start) {
 		_start = start;
 	}
+	/**
+	 * The length of this range
+	 */
 	size_t count() const {
 		return _count;
 	}
 	void count(size_t count) {
 		_count = count;
 	}
+	/**
+	 * The attributes
+	 */
 	uint attr() const {
 		return _attr;
 	}
 	void attr(uint attr) {
 		_attr = attr;
 	}
+	/**
+	 * The hotspot
+	 */
 	uintptr_t hotspot() const {
 		return _hotspot;
 	}

@@ -21,11 +21,21 @@
 
 namespace nre {
 
+/**
+ * Quicksort implementation
+ */
 template<typename T>
 class Quicksort {
 public:
 	typedef bool (*cmp_func)(T const &a,T const &b);
 
+	/**
+	 * Sorts the given array with the given comparison function
+	 *
+	 * @param cmp the comparison function
+	 * @param a the array
+	 * @param count the number of items in the array
+	 */
 	static void sort(cmp_func cmp,T a[],size_t count) {
 		if(count > 1)
 			sort(cmp,a,0,count - 1);

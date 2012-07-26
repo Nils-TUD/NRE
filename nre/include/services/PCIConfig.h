@@ -25,8 +25,14 @@
 
 namespace nre {
 
+/**
+ * Types for the PCI configuration service
+ */
 class PCIConfig {
 public:
+	/**
+	 * The available commands
+	 */
 	enum Command {
 		READ,
 		WRITE,
@@ -38,18 +44,36 @@ private:
 	PCIConfig();
 };
 
+/**
+ * Represents a session at the PCI configuration service
+ */
 class PCIConfigSession : public ClientSession {
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit PCIConfigSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 	}
+	/**
+	 * Destroys the session
+	 */
 	virtual ~PCIConfigSession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _pts[cpu];
 		delete[] _pts;
 	}
 
+	/**
+	 * Reads a value from given bdf and offset
+	 *
+	 * @param bdf the bus-device-function triple
+	 * @param offset the offset
+	 * @return the value
+	 */
 	uint32_t read(uint32_t bdf,size_t offset) {
 		UtcbFrame uf;
 		uf << PCIConfig::READ << bdf << offset;
@@ -60,6 +84,13 @@ public:
 		return value;
 	}
 
+	/**
+	 * Writes the given value to given bdf and offset
+	 *
+	 * @param bdf the bus-device-function triple
+	 * @param offset the offset
+	 * @param value the value to write
+	 */
 	void write(uint32_t bdf,size_t offset,uint32_t value) {
 		UtcbFrame uf;
 		uf << PCIConfig::WRITE << bdf << offset << value;
@@ -67,6 +98,13 @@ public:
 		uf.check_reply();
 	}
 
+	/**
+	 * Determines the address of given bdf and offset
+	 *
+	 * @param bdf the bus-device-function triple
+	 * @param offset the offset
+	 * @return the address
+	 */
 	uintptr_t addr(uint32_t bdf,size_t offset) {
 		UtcbFrame uf;
 		uf << PCIConfig::ADDR << bdf << offset;
@@ -77,6 +115,9 @@ public:
 		return addr;
 	}
 
+	/**
+	 * Tries to reboot the PCI via the PCI configuration space
+	 */
 	void reboot() {
 		UtcbFrame uf;
 		uf << PCIConfig::REBOOT;

@@ -21,8 +21,18 @@
 
 namespace nre {
 
+/**
+ * Outputstream that writes to a string
+ */
 class OStringStream : public OStream {
 public:
+	/**
+	 * Convenience method to write to <dst> in given format
+	 *
+	 * @param dst the string
+	 * @param max the size of <dst>
+	 * @param fmt the format
+	 */
 	static void format(char *dst,size_t max,const char *fmt,...) {
 		OStringStream os(dst,max);
 		va_list ap;
@@ -31,6 +41,12 @@ public:
 		va_end(ap);
 	}
 
+	/**
+	 * Constructor
+	 *
+	 * @param dst the string
+	 * @param max the size of <dst>
+	 */
 	explicit OStringStream(char *dst,size_t max) : OStream(),
 			_dst(dst), _max(max), _pos() {
 	}

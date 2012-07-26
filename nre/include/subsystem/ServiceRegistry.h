@@ -60,7 +60,7 @@ public:
 		 */
 		~Service() {
 			CapRange(_pts,_count,Crd::OBJ_ALL).revoke(true);
-			CapSpace::get().free(_pts,_count);
+			CapSelSpace::get().free(_pts,_count);
 		}
 
 	public:

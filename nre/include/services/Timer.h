@@ -25,12 +25,18 @@
 
 namespace nre {
 
+/**
+ * Types for the timer service
+ */
 class Timer {
 public:
 	enum {
 		WALLCLOCK_FREQ	= 1000000
 	};
 
+	/**
+	 * The available commands
+	 */
 	enum Command {
 		GET_SMS,
 		PROG_TIMER,
@@ -41,13 +47,24 @@ private:
 	Timer();
 };
 
+/**
+ * Represents a session at the timer service
+ */
 class TimerSession : public ClientSession {
 public:
+	/**
+	 * Creates a new session with given connection
+	 *
+	 * @param con the connection
+	 */
 	explicit TimerSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		get_sms();
 	}
+	/**
+	 * Destroys this session
+	 */
 	virtual ~TimerSession() {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
 			delete _sms[cpu];
@@ -55,22 +72,44 @@ public:
 		}
 		delete[] _sms;
 		delete[] _pts;
-		CapSpace::get().free(_caps,Math::next_pow2(CPU::count()));
+		CapSelSpace::get().free(_caps,Math::next_pow2(CPU::count()));
 	}
 
+	/**
+	 * Returns the semaphore that is signaled as soon as a timer fires.
+	 *
+	 * @param cpu the CPU id
+	 * @return the semaphore for the given CPU
+	 */
 	Sm &sm(cpu_t cpu) {
 		return *_sms[cpu];
 	}
 
+	/**
+	 * Waits for <cycles> cycles.
+	 *
+	 * @param cycles the number of cycles
+	 */
 	void wait_for(timevalue_t cycles) {
 		wait_until(Util::tsc() + cycles);
 	}
 
+	/**
+	 * Waits until the TSC has the value <cycles>
+	 *
+	 * @param cycles the number of cycles
+	 */
 	void wait_until(timevalue_t cycles) {
 		program(cycles);
 		_sms[CPU::current().log_id()]->zero();
 	}
 
+	/**
+	 * Programs a timer for the TSC value <cycles>. That is, it does not block. Use sm(cpu_t) to
+	 * get a signal.
+	 *
+	 * @param cycles the number of cycles
+	 */
 	void program(timevalue_t cycles) {
 		UtcbFrame uf;
 		uf << Timer::PROG_TIMER << cycles;
@@ -78,6 +117,12 @@ public:
 		uf.check_reply();
 	}
 
+	/**
+	 * Determines the current time
+	 *
+	 * @param uptime the number of cycles since systemstart
+	 * @param unixts the current unix timestamp in microseconds
+	 */
 	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
 		UtcbFrame uf;
 		uf << Timer::GET_TIME;

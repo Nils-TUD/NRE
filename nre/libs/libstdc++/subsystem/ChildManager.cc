@@ -19,7 +19,6 @@
 #include <ipc/Service.h>
 #include <kobj/Gsi.h>
 #include <kobj/Ports.h>
-#include <cap/Caps.h>
 #include <arch/Elf.h>
 #include <util/Math.h>
 #include <Logging.h>
@@ -27,7 +26,7 @@
 namespace nre {
 
 ChildManager::ChildManager() : _child_count(), _childs(),
-		_portal_caps(CapSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
+		_portal_caps(CapSelSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
 		_dsm(), _registry(), _sm(), _switchsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
 	_ecs = new LocalThread*[CPU::count()];
 	_regecs = new LocalThread*[CPU::count()];
@@ -59,7 +58,7 @@ ChildManager::~ChildManager() {
 	}
 	delete[] _ecs;
 	delete[] _regecs;
-	CapSpace::get().free(MAX_CHILDS * per_child_caps());
+	CapSelSpace::get().free(MAX_CHILDS * per_child_caps());
 	RCU::gc(true);
 }
 
@@ -145,11 +144,11 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		throw ElfException(E_ELF_SIG);
 
 	static int exc[] = {
-		CapSpace::EV_DIVIDE,CapSpace::EV_DEBUG,CapSpace::EV_BREAKPOINT,CapSpace::EV_OVERFLOW,
-		CapSpace::EV_BOUNDRANGE,CapSpace::EV_UNDEFOP,CapSpace::EV_NOMATHPROC,
-		CapSpace::EV_DBLFAULT,CapSpace::EV_TSS,CapSpace::EV_INVSEG,CapSpace::EV_STACK,
-		CapSpace::EV_GENPROT,CapSpace::EV_MATHFAULT,CapSpace::EV_ALIGNCHK,CapSpace::EV_MACHCHK,
-		CapSpace::EV_SIMD
+		CapSelSpace::EV_DIVIDE,CapSelSpace::EV_DEBUG,CapSelSpace::EV_BREAKPOINT,CapSelSpace::EV_OVERFLOW,
+		CapSelSpace::EV_BOUNDRANGE,CapSelSpace::EV_UNDEFOP,CapSelSpace::EV_NOMATHPROC,
+		CapSelSpace::EV_DBLFAULT,CapSelSpace::EV_TSS,CapSelSpace::EV_INVSEG,CapSelSpace::EV_STACK,
+		CapSelSpace::EV_GENPROT,CapSelSpace::EV_MATHFAULT,CapSelSpace::EV_ALIGNCHK,CapSelSpace::EV_MACHCHK,
+		CapSelSpace::EV_SIMD
 	};
 
 	// create child
@@ -169,15 +168,15 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 				c->_pts[idx + i] = new Pt(_ecs[cpu],pts + off + exc[i],Portals::exception,
 						Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
 			}
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_PAGEFAULT,Portals::pf,
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::EV_PAGEFAULT,Portals::pf,
 					Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::EV_STARTUP,Portals::startup,
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::EV_STARTUP,Portals::startup,
 					Mtd(Mtd::RSP));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_INIT,Portals::init_caps,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSpace::SRV_SERVICE,Portals::service,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_IO,Portals::io,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_GSI,Portals::gsi,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSpace::SRV_DS,Portals::dataspace,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_INIT,Portals::init_caps,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SERVICE,Portals::service,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_IO,Portals::io,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_GSI,Portals::gsi,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_DS,Portals::dataspace,Mtd(0));
 		}
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));

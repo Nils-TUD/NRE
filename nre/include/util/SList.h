@@ -26,6 +26,10 @@ class SList;
 template<class T>
 class SListIterator;
 
+/**
+ * A listitem for the singly linked list. It is intended that you inherit from this class to add
+ * data to the item.
+ */
 class SListItem {
 	template<class T>
 	friend class SList;
@@ -33,7 +37,10 @@ class SListItem {
 	friend class SListIterator;
 
 public:
-	SListItem() : _next() {
+	/**
+	 * Constructor
+	 */
+	explicit SListItem() : _next() {
 	}
 
 private:
@@ -82,28 +89,54 @@ private:
 	T *_n;
 };
 
+/**
+ * The singly linked list. Takes an arbitrary class as list-item and expects it to have a prev(),
+ * prev(T*), next() and next(*T) method. In most cases, you should inherit from SListItem and
+ * specify your class for T.
+ */
 template<class T>
 class SList {
 public:
 	typedef SListIterator<T> iterator;
 
-	SList() : _head(0), _tail(0), _len(0) {
+	/**
+	 * Constructor. Creates an empty list
+	 */
+	explicit SList() : _head(0), _tail(0), _len(0) {
 	}
 
+	/**
+	 * @return the number of items in the list
+	 */
 	size_t length() const {
 		return _len;
 	}
 
+	/**
+	 * @return beginning of list
+	 */
 	iterator begin() const {
 		return iterator(_head);
 	}
+	/**
+	 * @return end of list
+	 */
 	iterator end() const {
 		return iterator();
 	}
+	/**
+	 * @return tail of the list, i.e. the last valid item
+	 */
 	iterator tail() const {
 		return iterator(_tail);
 	}
 
+	/**
+	 * Appends the given item to the list. This works in constant time.
+	 *
+	 * @param e the list item
+	 * @return the position where it has been inserted
+	 */
 	iterator append(T *e) {
 		if(_head == 0)
 			_head = e;
@@ -114,6 +147,13 @@ public:
 		_len++;
 		return iterator(e);
 	}
+	/**
+	 * Inserts the given item into the list after <p>. This works in constant time.
+	 *
+	 * @param p the previous item (p = insert it at the beginning)
+	 * @param e the list item
+	 * @return the position where it has been inserted
+	 */
 	iterator insert(T *p,T *e) {
 		e->next(p ? p->next() : _head);
 		if(p)
@@ -125,6 +165,12 @@ public:
 		_len++;
 		return iterator(e);
 	}
+	/**
+	 * Removes the given item from the list. This works in linear time.
+	 * Does NOT expect that the item is in the list!
+	 *
+	 * @param e the list item
+	 */
 	void remove(T *e) {
 		T *t = _head, *p = 0;
 		while(t && t != e) {

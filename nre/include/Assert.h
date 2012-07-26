@@ -20,20 +20,39 @@
 
 namespace nre {
 
+/**
+ * Special exception for asserts to print the expression that has been used, the file and the line.
+ */
 class AssertException : public Exception {
 public:
+	/**
+	 * Constructor
+	 *
+	 * @param expr the expression
+	 * @param file the filename
+	 * @param line the line number
+	 */
 	explicit AssertException(const char *expr,const char *file,int line) throw()
 		: Exception(E_ASSERT), _expr(expr), _file(file), _line(line) {
 	}
 	virtual ~AssertException() throw() {
 	}
 
+	/**
+	 * @return the expression that has been asserted
+	 */
 	const char *expr() const throw() {
 		return _expr;
 	}
+	/**
+	 * @return the file in which the assert occurred
+	 */
 	const char *file() const throw() {
 		return _file;
 	}
+	/**
+	 * @return the line in which the assert occurred
+	 */
 	int line() const throw() {
 		return _line;
 	}

@@ -20,6 +20,12 @@
 
 namespace nre {
 
+/**
+ * The input-stream is used to read formatted input from various sources. Subclasses have
+ * to implement the method to actually read a character. This class provides the higher-level
+ * stuff around it. Note that this class isn't finished yet, because we don't really have
+ * formatted input.
+ */
 class IStream {
 public:
 	explicit IStream() : _last('\0') {

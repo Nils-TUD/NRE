@@ -82,8 +82,8 @@ public:
 	 * @param portal the portal-function to provide
 	 */
 	explicit Service(const char *name,const CPUSet &cpus,Pt::portal_func portal)
-		: _regcaps(CapSpace::get().allocate(CPU::count(),CPU::count())),
-		  _caps(CapSpace::get().allocate(MAX_SESSIONS * CPU::count(),MAX_SESSIONS * CPU::count())),
+		: _regcaps(CapSelSpace::get().allocate(CPU::count(),CPU::count())),
+		  _caps(CapSelSpace::get().allocate(MAX_SESSIONS * CPU::count(),MAX_SESSIONS * CPU::count())),
 		  _sm(), _name(name), _func(portal), _insts(new ServiceCPUHandler*[CPU::count()]),
 		  _reg_cpus(cpus.get()), _sessions() {
 		for(size_t i = 0; i < CPU::count(); ++i) {
@@ -104,8 +104,8 @@ public:
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _insts[i];
 		delete[] _insts;
-		CapSpace::get().free(_caps,MAX_SESSIONS * CPU::count());
-		CapSpace::get().free(_regcaps,CPU::count());
+		CapSelSpace::get().free(_caps,MAX_SESSIONS * CPU::count());
+		CapSelSpace::get().free(_regcaps,CPU::count());
 	}
 
 	/**

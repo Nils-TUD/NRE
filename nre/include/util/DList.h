@@ -20,11 +20,29 @@
 
 namespace nre {
 
+template<class T>
+class DList;
+template<class T>
+class DListIterator;
+
+/**
+ * A listitem for the doubly linked list. It is intended that you inherit from this class to add
+ * data to the item.
+ */
 class DListItem {
+	template<class T>
+	friend class DList;
+	template<class T>
+	friend class DListIterator;
+
 public:
-	DListItem() : _prev(), _next() {
+	/**
+	 * Constructor
+	 */
+	explicit DListItem() : _prev(), _next() {
 	}
 
+private:
 	DListItem *prev() {
 		return _prev;
 	}
@@ -38,7 +56,6 @@ public:
 		_next = i;
 	}
 
-private:
 	DListItem *_prev;
 	DListItem *_next;
 };
@@ -92,25 +109,48 @@ private:
 	T *_n;
 };
 
+/**
+ * The doubly linked list. Takes an arbitrary class as list-item and expects it to have a prev(),
+ * prev(T*), next() and next(*T) method. In most cases, you should inherit from DListItem and
+ * specify your class for T.
+ */
 template<class T>
 class DList {
 public:
 	typedef DListIterator<T> iterator;
 
-	DList() : _head(0), _tail(0), _len(0) {
+	/**
+	 * Constructor. Creates an empty list
+	 */
+	explicit DList() : _head(0), _tail(0), _len(0) {
 	}
 
+	/**
+	 * @return the number of items in the list
+	 */
 	size_t length() const {
 		return _len;
 	}
 
+	/**
+	 * @return beginning of list
+	 */
 	iterator begin() const {
 		return iterator(0,_head);
 	}
+	/**
+	 * @return end of list
+	 */
 	iterator end() const {
 		return iterator(_tail,0);
 	}
 
+	/**
+	 * Appends the given item to the list. This works in constant time.
+	 *
+	 * @param e the list item
+	 * @return the position where it has been inserted
+	 */
 	iterator append(T *e) {
 		if(_head == 0)
 			_head = e;
@@ -122,6 +162,12 @@ public:
 		_len++;
 		return iterator(static_cast<T*>(e->prev()),e);
 	}
+	/**
+	 * Removes the given item from the list. This works in constant time.
+	 * Expects that the item is in the list!
+	 *
+	 * @param e the list item
+	 */
 	void remove(T *e) {
 		if(e->prev())
 			e->prev()->next(e->next());

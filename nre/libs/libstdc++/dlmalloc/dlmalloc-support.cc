@@ -55,14 +55,14 @@ static size_t pos = 0;
 // Semaphore glue
 
 void semaphore_init(DlMallocSm *lk,unsigned initial) {
-	lk->sm = CapSpace::get().allocate();
+	lk->sm = CapSelSpace::get().allocate();
 	Syscalls::create_sm(lk->sm,0,Pd::current()->sel());
 	lk->value = initial;
 }
 
 void semaphore_destroy(DlMallocSm *lk) {
 	Syscalls::revoke(Crd(lk->sm,0,Crd::OBJ_ALL),true);
-	CapSpace::get().free(lk->sm);
+	CapSelSpace::get().free(lk->sm);
 }
 
 void semaphore_down(DlMallocSm *lk) {

@@ -223,7 +223,7 @@ public:
 	 * @param attr the allowed attributes (default Crd::OBJ_ALL)
 	 */
 	void accept_delegates(uint order,uint attr = Crd::OBJ_ALL) {
-		capsel_t caps = CapSpace::get().allocate(1 << order,1 << order);
+		capsel_t caps = CapSelSpace::get().allocate(1 << order,1 << order);
 		delegation_window(Crd(caps,order,attr));
 	}
 

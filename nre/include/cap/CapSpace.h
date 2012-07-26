@@ -30,9 +30,17 @@ public:
 	}
 };
 
-class CapSpace {
+/**
+ * The capability selector space contains the selectors for your capabilites. This class manages
+ * the selectors. That is, you can allocate and release selectors.
+ */
+class CapSelSpace {
 public:
+	/**
+	 * Selectors with special meaning
+	 */
 	enum Caps {
+		// the exception portals
 		EV_DIVIDE		= 0x0,
 		EV_DEBUG		= 0x1,
 		EV_BREAKPOINT	= 0x3,
@@ -53,10 +61,12 @@ public:
 		EV_STARTUP		= 0x1E,
 		EV_RECALL		= 0x1F,
 
+		// our own Pd, Ec and Sc are aways at these offsets
 		INIT_PD			= 0x20,
 		INIT_EC			= 0x21,
 		INIT_SC			= 0x22,
 
+		// service portals
 		SRV_INIT		= 0x23,		// get initial caps
 		SRV_SERVICE		= 0x24,		// service portal
 		SRV_IO			= 0x25,		// io ports portal
@@ -64,15 +74,19 @@ public:
 		SRV_DS			= 0x27,		// dataspace portal
 	};
 
-	static CapSpace& get() {
+	/**
+	 * @return the instance of this class
+	 */
+	static CapSelSpace& get() {
 		return _inst;
 	}
 
-private:
-	explicit CapSpace(capsel_t off = Hip::get().object_caps()) : _lck(), _off(off) {
-	}
-
-public:
+	/**
+	 * Allocates <count> selectors with alignment <align>.
+	 *
+	 * @param count the number of selectors to allocate (default = 1)
+	 * @param align the alignment of the selectors (default = 1)
+	 */
 	capsel_t allocate(uint count = 1,uint align = 1) {
 		ScopedLock<SpinLock> lock(&_lck);
 		capsel_t res = (_off + align - 1) & ~(align - 1);
@@ -81,15 +95,24 @@ public:
 		_off = res + count;
 		return res;
 	}
-	void free(capsel_t,uint = 1) {
+	/**
+	 * Free's the selectors <base>...<base>+<count>-1
+	 *
+	 * @param base the base of the selectors
+	 * @param count the number (default = 1)
+	 */
+	void free(UNUSED capsel_t base,UNUSED uint count = 1) {
 		// TODO implement me
 	}
 
 private:
-	CapSpace(const CapSpace&);
-	CapSpace& operator=(const CapSpace&);
+	explicit CapSelSpace() : _lck(), _off(Hip::get().object_caps()) {
+	}
 
-	static CapSpace _inst;
+	CapSelSpace(const CapSelSpace&);
+	CapSelSpace& operator=(const CapSelSpace&);
+
+	static CapSelSpace _inst;
 	SpinLock _lck;
 	capsel_t _off;
 };
