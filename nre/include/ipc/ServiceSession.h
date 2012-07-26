@@ -49,8 +49,8 @@ public:
 	 */
 	virtual ~ServiceSession() {
 		for(uint i = 0; i < CPU::count(); ++i)
-			delete _objs[i];
-		delete[] _objs;
+			delete _pts[i];
+		delete[] _pts;
 	}
 
 	/**
@@ -77,7 +77,7 @@ protected:
 private:
 	size_t _id;
 	capsel_t _caps;
-	ObjCap **_objs;
+	Pt **_pts;
 };
 
 }
