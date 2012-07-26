@@ -47,12 +47,12 @@ public:
 };
 
 /**
- * This class is used to provide a service for client. If you create an instance of it, it is
- * registered at your parent with a specified name and services portals (if desired), that the
- * client can call to open and close sessions. Sessions are used to bind data to them. Note that
- * sessions are always used (also if no additional data is needed) to prevent a special case.
+ * This class is used to provide a service for clients. If you create an instance of it, it is
+ * registered at your parent with a specified name and services portals, that the client can call
+ * to open and close sessions. Sessions are used to bind data to them. Note that sessions are
+ * always used (also if no additional data is needed) to prevent a special case.
  * As soon as a client has a session, it can use the service that is provided. That is, it can call
- * the portals, if desired.
+ * the portals.
  */
 class Service {
 	friend class ServiceCPUHandler;
@@ -75,14 +75,13 @@ public:
 
 	/**
 	 * Constructor. Creates portals on the specified CPUs to accept client sessions and creates
-	 * Threads to handle <portal>, if it is non-zero. Afterwards, the service is registered at the
-	 * parent.
+	 * Threads to handle <portal>. Afterwards, the service is registered at the parent.
 	 *
 	 * @param name the name of the service
 	 * @param cpus the CPUs on which you want to provide the service
-	 * @param portal the portal-function to provide (0 = no portals)
+	 * @param portal the portal-function to provide
 	 */
-	explicit Service(const char *name,const CPUSet &cpus,Pt::portal_func portal = 0)
+	explicit Service(const char *name,const CPUSet &cpus,Pt::portal_func portal)
 		: _regcaps(CapSpace::get().allocate(CPU::count(),CPU::count())),
 		  _caps(CapSpace::get().allocate(MAX_SESSIONS * CPU::count(),MAX_SESSIONS * CPU::count())),
 		  _sm(), _name(name), _func(portal), _insts(new ServiceCPUHandler*[CPU::count()]),

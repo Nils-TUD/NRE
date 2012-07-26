@@ -40,7 +40,7 @@ public:
 	 * @param s the service-instance
 	 * @param id the id of this session
 	 * @param pts the portal selectors
-	 * @param func the portal function. if 0, semaphores are created @ <pts> as dummy-capabilities.
+	 * @param func the portal function
 	 * 	Otherwise, portals are created
 	 */
 	explicit ServiceSession(Service *s,size_t id,capsel_t pts,Pt::portal_func func);
