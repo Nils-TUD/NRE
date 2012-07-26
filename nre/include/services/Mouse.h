@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Consumer.h>
 #include <mem/DataSpace.h>
 
@@ -37,13 +37,13 @@ private:
 	Mouse();
 };
 
-class MouseSession : public Session {
+class MouseSession : public ClientSession {
 	enum {
 		DS_SIZE	= ExecEnv::PAGE_SIZE
 	};
 
 public:
-	explicit MouseSession(Connection &con) : Session(con),
+	explicit MouseSession(Connection &con) : ClientSession(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
 		share();
 	}

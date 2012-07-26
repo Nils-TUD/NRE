@@ -16,16 +16,16 @@
 
 #pragma once
 
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Connection.h>
 #include <utcb/UtcbFrame.h>
 #include <kobj/Pt.h>
 
 namespace nre {
 
-class LogSession : public Session {
+class LogSession : public ClientSession {
 public:
-	explicit LogSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
+	explicit LogSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 	}

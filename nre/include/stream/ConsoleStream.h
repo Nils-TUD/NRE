@@ -19,7 +19,7 @@
 #include <stream/OStream.h>
 #include <stream/IStream.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <services/Console.h>
 #include <cstring>
 

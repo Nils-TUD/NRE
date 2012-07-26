@@ -28,9 +28,9 @@ using namespace nre;
 char ViewSwitcher::_backup[Screen::COLS * 2];
 char ViewSwitcher::_buffer[Screen::COLS + 1];
 
-ViewSwitcher::ViewSwitcher() : _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
+ViewSwitcher::ViewSwitcher(ConsoleService *srv) : _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		_prod(&_ds,true,true), _cons(&_ds,false), _ec(switch_thread,CPU::current().log_id()),
-		_sc(&_ec,Qpd()) {
+		_sc(&_ec,Qpd()), _srv(srv) {
 	_ec.set_tls<ViewSwitcher*>(Thread::TLS_PARAM,this);
 }
 
@@ -43,9 +43,6 @@ void ViewSwitcher::switch_to(ConsoleSessionData *from,ConsoleSessionData *to) {
 
 void ViewSwitcher::switch_thread(void*) {
 	ViewSwitcher *vs = Thread::current()->get_tls<ViewSwitcher*>(Thread::TLS_PARAM);
-	// note that we can do that here (although we're created from ConsoleService) because we start
-	// this thread after the instance has been created (in ConsoleService::init).
-	ConsoleService *srv = ConsoleService::get();
 	Clock clock(1000);
 	Connection con("timer");
 	TimerSession timer(con);
@@ -56,7 +53,7 @@ void ViewSwitcher::switch_thread(void*) {
 		// are we finished?
 		if(until && clock.source_time() >= until) {
 			ScopedLock<RCULock> guard(&RCU::lock());
-			ConsoleSessionData *sess = srv->get_session_by_id<ConsoleSessionData>(sessid);
+			ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 			if(sess) {
 				// finally swap to that session. i.e. give him direct screen access
 				sess->to_front();
@@ -71,7 +68,7 @@ void ViewSwitcher::switch_thread(void*) {
 			if(cmd->oldsessid != (size_t)-1) {
 				assert(cmd->oldsessid == sessid);
 				ScopedLock<RCULock> guard(&RCU::lock());
-				ConsoleSessionData *old = srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
+				ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
 				if(old) {
 					// if we have already given him the screen, take it away
 					if(until == 0)
@@ -87,7 +84,7 @@ void ViewSwitcher::switch_thread(void*) {
 
 		{
 			ScopedLock<RCULock> guard(&RCU::lock());
-			ConsoleSessionData *sess = srv->get_session_by_id<ConsoleSessionData>(sessid);
+			ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 			// if the session is dead, stop switching to it
 			if(!sess) {
 				until = 0;
@@ -97,7 +94,7 @@ void ViewSwitcher::switch_thread(void*) {
 			// repaint all lines from the buffer except the first
 			uintptr_t offset = Screen::TEXT_OFF + sess->page() * Screen::PAGE_SIZE;
 			if(sess->out_ds()) {
-				memcpy(reinterpret_cast<void*>(srv->screen()->mem().virt() + offset + Screen::COLS * 2),
+				memcpy(reinterpret_cast<void*>(vs->_srv->screen()->mem().virt() + offset + Screen::COLS * 2),
 						reinterpret_cast<void*>(sess->out_ds()->virt() + offset + Screen::COLS * 2),
 						Screen::PAGE_SIZE - Screen::COLS * 2);
 			}
@@ -109,7 +106,7 @@ void ViewSwitcher::switch_thread(void*) {
 				os << "Console " << sessid << "," << sess->page();
 
 				// write console tag
-				char *screen = reinterpret_cast<char*>(srv->screen()->mem().virt() + offset);
+				char *screen = reinterpret_cast<char*>(vs->_srv->screen()->mem().virt() + offset);
 				char *s = _buffer;
 				for(uint x = 0; x < Screen::COLS; ++x, ++s) {
 					screen[x * 2] = *s ? *s : ' ';

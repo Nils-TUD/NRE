@@ -14,39 +14,25 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <kobj/LocalThread.h>
-#include <kobj/Pt.h>
-#include <kobj/UserSm.h>
-#include <CPU.h>
+#include <ipc/Service.h>
+#include <ipc/ServiceSession.h>
 
 namespace nre {
 
-class Service;
-
-class ServiceInstance {
-public:
-	explicit ServiceInstance(Service* s,capsel_t pt,cpu_t cpu);
-
-	cpu_t cpu() const {
-		return _session_ec.cpu();
+ServiceSession::ServiceSession(Service *s,size_t id,capsel_t pts,Pt::portal_func func)
+	: RCUObject(), _id(id), _caps(pts), _objs(new ObjCap*[CPU::count()]) {
+	for(uint i = 0; i < CPU::count(); ++i) {
+		LocalThread *ec = s->get_thread(i);
+		_objs[i] = 0;
+		if(ec) {
+			// just use portals if the service wants to provide one. otherwise use a semaphore to
+			// prevent the client from calling us
+			if(func)
+				_objs[i] = new Pt(ec,pts + i,func);
+			else
+				_objs[i] = new Sm(pts + i,0U);
+		}
 	}
-	LocalThread &ec() {
-		return _session_ec;
-	}
-
-private:
-	ServiceInstance(const ServiceInstance&);
-	ServiceInstance& operator=(const ServiceInstance&);
-
-	PORTAL static void portal(capsel_t pid);
-
-	Service *_s;
-	LocalThread _session_ec;
-	LocalThread _service_ec;
-	Pt _pt;
-	UserSm _sm;
-};
+}
 
 }

@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <kobj/Pt.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Connection.h>
 #include <services/Keyboard.h>
 #include <Hip.h>
@@ -58,7 +58,7 @@ public:
 	};
 };
 
-class ConsoleSession : public Session {
+class ConsoleSession : public ClientSession {
 	enum {
 		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
 		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * Console::PAGES
@@ -66,7 +66,7 @@ class ConsoleSession : public Session {
 
 public:
 	explicit ConsoleSession(Connection &con,bool show_pages = true)
-			: Session(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
+			: ClientSession(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
 		create(show_pages);
 	}

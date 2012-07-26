@@ -14,9 +14,9 @@
  * General Public License version 2 for more details.
  */
 
-#include <ipc/ServiceInstance.h>
+#include <ipc/ServiceCPUHandler.h>
 #include <ipc/Service.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <stream/Serial.h>
 #include <cap/Caps.h>
@@ -25,7 +25,7 @@
 
 namespace nre {
 
-ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
+ServiceCPUHandler::ServiceCPUHandler(Service* s,capsel_t pt,cpu_t cpu)
 		: _s(s), _session_ec(cpu), _service_ec(cpu), _pt(&_service_ec,pt,portal), _sm() {
 	_service_ec.set_tls<Service*>(Thread::TLS_PARAM,s);
 	UtcbFrameRef ecuf(_service_ec.utcb());
@@ -33,22 +33,22 @@ ServiceInstance::ServiceInstance(Service* s,capsel_t pt,cpu_t cpu)
 	ecuf.accept_translates(s->_caps,Math::next_pow2_shift(Service::MAX_SESSIONS * CPU::count()));
 }
 
-void ServiceInstance::portal(capsel_t) {
+void ServiceCPUHandler::portal(capsel_t) {
 	UtcbFrameRef uf;
 	Service *s = Thread::current()->get_tls<Service*>(Thread::TLS_PARAM);
 	try {
-		Session::Command cmd;
+		ClientSession::Command cmd;
 		uf >> cmd;
 		switch(cmd) {
-			case Session::OPEN: {
+			case ClientSession::OPEN: {
 				uf.finish_input();
 
-				SessionData *sess = s->new_session();
+				ServiceSession *sess = s->new_session();
 				uf.delegate(CapRange(sess->caps(),CPU::count(),Crd::OBJ_ALL));
 			}
 			break;
 
-			case Session::CLOSE: {
+			case ClientSession::CLOSE: {
 				capsel_t sid = uf.get_translated().offset();
 				uf.finish_input();
 

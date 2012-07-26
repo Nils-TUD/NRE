@@ -20,7 +20,7 @@
 #include <kobj/Sm.h>
 #include <kobj/Gsi.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/ConsoleStream.h>

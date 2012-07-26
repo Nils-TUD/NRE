@@ -18,16 +18,16 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <CPU.h>
 
 namespace nre {
 
-class RebootSession : public Session {
+class RebootSession : public ClientSession {
 public:
-	explicit RebootSession(Connection &con) : Session(con), _pts(new Pt*[CPU::count()]) {
+	explicit RebootSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 	}

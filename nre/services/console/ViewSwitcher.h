@@ -24,6 +24,7 @@
 
 #include "Screen.h"
 
+class ConsoleService;
 class ConsoleSessionData;
 
 class ViewSwitcher {
@@ -40,7 +41,7 @@ class ViewSwitcher {
 	};
 
 public:
-	explicit ViewSwitcher();
+	explicit ViewSwitcher(ConsoleService *srv);
 
 	void start() {
 		_sc.start();
@@ -56,6 +57,7 @@ private:
 	nre::Consumer<SwitchCommand> _cons;
 	nre::GlobalThread _ec;
 	nre::Sc _sc;
+	ConsoleService *_srv;
 	static char _backup[];
 	static char _buffer[];
 };

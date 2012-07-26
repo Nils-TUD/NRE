@@ -101,11 +101,7 @@ int main() {
 		Serial::get() << e.name() << ": " << e.msg() << "\n";
 	}
 
-	Service *srv = new Service("pcicfg",portal_pcicfg);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->log_id());
-	srv->reg();
-
+	new Service("pcicfg",CPUSet(CPUSet::ALL),portal_pcicfg);
 	Sm sm(0);
 	sm.down();
 	return 0;

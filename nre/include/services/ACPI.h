@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
@@ -50,9 +50,9 @@ private:
 	ACPI();
 };
 
-class ACPISession : public Session {
+class ACPISession : public ClientSession {
 public:
-	explicit ACPISession(Connection &con) : Session(con), _ds(), _pts(new Pt*[CPU::count()]) {
+	explicit ACPISession(Connection &con) : ClientSession(con), _ds(), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 		get_mem();

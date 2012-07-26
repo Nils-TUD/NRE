@@ -18,7 +18,7 @@
 #include <kobj/Pd.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Service.h>
 #include <stream/Serial.h>
 #include <util/ScopedCapSels.h>

@@ -31,14 +31,7 @@ class ConsoleService : public nre::Service {
 public:
 	typedef nre::SessionIterator<ConsoleSessionData> iterator;
 
-	static ConsoleService *get() {
-		return _inst;
-	}
-	static ConsoleService *create(const char *name) {
-		return _inst = new ConsoleService(name);
-	}
-
-	void init();
+	ConsoleService(const char *name);
 
 	ConsoleSessionData *active() {
 		iterator it = _sess_cycler.current();
@@ -64,9 +57,7 @@ public:
 	bool handle_keyevent(const nre::Keyboard::Packet &pk);
 
 private:
-	ConsoleService(const char *name);
-
-	virtual nre::SessionData *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
+	virtual nre::ServiceSession *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
 	virtual void created_session(size_t idx);
 
 	nre::Connection _con;
@@ -74,5 +65,4 @@ private:
 	Screen *_screen;
 	nre::Cycler<iterator> _sess_cycler;
 	ViewSwitcher _switcher;
-	static ConsoleService *_inst;
 };

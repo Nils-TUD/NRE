@@ -30,14 +30,15 @@ void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,bool show_pag
 	if(_in_ds)
 		_prod = new Producer<Console::ReceivePacket>(in_ds,false,false);
 	_show_pages = show_pages;
-	ConsoleService::get()->switcher().switch_to(ConsoleService::get()->active(),this);
+	_srv->switcher().switch_to(_srv->active(),this);
 }
 
 void ConsoleSessionData::portal(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
 		ScopedLock<RCULock> guard(&RCU::lock());
-		ConsoleSessionData *sess = ConsoleService::get()->get_session<ConsoleSessionData>(pid);
+		ConsoleService *srv = Thread::current()->get_tls<ConsoleService*>(Thread::TLS_PARAM);
+		ConsoleSessionData *sess = srv->get_session<ConsoleSessionData>(pid);
 		Console::Command cmd;
 		uf >> cmd;
 		switch(cmd) {

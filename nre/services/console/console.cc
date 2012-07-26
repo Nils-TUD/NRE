@@ -21,12 +21,7 @@
 using namespace nre;
 
 int main() {
-	ConsoleService *srv = ConsoleService::create("console");
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->log_id());
-	srv->init();
-	srv->reg();
-
+	ConsoleService *srv = new ConsoleService("console");
 	Connection con("keyboard");
 	KeyboardSession kb(con);
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {

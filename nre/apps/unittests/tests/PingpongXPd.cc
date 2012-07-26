@@ -16,7 +16,7 @@
 
 #include <ipc/Service.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <subsystem/ChildManager.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
@@ -39,10 +39,10 @@ static const uint tries = 10000;
 static uint64_t results[tries];
 static PingpongService *srv;
 
-class PingpongSessionData : public SessionData {
+class PingpongSession : public ServiceSession {
 public:
-	PingpongSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func) {
+	PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,caps,func) {
 	}
 
 	virtual void invalidate();
@@ -50,8 +50,7 @@ public:
 
 class PingpongService : public Service {
 public:
-	PingpongService() : Service("pingpong",portal), _sm(0) {
-		provide_on(CPU::current().log_id());
+	PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
 	}
 
 	void wait() {
@@ -62,8 +61,8 @@ public:
 	}
 
 private:
-	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new PingpongSessionData(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+		return new PingpongSession(this,id,caps,func);
 	}
 
 	PORTAL static void portal(capsel_t pid);
@@ -71,7 +70,7 @@ private:
 	Sm _sm;
 };
 
-void PingpongSessionData::invalidate() {
+void PingpongSession::invalidate() {
 	srv->notify();
 }
 
@@ -90,7 +89,6 @@ void PingpongService::portal(capsel_t) {
 
 static int pingpong_server() {
 	srv = new PingpongService();
-	srv->reg();
 	srv->wait();
 	delete srv;
 	return 0;
@@ -98,7 +96,7 @@ static int pingpong_server() {
 
 static void pingpong_client() {
 	Connection con("pingpong");
-	Session sess(con);
+	ClientSession sess(con);
 	Pt pt(sess.caps() + CPU::current().log_id());
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	uint sum = 0;

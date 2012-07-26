@@ -26,10 +26,10 @@
 namespace nre {
 
 /**
- * Represents a session at a service. This way the service can manage per-session-data. That is,
+ * The client-part of a session. This way the service can manage per-session-data. That is,
  * it can distinguish between clients.
  */
-class Session {
+class ClientSession {
 public:
 	enum Command {
 		OPEN,
@@ -42,12 +42,12 @@ public:
 	 * @param con the connection to the service
 	 * @throws Exception if the session-creation failed
 	 */
-	explicit Session(Connection &con) : _caps(open(con)), _con(con) {
+	explicit ClientSession(Connection &con) : _caps(open(con)), _con(con) {
 	}
 	/**
 	 * Closes the session again
 	 */
-	virtual ~Session() {
+	virtual ~ClientSession() {
 		close();
 		CapSpace::get().free(_caps,CPU::count());
 	}
@@ -83,8 +83,8 @@ private:
 		_con.pt(CPU::current().log_id())->call(uf);
 	}
 
-	Session(const Session&);
-	Session& operator=(const Session&);
+	ClientSession(const ClientSession&);
+	ClientSession& operator=(const ClientSession&);
 
 	capsel_t _caps;
 	Connection &_con;

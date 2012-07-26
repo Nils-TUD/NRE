@@ -29,7 +29,7 @@ public:
 	}
 };
 
-class Session;
+class ClientSession;
 class UtcbFrameRef;
 template<class DS>
 class DataSpaceManager;

@@ -20,17 +20,13 @@
 
 using namespace nre;
 
-ConsoleService *ConsoleService::_inst;
-
 ConsoleService::ConsoleService(const char *name)
-	: Service(name,ConsoleSessionData::portal), _con("reboot"), _reboot(_con),
-	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()), _switcher() {
-}
-
-void ConsoleService::init() {
+	: Service(name,CPUSet(CPUSet::ALL),ConsoleSessionData::portal), _con("reboot"), _reboot(_con),
+	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()), _switcher(this) {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalThread *ec = get_ec(it->log_id());
+		LocalThread *ec = get_thread(it->log_id());
+		ec->set_tls<ConsoleService*>(Thread::TLS_PARAM,this);
 		UtcbFrameRef uf(ec->utcb());
 		uf.accept_delegates(1);
 	}
@@ -59,7 +55,7 @@ void ConsoleService::next() {
 	_switcher.switch_to(old,&*it);
 }
 
-SessionData *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+ServiceSession *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 	return new ConsoleSessionData(this,id,caps,func);
 }
 

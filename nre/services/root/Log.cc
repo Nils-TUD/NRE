@@ -43,10 +43,7 @@ Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1), _to_ser(false), _bufpos(
 }
 
 void Log::reg() {
-	_srv = new Service("log",portal);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		_srv->provide_on(it->log_id());
-	_srv->reg();
+	_srv = new Service("log",CPUSet(CPUSet::ALL),portal);
 }
 
 void Log::out(char c) {
@@ -81,7 +78,7 @@ void Log::write(uint sessid,const char *line,size_t len) {
 
 void Log::portal(capsel_t pid) {
 	ScopedLock<RCULock> guard(&RCU::lock());
-	SessionData *sess = _srv->get_session<SessionData>(pid);
+	ServiceSession *sess = _srv->get_session<ServiceSession>(pid);
 	UtcbFrameRef uf;
 	try {
 		String line;

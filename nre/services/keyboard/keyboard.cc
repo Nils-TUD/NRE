@@ -26,10 +26,10 @@
 using namespace nre;
 
 template<class T>
-class KeyboardSessionData : public SessionData {
+class KeyboardSessionData : public ServiceSession {
 public:
 	KeyboardSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _prod(), _ds() {
+		: ServiceSession(s,id,caps,func), _prod(), _ds() {
 	}
 	virtual ~KeyboardSessionData() {
 		delete _ds;
@@ -57,13 +57,11 @@ class KeyboardService : public Service {
 public:
 	typedef SessionIterator<KeyboardSessionData<T> > iterator;
 
-	KeyboardService(const char *name,Pt::portal_func func = 0) : Service(name,func) {
-	}
-
-	void init() {
+	KeyboardService(const char *name,Pt::portal_func func = 0)
+			: Service(name,CPUSet(CPUSet::ALL),func) {
 		// we want to accept one dataspaces
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-			LocalThread *ec = get_ec(it->log_id());
+			LocalThread *ec = get_thread(it->log_id());
 			UtcbFrameRef uf(ec->utcb());
 			uf.accept_delegates(0);
 		}
@@ -80,7 +78,7 @@ public:
 	}
 
 private:
-	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 		return new KeyboardSessionData<T>(this,id,caps,func);
 	}
 };
@@ -169,18 +167,8 @@ int main() {
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		kbsrv->provide_on(it->log_id());
-	kbsrv->init();
-	kbsrv->reg();
-
 	if(hostkb->mouse_enabled()) {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
-		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			mousesrv->provide_on(it->log_id());
-		mousesrv->init();
-		mousesrv->reg();
-
 		Sc *sc = new Sc(new GlobalThread(mousehandler,CPU::current().log_id()),Qpd());
 		sc->start();
 	}

@@ -27,10 +27,10 @@ class TimerService;
 static HostTimer *timer;
 static TimerService *srv;
 
-class TimerSessionData : public SessionData {
+class TimerSessionData : public ServiceSession {
 public:
 	explicit TimerSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
+		: ServiceSession(s,id,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 			timer->setup_clientdata(_data + it->log_id(),it->log_id());
 	}
@@ -48,11 +48,12 @@ private:
 
 class TimerService : public Service {
 public:
-	explicit TimerService(const char *name,Pt::portal_func func) : Service(name,func) {
+	explicit TimerService(const char *name,Pt::portal_func func)
+		: Service(name,CPUSet(CPUSet::ALL),func) {
 	}
 
 private:
-	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 		return new TimerSessionData(this,id,caps,func);
 	}
 };
@@ -107,10 +108,6 @@ PORTAL static void portal_timer(capsel_t pid) {
 int main() {
 	timer = new HostTimer();
 	srv = new TimerService("timer",portal_timer);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->log_id());
-	srv->reg();
-
 	Sm sm(0);
 	sm.down();
 	return 0;

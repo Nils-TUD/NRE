@@ -17,7 +17,7 @@
 #pragma once
 
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <ipc/Consumer.h>
 #include <mem/DataSpace.h>
 
@@ -172,13 +172,13 @@ private:
 	Keyboard();
 };
 
-class KeyboardSession : public Session {
+class KeyboardSession : public ClientSession {
 	enum {
 		DS_SIZE = ExecEnv::PAGE_SIZE
 	};
 
 public:
-	explicit KeyboardSession(Connection &con) : Session(con),
+	explicit KeyboardSession(Connection &con) : ClientSession(con),
 			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true),
 			_pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)

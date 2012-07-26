@@ -22,11 +22,11 @@
 
 #include "ConsoleService.h"
 
-class ConsoleSessionData : public nre::SessionData {
+class ConsoleSessionData : public nre::ServiceSession {
 public:
-	ConsoleSessionData(nre::Service *s,size_t id,capsel_t caps,nre::Pt::portal_func func)
-			: SessionData(s,id,caps,func), _page(0),  _sm(), _in_ds(), _out_ds(), _prod(), _regs(),
-			  _show_pages(true) {
+	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t caps,nre::Pt::portal_func func)
+			: ServiceSession(srv,id,caps,func), _page(0),  _sm(), _in_ds(), _out_ds(), _prod(), _regs(),
+			  _show_pages(true), _srv(srv) {
 		_regs.offset = nre::Console::TEXT_OFF >> 1;
 		_regs.mode = 0;
 		_regs.cursor_pos = (nre::Console::ROWS - 1) * nre::Console::COLS + (nre::Console::TEXT_OFF >> 1);
@@ -51,13 +51,13 @@ public:
 	void prev() {
 		if(_show_pages) {
 			_page = (_page - 1) % Screen::TEXT_PAGES;
-			ConsoleService::get()->switcher().switch_to(this,this);
+			_srv->switcher().switch_to(this,this);
 		}
 	}
 	void next() {
 		if(_show_pages) {
 			_page = (_page + 1) % Screen::TEXT_PAGES;
-			ConsoleService::get()->switcher().switch_to(this,this);
+			_srv->switcher().switch_to(this,this);
 		}
 	}
 
@@ -78,15 +78,15 @@ public:
 	void set_regs(const nre::Console::Register &regs) {
 		_page = (_regs.offset - (nre::Console::TEXT_OFF >> 1)) >> 11;
 		_regs = regs;
-		if(ConsoleService::get()->active() == this)
-			ConsoleService::get()->screen()->set_regs(_regs);
+		if(_srv->active() == this)
+			_srv->screen()->set_regs(_regs);
 	}
 
 	PORTAL static void portal(capsel_t pid);
 
 private:
 	void swap() {
-		_out_ds->switch_to(ConsoleService::get()->screen()->mem());
+		_out_ds->switch_to(_srv->screen()->mem());
 	}
 
 	uint _page;
@@ -96,4 +96,5 @@ private:
 	nre::Producer<nre::Console::ReceivePacket> *_prod;
 	nre::Console::Register _regs;
 	bool _show_pages;
+	ConsoleService *_srv;
 };

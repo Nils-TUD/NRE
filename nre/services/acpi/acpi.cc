@@ -65,11 +65,7 @@ int main() {
 		Serial::get() << e;
 	}
 
-	Service *srv = new Service("acpi",portal_acpi);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->log_id());
-	srv->reg();
-
+	new Service("acpi",CPUSet(CPUSet::ALL),portal_acpi);
 	Sm sm(0);
 	sm.down();
 	return 0;

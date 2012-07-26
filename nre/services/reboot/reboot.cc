@@ -51,11 +51,7 @@ PORTAL static void portal_reboot(capsel_t) {
 }
 
 int main() {
-	Service *srv = new Service("reboot",portal_reboot);
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		srv->provide_on(it->log_id());
-	srv->reg();
-
+	new Service("reboot",CPUSet(CPUSet::ALL),portal_reboot);
 	Sm sm(0);
 	sm.down();
 	return 0;

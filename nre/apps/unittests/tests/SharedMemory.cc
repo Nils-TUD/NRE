@@ -20,7 +20,7 @@
 #include <ipc/Consumer.h>
 #include <ipc/Producer.h>
 #include <ipc/Connection.h>
-#include <ipc/Session.h>
+#include <ipc/ClientSession.h>
 #include <stream/IStringStream.h>
 #include <Hip.h>
 #include <CPU.h>
@@ -49,13 +49,13 @@ const TestCase sharedmem = {
 };
 static ShmService *srv;
 
-class ShmSessionData : public SessionData {
+class ShmSession : public ServiceSession {
 public:
-	ShmSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: SessionData(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
+	ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
-	virtual ~ShmSessionData() {
+	virtual ~ShmSession() {
 		delete _ds;
 		delete _cons;
 		delete _sc;
@@ -85,9 +85,8 @@ private:
 
 class ShmService : public Service {
 public:
-	ShmService() : Service("shm",portal), _sm(0) {
-		provide_on(CPU::current().log_id());
-		UtcbFrameRef uf(get_ec(CPU::current().log_id())->utcb());
+	ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
+		UtcbFrameRef uf(get_thread(CPU::current().log_id())->utcb());
 		uf.accept_delegates(0);
 	}
 
@@ -101,8 +100,8 @@ public:
 private:
 	PORTAL static void portal(capsel_t pid);
 
-	virtual SessionData *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new ShmSessionData(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
+		return new ShmSession(this,id,caps,func);
 	}
 
 	Sm _sm;
@@ -111,7 +110,7 @@ private:
 void ShmService::portal(capsel_t pid) {
 	UtcbFrameRef uf;
 	try {
-		ShmSessionData *sess = srv->get_session<ShmSessionData>(pid);
+		ShmSession *sess = srv->get_session<ShmSession>(pid);
 		capsel_t sel = uf.get_delegated(0).offset();
 		uf.finish_input();
 		sess->set_ds(new DataSpace(sel));
@@ -123,16 +122,16 @@ void ShmService::portal(capsel_t pid) {
 	}
 }
 
-void ShmSessionData::invalidate() {
+void ShmSession::invalidate() {
 	srv->notify();
 	if(_cons)
 		_cons->stop();
 }
 
-void ShmSessionData::receiver(void*) {
+void ShmSession::receiver(void*) {
 	capsel_t caps = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
 	ScopedLock<RCULock> guard(&RCU::lock());
-	ShmSessionData *sess = srv->get_session<ShmSessionData>(caps);
+	ShmSession *sess = srv->get_session<ShmSession>(caps);
 	Consumer<Item> *cons = sess->cons();
 	size_t count = 0;
 	while(1) {
@@ -151,16 +150,15 @@ static int shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
-	srv->reg();
 	srv->wait();
-	srv->unreg();
+	delete srv;
 	return 0;
 }
 
 static int shm_client(int,char *argv[]) {
 	size_t ds_size = IStringStream::read_from<size_t>(argv[1]);
 	Connection con("shm");
-	Session sess(con);
+	ClientSession sess(con);
 	DataSpace ds(ds_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 	Producer<Item> prod(&ds,true,true);
 	{
