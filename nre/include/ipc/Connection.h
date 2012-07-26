@@ -76,7 +76,7 @@ private:
 		ScopedCapSels caps(CPU::count(),CPU::count());
 		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
 		uf << Service::GET << String(service);
-		CPU::current().srv_pt->call(uf);
+		CPU::current().srv_pt().call(uf);
 		uf.check_reply();
 		uf >> _available;
 		return caps.release();

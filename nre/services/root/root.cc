@@ -63,9 +63,9 @@ CPU0Init::CPU0Init() {
 	// use the local stack here since we can't map dataspaces yet
 	LocalThread *ec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(ptstack),ec_utcb);
-	cpu.ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
-	cpu.gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
-	cpu.io_pt = new Pt(ec,Hypervisor::portal_io);
+	cpu.ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
+	cpu.gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
+	cpu.io_pt(new Pt(ec,Hypervisor::portal_io));
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
 	defuf.accept_translates();
@@ -78,7 +78,7 @@ CPU0Init::CPU0Init() {
 			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
 	UtcbFrameRef reguf(regec->utcb());
 	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
-	cpu.srv_pt = new Pt(regec,portal_service);
+	cpu.srv_pt(new Pt(regec,portal_service));
 }
 
 int main() {
@@ -111,7 +111,7 @@ int main() {
 	LOG(Logging::CPUS,Serial::get().writef("CPUs:\n"));
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LOG(Logging::CPUS,Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
-				it->package,it->core,it->thread,it->flags));
+				it->package(),it->core(),it->thread(),it->flags()));
 	}
 
 	// now we can use dlmalloc (map-pt created and available memory added to pool)
@@ -124,9 +124,9 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->log_id() != CPU::current().log_id()) {
 			LocalThread *ec = new LocalThread(it->log_id());
-			it->ds_pt = new Pt(ec,PhysicalMemory::portal_dataspace);
-			it->gsi_pt = new Pt(ec,Hypervisor::portal_gsi);
-			it->io_pt = new Pt(ec,Hypervisor::portal_io);
+			it->ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
+			it->gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
+			it->io_pt(new Pt(ec,Hypervisor::portal_io));
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.accept_translates();
@@ -137,7 +137,7 @@ int main() {
 			LocalThread *regec = new LocalThread(it->log_id());
 			UtcbFrameRef reguf(ec->utcb());
 			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
-			it->srv_pt = new Pt(regec,portal_service);
+			it->srv_pt(new Pt(regec,portal_service));
 		}
 	}
 

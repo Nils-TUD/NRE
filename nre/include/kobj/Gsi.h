@@ -91,7 +91,7 @@ private:
 		ScopedCapSels cap;
 		uf.delegation_window(Crd(cap.get(),0,Crd::OBJ_ALL));
 		uf << ALLOC << gsi << pcicfg;
-		CPU::current().gsi_pt->call(uf);
+		CPU::current().gsi_pt().call(uf);
 
 		uf.check_reply();
 		uf >> _gsi;
@@ -102,7 +102,7 @@ private:
 		try {
 			UtcbFrame uf;
 			uf << RELEASE << _gsi;
-			CPU::current().gsi_pt->call(uf);
+			CPU::current().gsi_pt().call(uf);
 		}
 		catch(...) {
 			// ignore

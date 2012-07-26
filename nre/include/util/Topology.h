@@ -49,9 +49,9 @@ public:
 		size_t i = 0;
 		for(CPU::iterator it = begin; it != end; ++it, ++i) {
 			local[i].id = it->log_id();
-			local[i].thread = it->thread;
-			local[i].core = it->core;
-			local[i].package = it->package;
+			local[i].thread = it->thread();
+			local[i].core = it->core();
+			local[i].package = it->package();
 		}
 		if(i < parts)
 			parts = i;

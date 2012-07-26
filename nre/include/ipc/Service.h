@@ -222,13 +222,13 @@ private:
 		UtcbFrame uf;
 		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
 		uf << REGISTER << String(_name) << _reg_cpus;
-		CPU::current().srv_pt->call(uf);
+		CPU::current().srv_pt().call(uf);
 		uf.check_reply();
 	}
 	void unreg() {
 		UtcbFrame uf;
 		uf << UNREGISTER << String(_name);
-		CPU::current().srv_pt->call(uf);
+		CPU::current().srv_pt().call(uf);
 		uf.check_reply();
 	}
 

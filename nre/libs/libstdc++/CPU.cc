@@ -56,18 +56,18 @@ CPUInit::CPUInit() {
 		last = &cpu;
 
 		// copy attributes from Hip-CPU
-		cpu.flags = it->flags;
-		cpu.package = it->package;
-		cpu.core = it->core;
-		cpu.thread = it->thread;
+		cpu._flags = it->flags;
+		cpu._package = it->package;
+		cpu._core = it->core;
+		cpu._thread = it->thread;
 
 		// create per-cpu-portals
 		if(_startup_info.child) {
 			capsel_t off = cpu.log_id() * Hip::get().service_caps();
-			cpu.ds_pt = new Pt(off + CapSpace::SRV_DS);
-			cpu.srv_pt = new Pt(off + CapSpace::SRV_SERVICE);
-			cpu.gsi_pt = new Pt(off + CapSpace::SRV_GSI);
-			cpu.io_pt = new Pt(off + CapSpace::SRV_IO);
+			cpu._ds_pt = new Pt(off + CapSpace::SRV_DS);
+			cpu._srv_pt = new Pt(off + CapSpace::SRV_SERVICE);
+			cpu._gsi_pt = new Pt(off + CapSpace::SRV_GSI);
+			cpu._io_pt = new Pt(off + CapSpace::SRV_IO);
 			if(cpu.phys_id() == _startup_info.cpu) {
 				// switch to dlmalloc, since we have created its dependencies now
 				// note: by doing it here, the startup-heap-size does not depend on the number of CPUs

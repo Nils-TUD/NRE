@@ -33,7 +33,7 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 	ScopedCapSels caps(2,2);
 	uf.delegation_window(Crd(caps.get(),1,Crd::OBJ_ALL));
 	uf << CREATE << desc;
-	CPU::current().ds_pt->call(uf);
+	CPU::current().ds_pt().call(uf);
 
 	uf.check_reply();
 	uf >> desc;
@@ -54,7 +54,7 @@ void DataSpace::switch_to(DataSpace &dest) {
 	uf.translate(unmapsel());
 	uf.translate(dest.unmapsel());
 	uf << SWITCH_TO;
-	CPU::current().ds_pt->call(uf);
+	CPU::current().ds_pt().call(uf);
 	uf.check_reply();
 	uintptr_t tmp = _desc.origin();
 	_desc.origin(dest._desc.origin());
@@ -70,7 +70,7 @@ void DataSpace::join() {
 	uf.delegation_window(Crd(umcap.get(),0,Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN;
-	CPU::current().ds_pt->call(uf);
+	CPU::current().ds_pt().call(uf);
 
 	uf.check_reply();
 	uf >> _desc;
@@ -94,7 +94,7 @@ void DataSpace::destroy() {
 
 	uf.translate(_unmapsel);
 	uf << DESTROY << _desc;
-	CPU::current().ds_pt->call(uf);
+	CPU::current().ds_pt().call(uf);
 
 	CapSpace::get().free(_unmapsel);
 	CapSpace::get().free(_sel);

@@ -98,14 +98,14 @@ private:
 		ScopedCapSels cap;
 		uf.delegation_window(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
 		uf << ALLOC << _base << _count;
-		CPU::current().io_pt->call(uf);
+		CPU::current().io_pt().call(uf);
 		uf.check_reply();
 	}
 	void release() {
 		try {
 			UtcbFrame uf;
 			uf << RELEASE << _base << _count;
-			CPU::current().io_pt->call(uf);
+			CPU::current().io_pt().call(uf);
 		}
 		catch(...) {
 			// ignore

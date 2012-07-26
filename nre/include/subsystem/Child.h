@@ -105,7 +105,7 @@ private:
 		for(uint i = 0; i < Hip::MAX_GSIS; ++i) {
 			if(_gsis.is_set(i)) {
 				uf << Gsi::RELEASE << i;
-				CPU::current().gsi_pt->call(uf);
+				CPU::current().gsi_pt().call(uf);
 				uf.clear();
 			}
 		}
@@ -116,7 +116,7 @@ private:
 		for(RegionManager::iterator it = _io.begin(); it != _io.end(); ++it) {
 			if(it->size) {
 				uf << Ports::RELEASE << it->addr << it->size;
-				CPU::current().io_pt->call(uf);
+				CPU::current().io_pt().call(uf);
 				uf.clear();
 			}
 		}

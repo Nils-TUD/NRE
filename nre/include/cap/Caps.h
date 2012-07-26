@@ -51,7 +51,7 @@ public:
 			}
 
 			uf << cr;
-			CPU::current().io_pt->call(uf);
+			CPU::current().io_pt().call(uf);
 
 			// adjust start and hotspot for the next round
 			cr.start(cr.start() + cr.count());

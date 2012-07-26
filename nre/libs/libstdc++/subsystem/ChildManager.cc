@@ -385,7 +385,7 @@ capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPU
 	ScopedCapSels caps(CPU::count(),CPU::count());
 	uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
 	uf << Service::GET << String(name);
-	CPU::current().srv_pt->call(uf);
+	CPU::current().srv_pt().call(uf);
 	uf.check_reply();
 	uf >> available;
 	return caps.release();
@@ -433,7 +433,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 					cap = c->_gsi_next++;
 					puf.delegation_window(Crd(c->_gsi_caps + cap,0,Crd::OBJ_ALL));
 				}
-				CPU::current().gsi_pt->call(puf);
+				CPU::current().gsi_pt().call(puf);
 				puf.check_reply();
 				if(op == Gsi::ALLOC)
 					puf >> gsi;
@@ -486,7 +486,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 				if(op == Ports::ALLOC)
 					puf.delegation_window(Crd(0,31,Crd::IO_ALL));
 				puf << op << base << count;
-				CPU::current().io_pt->call(puf);
+				CPU::current().io_pt().call(puf);
 				puf.check_reply();
 			}
 
