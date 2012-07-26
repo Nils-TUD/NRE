@@ -198,6 +198,26 @@ protected:
 	}
 
 private:
+	/**
+	 * May be overwritten to create an inherited class from ServiceSession.
+	 *
+	 * @param id the session-id
+	 * @param pts the capabilities
+	 * @param func the portal-function
+	 * @return the session-object
+	 */
+	virtual ServiceSession *create_session(size_t id,capsel_t pts,Pt::portal_func func) {
+		return new ServiceSession(this,id,pts,func);
+	}
+	/**
+	 * Is called after a session has been created and put into the corresponding slot. May be
+	 * overwritten to perform some action.
+	 *
+	 * @param id the session-id
+	 */
+	virtual void created_session(UNUSED size_t id) {
+	}
+
 	void reg() {
 		UtcbFrame uf;
 		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
@@ -212,12 +232,6 @@ private:
 		uf.check_reply();
 	}
 
-	virtual ServiceSession *create_session(size_t id,capsel_t pts,Pt::portal_func func) {
-		return new ServiceSession(this,id,pts,func);
-	}
-	virtual void created_session(size_t) {
-	}
-
 	ServiceSession *new_session() {
 		ScopedLock<UserSm> guard(&_sm);
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
@@ -228,7 +242,6 @@ private:
 		}
 		throw ServiceException(E_CAPACITY);
 	}
-
 	void destroy_session(capsel_t pid) {
 		ScopedLock<UserSm> guard(&_sm);
 		size_t i = (pid - _caps) / CPU::count();
