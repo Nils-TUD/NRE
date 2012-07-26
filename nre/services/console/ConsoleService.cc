@@ -25,9 +25,9 @@ ConsoleService::ConsoleService(const char *name)
 	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()), _switcher(this) {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalThread *ec = get_thread(it->log_id());
-		ec->set_tls<ConsoleService*>(Thread::TLS_PARAM,this);
-		UtcbFrameRef uf(ec->utcb());
+		LocalThread *t = get_thread(it->log_id());
+		t->set_tls<ConsoleService*>(Thread::TLS_PARAM,this);
+		UtcbFrameRef uf(t->utcb());
 		uf.accept_delegates(1);
 	}
 
