@@ -67,7 +67,7 @@ void ConsoleService::session_ready(ConsoleSessionData *sess) {
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
-	if((~pk.flags & Keyboard::LWIN) || (~pk.flags & Keyboard::RELEASE))
+	if((~pk.flags & Keyboard::LCTRL) || (~pk.flags & Keyboard::RELEASE))
 		return false;
 	switch(pk.keycode) {
 		case Keyboard::VK_END:
