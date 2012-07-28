@@ -127,7 +127,7 @@ public:
 	}
 
 	template<typename T>
-	static inline T is_pow2(T value) {
+	static inline bool is_pow2(T value) {
 		return (value & (value - 1)) == 0;
 	}
 
@@ -154,6 +154,8 @@ public:
 	 */
 	template<typename T>
 	static inline T next_pow2(T value) {
+		if(is_pow2(value))
+			return value;
 		return 1 << next_pow2_shift(value);
 	}
 	template<typename T>
