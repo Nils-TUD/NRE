@@ -104,7 +104,7 @@ static UserSm sm;
 
 static void view0(void*) {
 	uint page = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
-	ConsoleStream view(*conssess,page);
+	ConsoleStream view(*conssess,page % Console::PAGES);
 	int i = 0;
 	while(1) {
 		//char c = view.read();
