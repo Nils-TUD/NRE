@@ -176,11 +176,11 @@ static void portal_service(capsel_t) {
 	try {
 		Service::Command cmd;
 		String name;
-		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 		uf >> cmd >> name;
 		switch(cmd) {
 			case Service::REGISTER: {
 				BitField<Hip::MAX_CPUS> available;
+				capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 				uf >> available;
 				uf.finish_input();
 
