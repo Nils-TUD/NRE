@@ -94,7 +94,7 @@ static int pingpong_server() {
 	return 0;
 }
 
-static void pingpong_client() {
+static int pingpong_client() {
 	Connection con("pingpong");
 	ClientSession sess(con);
 	Pt pt(sess.caps() + CPU::current().log_id());
@@ -129,6 +129,7 @@ static void pingpong_client() {
 	WVPRINTF("avg: %Lu",avg);
 	WVPRINTF("min: %Lu",min);
 	WVPRINTF("max: %Lu",max);
+	return 0;
 }
 
 static Hip::mem_iterator get_self() {
