@@ -38,8 +38,8 @@ ConsoleService::ConsoleService(const char *name)
 	// copy screen to buffer
 	memcpy(reinterpret_cast<void*>(ds->virt()),reinterpret_cast<void*>(_screen->mem().virt()),
 			ExecEnv::PAGE_SIZE * Screen::PAGES);
-	sess->create(0,ds);
 	add_session(sess);
+	sess->create(0,ds);
 	_switcher.start();
 }
 
@@ -59,9 +59,9 @@ ServiceSession *ConsoleService::create_session(size_t id,capsel_t caps,Pt::porta
 	return new ConsoleSessionData(this,id,caps,func);
 }
 
-void ConsoleService::created_session(size_t idx) {
+void ConsoleService::session_ready(ConsoleSessionData *sess) {
 	ConsoleSessionData *old = active();
-	iterator it = iterator(this,idx);
+	iterator it = iterator(this,sess->id());
 	_sess_cycler.reset(sessions_begin(),it,sessions_end());
 	_switcher.switch_to(old,&*it);
 }

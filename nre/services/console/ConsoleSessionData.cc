@@ -30,7 +30,7 @@ void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,bool show_pag
 	if(_in_ds)
 		_prod = new Producer<Console::ReceivePacket>(in_ds,false,false);
 	_show_pages = show_pages;
-	_srv->switcher().switch_to(_srv->active(),this);
+	_srv->session_ready(this);
 }
 
 void ConsoleSessionData::portal(capsel_t pid) {
