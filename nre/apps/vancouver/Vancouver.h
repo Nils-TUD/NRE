@@ -19,8 +19,8 @@
 
 #include <kobj/UserSm.h>
 #include <kobj/GlobalThread.h>
-#include <kobj/Sc.h>
 #include <mem/DataSpace.h>
+#include <services/Admission.h>
 
 #include "bus/motherboard.h"
 #include "Timeouts.h"
@@ -28,14 +28,14 @@
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	Vancouver(const char *args,size_t ramsize)
-			: _lt_input(keyboard_thread,nre::CPU::current().log_id()), _sc_input(&_lt_input,nre::Qpd()),
-			  _mb(), _timeouts(_mb),
+			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
+			  _as_input(&_lt_input,nre::String("VMM-input")), _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RWX),
 			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
 		create_devices(args);
 		create_vcpus();
 		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-		_sc_input.start();
+		_as_input.start();
 	}
 
 	void reset();
@@ -54,7 +54,7 @@ private:
 	void create_vcpus();
 
 	nre::GlobalThread _lt_input;
-	nre::Sc _sc_input;
+	nre::AdmissionSession _as_input;
 	Motherboard _mb;
 	Timeouts _timeouts;
 	nre::DataSpace _guest_mem;

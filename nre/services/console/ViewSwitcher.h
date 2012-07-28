@@ -18,9 +18,9 @@
 
 #include <ipc/Producer.h>
 #include <ipc/Consumer.h>
-#include <kobj/Sc.h>
 #include <kobj/GlobalThread.h>
 #include <mem/DataSpace.h>
+#include <services/Admission.h>
 
 #include "Screen.h"
 
@@ -44,7 +44,7 @@ public:
 	explicit ViewSwitcher(ConsoleService *srv);
 
 	void start() {
-		_sc.start();
+		_as.start();
 	}
 
 	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);
@@ -57,7 +57,7 @@ private:
 	nre::Producer<SwitchCommand> _prod;
 	nre::Consumer<SwitchCommand> _cons;
 	nre::GlobalThread _ec;
-	nre::Sc _sc;
+	nre::AdmissionSession _as;
 	ConsoleService *_srv;
 	static char _backup[];
 	static char _buffer[];

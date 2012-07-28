@@ -19,8 +19,8 @@
 
 #include <kobj/UserSm.h>
 #include <kobj/GlobalThread.h>
-#include <kobj/Sc.h>
 #include <services/Timer.h>
+#include <services/Admission.h>
 #include <util/TimeoutList.h>
 #include <util/ScopedLock.h>
 
@@ -33,9 +33,10 @@ class Timeouts {
 
 public:
 	Timeouts(Motherboard &mb) : _mb(mb), _timeouts(), _timercon("timer"), _timer(_timercon),
-		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()), _sc(&_ec,nre::Qpd()) {
+		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()),
+		_as(&_ec,nre::String("VMM-Timeouts")) {
 		_ec.set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
-		_sc.start();
+		_as.start();
 	}
 
 	size_t alloc() {
@@ -65,5 +66,5 @@ private:
 	nre::TimerSession _timer;
 	timevalue_t _last_to;
 	nre::GlobalThread _ec;
-	nre::Sc _sc;
+	nre::AdmissionSession _as;
 };

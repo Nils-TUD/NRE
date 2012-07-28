@@ -29,6 +29,7 @@
 #include <services/Mouse.h>
 #include <services/ACPI.h>
 #include <services/Timer.h>
+#include <services/Admission.h>
 #include <util/Date.h>
 #include <Exception.h>
 
@@ -135,8 +136,10 @@ int main() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		GlobalThread *gt = new GlobalThread(view0,it->log_id());
 		gt->set_tls<uint>(Thread::TLS_PARAM,it->log_id());
-		Sc *sc = new Sc(gt,Qpd());
-		sc->start();
+		AdmissionSession *as = new AdmissionSession(gt,String("Test Thread"));
+		as->start();
+		//Sc *sc = new Sc(gt,Qpd());
+		//sc->start();
 	}
 
 	/*

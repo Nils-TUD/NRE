@@ -17,8 +17,8 @@
 #include <ipc/Service.h>
 #include <ipc/Producer.h>
 #include <kobj/GlobalThread.h>
-#include <kobj/Sc.h>
 #include <kobj/Gsi.h>
+#include <services/Admission.h>
 #include <RCU.h>
 
 #include "HostKeyboard.h"
@@ -169,8 +169,9 @@ int main() {
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
 	if(hostkb->mouse_enabled()) {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
-		Sc *sc = new Sc(new GlobalThread(mousehandler,CPU::current().log_id()),Qpd());
-		sc->start();
+		GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
+		AdmissionSession *as = new AdmissionSession(gt,String("Mouse"));
+		as->start();
 	}
 
 	kbhandler(0);
