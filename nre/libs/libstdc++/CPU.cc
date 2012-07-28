@@ -39,11 +39,14 @@ CPUInit CPUInit::init INIT_PRIO_CPUS;
 CPUInit::CPUInit() {
 	CPU *last = 0;
 	const Hip& hip = Hip::get();
-	cpu_t id = 0;
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++id) {
-		CPU &cpu = CPU::get(id);
-		cpu._id = id;
-		CPU::_logtophys[id] = it->id();
+	cpu_t i = 0,id = 0,offline = 0;
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
+		CPU &cpu = CPU::get(i);
+		if(it->enabled())
+			cpu._id = id++;
+		else
+			cpu._id = Hip::MAX_CPUS - ++offline;
+		CPU::_logtophys[cpu._id] = it->id();
 		if(!it->enabled())
 			continue;
 

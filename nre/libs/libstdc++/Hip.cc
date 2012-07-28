@@ -19,12 +19,12 @@
 namespace nre {
 
 cpu_t Hip::cpu_phys_to_log(cpu_t cpu) const {
-	cpu_t phys = 0;
-	for(cpu_iterator it = cpu_begin(); it != cpu_end(); ++it, ++phys) {
-		if(cpu == it->id())
-			break;
+	cpu_t log = 0;
+	for(cpu_iterator it = cpu_begin(); cpu != it->id() && it != cpu_end(); ++it) {
+		if(it->enabled())
+			log++;
 	}
-	return phys;
+	return log;
 }
 
 }
