@@ -57,7 +57,7 @@ class KeyboardService : public Service {
 public:
 	typedef SessionIterator<KeyboardSessionData<T> > iterator;
 
-	KeyboardService(const char *name,Pt::portal_func func = 0)
+	KeyboardService(const char *name,Pt::portal_func func)
 			: Service(name,CPUSet(CPUSet::ALL),func) {
 		// we want to accept one dataspaces
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
