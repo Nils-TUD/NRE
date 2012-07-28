@@ -101,6 +101,9 @@ int main() {
 		// also remove the BIOS-area (make it available as device-memory)
 		if(it->type != HipMem::AVAILABLE || it->addr == 0)
 			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
+		// make sure that we don't overwrite the next two pages behind the cmdline
+		if(it->type == HipMem::MB_MODULE && it->aux)
+			PhysicalMemory::remove(it->aux & ~(ExecEnv::PAGE_SIZE - 1),ExecEnv::PAGE_SIZE * 2);
 	}
 
 	// now allocate the available memory from the hypervisor
