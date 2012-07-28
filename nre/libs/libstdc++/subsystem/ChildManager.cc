@@ -381,8 +381,8 @@ void ChildManager::Portals::service(capsel_t pid) {
 
 capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
 	UtcbFrame uf;
-	ScopedCapSels caps(CPU::count(),CPU::count());
-	uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<size_t>(CPU::count()),Crd::OBJ_ALL));
+	ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
+	uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
 	uf << Service::GET << String(name);
 	CPU::current().srv_pt().call(uf);
 	uf.check_reply();

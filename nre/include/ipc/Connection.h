@@ -49,7 +49,7 @@ public:
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _pts[i];
 		delete[] _pts;
-		CapSelSpace::get().free(_caps,CPU::count());
+		CapSelSpace::get().free(_caps,1 << CPU::order());
 	}
 
 	/**
@@ -73,8 +73,8 @@ public:
 private:
 	capsel_t connect(const char *service) {
 		UtcbFrame uf;
-		ScopedCapSels caps(CPU::count(),CPU::count());
-		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
 		uf << Service::GET << String(service);
 		CPU::current().srv_pt().call(uf);
 		uf.check_reply();

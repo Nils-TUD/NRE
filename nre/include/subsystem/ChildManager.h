@@ -86,8 +86,7 @@ public:
 
 	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
-		uint count = Math::next_pow2<size_t>(CPU::count());
-		_registry.reg(c,name,cap,count,available);
+		_registry.reg(c,name,cap,1 << CPU::order(),available);
 		_regsm.up();
 	}
 
@@ -111,8 +110,7 @@ private:
 		if(!s) {
 			BitField<Hip::MAX_CPUS> available;
 			capsel_t caps = get_parent_service(name.str(),available);
-			uint count = Math::next_pow2<size_t>(CPU::count());
-			s = _registry.reg(0,name,caps,count,available);
+			s = _registry.reg(0,name,caps,1 << CPU::order(),available);
 			_regsm.up();
 		}
 		return s;

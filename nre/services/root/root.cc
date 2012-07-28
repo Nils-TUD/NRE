@@ -77,7 +77,7 @@ CPU0Init::CPU0Init() {
 	LocalThread *regec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
 	UtcbFrameRef reguf(regec->utcb());
-	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+	reguf.accept_delegates(CPU::order());
 	cpu.srv_pt(new Pt(regec,portal_service));
 }
 
@@ -139,7 +139,7 @@ int main() {
 			// register portal for the log service
 			LocalThread *regec = new LocalThread(it->log_id());
 			UtcbFrameRef reguf(ec->utcb());
-			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+			reguf.accept_delegates(CPU::order());
 			it->srv_pt(new Pt(regec,portal_service));
 		}
 	}

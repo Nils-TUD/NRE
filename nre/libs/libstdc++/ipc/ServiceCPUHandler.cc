@@ -29,7 +29,7 @@ ServiceCPUHandler::ServiceCPUHandler(Service* s,capsel_t pt,cpu_t cpu)
 	_service_ec.set_tls<Service*>(Thread::TLS_PARAM,s);
 	UtcbFrameRef ecuf(_service_ec.utcb());
 	// for session-identification
-	ecuf.accept_translates(s->_caps,Math::next_pow2_shift(Service::MAX_SESSIONS * CPU::count()));
+	ecuf.accept_translates(s->_caps,Service::MAX_SESSIONS_ORDER + CPU::order());
 }
 
 void ServiceCPUHandler::portal(capsel_t) {
@@ -43,7 +43,7 @@ void ServiceCPUHandler::portal(capsel_t) {
 				uf.finish_input();
 
 				ServiceSession *sess = s->new_session();
-				uf.delegate(CapRange(sess->caps(),CPU::count(),Crd::OBJ_ALL));
+				uf.delegate(CapRange(sess->caps(),1 << CPU::order(),Crd::OBJ_ALL));
 			}
 			break;
 

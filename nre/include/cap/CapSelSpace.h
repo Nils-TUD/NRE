@@ -85,7 +85,7 @@ public:
 	 * Allocates <count> selectors with alignment <align>.
 	 *
 	 * @param count the number of selectors to allocate (default = 1)
-	 * @param align the alignment of the selectors (default = 1)
+	 * @param align the alignment of the selectors (default = 1). has to be a power of 2!
 	 */
 	capsel_t allocate(uint count = 1,uint align = 1) {
 		ScopedLock<SpinLock> lock(&_lck);

@@ -62,6 +62,12 @@ public:
 	static size_t count() {
 		return _count;
 	}
+	/**
+	 * @return the next order of online CPUs, i.e. Math::next_pow2_shift(count())
+	 */
+	static uint order() {
+		return _order;
+	}
 
 	/**
 	 * @return iterator beginning of the list of online CPUs. They are always sorted by logical id.
@@ -174,6 +180,7 @@ private:
 	Pt *_gsi_pt;
 	Pt *_srv_pt;
 	static size_t _count;
+	static uint _order;
 	static CPU *_online;
 	static CPU _cpus[Hip::MAX_CPUS];
 	static cpu_t _logtophys[Hip::MAX_CPUS];

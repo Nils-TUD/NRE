@@ -30,6 +30,7 @@ class CPUInit {
 };
 
 size_t CPU::_count = 0;
+uint CPU::_order = 0;
 CPU *CPU::_online = 0;
 CPU CPU::_cpus[Hip::MAX_CPUS] INIT_PRIO_CPUS;
 cpu_t CPU::_logtophys[Hip::MAX_CPUS];
@@ -75,6 +76,7 @@ CPUInit::CPUInit() {
 			}
 		}
 	}
+	CPU::_order = Math::next_pow2_shift(CPU::_count);
 }
 
 }

@@ -72,7 +72,7 @@ public:
 		}
 		delete[] _sms;
 		delete[] _pts;
-		CapSelSpace::get().free(_caps,Math::next_pow2(CPU::count()));
+		CapSelSpace::get().free(_caps,1 << CPU::order());
 	}
 
 	/**
@@ -134,9 +134,8 @@ public:
 private:
 	void get_sms() {
 		UtcbFrame uf;
-		uint order = Math::next_pow2_shift(CPU::count());
-		ScopedCapSels caps(1 << order,1 << order);
-		uf.delegation_window(Crd(caps.get(),order,Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
 		uf << Timer::GET_SMS;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
