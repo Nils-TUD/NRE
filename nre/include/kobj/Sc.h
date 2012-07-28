@@ -87,6 +87,7 @@ public:
 		}
 		catch(...) {
 			sel(INVALID);
+			throw;
 		}
 	}
 
