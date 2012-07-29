@@ -3,6 +3,7 @@
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
 bin/apps/root
+bin/apps/admission provides=admission
 bin/apps/acpi provides=acpi
 bin/apps/keyboard provides=keyboard
 bin/apps/reboot provides=reboot

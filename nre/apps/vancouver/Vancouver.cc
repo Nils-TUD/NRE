@@ -139,7 +139,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			// TODO that's extremly hardcoded here ;)
 			const Hip &hip = Hip::get();
 			uintptr_t destaddr = reinterpret_cast<uintptr_t>(msg.start);
-			uint module = msg.module + 7;
+			uint module = msg.module + 8;
 			Hip::mem_iterator it;
 			for(it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 				if(it->type == HipMem::MB_MODULE && module-- == 0)

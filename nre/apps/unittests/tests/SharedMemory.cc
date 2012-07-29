@@ -186,8 +186,8 @@ static Hip::mem_iterator get_self() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// we're the second module
-		if(it->type == HipMem::MB_MODULE && i++ > 0)
+		// we're the third module
+		if(it->type == HipMem::MB_MODULE && i++ > 1)
 			return it;
 	}
 	return hip.mem_end();
