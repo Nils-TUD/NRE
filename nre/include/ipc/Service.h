@@ -100,8 +100,11 @@ public:
 	 */
 	virtual ~Service() {
 		unreg();
-		for(size_t i = 0; i < MAX_SESSIONS; ++i)
-			delete _sessions[i];
+		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
+			ServiceSession *sess = rcu_dereference(_sessions[i]);
+			if(sess)
+				remove_session(sess);
+		}
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _insts[i];
 		delete[] _insts;
