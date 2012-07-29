@@ -105,7 +105,7 @@ static UserSm sm;
 
 static void view0(void*) {
 	uint page = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
-	ConsoleStream view(*conssess,page % Console::PAGES);
+	ConsoleStream view(*conssess,page % Console::TEXT_PAGES);
 	int i = 0;
 	while(1) {
 		//char c = view.read();
@@ -132,7 +132,7 @@ static void tick_thread(void*) {
 
 int main() {
 	conscon = new Connection("console");
-	conssess = new ConsoleSession(*conscon);
+	conssess = new ConsoleSession(*conscon,CPU::count());
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		GlobalThread *gt = new GlobalThread(view0,it->log_id());
 		gt->set_tls<uint>(Thread::TLS_PARAM,it->log_id());

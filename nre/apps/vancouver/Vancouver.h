@@ -31,7 +31,7 @@ public:
 			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
 			  _as_input(&_lt_input,nre::String("VMM-input")), _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RWX),
-			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
+			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,0) {
 		create_devices(args);
 		create_vcpus();
 		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);

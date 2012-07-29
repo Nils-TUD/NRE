@@ -297,7 +297,7 @@ int main() {
 	Connection timercon("timer");
 	TimerSession timer(timercon);
 	Connection conscon("console");
-	ConsoleSession console(conscon);
+	ConsoleSession console(conscon,1);
 
 	gen_sinlut();
 	gen_sqrtlut();

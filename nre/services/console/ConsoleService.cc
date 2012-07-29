@@ -39,7 +39,7 @@ ConsoleService::ConsoleService(const char *name)
 	memcpy(reinterpret_cast<void*>(ds->virt()),reinterpret_cast<void*>(_screen->mem().virt()),
 			ExecEnv::PAGE_SIZE * Screen::PAGES);
 	add_session(sess);
-	sess->create(0,ds);
+	sess->create(0,ds,2);
 	_switcher.start();
 }
 
