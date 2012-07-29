@@ -47,9 +47,10 @@ public:
 	 * @param gt the global thread to start
 	 * @param name the name for the Sc
 	 * @param qpd the quantum+prio-descriptor
+	 * @throws Exception if there is no connection to the admission-service or session-creation failed
 	 */
 	explicit AdmissionSession(GlobalThread *gt,const String &name,Qpd qpd = Qpd())
-			: ClientSession(*_con), _ec(gt), _name(name), _qpd(qpd) {
+			: ClientSession(get()), _ec(gt), _name(name), _qpd(qpd) {
 	}
 	/**
 	 * Creates an admission-session for the given VCPU. Please call start() to finally start it.
@@ -57,9 +58,10 @@ public:
 	 * @param vcpu the VCPU to start
 	 * @param name the name for the Sc
 	 * @param qpd the quantum+prio-descriptor (might be changed)
+	 * @throws Exception if there is no connection to the admission-service or session-creation failed
 	 */
 	explicit AdmissionSession(VCpu *vcpu,const String &name,Qpd qpd = Qpd())
-			: ClientSession(*_con), _ec(vcpu), _name(name), _qpd(qpd) {
+			: ClientSession(get()), _ec(vcpu), _name(name), _qpd(qpd) {
 	}
 
 	/**
@@ -95,6 +97,12 @@ public:
 	}
 
 private:
+	static Connection &get() {
+		if(_con == 0)
+			throw Exception(E_NOT_FOUND,"No connection to admission service");
+		return *_con;
+	}
+
 	Ec *_ec;
 	String _name;
 	Qpd _qpd;
