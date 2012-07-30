@@ -19,6 +19,7 @@
 #include <arch/ExecEnv.h>
 #include <kobj/Thread.h>
 #include <kobj/Pd.h>
+#include <kobj/Sm.h>
 #include <Compiler.h>
 #include <Hip.h>
 
@@ -49,15 +50,6 @@ public:
 		Pd *pd = Pd::current();
 		create(pd,Syscalls::EC_LOCAL,ExecEnv::setup_stack(pd,this,0,
 				reinterpret_cast<uintptr_t>(portal_reply_landing_spot),stack()));
-	}
-	/**
-	 * Destroys this thread. Make sure that you have destroyed all bound portals first.
-	 */
-	virtual ~LocalThread();
-
-private:
-	PORTAL static void portal(capsel_t) {
-		// do nothing
 	}
 };
 
