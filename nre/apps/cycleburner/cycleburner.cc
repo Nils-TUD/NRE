@@ -324,4 +324,5 @@ int main() {
 		// Wait
 		timer.wait_until(clock.source_time(WAIT_TIME));
 	}
+	return 0;
 }

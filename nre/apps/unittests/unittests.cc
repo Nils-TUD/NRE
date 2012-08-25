@@ -68,4 +68,5 @@ int main() {
 		}
 		Serial::get().writef("Done\n");
 	}
+	return 0;
 }
