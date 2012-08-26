@@ -15,13 +15,13 @@
  */
 
 #include <kobj/Pt.h>
+#include <kobj/Sc.h>
 #include <subsystem/ChildManager.h>
 #include <ipc/Service.h>
 #include <ipc/Consumer.h>
 #include <ipc/Producer.h>
 #include <ipc/Connection.h>
 #include <ipc/ClientSession.h>
-#include <services/Admission.h>
 #include <stream/IStringStream.h>
 #include <Hip.h>
 #include <CPU.h>
@@ -52,14 +52,14 @@ static ShmService *srv;
 
 class ShmSession : public ServiceSession {
 public:
-	ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _as(), _cons(), _ds() {
+	explicit ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
 	virtual ~ShmSession() {
 		delete _ds;
 		delete _cons;
-		delete _as;
+		delete _sc;
 	}
 
 	virtual void invalidate();
@@ -71,15 +71,15 @@ public:
 	void set_ds(DataSpace *ds) {
 		_ds = ds;
 		_cons = new Consumer<Item>(ds);
-		_as = new AdmissionSession(&_ec,String("Shm-receiver"),Qpd());
-		_as->start();
+		_sc = new Sc(&_ec,Qpd());
+		_sc->start(String("Shm-receiver"));
 	}
 
 private:
 	static void receiver(void *);
 
 	GlobalThread _ec;
-	AdmissionSession *_as;
+	Sc *_sc;
 	Consumer<Item> *_cons;
 	DataSpace *_ds;
 };

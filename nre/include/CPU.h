@@ -156,11 +156,20 @@ public:
 	void srv_pt(Pt *pt) {
 		_srv_pt = pt;
 	}
+	/**
+	 * The Sc portal
+	 */
+	Pt &sc_pt() {
+		return *_sc_pt;
+	}
+	void sc_pt(Pt *pt) {
+		_sc_pt = pt;
+	}
 
 private:
 	CPU()
 		: _id(), _next(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
-		  _gsi_pt(), _srv_pt() {
+		  _gsi_pt(), _srv_pt(), _sc_pt() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);
@@ -179,6 +188,7 @@ private:
 	Pt *_io_pt;
 	Pt *_gsi_pt;
 	Pt *_srv_pt;
+	Pt *_sc_pt;
 	static size_t _count;
 	static uint _order;
 	static CPU *_online;

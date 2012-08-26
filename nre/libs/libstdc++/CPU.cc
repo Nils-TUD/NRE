@@ -72,6 +72,7 @@ CPUInit::CPUInit() {
 			cpu._srv_pt = new Pt(off + CapSelSpace::SRV_SERVICE);
 			cpu._gsi_pt = new Pt(off + CapSelSpace::SRV_GSI);
 			cpu._io_pt = new Pt(off + CapSelSpace::SRV_IO);
+			cpu._sc_pt = new Pt(off + CapSelSpace::SRV_SC);
 			if(cpu.phys_id() == _startup_info.cpu) {
 				// switch to dlmalloc, since we have created its dependencies now
 				// note: by doing it here, the startup-heap-size does not depend on the number of CPUs

@@ -42,6 +42,7 @@ ChildManager::ChildManager() : _child_count(), _childs(),
 		defuf.accept_delegates(0);
 
 		UtcbFrameRef reguf(_regecs[it->log_id()]->utcb());
+		defuf.accept_translates();
 		reguf.accept_delegates(Math::next_pow2_shift<size_t>(CPU::count()));
 	}
 }
@@ -175,6 +176,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_INIT,Portals::init_caps,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SERVICE,Portals::service,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_IO,Portals::io,Mtd(0));
+			// note that we have to handle the sc-portal with regecs because otherwise we might cause
+			// a deadlock, since the sc portal calls (finally) to the timetracker service, which can
+			// cause e.g. pagefaults. so they can't be handled with the same ec.
+			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SC,Portals::sc,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_GSI,Portals::gsi,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_DS,Portals::dataspace,Mtd(0));
 		}
@@ -240,7 +245,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		// start child; we have to put the child into the list before that
 		rcu_assign_pointer(_childs[idx],c);
 		c->_sc = new Sc(c->_ec,Qpd(),c->_pd);
-		c->_sc->start();
+		c->_sc->start(c->cmdline());
 	}
 	catch(...) {
 		delete c;
@@ -316,7 +321,9 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 		// we can't give the child the cap for e.g. the Pd when creating the Pd. therefore the child
 		// grabs them afterwards with this portal
 		uf.finish_input();
-		uf.delegate(c->_pd->sel(),0);
+		// don't allow them to create Sc's
+		uf.delegate(c->_pd->sel(),0,UtcbFrame::NONE,Crd::OBJ | Crd::PD_EC |
+				Crd::PD_PD | Crd::PD_PT | Crd::PD_SM);
 		uf.delegate(c->_ec->sel(),1);
 		uf.delegate(c->_sc->sel(),2);
 		uf << E_SUCCESS;
@@ -364,7 +371,7 @@ void ChildManager::Portals::service(capsel_t pid) {
 				uf.finish_input();
 
 				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
-				const ServiceRegistry::Service* s = cm->get_service(name);
+				const ServiceRegistry::Service* s = cm->get_service(name,true);
 
 				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
 				uf << E_SUCCESS << s->available();
@@ -495,6 +502,88 @@ void ChildManager::Portals::io(capsel_t pid) {
 			}
 		}
 		uf << E_SUCCESS;
+	}
+	catch(const Exception& e) {
+		Syscalls::revoke(uf.delegation_window(),true);
+		uf.clear();
+		uf << e.code();
+	}
+}
+
+void ChildManager::Portals::sc(capsel_t pid) {
+	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
+	UtcbFrameRef uf;
+	try {
+		ScopedLock<RCULock> guard(&RCU::lock());
+		Child *c = cm->get_child(pid);
+		Sc::Command cmd;
+		uf >> cmd;
+
+		switch(cmd) {
+			case Sc::START: {
+				String name;
+				Qpd qpd;
+				cpu_t cpu;
+				capsel_t ec = uf.get_delegated(0).offset();
+				uf >> name >> cpu >> qpd;
+				uf.finish_input();
+
+				// TODO later one could add policy here and adjust the qpd accordingly
+
+				capsel_t sc;
+				{
+					UtcbFrame puf;
+					puf.accept_delegates(0);
+					puf << Sc::START << name << cpu << qpd;
+					puf.delegate(ec);
+					CPU::current().sc_pt().call(puf);
+					puf.check_reply();
+					sc = puf.get_delegated(0).offset();
+					puf >> qpd;
+				}
+
+				{
+					ScopedLock<UserSm> guard(&c->_sm);
+					c->_scs.append(new Child::SchedEntity(name,cpu,sc));
+				}
+
+				LOG(Logging::ADMISSION,Serial::get().writef("Child '%s' created sc '%s' on cpu %u (%u)\n",
+							c->cmdline().str(),name.str(),cpu,sc));
+
+				uf.accept_delegates();
+				uf.delegate(sc);
+				uf << E_SUCCESS << qpd;
+			}
+			break;
+
+			case Sc::STOP: {
+				capsel_t sc = uf.get_translated(0).offset();
+				uf.finish_input();
+
+				{
+					ScopedLock<UserSm> guard(&c->_sm);
+					for(SList<Child::SchedEntity>::iterator it = c->_scs.begin(); it != c->_scs.end(); ++it) {
+						if(it->cap() == sc) {
+							c->_scs.remove(&*it);
+							delete &*it;
+							break;
+						}
+					}
+				}
+
+				{
+					UtcbFrame puf;
+					puf << Sc::STOP;
+					puf.delegate(sc);
+					CPU::current().sc_pt().call(puf);
+					puf.check_reply();
+				}
+
+				LOG(Logging::ADMISSION,Serial::get().writef("Child '%s' destroyed sc (%u)\n",
+							c->cmdline().str(),sc));
+			}
+			break;
+		}
 	}
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);

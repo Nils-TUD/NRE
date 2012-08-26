@@ -3,13 +3,13 @@
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
 bin/apps/root
-bin/apps/admission provides=admission
 bin/apps/acpi provides=acpi
 bin/apps/keyboard provides=keyboard
 bin/apps/reboot provides=reboot
 bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
+bin/apps/timetracker provides=timetracker
 bin/apps/vancouver
 bin/apps/guest_mini
 

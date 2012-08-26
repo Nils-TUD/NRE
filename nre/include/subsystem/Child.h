@@ -27,6 +27,8 @@
 #include <mem/RegionManager.h>
 #include <utcb/UtcbFrame.h>
 #include <util/BitField.h>
+#include <util/SList.h>
+#include <String.h>
 #include <RCU.h>
 #include <CPU.h>
 #include <util/Atomic.h>
@@ -42,6 +44,28 @@ OStream &operator<<(OStream &os,const Child &c);
 class Child : public RCUObject {
 	friend class ChildManager;
 	friend OStream &operator<<(OStream &os,const Child &c);
+
+	class SchedEntity : public nre::SListItem {
+	public:
+		explicit SchedEntity(const nre::String &name,cpu_t cpu,capsel_t cap)
+			: nre::SListItem(), _name(name), _cpu(cpu), _cap(cap) {
+		}
+
+		const nre::String &name() const {
+			return _name;
+		}
+		cpu_t cpu() const {
+			return _cpu;
+		}
+		capsel_t cap() const {
+			return _cap;
+		}
+
+	private:
+		nre::String _name;
+		cpu_t _cpu;
+		capsel_t _cap;
+	};
 
 public:
 	const String &cmdline() const {
@@ -81,8 +105,8 @@ public:
 private:
 	explicit Child(ChildManager *cm,const char *cmdline)
 			: RCUObject(), _cm(cm), _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
-			  _pts(), _ptcount(), _regs(), _io(), _entry(), _main(), _stack(), _utcb(), _hip(),
-			  _last_fault_addr(), _last_fault_cpu(), _gsis(),
+			  _pts(), _ptcount(), _regs(), _io(), _scs(), _entry(), _main(), _stack(), _utcb(),
+			  _hip(), _last_fault_addr(), _last_fault_cpu(), _gsis(),
 			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _sm() {
 	}
 	virtual ~Child() {
@@ -97,6 +121,7 @@ private:
 			delete _pd;
 		release_gsis();
 		release_ports();
+		release_scs();
 		CapSelSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
 	}
 
@@ -122,6 +147,19 @@ private:
 		}
 	}
 
+	void release_scs() {
+		UtcbFrame uf;
+		for(SList<SchedEntity>::iterator it = _scs.begin(); it != _scs.end(); ) {
+			uf << Sc::STOP;
+			uf.translate(it->cap());
+			CPU::current().sc_pt().call(uf);
+			uf.clear();
+			SList<SchedEntity>::iterator next = ++it;
+			delete &*it;
+			it = next;
+		}
+	}
+
 	Child(const Child&);
 	Child& operator=(const Child&);
 
@@ -135,6 +173,7 @@ private:
 	size_t _ptcount;
 	ChildMemory _regs;
 	RegionManager _io;
+	SList<SchedEntity> _scs;
 	uintptr_t _entry;
 	uintptr_t _main;
 	uintptr_t _stack;

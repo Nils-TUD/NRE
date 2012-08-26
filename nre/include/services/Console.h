@@ -103,6 +103,17 @@ public:
 	}
 
 	/**
+	 * Clears the given page
+	 *
+	 * @param page the page
+	 */
+	void clear(uint page) {
+		assert(page < Console::TEXT_PAGES);
+		uintptr_t addr = screen().virt() + Console::TEXT_OFF + page * Console::PAGE_SIZE;
+		memset(reinterpret_cast<void*>(addr),	0,Console::PAGE_SIZE);
+	}
+
+	/**
 	 * Sets the given registers
 	 *
 	 * @param regs the registers

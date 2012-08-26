@@ -72,6 +72,7 @@ public:
 		SRV_IO			= 0x25,		// io ports portal
 		SRV_GSI			= 0x26,		// global system interrupt portal
 		SRV_DS			= 0x27,		// dataspace portal
+		SRV_SC			= 0x28,		// Sc portal
 	};
 
 	/**

@@ -44,14 +44,15 @@ class ChildManager {
 	class Portals {
 	public:
 		enum {
-			COUNT	= 8
+			COUNT	= 9
 		};
 
 		PORTAL static void startup(capsel_t pid);
 		PORTAL static void init_caps(capsel_t pid);
 		PORTAL static void service(capsel_t pid);
-		PORTAL static void io(capsel_t);
-		PORTAL static void gsi(capsel_t);
+		PORTAL static void io(capsel_t pid);
+		PORTAL static void sc(capsel_t pid);
+		PORTAL static void gsi(capsel_t pid);
 		PORTAL static void dataspace(capsel_t pid);
 		PORTAL static void pf(capsel_t pid);
 		PORTAL static void exception(capsel_t pid);
@@ -90,6 +91,20 @@ public:
 		_regsm.up();
 	}
 
+	const ServiceRegistry::Service *get_service(const String &name,bool ask_parent) {
+		ScopedLock<UserSm> guard(&_sm);
+		const ServiceRegistry::Service* s = registry().find(name);
+		if(!s) {
+			if(!ask_parent)
+				throw ChildException(E_NOT_FOUND);
+			BitField<Hip::MAX_CPUS> available;
+			capsel_t caps = get_parent_service(name.str(),available);
+			s = _registry.reg(0,name,caps,1 << CPU::order(),available);
+			_regsm.up();
+		}
+		return s;
+	}
+
 	void unreg_service(Child *c,const String& name) {
 		ScopedLock<UserSm> guard(&_sm);
 		_registry.unreg(c,name);
@@ -102,18 +117,6 @@ private:
 				return i;
 		}
 		return MAX_CHILDS;
-	}
-
-	const ServiceRegistry::Service *get_service(const String &name) {
-		ScopedLock<UserSm> guard(&_sm);
-		const ServiceRegistry::Service* s = registry().find(name);
-		if(!s) {
-			BitField<Hip::MAX_CPUS> available;
-			capsel_t caps = get_parent_service(name.str(),available);
-			s = _registry.reg(0,name,caps,1 << CPU::order(),available);
-			_regsm.up();
-		}
-		return s;
 	}
 
 	static inline size_t per_child_caps() {

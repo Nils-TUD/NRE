@@ -14,21 +14,29 @@
  * General Public License version 2 for more details.
  */
 
-#include <arch/Startup.h>
-#include <services/Admission.h>
+#pragma once
 
-namespace nre {
+#include <util/SList.h>
+#include <String.h>
 
-Connection *AdmissionSession::_con = 0;
-AdmissionSession::Init AdmissionSession::_init INIT_PRIO_SERIAL;
-
-AdmissionSession::Init::Init() {
-	try {
-		AdmissionSession::_con = new Connection("admission");
+class TimeUser : public nre::SListItem {
+public:
+	explicit TimeUser(const nre::String &name,cpu_t cpu,capsel_t sc)
+		: nre::SListItem(), _name(name), _cpu(cpu), _sc(sc) {
 	}
-	catch(...) {
-		// this happens in root and the admission-service itself
-	}
-}
 
-}
+	const nre::String &name() const {
+		return _name;
+	}
+	cpu_t cpu() const {
+		return _cpu;
+	}
+	capsel_t cap() const {
+		return _sc;
+	}
+
+private:
+	nre::String _name;
+	cpu_t _cpu;
+	capsel_t _sc;
+};

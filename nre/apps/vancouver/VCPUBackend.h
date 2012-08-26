@@ -22,8 +22,8 @@
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
 #include <kobj/VCpu.h>
+#include <kobj/Sc.h>
 #include <utcb/UtcbFrame.h>
-#include <services/Admission.h>
 #include <Assert.h>
 #include <Compiler.h>
 
@@ -45,9 +45,9 @@ class VCPUBackend {
 public:
 	VCPUBackend(Motherboard *mb,VCVCpu *vcpu,bool use_svm,cpu_t cpu)
 			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
-			  _as(&_vcpu,nre::String("VMM-VCPU")) {
+			  _sc(&_vcpu,nre::Qpd()) {
 		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
-		_as.start();
+		_sc.start(nre::String("VMM-VCPU"));
 		_mb = mb;
 	}
 
@@ -101,7 +101,7 @@ private:
 	capsel_t _caps;
 	nre::Sm _sm;
 	nre::VCpu _vcpu;
-	nre::AdmissionSession _as;
+	nre::Sc _sc;
 	static Motherboard *_mb;
 	static bool _tsc_offset;
 	static bool _rdtsc_exit;

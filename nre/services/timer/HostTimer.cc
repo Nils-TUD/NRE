@@ -16,7 +16,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <services/Admission.h>
+#include <kobj/Sc.h>
 #include <stream/Serial.h>
 #include <util/Date.h>
 #include <util/Topology.h>
@@ -123,16 +123,16 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 		if((_per_cpu[cpu]->slot_count > 0) || !_per_cpu[cpu]->has_timer) {
 			// Create wakeup thread
 			GlobalThread *gt = new GlobalThread(xcpu_wakeup_thread,cpu);
-			AdmissionSession *as = new AdmissionSession(gt,String("Timer-Wakeup"));
+			Sc *sc = new Sc(gt,Qpd());
 			gt->set_tls(Thread::TLS_PARAM,this);
-			as->start();
+			sc->start(String("Timer-Wakeup"));
 			xcpu_threads_started++;
 		}
 		if(_per_cpu[cpu]->has_timer) {
 			GlobalThread *gt = new GlobalThread(gsi_thread,cpu);
-			AdmissionSession *as = new AdmissionSession(gt,String("Timer-GSI"));
+			Sc *sc = new Sc(gt,Qpd());
 			gt->set_tls(Thread::TLS_PARAM,this);
-			as->start();
+			sc->start(String("Timer-GSI"));
 		}
 	}
 

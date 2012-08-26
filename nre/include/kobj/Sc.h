@@ -20,8 +20,7 @@
 #include <kobj/GlobalThread.h>
 #include <kobj/VCpu.h>
 #include <kobj/Pd.h>
-#include <util/ScopedCapSels.h>
-#include <Syscalls.h>
+#include <String.h>
 
 namespace nre {
 
@@ -31,6 +30,11 @@ namespace nre {
  */
 class Sc : public ObjCap {
 public:
+	enum Command {
+		START,
+		STOP
+	};
+
 	/**
 	 * Creates a new Sc that is bound to the given GlobalThread. Note that it does NOT start it. Please
 	 * call start() afterwards.
@@ -52,6 +56,10 @@ public:
 	 */
 	explicit Sc(VCpu *vcpu,Qpd qpd) : ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
 	}
+	/**
+	 * Destructor. Stops the associated thread.
+	 */
+	virtual ~Sc();
 
 	/**
 	 * @return the ec it is bound to
@@ -60,7 +68,7 @@ public:
 		return _ec;
 	}
 	/**
-	 * @return the quantum-priority descriptor
+	 * @return the quantum-priority descriptor (might be changed by start())
 	 */
 	Qpd qpd() const {
 		return _qpd;
@@ -75,21 +83,7 @@ public:
 	/**
 	 * Starts the Sc, i.e. the attached GlobalThread.
 	 */
-	void start() {
-		ScopedCapSels scs;
-		// in this case we should assign the selector before it has been successfully created
-		// because the Sc starts immediatly. therefore, it should be completely initialized before
-		// its started.
-		try {
-			sel(scs.get());
-			Syscalls::create_sc(scs.get(),_ec->sel(),_qpd,_pd->sel());
-			scs.release();
-		}
-		catch(...) {
-			sel(INVALID);
-			throw;
-		}
-	}
+	void start(const String &name);
 
 private:
 	Sc(const Sc&);

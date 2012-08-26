@@ -70,6 +70,12 @@ public:
 		SM_DOWN = FLAG0,
 		SM_ZERO	= FLAG0 | FLAG1
 	};
+	/**
+	 * Sc operations
+	 */
+	enum ScOp {
+		GETTIME	= 0
+	};
 
 	/**
 	 * Calls the given portal
@@ -172,6 +178,19 @@ public:
 	 */
 	static inline void sm_ctrl(capsel_t sm,SmOp op) {
 		SyscallABI::syscall(sm << 8 | SM_CTRL | op);
+	}
+
+	/**
+	 * Get consumed CPU time of the given Sc
+	 *
+	 * @param sc the capability selector for the Sc
+	 * @return the consumed CPU time in microseconds
+	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
+	 */
+	static inline timevalue_t sc_time(capsel_t sc) {
+		word_t out1,out2;
+		SyscallABI::syscall(sc << 8 | SC_CTRL | GETTIME,0,0,0,0,out1,out2);
+		return (static_cast<timevalue_t>(out1) << 32) | out2;
 	}
 
 	/**
