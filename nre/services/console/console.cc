@@ -22,6 +22,7 @@ using namespace nre;
 
 int main() {
 	ConsoleService *srv = new ConsoleService("console");
+	srv->reg();
 	Connection con("keyboard");
 	KeyboardSession kb(con);
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {

@@ -41,7 +41,7 @@ static PingpongService *srv;
 
 class PingpongSession : public ServiceSession {
 public:
-	PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+	explicit PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: ServiceSession(s,id,caps,func) {
 	}
 
@@ -50,7 +50,7 @@ public:
 
 class PingpongService : public Service {
 public:
-	PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
+	explicit PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
 	}
 
 	void wait() {
@@ -89,7 +89,9 @@ void PingpongService::portal(capsel_t) {
 
 static int pingpong_server() {
 	srv = new PingpongService();
+	srv->reg();
 	srv->wait();
+	srv->unreg();
 	delete srv;
 	return 0;
 }

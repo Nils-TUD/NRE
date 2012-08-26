@@ -65,7 +65,8 @@ int main() {
 		Serial::get() << e;
 	}
 
-	new Service("acpi",CPUSet(CPUSet::ALL),portal_acpi);
+	Service *srv = new Service("acpi",CPUSet(CPUSet::ALL),portal_acpi);
+	srv->reg();
 	Sm sm(0);
 	sm.down();
 	return 0;

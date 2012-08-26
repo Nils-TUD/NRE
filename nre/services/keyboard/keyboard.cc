@@ -167,11 +167,13 @@ int main() {
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
+	kbsrv->reg();
 	if(hostkb->mouse_enabled()) {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
 		GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
 		AdmissionSession *as = new AdmissionSession(gt,String("Mouse"));
 		as->start();
+		mousesrv->reg();
 	}
 
 	kbhandler(0);

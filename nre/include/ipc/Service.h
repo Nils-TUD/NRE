@@ -77,7 +77,8 @@ public:
 
 	/**
 	 * Constructor. Creates portals on the specified CPUs to accept client sessions and creates
-	 * Threads to handle <portal>. Afterwards, the service is registered at the parent.
+	 * Threads to handle <portal>. Note that you have to call reg() afterwards to finally register
+	 * the service.
 	 *
 	 * @param name the name of the service
 	 * @param cpus the CPUs on which you want to provide the service
@@ -94,13 +95,11 @@ public:
 			else
 				_insts[i] = 0;
 		}
-		reg();
 	}
 	/**
-	 * Destroys this service, i.e. unregisters it and destroys all sessions
+	 * Destroys this service, i.e. destroys all sessions. You should have called unreg() before.
 	 */
 	virtual ~Service() {
-		unreg();
 		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
 			ServiceSession *sess = rcu_dereference(_sessions[i]);
 			if(sess)
@@ -111,6 +110,26 @@ public:
 		delete[] _insts;
 		CapSelSpace::get().free(_caps,MAX_SESSIONS << CPU::order());
 		CapSelSpace::get().free(_regcaps,1 << CPU::order());
+	}
+
+	/**
+	 * Registers the service at the parent
+	 */
+	void reg() {
+		UtcbFrame uf;
+		uf.delegate(CapRange(_regcaps,1 << CPU::order(),Crd::OBJ_ALL));
+		uf << REGISTER << String(_name) << _reg_cpus;
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
+	}
+	/**
+	 * Unregisters the service at the parent
+	 */
+	void unreg() {
+		UtcbFrame uf;
+		uf << UNREGISTER << String(_name);
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
 	}
 
 	/**
@@ -219,20 +238,6 @@ private:
 	 * @param id the session-id
 	 */
 	virtual void created_session(UNUSED size_t id) {
-	}
-
-	void reg() {
-		UtcbFrame uf;
-		uf.delegate(CapRange(_regcaps,1 << CPU::order(),Crd::OBJ_ALL));
-		uf << REGISTER << String(_name) << _reg_cpus;
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
-	}
-	void unreg() {
-		UtcbFrame uf;
-		uf << UNREGISTER << String(_name);
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
 	}
 
 	void add_session(ServiceSession *sess) {

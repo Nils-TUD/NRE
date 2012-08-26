@@ -109,6 +109,7 @@ void AdmissionService::portal(capsel_t pid) {
 
 int main() {
 	srv = new AdmissionService("admission");
+	srv->reg();
 	Sm sm(0);
 	sm.down();
 	return 0;

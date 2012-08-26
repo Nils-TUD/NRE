@@ -108,6 +108,7 @@ PORTAL static void portal_timer(capsel_t pid) {
 int main() {
 	timer = new HostTimer();
 	srv = new TimerService("timer",portal_timer);
+	srv->reg();
 	Sm sm(0);
 	sm.down();
 	return 0;

@@ -86,7 +86,7 @@ private:
 
 class ShmService : public Service {
 public:
-	ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
+	explicit ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
 		UtcbFrameRef uf(get_thread(CPU::current().log_id())->utcb());
 		uf.accept_delegates(0);
 	}
@@ -151,7 +151,9 @@ static int shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
+	srv->reg();
 	srv->wait();
+	srv->unreg();
 	delete srv;
 	return 0;
 }
