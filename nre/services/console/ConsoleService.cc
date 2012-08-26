@@ -32,13 +32,12 @@ ConsoleService::ConsoleService(const char *name)
 	}
 
 	// add dummy session for boot screen and HV screen
-	ConsoleSessionData *sess = new ConsoleSessionData(this,0,caps(),0);
+	ConsoleSessionData *sess = static_cast<ConsoleSessionData*>(new_session());
 	DataSpace *ds = new DataSpace(ExecEnv::PAGE_SIZE * Screen::PAGES,DataSpaceDesc::ANONYMOUS,
 			DataSpaceDesc::RW);
 	// copy screen to buffer
 	memcpy(reinterpret_cast<void*>(ds->virt()),reinterpret_cast<void*>(_screen->mem().virt()),
 			ExecEnv::PAGE_SIZE * Screen::PAGES);
-	add_session(sess);
 	sess->create(0,ds,2);
 	_switcher.start();
 }

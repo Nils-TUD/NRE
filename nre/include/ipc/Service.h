@@ -28,6 +28,7 @@
 #include <util/ScopedPtr.h>
 #include <util/CPUSet.h>
 #include <util/BitField.h>
+#include <Logging.h>
 #include <RCU.h>
 #include <CPU.h>
 #include <util/Math.h>
@@ -181,24 +182,22 @@ public:
 
 protected:
 	/**
-	 * Adds the given session
+	 * Creates a new session in a free slot.
 	 *
-	 * @param sess the session
+	 * @return the created session
+	 * @throws ServiceException if there are no free slots anymore
 	 */
-	void add_session(ServiceSession *sess) {
-		rcu_assign_pointer(_sessions[sess->id()],sess);
-		created_session(sess->id());
-	}
-	/**
-	 * Removes the given session
-	 *
-	 * @param sess the session
-	 */
-	void remove_session(ServiceSession *sess) {
-		rcu_assign_pointer(_sessions[sess->id()],0);
-		sess->invalidate();
-		RCU::invalidate(sess);
-		RCU::gc(true);
+	ServiceSession *new_session() {
+		ScopedLock<UserSm> guard(&_sm);
+		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
+			if(_sessions[i] == 0) {
+				LOG(Logging::SERVICES,Serial::get() << "Creating session " << i
+						<< " (caps=" << _caps + (i << CPU::order()) << ")\n");
+				add_session(create_session(i,_caps + (i << CPU::order()),_func));
+				return _sessions[i];
+			}
+		}
+		throw ServiceException(E_CAPACITY);
 	}
 
 private:
@@ -236,19 +235,21 @@ private:
 		uf.check_reply();
 	}
 
-	ServiceSession *new_session() {
-		ScopedLock<UserSm> guard(&_sm);
-		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
-			if(_sessions[i] == 0) {
-				add_session(create_session(i,_caps + (i << CPU::order()),_func));
-				return _sessions[i];
-			}
-		}
-		throw ServiceException(E_CAPACITY);
+	void add_session(ServiceSession *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],sess);
+		created_session(sess->id());
 	}
+	void remove_session(ServiceSession *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],0);
+		sess->invalidate();
+		RCU::invalidate(sess);
+		RCU::gc(true);
+	}
+
 	void destroy_session(capsel_t pid) {
 		ScopedLock<UserSm> guard(&_sm);
 		size_t i = (pid - _caps) >> CPU::order();
+		LOG(Logging::SERVICES,Serial::get() << "Destroying session " << i << "\n");
 		ServiceSession *sess = _sessions[i];
 		if(!sess)
 			throw ServiceException(E_NOT_FOUND);
