@@ -21,7 +21,11 @@
 #include <kobj/Ports.h>
 #include <kobj/Sm.h>
 
+class BufferedLog;
+
 class Log : public nre::BaseSerial {
+	friend class BufferedLog;
+
 	enum {
 		COM1	= 0x3F8,
 		COM2	= 0x2E8,
@@ -52,21 +56,15 @@ private:
 
 	void write(uint sessid,const char *line,size_t len);
 
-	void out(char c);
-	void out(const char *str) {
-		while(*str)
-			out(*str++);
-	}
-	void buffer(char c);
-
 	virtual void write(char c) {
 		if(c == '\0')
 			return;
 
-		if(_to_ser)
-			out(c);
-		else
-			buffer(c);
+		if(c == '\n')
+			write('\r');
+		while((_ports.in<uint8_t>(5) & 0x20) == 0)
+			;
+		_ports.out<uint8_t>(c,0);
 	}
 
 	// note that we use a portal here instead of shared-memory because dataspace sharing doesn't
@@ -80,10 +78,27 @@ private:
 
 	nre::Ports _ports;
 	nre::UserSm _sm;
-	bool _to_ser;
-	size_t _bufpos;
-	char _buf[MAX_LINE_LEN + 1];
 	static Log _inst;
 	static nre::Service *_srv;
 	static const char *_colors[];
+};
+
+class BufferedLog : public nre::BaseSerial {
+	explicit BufferedLog();
+
+	virtual void write(char c) {
+		if(c == '\0')
+			return;
+
+		if(_bufpos == sizeof(_buf) || c == '\n') {
+			Log::get().write(Log::ROOT_SESS,_buf,_bufpos);
+			_bufpos = 0;
+		}
+		if(c != '\n')
+			_buf[_bufpos++] = c;
+	}
+
+	size_t _bufpos;
+	char _buf[MAX_LINE_LEN + 1];
+	static BufferedLog _inst;
 };
