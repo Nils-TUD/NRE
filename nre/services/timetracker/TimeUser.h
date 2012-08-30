@@ -22,9 +22,9 @@
 
 class TimeUser : public nre::SListItem {
 public:
-	explicit TimeUser(const nre::String &name,cpu_t cpu,capsel_t sc)
-		: nre::SListItem(), _name(name), _cpu(cpu), _sc(sc), _last(nre::Syscalls::sc_time(_sc)),
-		  _lastdiff() {
+	explicit TimeUser(const nre::String &name,cpu_t cpu,capsel_t sc,bool idle)
+		: nre::SListItem(), _name(name), _cpu(cpu), _sc(sc), _idle(idle),
+		  _last(nre::Syscalls::sc_time(_sc)), _lastdiff() {
 	}
 
 	const nre::String &name() const {
@@ -35,6 +35,9 @@ public:
 	}
 	capsel_t cap() const {
 		return _sc;
+	}
+	bool idle() const {
+		return _idle;
 	}
 	timevalue_t ms_last_sec(bool update) {
 		timevalue_t res = _lastdiff;
@@ -51,6 +54,7 @@ private:
 	nre::String _name;
 	cpu_t _cpu;
 	capsel_t _sc;
+	bool _idle;
 	timevalue_t _last;
 	timevalue_t _lastdiff;
 };

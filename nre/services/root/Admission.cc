@@ -20,6 +20,7 @@
 #include <Syscalls.h>
 #include <Logging.h>
 #include "Admission.h"
+#include "Hypervisor.h"
 
 using namespace nre;
 
@@ -35,12 +36,20 @@ void Admission::notify_start(const String &name,cpu_t cpu,capsel_t sc) {
 			_tt_con = con.release();
 			_tt_sess = new TimeTrackerSession(*_tt_con);
 
+			// add idle Scs
+			for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+				char name[32];
+				OStringStream stream(name,sizeof(name));
+				stream << "CPU" << it->log_id() << "-idle";
+				capsel_t sc = Hypervisor::request_idle_sc(it->phys_id());
+				_tt_sess->start(String(name),it->log_id(),sc,true);
+			}
 			// notify the timetracker about the already existing ones
 			for(SList<Admission::SchedEntity>::iterator it = _list.begin(); it != _list.end(); ++it)
-				_tt_sess->start(it->name(),it->cpu(),it->cap());
+				_tt_sess->start(it->name(),it->cpu(),it->cap(),false);
 		}
 
-		_tt_sess->start(name,cpu,sc);
+		_tt_sess->start(name,cpu,sc,false);
 	}
 	catch(...) {
 		// ignore it

@@ -61,10 +61,10 @@ public:
 	/**
 	 * Starts the given Sc
 	 */
-	void start(const String &name,cpu_t cpu,capsel_t sc) {
+	void start(const String &name,cpu_t cpu,capsel_t sc,bool idle) {
 		UtcbFrame uf;
 		uf.delegate(sc);
-		uf << TimeTracker::START << name << cpu;
+		uf << TimeTracker::START << name << cpu << idle;
 		Pt pt(caps() + CPU::current().log_id());
 		pt.call(uf);
 		uf.check_reply();

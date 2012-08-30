@@ -24,7 +24,7 @@
 #include "TimeUser.h"
 
 #define MAX_NAME_LEN	20
-#define MAX_TIME_LEN	5
+#define MAX_TIME_LEN	6
 #define ROWS			(Console::ROWS - 3)
 #define MS_PER_SEC		(1000 * 1000)
 
@@ -33,7 +33,7 @@ using namespace nre;
 class TimeTrackerServiceSession : public ServiceSession {
 public:
 	explicit TimeTrackerServiceSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _top(0), _users(), _cons_con("console"),
+		: ServiceSession(s,id,caps,func), _top(0), _lastcputotal(), _users(), _cons_con("console"),
 		  _cons_sess(_cons_con,1) {
 	}
 
@@ -44,6 +44,13 @@ public:
 		_top = top;
 	}
 
+	timevalue_t last_cpu_total(cpu_t cpu) const {
+		return _lastcputotal[cpu];
+	}
+	void last_cpu_total(cpu_t cpu,timevalue_t val) {
+		_lastcputotal[cpu] = val;
+	}
+
 	ConsoleSession &console() {
 		return _cons_sess;
 	}
@@ -51,9 +58,9 @@ public:
 		return _users;
 	}
 
-	void start(const String &name,cpu_t cpu,capsel_t sc) {
+	void start(const String &name,cpu_t cpu,capsel_t sc,bool idle) {
 		ScopedLock<UserSm> guard(&sm);
-		_users.append(new TimeUser(name,cpu,sc));
+		_users.append(new TimeUser(name,cpu,sc,idle));
 	}
 
 	void stop(capsel_t sc,cpu_t) {
@@ -70,6 +77,7 @@ public:
 	static UserSm sm;
 private:
 	size_t _top;
+	timevalue_t _lastcputotal[Hip::MAX_CPUS];
 	SList<TimeUser> _users;
 	Connection _cons_con;
 	ConsoleSession _cons_sess;
@@ -120,11 +128,12 @@ void TimeTrackerService::portal(capsel_t pid) {
 			case TimeTracker::START: {
 				String name;
 				cpu_t cpu;
+				bool idle;
 				capsel_t cap = uf.get_delegated(0).offset();
-				uf >> name >> cpu;
+				uf >> name >> cpu >> idle;
 				uf.finish_input();
 
-				sess->start(name,cpu,cap);
+				sess->start(name,cpu,cap,idle);
 				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}
@@ -150,6 +159,7 @@ void TimeTrackerService::portal(capsel_t pid) {
 }
 
 static const char *getname(const String &name,size_t &len) {
+	// don't display the path to the program (might be long) and cut off arguments
 	size_t lastslash = 0,end = name.length();
 	for(size_t i = 0; i < name.length(); ++i) {
 		if(name.str()[i] == '/')
@@ -169,6 +179,7 @@ static void refresh_console(TimeTrackerService::iterator sess,ConsoleSession &co
 	cons.clear(0);
 	ConsoleStream stream(cons,0);
 
+	// display header
 	stream.writef("%*s: ",MAX_NAME_LEN,"CPU");
 	for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
 		stream.writef("%*u",MAX_TIME_LEN,cpu->log_id());
@@ -177,22 +188,36 @@ static void refresh_console(TimeTrackerService::iterator sess,ConsoleSession &co
 		stream << '-';
 	stream << '\n';
 
-	size_t y = 0,c = 0;
+	// determine the total time elapsed on each CPU. this way we don't assume that exactly 1sec
+	// has passed since last update and are thus less dependend on the timer-service.
+	static timevalue_t cputotal[Hip::MAX_CPUS];
 	SList<TimeUser> users = sess->users();
-	for(SList<TimeUser>::iterator u = users.begin(); u != users.end(); ++u, ++y) {
+	for(SList<TimeUser>::iterator u = users.begin(); u != users.end(); ++u)
+		cputotal[u->cpu()] += u->ms_last_sec(update);
+
+	size_t y = 0,c = 0;
+	for(SList<TimeUser>::iterator u = users.begin(); c < ROWS && u != users.end(); ++u, ++y) {
 		if(y < sess->top())
 			continue;
 
-		// always update the time, even if we're not displaying it
-		timevalue_t time = u->ms_last_sec(update);
-		if(c < ROWS) {
-			size_t namelen = 0;
-			const char *name = getname(u->name(),namelen);
-			timevalue_t permil = (timevalue_t)(1000 / ((float)MS_PER_SEC / time));
-			stream.writef("%*.*s: %*s%3Lu.%Lu\n",MAX_NAME_LEN,namelen,name,u->cpu() * MAX_TIME_LEN,"",
-					permil / 10,permil % 10);
-			c++;
-		}
+		// don't update the time again
+		timevalue_t time = u->ms_last_sec(false);
+		size_t namelen = 0;
+		const char *name = getname(u->name(),namelen);
+		// determine percentage of time used in the last second on this CPU
+		timevalue_t diff = cputotal[u->cpu()] - sess->last_cpu_total(u->cpu());
+		// writef doesn't support floats, so calculate it with 1000 as base and use the last decimal
+		// for the first fraction-digit.
+		timevalue_t permil = (timevalue_t)(1000 / ((float)diff / time));
+		stream.writef("%*.*s: %*s%3Lu.%Lu\n",MAX_NAME_LEN,namelen,name,u->cpu() * MAX_TIME_LEN,"",
+				permil / 10,permil % 10);
+		c++;
+	}
+
+	// store last cpu total and reset value
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+		sess->last_cpu_total(cputotal[it->log_id()]);
+		cputotal[it->log_id()] = 0;
 	}
 }
 
@@ -244,6 +269,7 @@ static void refresh_thread() {
 	Clock clock(1000);
 	int i = 0;
 	while(1) {
+		timevalue_t next = clock.source_time(1000);
 		{
 			ScopedLock<RCULock> guard(&RCU::lock());
 			TimeTrackerService::iterator it(srv);
@@ -254,7 +280,7 @@ static void refresh_thread() {
 		}
 
 		// wait a second
-		timer.wait_until(clock.source_time(1000));
+		timer.wait_until(next);
 		i++;
 	}
 }
