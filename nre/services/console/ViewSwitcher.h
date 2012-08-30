@@ -44,7 +44,7 @@ public:
 	explicit ViewSwitcher(ConsoleService *srv);
 
 	void start() {
-		_sc.start(nre::String("Console-VS"));
+		_sc.start(nre::String("console-vs"));
 	}
 
 	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);

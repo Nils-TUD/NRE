@@ -47,7 +47,7 @@ public:
 			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
 			  _sc(&_vcpu,nre::Qpd()) {
 		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
-		_sc.start(nre::String("VMM-VCPU"));
+		_sc.start(nre::String("vmm-vcpu"));
 		_mb = mb;
 	}
 

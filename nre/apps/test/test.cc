@@ -136,7 +136,7 @@ int main() {
 		GlobalThread *gt = new GlobalThread(view0,it->log_id());
 		gt->set_tls<uint>(Thread::TLS_PARAM,it->log_id());
 		Sc *sc = new Sc(gt,Qpd());
-		sc->start(String("Test Thread"));
+		sc->start(String("test-thread"));
 		//Sc *sc = new Sc(gt,Qpd());
 		//sc->start();
 	}

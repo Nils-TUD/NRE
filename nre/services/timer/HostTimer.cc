@@ -125,14 +125,14 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 			GlobalThread *gt = new GlobalThread(xcpu_wakeup_thread,cpu);
 			Sc *sc = new Sc(gt,Qpd());
 			gt->set_tls(Thread::TLS_PARAM,this);
-			sc->start(String("Timer-Wakeup"));
+			sc->start(String("timer-wakeup"));
 			xcpu_threads_started++;
 		}
 		if(_per_cpu[cpu]->has_timer) {
 			GlobalThread *gt = new GlobalThread(gsi_thread,cpu);
 			Sc *sc = new Sc(gt,Qpd());
 			gt->set_tls(Thread::TLS_PARAM,this);
-			sc->start(String("Timer-GSI"));
+			sc->start(String("timer-gsi"));
 		}
 	}
 

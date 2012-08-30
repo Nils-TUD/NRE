@@ -36,7 +36,7 @@ public:
 		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()),
 		_sc(&_ec,nre::Qpd()) {
 		_ec.set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
-		_sc.start(nre::String("VMM-Timeouts"));
+		_sc.start(nre::String("vmm-timeouts"));
 	}
 
 	size_t alloc() {

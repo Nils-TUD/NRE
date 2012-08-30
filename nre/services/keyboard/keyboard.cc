@@ -172,7 +172,7 @@ int main() {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
 		GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
 		Sc *sc = new Sc(gt,Qpd());
-		sc->start(String("Mouse"));
+		sc->start(String("mouse"));
 		mousesrv->reg();
 	}
 

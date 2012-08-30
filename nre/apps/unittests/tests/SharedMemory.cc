@@ -72,7 +72,7 @@ public:
 		_ds = ds;
 		_cons = new Consumer<Item>(ds);
 		_sc = new Sc(&_ec,Qpd());
-		_sc->start(String("Shm-receiver"));
+		_sc->start(String("shm-receiver"));
 	}
 
 private:

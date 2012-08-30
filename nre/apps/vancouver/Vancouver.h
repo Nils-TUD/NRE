@@ -35,7 +35,7 @@ public:
 		create_devices(args);
 		create_vcpus();
 		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-		_sc_input.start(nre::String("VMM-input"));
+		_sc_input.start(nre::String("vmm-input"));
 	}
 
 	void reset();
