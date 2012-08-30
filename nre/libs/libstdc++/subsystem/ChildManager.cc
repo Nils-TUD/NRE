@@ -707,6 +707,9 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			if(!src && !dst)
 				continue;
 
+			// also reset the information here
+			ch->_last_fault_addr = 0;
+			ch->_last_fault_cpu = 0;
 			if(src) {
 				src->desc().origin(dstorg);
 				src->all_perms(0);
