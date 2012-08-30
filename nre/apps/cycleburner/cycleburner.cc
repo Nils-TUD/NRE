@@ -40,14 +40,19 @@ static uint8_t sqrtlut[SQRT_LUTSIZE >> SQRT_PRESHIFT];
 
 static void gen_sinlut(void) {
 	for(int i = 0; i < SIN_LUTSIZE / 2; i++) {
-		sinlut[i] = static_cast<int8_t>(fsin(M_PI * 2 * static_cast<float>(i) / SIN_LUTSIZE) * 127);
+		float sinval = M_PI * 2 * static_cast<float>(i) / SIN_LUTSIZE;
+		fsin(sinval);
+		sinlut[i] = static_cast<int8_t>(sinval * 127);
 		sinlut[i + SIN_LUTSIZE / 2] = -sinlut[i];
 	}
 }
 
 static void gen_sqrtlut(void) {
-	for(int i = 0; i < (SQRT_LUTSIZE >> SQRT_PRESHIFT); i++)
-		sqrtlut[i] = fsqrt(i << SQRT_PRESHIFT);
+	for(int i = 0; i < (SQRT_LUTSIZE >> SQRT_PRESHIFT); i++) {
+		float sqrtval = i << SQRT_PRESHIFT;
+		fsqrt(sqrtval);
+		sqrtlut[i] = sqrtval;
+	}
 }
 
 static int16_t lsin(uint8_t v) {
