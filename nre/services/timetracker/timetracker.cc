@@ -182,7 +182,7 @@ static void refresh_console(TimeTrackerService::iterator sess,ConsoleSession &co
 	// display header
 	stream.writef("%*s: ",MAX_NAME_LEN,"CPU");
 	for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
-		stream.writef("%*u",MAX_TIME_LEN,cpu->log_id());
+		stream.writef("%*u ",MAX_TIME_LEN - 1,cpu->log_id());
 	stream.writef("\n");
 	for(int i = 0; i < Console::COLS - 2; i++)
 		stream << '-';
