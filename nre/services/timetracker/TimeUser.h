@@ -17,12 +17,14 @@
 #pragma once
 
 #include <util/SList.h>
+#include <Syscalls.h>
 #include <String.h>
 
 class TimeUser : public nre::SListItem {
 public:
 	explicit TimeUser(const nre::String &name,cpu_t cpu,capsel_t sc)
-		: nre::SListItem(), _name(name), _cpu(cpu), _sc(sc) {
+		: nre::SListItem(), _name(name), _cpu(cpu), _sc(sc), _last(nre::Syscalls::sc_time(_sc)),
+		  _lastdiff() {
 	}
 
 	const nre::String &name() const {
@@ -34,9 +36,21 @@ public:
 	capsel_t cap() const {
 		return _sc;
 	}
+	timevalue_t ms_last_sec(bool update) {
+		timevalue_t res = _lastdiff;
+		if(update) {
+			timevalue_t time = nre::Syscalls::sc_time(_sc);
+			res = time - _last;
+			_last = time;
+		}
+		_lastdiff = res;
+		return res;
+	}
 
 private:
 	nre::String _name;
 	cpu_t _cpu;
 	capsel_t _sc;
+	timevalue_t _last;
+	timevalue_t _lastdiff;
 };

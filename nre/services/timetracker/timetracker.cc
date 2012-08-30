@@ -23,12 +23,25 @@
 #include <util/Clock.h>
 #include "TimeUser.h"
 
+#define MAX_NAME_LEN	20
+#define MAX_TIME_LEN	5
+#define ROWS			(Console::ROWS - 3)
+#define MS_PER_SEC		(1000 * 1000)
+
 using namespace nre;
 
 class TimeTrackerServiceSession : public ServiceSession {
 public:
 	explicit TimeTrackerServiceSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _users(), _cons_con("console"), _cons_sess(_cons_con,1) {
+		: ServiceSession(s,id,caps,func), _top(0), _users(), _cons_con("console"),
+		  _cons_sess(_cons_con,1) {
+	}
+
+	size_t top() const {
+		return _top;
+	}
+	void top(size_t top) {
+		_top = top;
 	}
 
 	ConsoleSession &console() {
@@ -56,6 +69,7 @@ public:
 
 	static UserSm sm;
 private:
+	size_t _top;
 	SList<TimeUser> _users;
 	Connection _cons_con;
 	ConsoleSession _cons_sess;
@@ -135,6 +149,95 @@ void TimeTrackerService::portal(capsel_t pid) {
 	}
 }
 
+static const char *getname(const String &name,size_t &len) {
+	size_t lastslash = 0,end = name.length();
+	for(size_t i = 0; i < name.length(); ++i) {
+		if(name.str()[i] == '/')
+			lastslash = i + 1;
+		if(name.str()[i] == ' ') {
+			end = i;
+			break;
+		}
+	}
+	len = end - lastslash;
+	return name.str() + lastslash;
+}
+
+static void refresh_console(TimeTrackerService::iterator sess,ConsoleSession &cons,bool update) {
+	static UserSm sm;
+	ScopedLock<UserSm> guard(&sm);
+	cons.clear(0);
+	ConsoleStream stream(cons,0);
+
+	stream.writef("%*s: ",MAX_NAME_LEN,"CPU");
+	for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
+		stream.writef("%*u",MAX_TIME_LEN,cpu->log_id());
+	stream.writef("\n");
+	for(int i = 0; i < Console::COLS - 2; i++)
+		stream << '-';
+	stream << '\n';
+
+	size_t y = 0,c = 0;
+	SList<TimeUser> users = sess->users();
+	for(SList<TimeUser>::iterator u = users.begin(); u != users.end(); ++u, ++y) {
+		if(y < sess->top())
+			continue;
+
+		// always update the time, even if we're not displaying it
+		timevalue_t time = u->ms_last_sec(update);
+		if(c < ROWS) {
+			size_t namelen = 0;
+			const char *name = getname(u->name(),namelen);
+			timevalue_t permil = (timevalue_t)(1000 / ((float)MS_PER_SEC / time));
+			stream.writef("%*.*s: %*s%3Lu.%Lu\n",MAX_NAME_LEN,namelen,name,u->cpu() * MAX_TIME_LEN,"",
+					permil / 10,permil % 10);
+			c++;
+		}
+	}
+}
+
+static void input_thread(void*) {
+	Connection timercon("timer");
+	TimerSession timer(timercon);
+	Clock clock(1000);
+	while(1) {
+		{
+			ScopedLock<RCULock> guard(&RCU::lock());
+			TimeTrackerService::iterator it(srv);
+			for(it = srv->sessions_begin(); it != srv->sessions_end(); ++it) {
+				ConsoleSession &cons = it->console();
+				bool changed = false;
+				while(cons.consumer().has_data()) {
+					Console::ReceivePacket *pk = cons.consumer().get();
+					if(pk->flags & Keyboard::RELEASE) {
+						switch(pk->keycode) {
+							case Keyboard::VK_UP:
+								if(it->top() > 0) {
+									it->top(it->top() - 1);
+									changed = true;
+								}
+								break;
+							case Keyboard::VK_DOWN:
+								if(it->users().length() > ROWS + it->top()) {
+									it->top(it->top() + 1);
+									changed = true;
+								}
+								break;
+						}
+					}
+					cons.consumer().next();
+				}
+
+				if(changed)
+					refresh_console(it,cons,false);
+			}
+		}
+
+		// wait a bit
+		timer.wait_until(clock.source_time(50));
+	}
+}
+
 static void refresh_thread() {
 	Connection timercon("timer");
 	TimerSession timer(timercon);
@@ -146,21 +249,7 @@ static void refresh_thread() {
 			TimeTrackerService::iterator it(srv);
 			for(it = srv->sessions_begin(); it != srv->sessions_end(); ++it) {
 				ConsoleSession &cons = it->console();
-				cons.clear(0);
-				ConsoleStream stream(cons,0);
-
-				stream.writef("%20s  ","CPUs");
-				for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
-					stream.writef("%-12u",cpu->log_id());
-				stream.writef("\n");
-				for(int i = 0; i < Console::COLS; i++)
-					stream << '-';
-
-				SList<TimeUser> users = it->users();
-				for(SList<TimeUser>::iterator u = users.begin(); u != users.end(); ++u) {
-					timevalue_t time = Syscalls::sc_time(u->cap());
-					stream.writef("%20.20s: %*s%Lu\n",u->name().str(),u->cpu() * 12,"",time);
-				}
+				refresh_console(it,cons,true);
 			}
 		}
 
@@ -172,6 +261,11 @@ static void refresh_thread() {
 
 int main() {
 	srv = new TimeTrackerService("timetracker");
+
+	GlobalThread gt(input_thread,CPU::current().log_id());
+	Sc sc(&gt,Qpd());
+	sc.start(String("timetracker-input"));
+
 	srv->reg();
 	refresh_thread();
 	return 0;
