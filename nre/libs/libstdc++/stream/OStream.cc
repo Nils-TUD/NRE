@@ -170,7 +170,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 			case 's':
 				s = va_arg(ap, char*);
 				if(pad > 0 && !(flags & PADRIGHT)) {
-					width = strlen(s);
+					width = prec != (ulong)-1 ? prec : strlen(s);
 					printpad(pad - width,flags);
 				}
 				n = puts(s,prec);
