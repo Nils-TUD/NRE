@@ -26,7 +26,7 @@ class ConsoleSessionData : public nre::ServiceSession {
 public:
 	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t caps,nre::Pt::portal_func func)
 			: ServiceSession(srv,id,caps,func), _page(0),  _sm(), _in_ds(), _out_ds(), _prod(), _regs(),
-			  _show_pages(true), _srv(srv) {
+			  _pages(0), _srv(srv) {
 		_regs.offset = nre::Console::TEXT_OFF >> 1;
 		_regs.mode = 0;
 		_regs.cursor_pos = (nre::Console::ROWS - 1) * nre::Console::COLS + (nre::Console::TEXT_OFF >> 1);
@@ -49,19 +49,19 @@ public:
 	}
 
 	void prev() {
-		if(_show_pages) {
-			_page = (_page - 1) % Screen::TEXT_PAGES;
+		if(_pages != 0) {
+			_page = (_page - 1) % _pages;
 			_srv->switcher().switch_to(this,this);
 		}
 	}
 	void next() {
-		if(_show_pages) {
-			_page = (_page + 1) % Screen::TEXT_PAGES;
+		if(_pages != 0) {
+			_page = (_page + 1) % _pages;
 			_srv->switcher().switch_to(this,this);
 		}
 	}
 
-	void create(nre::DataSpace *in_ds,nre::DataSpace *out_ds,bool show_pages = true);
+	void create(nre::DataSpace *in_ds,nre::DataSpace *out_ds,uint pages);
 
 	void to_front() {
 		swap();
@@ -95,6 +95,6 @@ private:
 	nre::DataSpace *_out_ds;
 	nre::Producer<nre::Console::ReceivePacket> *_prod;
 	nre::Console::Register _regs;
-	bool _show_pages;
+	uint _pages;
 	ConsoleService *_srv;
 };

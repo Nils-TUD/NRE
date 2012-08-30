@@ -17,8 +17,8 @@
 #include <ipc/Service.h>
 #include <ipc/Producer.h>
 #include <kobj/GlobalThread.h>
-#include <kobj/Sc.h>
 #include <kobj/Gsi.h>
+#include <kobj/Sc.h>
 #include <RCU.h>
 
 #include "HostKeyboard.h"
@@ -28,7 +28,7 @@ using namespace nre;
 template<class T>
 class KeyboardSessionData : public ServiceSession {
 public:
-	KeyboardSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+	explicit KeyboardSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: ServiceSession(s,id,caps,func), _prod(), _ds() {
 	}
 	virtual ~KeyboardSessionData() {
@@ -57,7 +57,7 @@ class KeyboardService : public Service {
 public:
 	typedef SessionIterator<KeyboardSessionData<T> > iterator;
 
-	KeyboardService(const char *name,Pt::portal_func func = 0)
+	explicit KeyboardService(const char *name,Pt::portal_func func)
 			: Service(name,CPUSet(CPUSet::ALL),func) {
 		// we want to accept one dataspaces
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
@@ -167,10 +167,13 @@ int main() {
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
+	kbsrv->reg();
 	if(hostkb->mouse_enabled()) {
 		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
-		Sc *sc = new Sc(new GlobalThread(mousehandler,CPU::current().log_id()),Qpd());
-		sc->start();
+		GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
+		Sc *sc = new Sc(gt,Qpd());
+		sc->start(String("mouse"));
+		mousesrv->reg();
 	}
 
 	kbhandler(0);

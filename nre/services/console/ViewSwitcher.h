@@ -18,8 +18,8 @@
 
 #include <ipc/Producer.h>
 #include <ipc/Consumer.h>
-#include <kobj/Sc.h>
 #include <kobj/GlobalThread.h>
+#include <kobj/Sc.h>
 #include <mem/DataSpace.h>
 
 #include "Screen.h"
@@ -44,7 +44,7 @@ public:
 	explicit ViewSwitcher(ConsoleService *srv);
 
 	void start() {
-		_sc.start();
+		_sc.start(nre::String("console-vs"));
 	}
 
 	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);

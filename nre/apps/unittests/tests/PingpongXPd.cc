@@ -41,7 +41,7 @@ static PingpongService *srv;
 
 class PingpongSession : public ServiceSession {
 public:
-	PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+	explicit PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: ServiceSession(s,id,caps,func) {
 	}
 
@@ -50,7 +50,7 @@ public:
 
 class PingpongService : public Service {
 public:
-	PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
+	explicit PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
 	}
 
 	void wait() {
@@ -89,12 +89,14 @@ void PingpongService::portal(capsel_t) {
 
 static int pingpong_server() {
 	srv = new PingpongService();
+	srv->reg();
 	srv->wait();
+	srv->unreg();
 	delete srv;
 	return 0;
 }
 
-static void pingpong_client() {
+static int pingpong_client() {
 	Connection con("pingpong");
 	ClientSession sess(con);
 	Pt pt(sess.caps() + CPU::current().log_id());
@@ -129,14 +131,15 @@ static void pingpong_client() {
 	WVPRINTF("avg: %Lu",avg);
 	WVPRINTF("min: %Lu",min);
 	WVPRINTF("max: %Lu",max);
+	return 0;
 }
 
 static Hip::mem_iterator get_self() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// we're the second module
-		if(it->type == HipMem::MB_MODULE && i++ > 0)
+		// we're the third module
+		if(it->type == HipMem::MB_MODULE && i++ > 1)
 			return it;
 	}
 	return hip.mem_end();

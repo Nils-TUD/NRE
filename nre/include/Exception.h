@@ -85,10 +85,7 @@ public:
 	 * @param code the error-code
 	 * @param msg optionally, a message describing the error
 	 */
-	explicit Exception(ErrorCode code,const char *msg = 0) throw()
-		: _code(code), _msg(msg), _backtrace(), _count() {
-		_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
-	}
+	explicit Exception(ErrorCode code,const char *msg = 0) throw();
 	virtual ~Exception() throw() {
 	}
 

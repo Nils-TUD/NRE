@@ -30,6 +30,7 @@ class CPUInit {
 };
 
 size_t CPU::_count = 0;
+uint CPU::_order = 0;
 CPU *CPU::_online = 0;
 CPU CPU::_cpus[Hip::MAX_CPUS] INIT_PRIO_CPUS;
 cpu_t CPU::_logtophys[Hip::MAX_CPUS];
@@ -38,11 +39,14 @@ CPUInit CPUInit::init INIT_PRIO_CPUS;
 CPUInit::CPUInit() {
 	CPU *last = 0;
 	const Hip& hip = Hip::get();
-	cpu_t id = 0;
-	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++id) {
-		CPU &cpu = CPU::get(id);
-		cpu._id = id;
-		CPU::_logtophys[id] = it->id();
+	cpu_t i = 0,id = 0,offline = 0;
+	for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
+		CPU &cpu = CPU::get(i);
+		if(it->enabled())
+			cpu._id = id++;
+		else
+			cpu._id = Hip::MAX_CPUS - ++offline;
+		CPU::_logtophys[cpu._id] = it->id();
 		if(!it->enabled())
 			continue;
 
@@ -68,6 +72,7 @@ CPUInit::CPUInit() {
 			cpu._srv_pt = new Pt(off + CapSelSpace::SRV_SERVICE);
 			cpu._gsi_pt = new Pt(off + CapSelSpace::SRV_GSI);
 			cpu._io_pt = new Pt(off + CapSelSpace::SRV_IO);
+			cpu._sc_pt = new Pt(off + CapSelSpace::SRV_SC);
 			if(cpu.phys_id() == _startup_info.cpu) {
 				// switch to dlmalloc, since we have created its dependencies now
 				// note: by doing it here, the startup-heap-size does not depend on the number of CPUs
@@ -75,6 +80,7 @@ CPUInit::CPUInit() {
 			}
 		}
 	}
+	CPU::_order = Math::next_pow2_shift(CPU::_count);
 }
 
 }

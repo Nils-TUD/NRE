@@ -27,7 +27,7 @@ class Hypervisor {
 public:
 	static void init();
 
-	PORTAL static void portal_mem(capsel_t pid);
+	PORTAL static void portal_map(capsel_t pid);
 	PORTAL static void portal_gsi(capsel_t pid);
 	PORTAL static void portal_io(capsel_t pid);
 
@@ -56,11 +56,19 @@ public:
 		_io.free(base,count);
 	}
 
+	static capsel_t request_idle_sc(cpu_t cpu) {
+		nre::UtcbFrame uf;
+		uf.accept_delegates(0,nre::Crd::OBJ_ALL);
+		uf << nre::CapRange(cpu,1,nre::Crd::OBJ_ALL);
+		_map_pts[nre::CPU::current().log_id()]->call(uf);
+		return uf.get_delegated(0).offset();
+	}
+
 private:
 	Hypervisor();
 
 	static uchar _stack[];
-	static nre::Pt *_mem_pts[];
+	static nre::Pt *_map_pts[];
 	static nre::RegionManager _io;
 	static nre::BitField<nre::Hip::MAX_GSIS> _gsis;
 	static nre::UserSm _io_sm;

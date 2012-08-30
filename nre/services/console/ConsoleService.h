@@ -54,11 +54,11 @@ public:
 	Screen *screen() {
 		return _screen;
 	}
+	void session_ready(ConsoleSessionData *sess);
 	bool handle_keyevent(const nre::Keyboard::Packet &pk);
 
 private:
 	virtual nre::ServiceSession *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
-	virtual void created_session(size_t idx);
 
 	nre::Connection _con;
 	nre::RebootSession _reboot;

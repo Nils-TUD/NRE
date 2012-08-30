@@ -21,8 +21,8 @@
 #include <kobj/Thread.h>
 #include <kobj/Sm.h>
 #include <kobj/Pt.h>
-#include <kobj/Sc.h>
 #include <kobj/VCpu.h>
+#include <kobj/Sc.h>
 #include <utcb/UtcbFrame.h>
 #include <Assert.h>
 #include <Compiler.h>
@@ -47,7 +47,7 @@ public:
 			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
 			  _sc(&_vcpu,nre::Qpd()) {
 		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
-		_sc.start();
+		_sc.start(nre::String("vmm-vcpu"));
 		_mb = mb;
 	}
 

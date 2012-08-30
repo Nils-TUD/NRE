@@ -27,7 +27,7 @@
 using namespace nre;
 
 uchar Hypervisor::_stack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
-Pt *Hypervisor::_mem_pts[Hip::MAX_CPUS];
+Pt *Hypervisor::_map_pts[Hip::MAX_CPUS];
 RegionManager Hypervisor::_io INIT_PRIO_HV;
 BitField<Hip::MAX_GSIS> Hypervisor::_gsis INIT_PRIO_HV;
 UserSm Hypervisor::_io_sm INIT_PRIO_HV;
@@ -41,7 +41,7 @@ Hypervisor::Hypervisor() {
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	LocalThread *ec = new LocalThread(CPU::current().log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
-	_mem_pts[CPU::current().log_id()] = new Pt(ec,portal_mem);
+	_map_pts[CPU::current().log_id()] = new Pt(ec,portal_map);
 	// make all I/O ports available
 	_io.free(0,0xFFFF);
 }
@@ -51,7 +51,7 @@ void Hypervisor::init() {
 		if(it->log_id() == CPU::current().log_id())
 			continue;
 		LocalThread *ec = new LocalThread(it->log_id());
-		_mem_pts[it->log_id()] = new Pt(ec,portal_mem);
+		_map_pts[it->log_id()] = new Pt(ec,portal_map);
 	}
 }
 
@@ -83,7 +83,7 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 		}
 
 		uf << cr;
-		_mem_pts[CPU::current().log_id()]->call(uf);
+		_map_pts[CPU::current().log_id()]->call(uf);
 
 		// adjust start and hotspot for the next round
 		cr.start(cr.start() + cr.count());
@@ -118,7 +118,7 @@ char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 	return vaddr;
 }
 
-void Hypervisor::portal_mem(capsel_t) {
+void Hypervisor::portal_map(capsel_t) {
 	UtcbFrameRef uf;
 	CapRange range;
 	uf >> range;

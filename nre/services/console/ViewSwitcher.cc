@@ -56,10 +56,13 @@ void ViewSwitcher::switch_thread(void*) {
 		// are we finished?
 		if(until && clock.source_time() >= until) {
 			ScopedLock<RCULock> guard(&RCU::lock());
-			ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
-			if(sess) {
+			try {
+				ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 				// finally swap to that session. i.e. give him direct screen access
 				sess->to_front();
+			}
+			catch(...) {
+				// just ignore it
 			}
 			until = 0;
 		}
@@ -71,11 +74,14 @@ void ViewSwitcher::switch_thread(void*) {
 			if(cmd->oldsessid != (size_t)-1) {
 				assert(cmd->oldsessid == sessid);
 				ScopedLock<RCULock> guard(&RCU::lock());
-				ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
-				if(old) {
+				try {
+					ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
 					// if we have already given him the screen, take it away
 					if(until == 0)
 						old->to_back();
+				}
+				catch(...) {
+					// just ignore it
 				}
 			}
 			sessid = cmd->sessid;
@@ -87,36 +93,38 @@ void ViewSwitcher::switch_thread(void*) {
 
 		{
 			ScopedLock<RCULock> guard(&RCU::lock());
-			ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
-			// if the session is dead, stop switching to it
-			if(!sess) {
+			try {
+				ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
+
+				// repaint all lines from the buffer except the first
+				uintptr_t offset = Screen::TEXT_OFF + sess->page() * Screen::PAGE_SIZE;
+				if(sess->out_ds()) {
+					memcpy(reinterpret_cast<void*>(vs->_srv->screen()->mem().virt() + offset + Screen::COLS * 2),
+							reinterpret_cast<void*>(sess->out_ds()->virt() + offset + Screen::COLS * 2),
+							Screen::PAGE_SIZE - Screen::COLS * 2);
+				}
+
+				if(!tag_done) {
+					// write tag into buffer
+					memset(_buffer,0,sizeof(_buffer));
+					OStringStream os(_buffer,sizeof(_buffer));
+					os << "Console " << sessid << "," << sess->page();
+
+					// write console tag
+					char *screen = reinterpret_cast<char*>(vs->_srv->screen()->mem().virt() + offset);
+					char *s = _buffer;
+					for(uint x = 0; x < Screen::COLS; ++x, ++s) {
+						screen[x * 2] = *s ? *s : ' ';
+						screen[x * 2 + 1] = COLOR;
+					}
+					sess->activate();
+					tag_done = true;
+				}
+			}
+			catch(...) {
+				// if the session is dead, stop switching to it
 				until = 0;
 				continue;
-			}
-
-			// repaint all lines from the buffer except the first
-			uintptr_t offset = Screen::TEXT_OFF + sess->page() * Screen::PAGE_SIZE;
-			if(sess->out_ds()) {
-				memcpy(reinterpret_cast<void*>(vs->_srv->screen()->mem().virt() + offset + Screen::COLS * 2),
-						reinterpret_cast<void*>(sess->out_ds()->virt() + offset + Screen::COLS * 2),
-						Screen::PAGE_SIZE - Screen::COLS * 2);
-			}
-
-			if(!tag_done) {
-				// write tag into buffer
-				memset(_buffer,0,sizeof(_buffer));
-				OStringStream os(_buffer,sizeof(_buffer));
-				os << "Console " << sessid << "," << sess->page();
-
-				// write console tag
-				char *screen = reinterpret_cast<char*>(vs->_srv->screen()->mem().virt() + offset);
-				char *s = _buffer;
-				for(uint x = 0; x < Screen::COLS; ++x, ++s) {
-					screen[x * 2] = *s ? *s : ' ';
-					screen[x * 2 + 1] = COLOR;
-				}
-				sess->activate();
-				tag_done = true;
 			}
 		}
 

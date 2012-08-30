@@ -87,12 +87,12 @@ public:
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
-	 * @param show_pages whether the console should allow the user to switch between different pages
+	 * @param pages the number of text-pages to let the user switch between (0 = no switching)
 	 */
-	explicit ConsoleSession(Connection &con,bool show_pages = true)
+	explicit ConsoleSession(Connection &con,uint pages = 0)
 			: ClientSession(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
-		create(show_pages);
+		create(pages);
 	}
 
 	/**
@@ -100,6 +100,17 @@ public:
 	 */
 	const DataSpace &screen() const {
 		return _out_ds;
+	}
+
+	/**
+	 * Clears the given page
+	 *
+	 * @param page the page
+	 */
+	void clear(uint page) {
+		assert(page < Console::TEXT_PAGES);
+		uintptr_t addr = screen().virt() + Console::TEXT_OFF + page * Console::PAGE_SIZE;
+		memset(reinterpret_cast<void*>(addr),	0,Console::PAGE_SIZE);
 	}
 
 	/**
@@ -138,9 +149,9 @@ public:
 	}
 
 private:
-	void create(bool show_pages) {
+	void create(uint pages) {
 		UtcbFrame uf;
-		uf << Console::CREATE << show_pages;
+		uf << Console::CREATE << pages;
 		uf.delegate(_in_ds.sel(),0);
 		uf.delegate(_out_ds.sel(),1);
 		Pt pt(caps() + CPU::current().log_id());

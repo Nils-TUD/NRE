@@ -72,6 +72,7 @@ public:
 		SRV_IO			= 0x25,		// io ports portal
 		SRV_GSI			= 0x26,		// global system interrupt portal
 		SRV_DS			= 0x27,		// dataspace portal
+		SRV_SC			= 0x28,		// Sc portal
 	};
 
 	/**
@@ -85,7 +86,7 @@ public:
 	 * Allocates <count> selectors with alignment <align>.
 	 *
 	 * @param count the number of selectors to allocate (default = 1)
-	 * @param align the alignment of the selectors (default = 1)
+	 * @param align the alignment of the selectors (default = 1). has to be a power of 2!
 	 */
 	capsel_t allocate(uint count = 1,uint align = 1) {
 		ScopedLock<SpinLock> lock(&_lck);

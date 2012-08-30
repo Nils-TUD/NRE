@@ -28,6 +28,7 @@
 #include <util/ScopedPtr.h>
 #include <util/CPUSet.h>
 #include <util/BitField.h>
+#include <Logging.h>
 #include <RCU.h>
 #include <CPU.h>
 #include <util/Math.h>
@@ -61,7 +62,8 @@ class Service {
 
 public:
 	enum {
-		MAX_SESSIONS		= 32
+		MAX_SESSIONS_ORDER	= 6,
+		MAX_SESSIONS		= 1 << MAX_SESSIONS_ORDER
 	};
 
 	/**
@@ -75,15 +77,16 @@ public:
 
 	/**
 	 * Constructor. Creates portals on the specified CPUs to accept client sessions and creates
-	 * Threads to handle <portal>. Afterwards, the service is registered at the parent.
+	 * Threads to handle <portal>. Note that you have to call reg() afterwards to finally register
+	 * the service.
 	 *
 	 * @param name the name of the service
 	 * @param cpus the CPUs on which you want to provide the service
 	 * @param portal the portal-function to provide
 	 */
 	explicit Service(const char *name,const CPUSet &cpus,Pt::portal_func portal)
-		: _regcaps(CapSelSpace::get().allocate(CPU::count(),CPU::count())),
-		  _caps(CapSelSpace::get().allocate(MAX_SESSIONS * CPU::count(),MAX_SESSIONS * CPU::count())),
+		: _regcaps(CapSelSpace::get().allocate(1 << CPU::order(),1 << CPU::order())),
+		  _caps(CapSelSpace::get().allocate(MAX_SESSIONS << CPU::order(),MAX_SESSIONS << CPU::order())),
 		  _sm(), _name(name), _func(portal), _insts(new ServiceCPUHandler*[CPU::count()]),
 		  _reg_cpus(cpus.get()), _sessions() {
 		for(size_t i = 0; i < CPU::count(); ++i) {
@@ -92,20 +95,41 @@ public:
 			else
 				_insts[i] = 0;
 		}
-		reg();
 	}
 	/**
-	 * Destroys this service, i.e. unregisters it and destroys all sessions
+	 * Destroys this service, i.e. destroys all sessions. You should have called unreg() before.
 	 */
 	virtual ~Service() {
-		unreg();
-		for(size_t i = 0; i < MAX_SESSIONS; ++i)
-			delete _sessions[i];
+		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
+			ServiceSession *sess = rcu_dereference(_sessions[i]);
+			if(sess)
+				remove_session(sess);
+		}
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _insts[i];
 		delete[] _insts;
-		CapSelSpace::get().free(_caps,MAX_SESSIONS * CPU::count());
-		CapSelSpace::get().free(_regcaps,CPU::count());
+		CapSelSpace::get().free(_caps,MAX_SESSIONS << CPU::order());
+		CapSelSpace::get().free(_regcaps,1 << CPU::order());
+	}
+
+	/**
+	 * Registers the service at the parent
+	 */
+	void reg() {
+		UtcbFrame uf;
+		uf.delegate(CapRange(_regcaps,1 << CPU::order(),Crd::OBJ_ALL));
+		uf << REGISTER << String(_name) << _reg_cpus;
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
+	}
+	/**
+	 * Unregisters the service at the parent
+	 */
+	void unreg() {
+		UtcbFrame uf;
+		uf << UNREGISTER << String(_name);
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
 	}
 
 	/**
@@ -152,7 +176,7 @@ public:
 	 */
 	template<class T>
 	T *get_session(capsel_t pid) {
-		return get_session_by_id<T>((pid - _caps) / CPU::count());
+		return get_session_by_id<T>((pid - _caps) >> CPU::order());
 	}
 	/**
 	 * @param id the session-id
@@ -177,24 +201,22 @@ public:
 
 protected:
 	/**
-	 * Adds the given session
+	 * Creates a new session in a free slot.
 	 *
-	 * @param sess the session
+	 * @return the created session
+	 * @throws ServiceException if there are no free slots anymore
 	 */
-	void add_session(ServiceSession *sess) {
-		rcu_assign_pointer(_sessions[sess->id()],sess);
-		created_session(sess->id());
-	}
-	/**
-	 * Removes the given session
-	 *
-	 * @param sess the session
-	 */
-	void remove_session(ServiceSession *sess) {
-		rcu_assign_pointer(_sessions[sess->id()],0);
-		sess->invalidate();
-		RCU::invalidate(sess);
-		RCU::gc(true);
+	ServiceSession *new_session() {
+		ScopedLock<UserSm> guard(&_sm);
+		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
+			if(_sessions[i] == 0) {
+				LOG(Logging::SERVICES,Serial::get() << "Creating session " << i
+						<< " (caps=" << _caps + (i << CPU::order()) << ")\n");
+				add_session(create_session(i,_caps + (i << CPU::order()),_func));
+				return _sessions[i];
+			}
+		}
+		throw ServiceException(E_CAPACITY);
 	}
 
 private:
@@ -218,33 +240,21 @@ private:
 	virtual void created_session(UNUSED size_t id) {
 	}
 
-	void reg() {
-		UtcbFrame uf;
-		uf.delegate(CapRange(_regcaps,Math::next_pow2<size_t>(CPU::count()),Crd::OBJ_ALL));
-		uf << REGISTER << String(_name) << _reg_cpus;
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
+	void add_session(ServiceSession *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],sess);
+		created_session(sess->id());
 	}
-	void unreg() {
-		UtcbFrame uf;
-		uf << UNREGISTER << String(_name);
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
+	void remove_session(ServiceSession *sess) {
+		rcu_assign_pointer(_sessions[sess->id()],0);
+		sess->invalidate();
+		RCU::invalidate(sess);
+		RCU::gc(true);
 	}
 
-	ServiceSession *new_session() {
-		ScopedLock<UserSm> guard(&_sm);
-		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
-			if(_sessions[i] == 0) {
-				add_session(create_session(i,_caps + i * CPU::count(),_func));
-				return _sessions[i];
-			}
-		}
-		throw ServiceException(E_CAPACITY);
-	}
 	void destroy_session(capsel_t pid) {
 		ScopedLock<UserSm> guard(&_sm);
-		size_t i = (pid - _caps) / CPU::count();
+		size_t i = (pid - _caps) >> CPU::order();
+		LOG(Logging::SERVICES,Serial::get() << "Destroying session " << i << "\n");
 		ServiceSession *sess = _sessions[i];
 		if(!sess)
 			throw ServiceException(E_NOT_FOUND);

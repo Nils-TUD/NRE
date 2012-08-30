@@ -32,6 +32,7 @@
 #include "PhysicalMemory.h"
 #include "VirtualMemory.h"
 #include "Hypervisor.h"
+#include "Admission.h"
 #include "Log.h"
 
 using namespace nre;
@@ -53,6 +54,7 @@ CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 // stack for LocalThread of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
+static uchar scptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 static uchar regptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 static ChildManager *mng;
 
@@ -66,18 +68,28 @@ CPU0Init::CPU0Init() {
 	cpu.ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
 	cpu.gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
 	cpu.io_pt(new Pt(ec,Hypervisor::portal_io));
-	// accept translated caps
-	UtcbFrameRef defuf(ec->utcb());
-	defuf.accept_translates();
 	new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+	// accept translated caps
+	UtcbFrameRef defuf(ec->utcb());
+	defuf.accept_translates();
+
+	// use a different one for sc, because otherwise it conflicts with dataspace-creation
+	uintptr_t scptec_utcb = VirtualMemory::alloc(Utcb::SIZE);
+	LocalThread *scptec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
+			reinterpret_cast<uintptr_t>(scptstack),scptec_utcb);
+	cpu.sc_pt(new Pt(scptec,Admission::portal_sc));
+	UtcbFrameRef scptuf(scptec->utcb());
+	scptuf.accept_translates();
+	scptuf.accept_delegates(0);
+
 	// register portal for the log service
 	uintptr_t regec_utcb = VirtualMemory::alloc(Utcb::SIZE);
 	LocalThread *regec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(regptstack),regec_utcb);
 	UtcbFrameRef reguf(regec->utcb());
-	reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+	reguf.accept_delegates(CPU::order());
 	cpu.srv_pt(new Pt(regec,portal_service));
 }
 
@@ -101,6 +113,9 @@ int main() {
 		// also remove the BIOS-area (make it available as device-memory)
 		if(it->type != HipMem::AVAILABLE || it->addr == 0)
 			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
+		// make sure that we don't overwrite the next two pages behind the cmdline
+		if(it->type == HipMem::MB_MODULE && it->aux)
+			PhysicalMemory::remove(it->aux & ~(ExecEnv::PAGE_SIZE - 1),ExecEnv::PAGE_SIZE * 2);
 	}
 
 	// now allocate the available memory from the hypervisor
@@ -133,10 +148,18 @@ int main() {
 			new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 			new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+
+			// again, separate ec for sc-portal
+			LocalThread *scec = new LocalThread(it->log_id());
+			UtcbFrameRef scuf(scec->utcb());
+			scuf.accept_translates();
+			scuf.accept_delegates(0);
+			it->sc_pt(new Pt(scec,Admission::portal_sc));
+
 			// register portal for the log service
 			LocalThread *regec = new LocalThread(it->log_id());
 			UtcbFrameRef reguf(ec->utcb());
-			reguf.accept_delegates(Math::next_pow2_shift(CPU::count()));
+			reguf.accept_delegates(CPU::order());
 			it->srv_pt(new Pt(regec,portal_service));
 		}
 	}
@@ -176,11 +199,11 @@ static void portal_service(capsel_t) {
 	try {
 		Service::Command cmd;
 		String name;
-		capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 		uf >> cmd >> name;
 		switch(cmd) {
 			case Service::REGISTER: {
 				BitField<Hip::MAX_CPUS> available;
+				capsel_t cap = uf.get_delegated(uf.delegation_window().order()).offset();
 				uf >> available;
 				uf.finish_input();
 
@@ -190,8 +213,18 @@ static void portal_service(capsel_t) {
 			}
 			break;
 
+			case Service::GET: {
+				uf.finish_input();
+
+				LOG(Logging::SERVICES,Serial::get() << "Root gets " << name << "\n");
+				const ServiceRegistry::Service* s = mng->get_service(name,false);
+
+				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
+				uf << E_SUCCESS << s->available();
+			}
+			break;
+
 			case Service::UNREGISTER:
-			case Service::GET:
 				uf.clear();
 				uf << E_NOT_FOUND;
 				break;

@@ -49,7 +49,7 @@ static malloc_func malloc_ptr = startup_malloc;
 static realloc_func realloc_ptr = 0;
 static free_func free_ptr = startup_free;
 
-static char startup_heap[512];
+static char startup_heap[1024];
 static size_t pos = 0;
 
 // Semaphore glue

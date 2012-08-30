@@ -18,6 +18,7 @@
 
 #include <kobj/ObjCap.h>
 #include <Syscalls.h>
+#include <Hip.h>
 
 namespace nre {
 
@@ -41,6 +42,18 @@ protected:
 	}
 
 public:
+	/**
+	 * Attaches an Ec-object to the given selector. The destructor will neither free the selector
+	 * nor the capability.
+	 *
+	 * @param cap the capability-selector for the Ec
+	 * @param cpu the logical CPU it runs on
+	 */
+	explicit Ec(capsel_t cap,cpu_t cpu)
+		: ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT), _event_base(Hip::get().service_caps() * cpu),
+		  _cpu(cpu) {
+	}
+
 	/**
 	 * Let's this Ec perform a recall
 	 */

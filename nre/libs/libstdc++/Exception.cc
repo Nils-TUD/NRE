@@ -14,17 +14,15 @@
  * General Public License version 2 for more details.
  */
 
-#include <Hip.h>
+#include <Exception.h>
+#include <Logging.h>
 
 namespace nre {
 
-cpu_t Hip::cpu_phys_to_log(cpu_t cpu) const {
-	cpu_t log = 0;
-	for(cpu_iterator it = cpu_begin(); cpu != it->id() && it != cpu_end(); ++it) {
-		if(it->enabled())
-			log++;
-	}
-	return log;
+Exception::Exception(ErrorCode code,const char *msg) throw()
+	: _code(code), _msg(msg), _backtrace(), _count() {
+	_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
+	LOG(Logging::EXCEPTIONS,Serial::get() << *this);
 }
 
 }

@@ -28,14 +28,14 @@
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	Vancouver(const char *args,size_t ramsize)
-			: _lt_input(keyboard_thread,nre::CPU::current().log_id()), _sc_input(&_lt_input,nre::Qpd()),
-			  _mb(), _timeouts(_mb),
+			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
+			  _sc_input(&_lt_input,nre::Qpd()), _mb(), _timeouts(_mb),
 			  _guest_mem(ramsize,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RWX),
-			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,false) {
+			  _guest_size(ramsize), _conscon("console"), _conssess(_conscon,0) {
 		create_devices(args);
 		create_vcpus();
 		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-		_sc_input.start();
+		_sc_input.start(nre::String("vmm-input"));
 	}
 
 	void reset();

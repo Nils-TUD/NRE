@@ -101,7 +101,8 @@ int main() {
 		Serial::get() << e.name() << ": " << e.msg() << "\n";
 	}
 
-	new Service("pcicfg",CPUSet(CPUSet::ALL),portal_pcicfg);
+	Service *srv = new Service("pcicfg",CPUSet(CPUSet::ALL),portal_pcicfg);
+	srv->reg();
 	Sm sm(0);
 	sm.down();
 	return 0;

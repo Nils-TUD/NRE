@@ -25,13 +25,18 @@
 
 using namespace nre;
 
+BufferedLog BufferedLog::_inst INIT_PRIO_SERIAL;
 Log Log::_inst INIT_PRIO_SERIAL;
 Service *Log::_srv;
 const char *Log::_colors[] = {
 	"31","32","33","34","35","36"
 };
 
-Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1), _to_ser(false), _bufpos(0), _buf() {
+BufferedLog::BufferedLog() : BaseSerial(), _bufpos(0), _buf() {
+	BaseSerial::_inst = this;
+}
+
+Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1) {
 	_ports.out<uint8_t>(0x80,LCR);			// Enable DLAB (set baud rate divisor)
 	_ports.out<uint8_t>(0x01,DLR_LO);		// Set divisor to 1 (lo byte) 115200 baud
 	_ports.out<uint8_t>(0x00,DLR_HI);		//                  (hi byte)
@@ -39,33 +44,15 @@ Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1), _to_ser(false), _bufpos(
 	_ports.out<uint8_t>(0,IER);			// disable interrupts
 	_ports.out<uint8_t>(7,FCR);
 	_ports.out<uint8_t>(3,MCR);
-	BaseSerial::_inst = this;
 }
 
 void Log::reg() {
 	_srv = new Service("log",CPUSet(CPUSet::ALL),portal);
-}
-
-void Log::out(char c) {
-	if(c == '\n')
-		out('\r');
-	while((_ports.in<uint8_t>(5) & 0x20) == 0)
-		;
-	_ports.out<uint8_t>(c,0);
-}
-
-void Log::buffer(char c) {
-	if(_bufpos == sizeof(_buf) || c == '\n') {
-		write(ROOT_SESS,_buf,_bufpos);
-		_bufpos = 0;
-	}
-	if(c != '\n')
-		_buf[_bufpos++] = c;
+	_srv->reg();
 }
 
 void Log::write(uint sessid,const char *line,size_t len) {
 	ScopedLock<UserSm> guard(&_sm);
-	_to_ser = true;
 	*this << "\e[0;" << _colors[sessid % ARRAY_SIZE(_colors)] << "m[" << sessid << "] ";
 	for(size_t i = 0; i < len; ++i) {
 		char c = line[i];
@@ -73,7 +60,6 @@ void Log::write(uint sessid,const char *line,size_t len) {
 			*this << c;
 	}
 	*this << "\e[0m\n";
-	_to_ser = false;
 }
 
 void Log::portal(capsel_t pid) {

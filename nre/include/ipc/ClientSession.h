@@ -49,7 +49,7 @@ public:
 	 */
 	virtual ~ClientSession() {
 		close();
-		CapSelSpace::get().free(_caps,CPU::count());
+		CapSelSpace::get().free(_caps,1 << CPU::order());
 	}
 
 	/**
@@ -68,8 +68,8 @@ public:
 private:
 	capsel_t open(Connection &con) {
 		UtcbFrame uf;
-		ScopedCapSels caps(CPU::count(),CPU::count());
-		uf.delegation_window(Crd(caps.get(),Math::next_pow2_shift<uint>(CPU::count()),Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
 		uf << OPEN;
 		con.pt(CPU::current().log_id())->call(uf);
 		uf.check_reply();

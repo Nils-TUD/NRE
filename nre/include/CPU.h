@@ -62,6 +62,12 @@ public:
 	static size_t count() {
 		return _count;
 	}
+	/**
+	 * @return the next order of online CPUs, i.e. Math::next_pow2_shift(count())
+	 */
+	static uint order() {
+		return _order;
+	}
 
 	/**
 	 * @return iterator beginning of the list of online CPUs. They are always sorted by logical id.
@@ -150,11 +156,20 @@ public:
 	void srv_pt(Pt *pt) {
 		_srv_pt = pt;
 	}
+	/**
+	 * The Sc portal
+	 */
+	Pt &sc_pt() {
+		return *_sc_pt;
+	}
+	void sc_pt(Pt *pt) {
+		_sc_pt = pt;
+	}
 
 private:
 	CPU()
 		: _id(), _next(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
-		  _gsi_pt(), _srv_pt() {
+		  _gsi_pt(), _srv_pt(), _sc_pt() {
 	}
 	CPU(const CPU&);
 	CPU& operator=(const CPU&);
@@ -173,7 +188,9 @@ private:
 	Pt *_io_pt;
 	Pt *_gsi_pt;
 	Pt *_srv_pt;
+	Pt *_sc_pt;
 	static size_t _count;
+	static uint _order;
 	static CPU *_online;
 	static CPU _cpus[Hip::MAX_CPUS];
 	static cpu_t _logtophys[Hip::MAX_CPUS];

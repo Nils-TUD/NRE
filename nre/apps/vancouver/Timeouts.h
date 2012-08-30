@@ -33,9 +33,10 @@ class Timeouts {
 
 public:
 	Timeouts(Motherboard &mb) : _mb(mb), _timeouts(), _timercon("timer"), _timer(_timercon),
-		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()), _sc(&_ec,nre::Qpd()) {
+		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()),
+		_sc(&_ec,nre::Qpd()) {
 		_ec.set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
-		_sc.start();
+		_sc.start(nre::String("vmm-timeouts"));
 	}
 
 	size_t alloc() {

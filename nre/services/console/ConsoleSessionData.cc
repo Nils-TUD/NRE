@@ -21,7 +21,7 @@
 
 using namespace nre;
 
-void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,bool show_pages) {
+void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,uint pages) {
 	ScopedLock<UserSm> guard(&_sm);
 	if(_in_ds != 0)
 		throw Exception(E_EXISTS);
@@ -29,8 +29,8 @@ void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,bool show_pag
 	_out_ds = out_ds;
 	if(_in_ds)
 		_prod = new Producer<Console::ReceivePacket>(in_ds,false,false);
-	_show_pages = show_pages;
-	_srv->switcher().switch_to(_srv->active(),this);
+	_pages = pages;
+	_srv->session_ready(this);
 }
 
 void ConsoleSessionData::portal(capsel_t pid) {
@@ -43,13 +43,13 @@ void ConsoleSessionData::portal(capsel_t pid) {
 		uf >> cmd;
 		switch(cmd) {
 			case Console::CREATE: {
-				bool show_pages;
+				uint pages;
 				capsel_t insel = uf.get_delegated(0).offset();
 				capsel_t outsel = uf.get_delegated(0).offset();
-				uf >> show_pages;
+				uf >> pages;
 				uf.finish_input();
 
-				sess->create(new DataSpace(insel),new DataSpace(outsel),show_pages);
+				sess->create(new DataSpace(insel),new DataSpace(outsel),pages);
 				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}

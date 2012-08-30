@@ -18,6 +18,7 @@
 
 #include <stream/OStream.h>
 #include <arch/ExecEnv.h>
+#include <Assert.h>
 
 class Log;
 
@@ -62,6 +63,8 @@ public:
 	 * @return the instance of the serial outstream
 	 */
 	static BaseSerial& get() {
+		// shouldn't be used before the serial stuff has been initialized
+		assert(_inst != 0);
 		return *_inst;
 	}
 

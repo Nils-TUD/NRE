@@ -32,6 +32,9 @@ char ConsoleStream::read() {
 void ConsoleStream::put(ushort value,ushort *base,uint &pos) {
 	bool visible = false;
 	switch(value & 0xff) {
+		// ignore '\0'
+		case '\0':
+			return;
 		// backspace
 		case 8:
 			if(pos)

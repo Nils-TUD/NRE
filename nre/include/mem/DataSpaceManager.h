@@ -54,7 +54,7 @@ class DataSpaceManager {
 	 * difficult to achieve that.
 	 */
 	struct Slot : public TreapNode<capsel_t> {
-		Slot() : TreapNode<capsel_t>(0) {
+		Slot() : TreapNode<capsel_t>(0), ds(), refs(), next() {
 		}
 		DS *ds;
 		unsigned refs;
@@ -79,8 +79,7 @@ public:
 	 */
 	const DS &create(const DataSpaceDesc& desc) {
 		ScopedLock<UserSm> guard(&_sm);
-		Slot *slot = 0;
-		slot = find_free();
+		Slot *slot = find_free();
 		slot->ds = new DS(desc);
 		slot->refs = 1;
 		slot->key(slot->ds->unmapsel());

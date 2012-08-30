@@ -15,7 +15,6 @@
  */
 
 #include <stream/OStream.h>
-#include <arch/Startup.h>
 #include <util/Digits.h>
 #include <cstring>
 
@@ -31,10 +30,6 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 	ullong u;
 	ulong pad,width,prec,base,flags;
 	bool readFlags;
-
-	// don't try to output something during initialization
-	if(!_startup_info.done)
-		return;
 
 	while(1) {
 		// wait for a '%'
@@ -175,7 +170,7 @@ void OStream::vwritef(const char *fmt,va_list ap) {
 			case 's':
 				s = va_arg(ap, char*);
 				if(pad > 0 && !(flags & PADRIGHT)) {
-					width = strlen(s);
+					width = prec != (ulong)-1 ? prec : strlen(s);
 					printpad(pad - width,flags);
 				}
 				n = puts(s,prec);

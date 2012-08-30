@@ -15,6 +15,7 @@
  */
 
 #include <kobj/Pt.h>
+#include <kobj/Sc.h>
 #include <subsystem/ChildManager.h>
 #include <ipc/Service.h>
 #include <ipc/Consumer.h>
@@ -51,7 +52,7 @@ static ShmService *srv;
 
 class ShmSession : public ServiceSession {
 public:
-	ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
+	explicit ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: ServiceSession(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
@@ -71,7 +72,7 @@ public:
 		_ds = ds;
 		_cons = new Consumer<Item>(ds);
 		_sc = new Sc(&_ec,Qpd());
-		_sc->start();
+		_sc->start(String("shm-receiver"));
 	}
 
 private:
@@ -85,7 +86,7 @@ private:
 
 class ShmService : public Service {
 public:
-	ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
+	explicit ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
 		UtcbFrameRef uf(get_thread(CPU::current().log_id())->utcb());
 		uf.accept_delegates(0);
 	}
@@ -150,7 +151,9 @@ static int shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
+	srv->reg();
 	srv->wait();
+	srv->unreg();
 	delete srv;
 	return 0;
 }
@@ -185,8 +188,8 @@ static Hip::mem_iterator get_self() {
 	int i = 0;
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// we're the second module
-		if(it->type == HipMem::MB_MODULE && i++ > 0)
+		// we're the third module
+		if(it->type == HipMem::MB_MODULE && i++ > 1)
 			return it;
 	}
 	return hip.mem_end();

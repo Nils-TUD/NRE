@@ -21,14 +21,14 @@
 
 #define M_PI	3.14159265358979323846
 
-static inline float fsin(float f) {
+// somehow gcc is unable to return a float with SSE disabled on x86_64 (gcc bug?). it works when
+// passing it as reference and changing it.
+static inline void fsin(float &f) {
 	asm ("fsin\n" : "+t" (f));
-	return f;
 }
 
-static inline float fsqrt(float f) {
+static inline void fsqrt(float &f) {
 	asm ("fsqrt\n" : "+t" (f));
-	return f;
 }
 
 /* EOF */
