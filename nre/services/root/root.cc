@@ -166,7 +166,15 @@ int main() {
 
 	mng = new ChildManager();
 	Log::get().reg();
+
+	LOG(Logging::MEM_MAP,
+			Serial::get() << "Memory: " << (PhysicalMemory::regions().total_size() / 1024) << " KiB\n");
+
 	start_childs();
+	mng->wait_for_all();
+
+	LOG(Logging::MEM_MAP,
+			Serial::get() << "Memory: " << (PhysicalMemory::regions().total_size() / 1024) << " KiB\n");
 
 	Sm sm(0);
 	sm.down();

@@ -57,6 +57,13 @@ public:
 		return _regs + MAX_REGIONS;
 	}
 
+	size_t total_size() const {
+		size_t s = 0;
+		for(iterator it = begin(); it != end(); ++it)
+			s += it->size;
+		return s;
+	}
+
 	uintptr_t alloc(size_t size) {
 		Region *r = get(size);
 		if(!r)
