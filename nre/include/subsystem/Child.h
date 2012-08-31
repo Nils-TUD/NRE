@@ -154,9 +154,8 @@ private:
 			uf.translate(it->cap());
 			CPU::current().sc_pt().call(uf);
 			uf.clear();
-			SList<SchedEntity>::iterator next = ++it;
-			delete &*it;
-			it = next;
+			SList<SchedEntity>::iterator cur = it++;
+			delete &*cur;
 		}
 	}
 
