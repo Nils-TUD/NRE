@@ -89,6 +89,7 @@ void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {
 		for(size_t i = 0; i < ExecEnv::PAGE_SIZE / sizeof(RootDataSpace); ++i) {
 			ds->_next = _free;
 			_free = ds;
+			ds++;
 		}
 	}
 	res = _free;
