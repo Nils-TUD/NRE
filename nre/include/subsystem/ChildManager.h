@@ -40,6 +40,7 @@ public:
 class ChildManager {
 	class Portals;
 	friend class Portals;
+	friend class Child;
 
 	class Portals {
 	public:

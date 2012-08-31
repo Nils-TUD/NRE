@@ -25,13 +25,10 @@
 #include <kobj/Ports.h>
 #include <subsystem/ChildMemory.h>
 #include <mem/RegionManager.h>
-#include <utcb/UtcbFrame.h>
 #include <util/BitField.h>
 #include <util/SList.h>
-#include <String.h>
 #include <RCU.h>
-#include <CPU.h>
-#include <util/Atomic.h>
+#include <String.h>
 
 namespace nre {
 
@@ -122,42 +119,14 @@ private:
 		release_gsis();
 		release_ports();
 		release_scs();
+		release_regs();
 		CapSelSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
 	}
 
-	void release_gsis() {
-		UtcbFrame uf;
-		for(uint i = 0; i < Hip::MAX_GSIS; ++i) {
-			if(_gsis.is_set(i)) {
-				uf << Gsi::RELEASE << i;
-				CPU::current().gsi_pt().call(uf);
-				uf.clear();
-			}
-		}
-	}
-
-	void release_ports() {
-		UtcbFrame uf;
-		for(RegionManager::iterator it = _io.begin(); it != _io.end(); ++it) {
-			if(it->size) {
-				uf << Ports::RELEASE << it->addr << it->size;
-				CPU::current().io_pt().call(uf);
-				uf.clear();
-			}
-		}
-	}
-
-	void release_scs() {
-		UtcbFrame uf;
-		for(SList<SchedEntity>::iterator it = _scs.begin(); it != _scs.end(); ) {
-			uf << Sc::STOP;
-			uf.translate(it->cap());
-			CPU::current().sc_pt().call(uf);
-			uf.clear();
-			SList<SchedEntity>::iterator cur = it++;
-			delete &*cur;
-		}
-	}
+	void release_gsis();
+	void release_ports();
+	void release_scs();
+	void release_regs();
 
 	Child(const Child&);
 	Child& operator=(const Child&);

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <kobj/ObjCap.h>
 #include <Exception.h>
 #include <mem/DataSpaceDesc.h>
 #include <util/MaskField.h>
@@ -149,6 +150,15 @@ public:
 	 */
 	explicit ChildMemory() : _list(isless) {
 	}
+	/**
+	 * Destructor
+	 */
+	~ChildMemory() {
+		for(iterator it = begin(); it != end(); ) {
+			iterator cur = it++;
+			delete &*cur;
+		}
+	}
 
 	/**
 	 * @return the first dataspace
@@ -213,7 +223,7 @@ public:
 	 * @param perm the permissions to use (desc.perm() is ignored)
 	 * @param sel the selector for the dataspace
 	 */
-	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t sel) {
+	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t sel = ObjCap::INVALID) {
 		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),perm,desc.phys(),addr,desc.virt()),sel);
 		_list.insert(ds);
 	}

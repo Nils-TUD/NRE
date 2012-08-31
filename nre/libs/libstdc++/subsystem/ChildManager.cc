@@ -214,20 +214,20 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			memcpy(reinterpret_cast<void*>(ds.virt()),
 					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
 			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
-			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.sel());
+			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.unmapsel());
 		}
 
 		// utcb
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
-		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::ANONYMOUS,0),c->_utcb,0,0);
+		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::ANONYMOUS,0),c->_utcb,0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
 				eccpu,c->_pd,c->_utcb);
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
 		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
-				c->stack(),ChildMemory::RW,0);
+				c->stack(),ChildMemory::RW);
 
 		// and a HIP
 		{
@@ -236,7 +236,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 			c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
 			memcpy(reinterpret_cast<void*>(ds.virt()),&Hip::get(),ExecEnv::PAGE_SIZE);
 			// TODO we need to adjust the hip
-			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.sel());
+			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.unmapsel());
 		}
 
 		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting client '" << c->cmdline() << "'...\n");
@@ -606,7 +606,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
 		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm());
-		c->reglist().add(desc,addr,desc.perm(),0);
+		c->reglist().add(desc,addr,desc.perm());
 		desc.virt(addr);
 		LOG(Logging::DATASPACES,
 				Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
