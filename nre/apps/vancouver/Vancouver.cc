@@ -300,8 +300,23 @@ void Vancouver::keyboard_thread(void*) {
 	while(1) {
 		Console::ReceivePacket pk = vc->_conssess.receive();
 
-		if(pk.keycode == Keyboard::VK_D && (pk.flags & (Keyboard::RELEASE)) && (pk.flags & Keyboard::LCTRL))
-			vc->_mb.dump_counters();
+		if((pk.flags & Keyboard::RELEASE) && (pk.flags & Keyboard::LCTRL)) {
+			switch(pk.keycode) {
+				case Keyboard::VK_HOME: {
+					ScopedLock<UserSm> guard(&globalsm);
+					MessageLegacy msg2(MessageLegacy::RESET, 0);
+				    vc->_mb.bus_legacy.send_fifo(msg2);
+				    continue;
+				}
+				break;
+
+				case Keyboard::VK_D: {
+					vc->_mb.dump_counters();
+				    continue;
+				}
+				break;
+			}
+		}
 
 		ScopedLock<UserSm> guard(&globalsm);
 		MessageInput msg(0x10000,pk.scancode | pk.flags);
