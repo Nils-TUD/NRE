@@ -63,6 +63,13 @@ public:
 	static void remove(uintptr_t addr,size_t size);
 	static void map_all();
 
+	static size_t total_size() {
+		return _totalsize;
+	}
+	static size_t free_size() {
+		return _mem.total_size();
+	}
+
 	static const nre::RegionManager &regions() {
 		return _mem;
 	}
@@ -74,6 +81,7 @@ private:
 
 	PhysicalMemory();
 
+	static size_t _totalsize;
 	static nre::RegionManager _mem;
 	static nre::DataSpaceManager<RootDataSpace> _dsmng;
 };

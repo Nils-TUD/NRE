@@ -23,6 +23,7 @@
 using namespace nre;
 
 PhysicalMemory::RootDataSpace *PhysicalMemory::RootDataSpace::_free = 0;
+size_t PhysicalMemory::_totalsize = 0;
 RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
 
@@ -123,6 +124,7 @@ void PhysicalMemory::map_all() {
 		if(it->size)
 			Hypervisor::map_mem(it->addr,VirtualMemory::phys_to_virt(it->addr),it->size);
 	}
+	_totalsize = _mem.total_size();
 }
 
 bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
@@ -216,6 +218,7 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 		}
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}

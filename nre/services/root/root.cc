@@ -33,6 +33,7 @@
 #include "VirtualMemory.h"
 #include "Hypervisor.h"
 #include "Admission.h"
+#include "SysInfoService.h"
 #include "Log.h"
 
 using namespace nre;
@@ -54,7 +55,6 @@ CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 // stack for LocalThread of first CPU
 static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
-static uchar scptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 static uchar regptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
 static ChildManager *mng;
 
@@ -68,21 +68,14 @@ CPU0Init::CPU0Init() {
 	cpu.ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
 	cpu.gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
 	cpu.io_pt(new Pt(ec,Hypervisor::portal_io));
+	cpu.sc_pt(new Pt(ec,Admission::portal_sc));
 	new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 	new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 			Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
 	// accept translated caps
 	UtcbFrameRef defuf(ec->utcb());
+	defuf.accept_delegates(0);
 	defuf.accept_translates();
-
-	// use a different one for sc, because otherwise it conflicts with dataspace-creation
-	uintptr_t scptec_utcb = VirtualMemory::alloc(Utcb::SIZE);
-	LocalThread *scptec = new LocalThread(cpu.log_id(),ObjCap::INVALID,
-			reinterpret_cast<uintptr_t>(scptstack),scptec_utcb);
-	cpu.sc_pt(new Pt(scptec,Admission::portal_sc));
-	UtcbFrameRef scptuf(scptec->utcb());
-	scptuf.accept_translates();
-	scptuf.accept_delegates(0);
 
 	// register portal for the log service
 	uintptr_t regec_utcb = VirtualMemory::alloc(Utcb::SIZE);
@@ -134,6 +127,7 @@ int main() {
 
 	// create memory mapping portals for the other CPUs
 	Hypervisor::init();
+	Admission::init();
 
 	// now init the stuff for all other CPUs (using dlmalloc)
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
@@ -142,19 +136,14 @@ int main() {
 			it->ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
 			it->gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
 			it->io_pt(new Pt(ec,Hypervisor::portal_io));
+			it->sc_pt(new Pt(ec,Admission::portal_sc));
 			// accept translated caps
 			UtcbFrameRef defuf(ec->utcb());
 			defuf.accept_translates();
+			defuf.accept_delegates(0);
 			new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
 			new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
 					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
-
-			// again, separate ec for sc-portal
-			LocalThread *scec = new LocalThread(it->log_id());
-			UtcbFrameRef scuf(scec->utcb());
-			scuf.accept_translates();
-			scuf.accept_delegates(0);
-			it->sc_pt(new Pt(scec,Admission::portal_sc));
 
 			// register portal for the log service
 			LocalThread *regec = new LocalThread(it->log_id());
@@ -166,15 +155,10 @@ int main() {
 
 	mng = new ChildManager();
 	Log::get().reg();
-
-	LOG(Logging::MEM_MAP,
-			Serial::get() << "Memory: " << (PhysicalMemory::regions().total_size() / 1024) << " KiB\n");
+	SysInfoService *sysinfo = new SysInfoService();
+	sysinfo->reg();
 
 	start_childs();
-	mng->wait_for_all();
-
-	LOG(Logging::MEM_MAP,
-			Serial::get() << "Memory: " << (PhysicalMemory::regions().total_size() / 1024) << " KiB\n");
 
 	Sm sm(0);
 	sm.down();
@@ -221,17 +205,7 @@ static void portal_service(capsel_t) {
 			}
 			break;
 
-			case Service::GET: {
-				uf.finish_input();
-
-				LOG(Logging::SERVICES,Serial::get() << "Root gets " << name << "\n");
-				const ServiceRegistry::Service* s = mng->get_service(name,false);
-
-				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
-				uf << E_SUCCESS << s->available();
-			}
-			break;
-
+			case Service::GET:
 			case Service::UNREGISTER:
 				uf.clear();
 				uf << E_NOT_FOUND;

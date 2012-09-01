@@ -161,6 +161,7 @@ void Hypervisor::portal_gsi(capsel_t) {
 		}
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
@@ -195,6 +196,7 @@ void Hypervisor::portal_io(capsel_t) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
+		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
 		uf << e.code();
 	}
