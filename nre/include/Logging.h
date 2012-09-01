@@ -60,14 +60,16 @@ public:
 		KEYBOARD		= 1 << 14,
 		ADMISSION		= 1 << 15,
 		EXCEPTIONS		= 1 << 16,
+		PLATFORM		= 1 << 17,
 	};
 
 	static UserSm sm;
 	static const int level = 0 |
 #ifndef NDEBUG
-		CHILD_CREATE | MEM_MAP | CPUS | CHILD_KILL | ACPI | PCICFG | REBOOT | TIMER | KEYBOARD | ADMISSION
+		CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI | PCICFG |
+		REBOOT | TIMER | KEYBOARD | ADMISSION
 #else
-		CHILD_KILL
+		CHILD_KILL | MEM_MAP | PLATFORM
 #endif
 	;
 

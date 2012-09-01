@@ -90,8 +90,10 @@ int main() {
 	const Hip &hip = Hip::get();
 
 	// add all available memory
-	LOG(Logging::RESOURCES,Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
+	LOG(Logging::PLATFORM,Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
 			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi));
+	LOG(Logging::PLATFORM,Serial::get().writef("CPU runs @ %u Mhz, bus @ %u Mhz\n",
+			Hip::get().freq_tsc / 1000,Hip::get().freq_bus / 1000));
 	LOG(Logging::MEM_MAP,Serial::get().writef("Memory:\n"));
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 		LOG(Logging::MEM_MAP,Serial::get().writef(
