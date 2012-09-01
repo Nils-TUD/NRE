@@ -1,4 +1,6 @@
 /* Default linker script, for normal executables */
+/* we need this file for the parameter and profile stuff. additionally, we specify a different
+   start address */
 OUTPUT_FORMAT("elf32-i386", "elf32-i386",
 	      "elf32-i386")
 OUTPUT_ARCH(i386)
