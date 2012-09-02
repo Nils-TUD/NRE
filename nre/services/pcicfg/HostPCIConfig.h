@@ -34,7 +34,7 @@ public:
 	}
 
 	virtual bool contains(uint32_t bdf,size_t offset) const {
-		return offset < 0x40 && bdf < 0x10000;
+		return offset < 0x100 && bdf < 0x10000;
 	}
 	virtual uintptr_t addr(uint32_t,size_t) {
 		throw nre::Exception(nre::E_ARGS_INVALID);
