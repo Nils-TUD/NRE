@@ -17,16 +17,20 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <services/PCIConfig.h>
 
 class Config {
 public:
+	typedef nre::PCIConfig::bdf_type bdf_type;
+	typedef nre::PCIConfig::value_type value_type;
+
 	explicit Config() {
 	}
 	virtual ~Config() {
 	}
 
-	virtual bool contains(uint32_t bdf,size_t offset) const = 0;
-	virtual uintptr_t addr(uint32_t bdf,size_t offset) = 0;
-	virtual uint32_t read(uint32_t bdf,size_t offset) = 0;
-	virtual void write(uint32_t bdf,size_t offset,uint32_t value) = 0;
+	virtual bool contains(bdf_type bdf,size_t offset) const = 0;
+	virtual uintptr_t addr(bdf_type bdf,size_t offset) = 0;
+	virtual value_type read(bdf_type bdf,size_t offset) = 0;
+	virtual void write(bdf_type bdf,size_t offset,value_type value) = 0;
 };

@@ -77,67 +77,6 @@ public:
 	}
 
 	/**
-	 * Searches for a given device and returns the bdf of it.
-	 */
-	// TODO we should add a comment in the pcicfg for that. this would be much faster
-	bdf_type search_device(value_type theclass = ~0U,value_type subclass = ~0U,uint instance = ~0U) {
-		LOG(nre::Logging::PCI,
-				nre::Serial::get().writef("Searching for PCI device %02x,%02x, instance %u\n",
-				theclass,subclass,instance));
-		for(bdf_type bus = 0; bus < 256; bus++) {
-			// skip empty busses
-			//if (conf_read(bus << 8, 0) == ~0u) continue;
-			for(bdf_type dev = 0; dev < 32; dev++) {
-				bdf_type maxfunc = 1;
-				for(bdf_type func = 0; func < maxfunc; func++) {
-					bdf_type bdf = (bus << 8) | (dev << 3) | func;
-					value_type value = conf_read(bdf,2);
-					if(value == ~0UL)
-						continue;
-					if(maxfunc == 1 && (conf_read(bdf,3) & 0x800000))
-						maxfunc = 8;
-					LOG(nre::Logging::PCI,
-							nre::Serial::get().writef("PCI %x:%x:%x => %02x,%02x\n",
-								bus,dev,func,((value >> 24) & 0xff),((value >> 16) & 0xff)));
-					if((theclass == ~0U || ((value >> 24) & 0xff) == theclass)
-							&& (subclass == ~0U || ((value >> 16) & 0xff) == subclass)
-							&& (instance == ~0U || !instance--))
-						return bdf;
-				}
-			}
-		}
-		return 0;
-	}
-
-	/**
-	 * Scan the PCI root bus for bridges.
-	 */
-	bdf_type search_bridge(value_type dst) {
-		value_type dstbus = dst >> 8;
-		for(bdf_type dev = 0; dev < 32; dev++) {
-			bdf_type maxfunc = 1;
-			for(bdf_type func = 0; func < maxfunc; func++) {
-				bdf_type bdf = (dev << 3) | func;
-				value_type value = conf_read(bdf,2);
-				if(value == ~0UL)
-					continue;
-
-				value_type header = conf_read(bdf,3) >> 16;
-				if(maxfunc == 1 && (header & 0x80))
-					maxfunc = 8;
-				if((header & 0x7f) != 1)
-					continue;
-
-				// we have a bridge
-				value_type b = conf_read(bdf,6);
-				if((((b >> 8) & 0xff) <= dstbus) && (((b >> 16) & 0xff) >= dstbus))
-					return bdf;
-			}
-		}
-		return 0;
-	}
-
-	/**
 	 * Program the nr-th MSI/MSI-X vector of the given device.
 	 */
 	Gsi *get_gsi_msi(bdf_type bdf,uint nr,void *msix_table = 0) {
@@ -187,7 +126,7 @@ public:
 	/**
 	 * Returns the gsi and enables them.
 	 */
-	Gsi *get_gsi(bdf_type bdf,	uint nr,bool /*level*/ = false,void *msix_table = 0) {
+	Gsi *get_gsi(bdf_type bdf,uint nr,bool /*level*/ = false,void *msix_table = 0) {
 		// If the device is MSI or MSI-X capable, don't use legacy interrupts.
 		if(find_cap(bdf,CAP_MSIX) || find_cap(bdf,CAP_MSI))
 			return get_gsi_msi(bdf,nr,msix_table);
@@ -203,7 +142,7 @@ public:
 
 		uint gsi;
 		try {
-			gsi = _acpi->get_gsi(bdf,pin - 1,search_bridge(bdf));
+			gsi = _acpi->get_gsi(bdf,pin - 1,_pcicfg.search_bridge(bdf));
 		}
 		catch(...) {
 			// No clue which GSI is triggered - fall back to PIC irq
