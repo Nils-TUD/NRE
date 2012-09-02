@@ -29,7 +29,7 @@
 #define LOG(lvl,expr) 	\
 	do { \
 		if(nre::Logging::level & (lvl)) { \
-			ScopedLock<nre::UserSm> guard(&nre::Logging::sm); \
+			nre::ScopedLock<nre::UserSm> guard(&nre::Logging::sm); \
 			(expr); \
 		} \
 	} \
