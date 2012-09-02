@@ -331,7 +331,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -382,7 +382,7 @@ void ChildManager::Portals::service(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -456,7 +456,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -506,7 +506,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -588,7 +588,7 @@ void ChildManager::Portals::sc(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -784,7 +784,7 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 

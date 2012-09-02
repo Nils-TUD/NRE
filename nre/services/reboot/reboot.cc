@@ -46,7 +46,7 @@ PORTAL static void portal_reboot(capsel_t) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 

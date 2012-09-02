@@ -88,7 +88,7 @@ PORTAL static void portal_pcicfg(capsel_t) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 

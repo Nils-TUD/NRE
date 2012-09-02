@@ -21,6 +21,7 @@
 #include <stream/OStream.h>
 #include <Errors.h>
 #include <Compiler.h>
+#include <String.h>
 
 namespace std {
 	/**
@@ -64,13 +65,17 @@ namespace std {
 namespace nre {
 
 class Exception;
+class UtcbFrameRef;
 static inline OStream &operator<<(OStream &os,const Exception &e);
+UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
 
 /**
  * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and
  * have optionally a message (string).
  */
 class Exception {
+	friend 	UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
+
 	enum {
 		MAX_TRACE_DEPTH = 16
 	};
@@ -85,7 +90,28 @@ public:
 	 * @param code the error-code
 	 * @param msg optionally, a message describing the error
 	 */
-	explicit Exception(ErrorCode code,const char *msg = 0) throw();
+	explicit Exception(ErrorCode code = E_FAILURE,const char *msg = 0) throw();
+
+	/**
+	 * Constructor with a formatted string
+	 *
+	 * @param code the error-code
+	 * @param bufsize the size of the buffer for string to create
+	 * @param msg a message describing the error
+	 */
+	explicit Exception(ErrorCode code,size_t bufsize,const char *fmt,...) throw();
+
+	/**
+	 * Constructor
+	 *
+	 * @param code the error-code
+	 * @param msg a message describing the error
+	 */
+	explicit Exception(ErrorCode code,const String &msg) throw();
+
+	/**
+	 * Destructor
+	 */
 	virtual ~Exception() throw() {
 	}
 
@@ -93,7 +119,7 @@ public:
 	 * @return the error message
 	 */
 	const char *msg() const {
-		return _msg ? _msg : "";
+		return _msg.str();
 	}
 	/**
 	 * @return the error-code as a string
@@ -148,11 +174,14 @@ protected:
 
 private:
 	ErrorCode _code;
-	const char *_msg;
+	String _msg;
 	uintptr_t _backtrace[MAX_TRACE_DEPTH];
 	size_t _count;
 	static const char *_msgs[];
 };
+
+UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
+UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
 
 static inline OStream &operator<<(OStream &os,const Exception &e) {
 	e.write(os);

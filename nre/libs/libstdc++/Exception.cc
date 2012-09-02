@@ -14,6 +14,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <Logging.h>
 
@@ -23,6 +24,32 @@ Exception::Exception(ErrorCode code,const char *msg) throw()
 	: _code(code), _msg(msg), _backtrace(), _count() {
 	_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
 	LOG(Logging::EXCEPTIONS,Serial::get() << *this);
+}
+
+Exception::Exception(ErrorCode code,size_t bufsize,const char *fmt,...) throw()
+	: _code(code), _msg(), _backtrace(), _count() {
+	va_list ap;
+	va_start(ap,fmt);
+	_msg.vformat(bufsize,fmt,ap);
+	va_end(ap);
+	_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
+	LOG(Logging::EXCEPTIONS,Serial::get() << *this);
+}
+
+Exception::Exception(ErrorCode code,const String &msg) throw()
+	: _code(code), _msg(msg), _backtrace(), _count() {
+	_count = ExecEnv::collect_backtrace(&_backtrace[0],MAX_TRACE_DEPTH);
+	LOG(Logging::EXCEPTIONS,Serial::get() << *this);
+}
+
+UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e) {
+	uf << e.code() << String(e.msg());
+	return uf;
+}
+
+UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e) {
+	uf >> e._code >> e._msg;
+	return uf;
 }
 
 }

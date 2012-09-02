@@ -53,7 +53,7 @@ PORTAL static void portal_acpi(capsel_t) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 

@@ -34,11 +34,14 @@ public:
 	 * @param fmt the format
 	 */
 	static void format(char *dst,size_t max,const char *fmt,...) {
-		OStringStream os(dst,max);
 		va_list ap;
 		va_start(ap,fmt);
-		os.vwritef(fmt,ap);
+		vformat(dst,max,fmt,ap);
 		va_end(ap);
+	}
+	static void vformat(char *dst,size_t max,const char *fmt,va_list ap) {
+		OStringStream os(dst,max);
+		os.vwritef(fmt,ap);
 	}
 
 	/**
@@ -49,6 +52,13 @@ public:
 	 */
 	explicit OStringStream(char *dst,size_t max) : OStream(),
 			_dst(dst), _max(max), _pos() {
+	}
+
+	/**
+	 * @return the length of the string
+	 */
+	size_t length() const {
+		return _pos;
 	}
 
 private:

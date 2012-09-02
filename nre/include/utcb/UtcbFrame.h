@@ -248,8 +248,14 @@ public:
 	void check_reply() {
 		ErrorCode res;
 		*this >> res;
-		if(res != E_SUCCESS)
-			throw UtcbException(res);
+		if(res != E_SUCCESS) {
+			Exception e;
+			// the following will extract the error-code again, so just pretend that we haven't
+			// read it yet
+			_upos -= (sizeof(ErrorCode) + sizeof(word_t) - 1) / sizeof(word_t);
+			*this >> e;
+			throw e;
+		}
 	}
 
 	/**

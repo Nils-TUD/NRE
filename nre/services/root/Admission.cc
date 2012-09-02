@@ -80,6 +80,6 @@ void Admission::portal_sc(capsel_t) {
 	catch(const Exception& e) {
 		Syscalls::revoke(uf.delegation_window(),true);
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }

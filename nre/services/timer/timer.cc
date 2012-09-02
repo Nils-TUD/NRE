@@ -101,7 +101,7 @@ PORTAL static void portal_timer(capsel_t pid) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 

@@ -146,7 +146,7 @@ PORTAL static void portal_keyboard(capsel_t pid) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
@@ -158,7 +158,7 @@ PORTAL static void portal_mouse(capsel_t pid) {
 	}
 	catch(const Exception &e) {
 		uf.clear();
-		uf << e.code();
+		uf << e;
 	}
 }
 
