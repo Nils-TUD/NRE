@@ -40,7 +40,6 @@ void HostHPET::HPETTimer::init(cpu_t cpu) {
 		PCIConfigSession pcicfg(con);
 		uintptr_t phys_addr = pcicfg.addr(rid,0);
 		DataSpace hpetds(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,phys_addr);
-		UNUSED volatile char fetch = *reinterpret_cast<char*>(hpetds.virt());
 		_gsi = new Gsi(reinterpret_cast<void*>(hpetds.virt()),cpu);
 
 		LOG(Logging::TIMER,Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#x)\n",

@@ -47,6 +47,9 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 void DataSpace::create() {
 	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
 	create(_desc,&_sel,&_unmapsel);
+	// if its locked memory, make sure that it is mapped for us
+	if(_desc.type() == DataSpaceDesc::LOCKED)
+		touch();
 }
 
 void DataSpace::switch_to(DataSpace &dest) {
@@ -75,6 +78,8 @@ void DataSpace::join() {
 	uf.check_reply();
 	uf >> _desc;
 	_unmapsel = umcap.release();
+	if(_desc.type() == DataSpaceDesc::LOCKED)
+		touch();
 }
 
 void DataSpace::destroy() {
@@ -98,6 +103,15 @@ void DataSpace::destroy() {
 
 	CapSelSpace::get().free(_unmapsel);
 	CapSelSpace::get().free(_sel);
+}
+
+void DataSpace::touch() {
+	uint *addr = reinterpret_cast<uint*>(_desc.virt());
+	uint *end = reinterpret_cast<uint*>(_desc.virt() + _desc.size());
+	while(addr < end) {
+		UNUSED volatile uint fetch = *addr;
+		addr += ExecEnv::PAGE_SIZE / sizeof(uint);
+	}
 }
 
 }

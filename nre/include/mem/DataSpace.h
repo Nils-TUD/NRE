@@ -152,6 +152,7 @@ private:
 	void create();
 	void join();
 	void destroy();
+	void touch();
 
 	DataSpace(const DataSpace&);
 	DataSpace& operator=(const DataSpace&);
