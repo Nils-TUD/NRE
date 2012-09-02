@@ -113,11 +113,12 @@ public:
 
 private:
 	size_t free_slot() const {
+		ScopedLock<UserSm> guard(&_slotsm);
 		for(size_t i = 0; i < MAX_CHILDS; ++i) {
 			if(_childs[i] == 0)
 				return i;
 		}
-		return MAX_CHILDS;
+		throw ChildException(E_CAPACITY);
 	}
 
 	static inline size_t per_child_caps() {
@@ -157,6 +158,7 @@ private:
 	ServiceRegistry _registry;
 	UserSm _sm;
 	UserSm _switchsm;
+	mutable UserSm _slotsm;
 	Sm _regsm;
 	Sm _diesm;
 	// we need different Ecs to be able to receive a different number of caps

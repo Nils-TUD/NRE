@@ -27,7 +27,7 @@ namespace nre {
 
 ChildManager::ChildManager() : _child_count(), _childs(),
 		_portal_caps(CapSelSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _switchsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
+		_dsm(), _registry(), _sm(), _switchsm(), _slotsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
 	_ecs = new LocalThread*[CPU::count()];
 	_regecs = new LocalThread*[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
@@ -162,7 +162,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		c->_pts = new Pt*[c->_ptcount];
 		memset(c->_pts,0,c->_ptcount * sizeof(Pt*));
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
-			size_t idx = cpu * Portals::COUNT;
+			size_t idx = cpu * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
 			size_t off = cpu * Hip::get().service_caps();
 			size_t i = 0;
 			for(; i < ARRAY_SIZE(exc); ++i) {
@@ -874,6 +874,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// TODO this is not sufficient, in general
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this
 			// one to notify the parent that he should map it?
+			// TODO actually, its worse. there seems to be no way to guarantee that the delegate
+			// works because even if we touch the whole ds, the parent could revoke it again
+			// before we do the delegate. so, IMO NOVA has to raise a pagefault when trying to
+			// delegate not-present memory
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
 		}
 	}
@@ -964,16 +968,14 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 }
 
 void ChildManager::destroy_child(capsel_t pid) {
-	static UserSm sm;
-	Child *c;
-	{
-		ScopedLock<UserSm> guard(&sm);
-		size_t i = (pid - _portal_caps) / per_child_caps();
-		c = rcu_dereference(_childs[i]);
-		if(!c)
-			return;
-		rcu_assign_pointer(_childs[i],0);
-	}
+	// we need the lock here to prevent that the slot is reused before we're finished with
+	// destroying the child (so, the lock is also used in free_slot())
+	ScopedLock<UserSm> guard(&_slotsm);
+	size_t i = (pid - _portal_caps) / per_child_caps();
+	Child *c = rcu_dereference(_childs[i]);
+	if(!c)
+		return;
+	rcu_assign_pointer(_childs[i],0);
 	_registry.remove(c);
 	RCU::invalidate(c);
 	// we have to wait until its deleted here because before that we can't reuse the slot.
