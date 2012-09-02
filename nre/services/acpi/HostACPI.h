@@ -50,7 +50,7 @@ public:
 	const nre::DataSpace &mem() const {
 		return *_ds;
 	}
-	uintptr_t find(const char *name,uint instance);
+	uintptr_t find(const char *name,uint instance,size_t &length);
 
 private:
 	static char checksum(char *table,unsigned count) {

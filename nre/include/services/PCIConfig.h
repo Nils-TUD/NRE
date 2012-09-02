@@ -40,6 +40,9 @@ public:
 		REBOOT
 	};
 
+	typedef uint32_t bdf_type;
+	typedef uint32_t value_type;
+
 private:
 	PCIConfig();
 };

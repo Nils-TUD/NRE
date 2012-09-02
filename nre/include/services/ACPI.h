@@ -19,6 +19,7 @@
 #include <arch/Types.h>
 #include <ipc/Connection.h>
 #include <ipc/ClientSession.h>
+#include <services/PCIConfig.h>
 #include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
@@ -36,7 +37,8 @@ public:
 	 */
 	enum Command {
 		GET_MEM,
-		FIND_TABLE
+		FIND_TABLE,
+		GET_GSI,
 	};
 
 	/**
@@ -99,6 +101,25 @@ public:
 		uintptr_t offset;
 		uf >> offset;
 		return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
+	}
+
+	/**
+	 * Search for the GSI that is triggered by the given device, specified by <bdf>.
+	 *
+	 * @param bdf the bus-device-function triple of the device
+	 * @param pin the IRQ pin of the device
+	 * @param parent_bdf the bus-device-function triple of the parent device (e.g. bridge)
+	 * @return the GSI
+	 */
+	uint get_gsi(PCIConfig::bdf_type bdf,uint8_t pin,PCIConfig::bdf_type parent_bdf) const {
+		UtcbFrame uf;
+		uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
+		_pts[CPU::current().log_id()]->call(uf);
+
+		uf.check_reply();
+		uint gsi;
+		uf >> gsi;
+		return gsi;
 	}
 
 private:

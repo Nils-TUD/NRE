@@ -61,6 +61,7 @@ public:
 		ADMISSION		= 1 << 15,
 		EXCEPTIONS		= 1 << 16,
 		PLATFORM		= 1 << 17,
+		PCI				= 1 << 18,
 	};
 
 	static UserSm sm;

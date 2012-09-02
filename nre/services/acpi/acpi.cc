@@ -16,12 +16,15 @@
 
 #include <ipc/Service.h>
 #include <services/ACPI.h>
+#include <services/PCIConfig.h>
 
 #include "HostACPI.h"
+#include "HostATARE.h"
 
 using namespace nre;
 
 static HostACPI *hostacpi;
+static HostATARE *hostatare;
 
 PORTAL static void portal_acpi(capsel_t) {
 	UtcbFrameRef uf;
@@ -45,8 +48,20 @@ PORTAL static void portal_acpi(capsel_t) {
 				uf >> name >> instance;
 				uf.finish_input();
 
-				uintptr_t off = hostacpi->find(name.str(),instance);
+				size_t len;
+				uintptr_t off = hostacpi->find(name.str(),instance,len);
 				uf << E_SUCCESS << off;
+			}
+			break;
+
+			case ACPI::GET_GSI: {
+				HostATARE::bdf_type bdf,parentbdf;
+				uint8_t pin;
+				uf >> bdf >> pin >> parentbdf;
+				uf.finish_input();
+
+				uint gsi = hostatare->get_gsi(bdf,pin,parentbdf);
+				uf << E_SUCCESS << gsi;
 			}
 			break;
 		}
@@ -60,6 +75,7 @@ PORTAL static void portal_acpi(capsel_t) {
 int main() {
 	try {
 		hostacpi = new HostACPI();
+		hostatare = new HostATARE(*hostacpi,0);
 	}
 	catch(const Exception &e) {
 		Serial::get() << e;
