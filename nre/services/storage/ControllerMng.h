@@ -25,7 +25,7 @@
 
 class ControllerMng {
 	enum {
-		MAX_CONTROLLER			= 4,
+		MAX_CONTROLLER			= 8,
 	};
 	enum {
 		CLASS_STORAGE_CTRL		= 0x1,

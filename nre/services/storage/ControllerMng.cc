@@ -29,7 +29,9 @@ void ControllerMng::find_ahci_controller() {
 		try {
 			bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL,SUBCLASS_SATA,inst);
 		}
-		catch(...) {
+		catch(const Exception &e) {
+			LOG(Logging::STORAGE_DETAIL,Serial::get() << "Stopping search for SATA controllers: "
+					<< e.code() << ": " << e.msg() << "\n");
 			break;
 		}
 
@@ -55,7 +57,9 @@ void ControllerMng::find_ide_controller() {
 		try {
 			bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL,SUBCLASS_IDE,inst);
 		}
-		catch(...) {
+		catch(const Exception &e) {
+			LOG(Logging::STORAGE_DETAIL,Serial::get() << "Stopping search for IDE controllers: "
+					<< e.code() << ": " << e.msg() << "\n");
 			break;
 		}
 
