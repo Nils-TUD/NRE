@@ -83,6 +83,9 @@ class HostMMConfig : public Config {
 public:
 	explicit HostMMConfig();
 
+	virtual const char *name() const {
+		return "MMConfig";
+	}
 	virtual bool contains(bdf_type bdf,size_t offset) const {
 		for(nre::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {
 			if(it->contains(bdf,offset))

@@ -27,10 +27,10 @@ static HostPCIConfig *pcicfg;
 static HostMMConfig *mmcfg;
 
 static Config *find(PCIConfig::bdf_type bdf,size_t offset) {
-	if(mmcfg && mmcfg->contains(bdf,offset))
-		return mmcfg;
 	if(pcicfg->contains(bdf,offset))
 		return pcicfg;
+	if(mmcfg && mmcfg->contains(bdf,offset))
+		return mmcfg;
 	throw Exception(E_NOT_FOUND,32,"BDF %#x+%#x not found",bdf,offset);
 }
 
@@ -53,7 +53,7 @@ PORTAL static void portal_pcicfg(capsel_t) {
 				uf.finish_input();
 				PCIConfig::value_type res = cfg->read(bdf,offset);
 				LOG(Logging::PCICFG,Serial::get().writef(
-						"PCIConfig::READ bdf=%#x off=%#x: %#x\n",bdf,offset,res));
+						"%s::READ bdf=%#x off=%#x: %#x\n",cfg->name(),bdf,offset,res));
 				uf << E_SUCCESS << res;
 			}
 			break;
@@ -64,16 +64,16 @@ PORTAL static void portal_pcicfg(capsel_t) {
 				uf.finish_input();
 				cfg->write(bdf,offset,value);
 				LOG(Logging::PCICFG,Serial::get().writef(
-						"PCIConfig::WRITE bdf=%#x off=%#x: %#x\n",bdf,offset,value));
+						"%s::WRITE bdf=%#x off=%#x: %#x\n",cfg->name(),bdf,offset,value));
 				uf << E_SUCCESS;
 			}
 			break;
 
 			case PCIConfig::ADDR: {
 				uf.finish_input();
-				uintptr_t res = cfg->addr(bdf,offset);
+				uintptr_t res = mmcfg->addr(bdf,offset);
 				LOG(Logging::PCICFG,Serial::get().writef(
-						"PCIConfig::ADDR bdf=%#x off=%#x: %p\n",bdf,offset,res));
+						"MMConfig::ADDR bdf=%#x off=%#x: %p\n",bdf,offset,res));
 				uf << E_SUCCESS << res;
 			}
 			break;

@@ -29,6 +29,7 @@ public:
 	virtual ~Config() {
 	}
 
+	virtual const char *name() const = 0;
 	virtual bool contains(bdf_type bdf,size_t offset) const = 0;
 	virtual uintptr_t addr(bdf_type bdf,size_t offset) = 0;
 	virtual value_type read(bdf_type bdf,size_t offset) = 0;

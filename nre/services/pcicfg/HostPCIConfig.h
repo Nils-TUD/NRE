@@ -33,6 +33,9 @@ public:
 	explicit HostPCIConfig() : _sm(), _addr(PORT_ADDR,4), _data(PORT_DATA,4) {
 	}
 
+	virtual const char *name() const {
+		return "PCIConfig";
+	}
 	virtual bool contains(bdf_type bdf,size_t offset) const {
 		return offset < 0x100 && bdf < 0x10000;
 	}
