@@ -20,7 +20,7 @@
 
 using namespace nre;
 
-static char prog[] = {
+static uint8_t prog[] = {
 #include "../../test.dump"
 };
 
