@@ -223,7 +223,7 @@ static void portal_service(capsel_t) {
 
 static void portal_pagefault(capsel_t) {
 	UtcbExcFrameRef uf;
-	uintptr_t *addr,addrs[32];
+	uintptr_t addrs[32];
 	uintptr_t pfaddr = uf->qual[1];
 	unsigned error = uf->qual[0];
 	uintptr_t eip = uf->rip;
@@ -232,11 +232,8 @@ static void portal_pagefault(capsel_t) {
 			pfaddr,eip,CPU::current().phys_id(),error);
 	ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1),uf->rbp,addrs,32);
 	Serial::get().writef("Backtrace:\n");
-	addr = addrs;
-	while(*addr != 0) {
+	for(uintptr_t *addr = addrs; *addr != 0; ++addr)
 		Serial::get().writef("\t%p\n",*addr);
-		addr++;
-	}
 
 	// let the kernel kill us
 	uf->rip = ExecEnv::KERNEL_START;
