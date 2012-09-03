@@ -214,7 +214,6 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 				break;
 
 			case DataSpace::SWITCH_TO:
-			case DataSpace::SHARE:
 				assert(false);
 				break;
 		}

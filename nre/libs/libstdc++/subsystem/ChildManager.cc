@@ -777,10 +777,6 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 			case DataSpace::DESTROY:
 				cm->unmap(uf,c);
 				break;
-
-			case DataSpace::SHARE:
-				throw Exception(E_ARGS_INVALID);
-				break;
 		}
 	}
 	catch(const Exception& e) {
