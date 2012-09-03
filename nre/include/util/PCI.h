@@ -190,7 +190,7 @@ private:
 		try {
 			value_type header;
 			size_t offset;
-			if((find_cap(bdf,CAP_PCIE)) && (~0UL != conf_read(bdf,0x40))) {
+			if((find_cap(bdf,CAP_PCIE)) && (~0U != conf_read(bdf,0x40))) {
 				for(offset = 0x100,header = conf_read(bdf,offset >> 2);
 						offset != 0;
 						offset = header >> 20,header = conf_read(bdf,offset >> 2)) {

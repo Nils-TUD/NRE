@@ -28,7 +28,7 @@ HostPCIConfig::bdf_type HostPCIConfig::search_device(value_type theclass,value_t
 			for(bdf_type func = 0; func < maxfunc; func++) {
 				bdf_type bdf = (bus << 8) | (dev << 3) | func;
 				value_type value = read(bdf,2 * 4);
-				if(value == ~0UL)
+				if(value == ~0U)
 					continue;
 				if(maxfunc == 1 && (read(bdf,3 * 4) & 0x800000))
 					maxfunc = 8;
@@ -50,7 +50,7 @@ HostPCIConfig::bdf_type HostPCIConfig::search_bridge(value_type dst) {
 		for(bdf_type func = 0; func < maxfunc; func++) {
 			bdf_type bdf = (dev << 3) | func;
 			value_type value = read(bdf,2 * 4);
-			if(value == ~0UL)
+			if(value == ~0U)
 				continue;
 
 			value_type header = read(bdf,3 * 4) >> 16;
