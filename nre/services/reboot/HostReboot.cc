@@ -29,11 +29,11 @@ void HostRebootKeyboard::reboot() {
 	_sess.reboot();
 }
 
-HostRebootFastGate::HostRebootFastGate() : HostRebootMethod(), _port(0x92,1) {
+HostRebootA20::HostRebootA20() : HostRebootMethod(), _port(0x92,1) {
 }
 
-void HostRebootFastGate::reboot() {
-	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via fastgate...\n");
+void HostRebootA20::reboot() {
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via gate A20...\n");
 	_port.out<uint8_t>(0x01);
 }
 

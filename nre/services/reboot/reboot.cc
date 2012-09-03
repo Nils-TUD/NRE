@@ -29,8 +29,8 @@ PORTAL static void portal_reboot(capsel_t) {
 		HostRebootKeyboard kb;
 		kb.reboot();
 
-		// if we're still here, try fastgate
-		HostRebootFastGate fg;
+		// if we're still here, try gate a20
+		HostRebootA20 fg;
 		fg.reboot();
 
 		// try pci reset
