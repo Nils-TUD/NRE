@@ -62,13 +62,14 @@ public:
 		EXCEPTIONS		= 1 << 16,
 		PLATFORM		= 1 << 17,
 		PCI				= 1 << 18,
+		STORAGE			= 1 << 19,
 	};
 
 	static UserSm sm;
 	static const int level = 0 |
 #ifndef NDEBUG
-		CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI | PCICFG |
-		REBOOT | TIMER | KEYBOARD | ADMISSION
+		CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI |
+		REBOOT | TIMER | KEYBOARD | STORAGE
 #else
 		CHILD_KILL | MEM_MAP | PLATFORM
 #endif

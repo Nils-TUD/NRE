@@ -29,6 +29,7 @@
 #include <services/Mouse.h>
 #include <services/ACPI.h>
 #include <services/Timer.h>
+#include <services/Storage.h>
 #include <util/Date.h>
 #include <Exception.h>
 
@@ -129,8 +130,16 @@ static void tick_thread(void*) {
 	}
 }
 
+static void wait_for(StorageSession &sess,Storage::tag_type tag) {
+	Storage::Packet *pk = sess.consumer().get();
+	Serial::get() << "Command " << Format<Storage::tag_type>("%#x",tag) << " complete\n";
+	assert(pk->tag == tag);
+	assert(pk->status == 0);
+	sess.consumer().next();
+}
+
 int main() {
-	conscon = new Connection("console");
+	/*conscon = new Connection("console");
 	conssess = new ConsoleSession(*conscon,CPU::count());
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		GlobalThread *gt = new GlobalThread(view0,it->log_id());
@@ -139,6 +148,54 @@ int main() {
 		sc->start(String("test-thread"));
 		//Sc *sc = new Sc(gt,Qpd());
 		//sc->start();
+	}*/
+
+	DataSpace ds(0x2000,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
+	Connection storagecon("storage");
+
+	// use AHCI controller
+	{
+		StorageSession storage(storagecon,ds,0,0);
+
+		Storage::Parameter params = storage.get_params();
+		Serial::get().writef("Talking with device %s (%Lu sectors with %zu bytes each, max %zu requests)\n",
+				params.name,params.sectors,params.sector_size,params.max_requests);
+
+		// read first sector
+		storage.read(1,0);
+		wait_for(storage,1);
+		Serial::get().writef("----\n%.512s----\n",ds.virt());
+
+		// write first sector
+		memcpy(reinterpret_cast<char*>(ds.virt()),"Foobar!!",9);
+		storage.write(2,0);
+		wait_for(storage,2);
+
+		storage.flush(3);
+		wait_for(storage,3);
+	}
+
+	// use IDE controller
+	{
+		StorageSession storage(storagecon,ds,1,0);
+
+		Storage::Parameter params = storage.get_params();
+		Serial::get().writef("Talking with device %s (%Lu sectors with %zu bytes each, max %zu requests)\n",
+				params.name,params.sectors,params.sector_size,params.max_requests);
+
+		// read first sector
+		storage.read(4,0);
+		wait_for(storage,4);
+		Serial::get().writef("----\n%.512s----\n",ds.virt());
+
+		// write second sector
+		memset(reinterpret_cast<void*>(ds.virt()),0,0x200);
+		memcpy(reinterpret_cast<char*>(ds.virt()),"That is a test!!",18);
+		storage.write(5,1);
+		wait_for(storage,5);
+
+		storage.flush(6);
+		wait_for(storage,6);
 	}
 
 	/*

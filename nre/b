@@ -128,7 +128,7 @@ case "$1" in
 		bochs -f $bochscfg -q
 		;;
 	run)
-		./$2 --qemu="$QEMU" --qemu-flags="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+		./$2 --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;
 	srv)
 		./$2 --server --build-dir="$PWD/$build"
