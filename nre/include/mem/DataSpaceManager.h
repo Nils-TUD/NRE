@@ -120,7 +120,7 @@ public:
 		Slot *s1 = find_unmap(ds1);
 		Slot *s2 = find_unmap(ds2);
 		if(!s1 || !s2)
-			throw DataSpaceException(E_NOT_FOUND);
+			throw DataSpaceException(E_NOT_FOUND,32,"DataSpace %u does not exist",s1 ? ds2 : ds1);
 
 		uintptr_t tmp = s1->ds->_desc.virt();
 		s1->ds->_desc.virt(s2->ds->_desc.virt());
@@ -139,7 +139,7 @@ public:
 		ScopedLock<UserSm> guard(&_sm);
 		Slot *s = find_unmap(sel);
 		if(!s)
-			throw DataSpaceException(E_NOT_FOUND);
+			throw DataSpaceException(E_NOT_FOUND,32,"DataSpace %u does not exist",sel);
 		if(--s->refs == 0) {
 			desc = s->ds->desc();
 			delete s->ds;
@@ -163,7 +163,7 @@ private:
 	}
 	Slot *find_free() {
 		if(!_free)
-			throw DataSpaceException(E_CAPACITY);
+			throw DataSpaceException(E_CAPACITY,"No free dataspace slots");
 		Slot *s = _free;
 		_free = _free->next;
 		return s;

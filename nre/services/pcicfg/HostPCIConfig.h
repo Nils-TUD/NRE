@@ -37,7 +37,7 @@ public:
 		return offset < 0x100 && bdf < 0x10000;
 	}
 	virtual uintptr_t addr(bdf_type,size_t) {
-		throw nre::Exception(nre::E_ARGS_INVALID);
+		throw nre::Exception(nre::E_ARGS_INVALID,"ADDR cmd not supported in PCI config space");
 	}
 	virtual value_type read(bdf_type bdf,size_t offset) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);

@@ -31,8 +31,7 @@ namespace nre {
 
 class ChildMemoryException : public Exception {
 public:
-	explicit ChildMemoryException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(ChildMemoryException)
 };
 
 class OStream;
@@ -210,7 +209,7 @@ public:
 		e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
 		if(e + size < e || e + size > ExecEnv::KERNEL_START)
-			throw ChildMemoryException(E_CAPACITY);
+			throw ChildMemoryException(E_CAPACITY,32,"Unable to allocate %zu bytes",size);
 		return e;
 	}
 
@@ -256,7 +255,7 @@ private:
 	}
 	void remove(DS *ds) {
 		if(!ds)
-			throw ChildMemoryException(E_NOT_FOUND);
+			throw ChildMemoryException(E_NOT_FOUND,"Dataspace not found");
 		_list.remove(ds);
 		delete ds;
 	}

@@ -229,7 +229,7 @@ public:
 	Keyboard::Packet receive() {
 		Keyboard::Packet *pk = _consumer.get();
 		if(!pk)
-			throw Exception(E_ABORT);
+			throw Exception(E_ABORT,"Unable to receive keyboard packet");
 		Keyboard::Packet res = *pk;
 		_consumer.next();
 		return res;

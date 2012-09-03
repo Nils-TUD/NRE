@@ -25,8 +25,7 @@ namespace nre {
 
 class PCIException : public Exception {
 public:
-	explicit PCIException(ErrorCode code,const char *msg = 0) throw() : Exception(code,msg) {
-	}
+	DEFINE_EXCONSTRS(PCIException)
 };
 
 /**
@@ -138,7 +137,7 @@ public:
 		// normal GSIs -  ask atare
 		value_type pin = conf_read(bdf,0xf) >> 8;
 		if(!pin)
-			throw PCIException(E_NOT_FOUND,"No IRQ PINs connected on given BDF");
+			throw PCIException(E_NOT_FOUND,32,"No IRQ PINs connected on BDF %#x",bdf);
 
 		uint gsi;
 		try {

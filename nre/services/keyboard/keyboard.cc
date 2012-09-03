@@ -42,7 +42,7 @@ public:
 
 	void set_ds(DataSpace *ds) {
 		if(_ds != 0)
-			throw Exception(E_EXISTS);
+			throw Exception(E_EXISTS,"Keyboard session already initialized");
 		_ds = ds;
 		_prod = new Producer<T>(ds,false,false);
 	}

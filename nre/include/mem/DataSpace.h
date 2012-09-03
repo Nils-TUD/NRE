@@ -25,8 +25,7 @@ namespace nre {
 
 class DataSpaceException : public Exception {
 public:
-	explicit DataSpaceException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(DataSpaceException)
 };
 
 class ClientSession;
@@ -48,7 +47,6 @@ public:
 	enum RequestType {
 		CREATE,
 		JOIN,
-		SHARE,
 		SWITCH_TO,
 		DESTROY
 	};

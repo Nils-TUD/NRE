@@ -70,7 +70,7 @@ uintptr_t HostACPI::find(const char *name,uint instance,size_t &length) {
 	for(size_t i = 0; i < _count; i++) {
 		if(memcmp(_tables[i]->signature,name,4) == 0 && instance-- == 0) {
 			if(checksum(reinterpret_cast<char*>(_tables[i]),_tables[i]->length) != 0)
-				throw Exception(E_NOT_FOUND);
+				throw Exception(E_NOT_FOUND,64,"Unable to find ACPI table '%s'",name);
 			length = _tables[i]->length;
 			return reinterpret_cast<uintptr_t>(_tables[i]) - _ds->virt();
 		}

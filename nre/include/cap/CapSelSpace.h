@@ -26,8 +26,7 @@ namespace nre {
 
 class CapException : public Exception {
 public:
-	explicit CapException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(CapException)
 };
 
 /**

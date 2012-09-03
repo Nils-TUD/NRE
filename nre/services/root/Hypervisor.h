@@ -39,7 +39,7 @@ public:
 		if(pcicfg)
 			gsi = nre::Hip::get().cfg_gsi - ++_next_msi;
 		if(_gsis.is_set(gsi))
-			throw nre::Exception(nre::E_EXISTS);
+			throw nre::Exception(nre::E_EXISTS,32,"GSI %u already in use",gsi);
 		_gsis.set(gsi);
 	}
 	static void release_gsi(uint gsi) {

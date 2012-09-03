@@ -187,7 +187,7 @@ public:
 			size_t size,bool write) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		if(size & 0x1FF)
-			throw nre::Exception(nre::E_ARGS_INVALID,"Can only transfer complete sectors");
+			throw nre::Exception(nre::E_ARGS_INVALID,32,"Can't transfer half sectors (%zu)",size);
 		uint8_t command = _params._lba48 ? 0x25 : 0xc8;
 		if(write)
 			command = _params._lba48 ? 0x35 : 0xca;
@@ -195,7 +195,7 @@ public:
 
 		// invalid offset or size?
 		if(offset + size < offset || offset + size > ds.size())
-			throw nre::Exception(nre::E_ARGS_INVALID,"Invalid offset/size");
+			throw nre::Exception(nre::E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
 		add_dma(ds,offset,size);
 		start_command(prod,tag);
 	}
@@ -213,7 +213,7 @@ public:
 
 		for(uint done = _inprogress & ~_regs->ci,tag; done; done &= ~(1 << tag)) {
 			tag = nre::Math::bit_scan_forward(done);
-			LOG(nre::Logging::STORAGE,
+			LOG(nre::Logging::STORAGE_DETAIL,
 					nre::Serial::get().writef("Operation for user %lx is finished\n",_usertags[tag].tag));
 			if(_usertags[tag].prod)
 				_usertags[tag].prod->produce(nre::Storage::Packet(_usertags[tag].tag,0));

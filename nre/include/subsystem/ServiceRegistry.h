@@ -25,8 +25,7 @@ namespace nre {
 
 class ServiceRegistryException : public Exception {
 public:
-	explicit ServiceRegistryException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(ServiceRegistryException)
 };
 
 /**
@@ -132,7 +131,7 @@ public:
 	const Service* reg(Child *child,const String &name,capsel_t pts,size_t count,
 			const BitField<Hip::MAX_CPUS> &available) {
 		if(search(name))
-			throw ServiceRegistryException(E_EXISTS);
+			throw ServiceRegistryException(E_EXISTS,64,"Service '%s' does already exist",name.str());
 		Service *s = new Service(child,name,pts,count,available);
 		_srvs.append(s);
 		return s;
@@ -147,8 +146,12 @@ public:
 	 */
 	void unreg(Child *child,const String &name) {
 		Service *s = search(name);
-		if(!s || s->child() != child)
-			throw ServiceRegistryException(E_NOT_FOUND);
+		if(!s)
+			throw ServiceRegistryException(E_NOT_FOUND,64,"Service '%s' does not exist",name.str());
+		if(s->child() != child) {
+			throw ServiceRegistryException(E_NOT_FOUND,128,"Child '%s' does not own service '%s'",
+					child->cmdline().str(),name.str());
+		}
 		_srvs.remove(s);
 		delete s;
 	}

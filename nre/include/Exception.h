@@ -23,6 +23,29 @@
 #include <Compiler.h>
 #include <String.h>
 
+/**
+ * Defines all constructors of Exception for subclasses of it. I think, this is the best solution
+ * atm since gcc does not support constructor inheritance yet. And without it, as you can see, it's
+ * quite inconvenient to define the constructors for every class because of the variable argument
+ * constructor. An alternative would be to use only Exception and no subclasses. But then we have
+ * no way to distinguish exceptions and provide different catch blocks for them. Another way would
+ * be to use the c++11-feature variadic templates to change the whole va_* stuff. But this is quite
+ * radical and I'm not sure yet if we want that.
+ * So, by providing this macro we can keep different exception classes with little effort and can
+ * switch easily to the constructor inheritance concept as soon as its available in gcc.
+ */
+#define DEFINE_EXCONSTRS(className) \
+	explicit className(ErrorCode code = E_FAILURE,const char *msg = 0) throw() : Exception(code,msg) {	\
+	}																												\
+	explicit className(ErrorCode code,size_t bufsize,const char *fmt,...) throw() : Exception(code) {		\
+		va_list ap;																									\
+		va_start(ap,fmt);																							\
+		_msg.vformat(bufsize,fmt,ap);																				\
+		va_end(ap);																									\
+	}																												\
+	explicit className(ErrorCode code,const String &msg) throw() : Exception(code,msg) {					\
+	}
+
 namespace std {
 	/**
 	 * Type of terminate-handlers
@@ -172,7 +195,6 @@ protected:
 			os.writef("\t%p\n",*it);
 	}
 
-private:
 	ErrorCode _code;
 	String _msg;
 	uintptr_t _backtrace[MAX_TRACE_DEPTH];

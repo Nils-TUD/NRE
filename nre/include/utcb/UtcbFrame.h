@@ -42,8 +42,7 @@ OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm);
  */
 class UtcbException : public Exception {
 public:
-	explicit UtcbException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(UtcbException)
 };
 
 /**
@@ -124,11 +123,11 @@ private:
 
 	void check_untyped_write(size_t u) {
 		if(free_untyped() < u)
-			throw UtcbException(E_CAPACITY);
+			throw UtcbException(E_CAPACITY,"No free slots for untyped items");
 	}
 	void check_typed_write(size_t t) {
 		if(free_typed() < t)
-			throw UtcbException(E_CAPACITY);
+			throw UtcbException(E_CAPACITY,"No free slots for typed items");
 	}
 	void check_untyped_read(size_t u) {
 		if(_upos + u > untyped())
@@ -236,7 +235,7 @@ public:
 	 */
 	void finish_input() {
 		if(has_more_untyped() || has_more_typed())
-			throw UtcbException(E_ARGS_INVALID);
+			throw UtcbException(E_ARGS_INVALID,"Received more typed/untyped items than expected");
 		clear();
 	}
 
@@ -367,7 +366,7 @@ public:
 		TypedItem ti;
 		get_typed(ti);
 		if(ti.crd().is_null() || (ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
-			throw UtcbException(E_ARGS_INVALID);
+			throw UtcbException(E_ARGS_INVALID,"Received invalid translation");
 		return ti.crd();
 	}
 	/**
@@ -382,7 +381,7 @@ public:
 		TypedItem ti;
 		get_typed(ti);
 		if(ti.crd().is_null() || !(ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
-			throw UtcbException(E_ARGS_INVALID);
+			throw UtcbException(E_ARGS_INVALID,"Received invalid delegation");
 		return ti.crd();
 	}
 	/**

@@ -63,15 +63,16 @@ public:
 		PLATFORM		= 1 << 17,
 		PCI				= 1 << 18,
 		STORAGE			= 1 << 19,
+		STORAGE_DETAIL	= 1 << 20,
 	};
 
 	static UserSm sm;
 	static const int level = 0 |
 #ifndef NDEBUG
 		CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI |
-		REBOOT | TIMER | KEYBOARD | STORAGE
+		REBOOT | TIMER | KEYBOARD | STORAGE | STORAGE_DETAIL
 #else
-		CHILD_KILL | MEM_MAP | PLATFORM
+		CHILD_KILL | MEM_MAP | PLATFORM | STORAGE
 #endif
 	;
 

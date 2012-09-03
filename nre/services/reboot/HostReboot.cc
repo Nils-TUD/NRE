@@ -54,13 +54,13 @@ HostRebootACPI::HostRebootACPI() : HostRebootMethod(), _method(), _value(), _add
 
 	char *table = reinterpret_cast<char*>(rsdt);
 	if(rsdt->length < 129)
-		throw Exception(E_NOT_FOUND,"FACP too small");
+		throw Exception(E_NOT_FOUND,32,"FACP too small (%u)",rsdt->length);
 	if(~table[113] & 0x4)
 		throw Exception(E_NOT_FOUND,"Reset unsupported");
 	if(table[117] != 8)
-		throw Exception(E_NOT_FOUND,"Register width invalid");
+		throw Exception(E_NOT_FOUND,32,"Register width invalid (%u)",table[117]);
 	if(table[118] != 0)
-		throw Exception(E_NOT_FOUND,"Register offset invalid");
+		throw Exception(E_NOT_FOUND,32,"Register offset invalid (%u)",table[118]);
 	if(table[119] > 1)
 		throw Exception(E_NOT_FOUND,"Byte access needed");
 
@@ -75,7 +75,7 @@ HostRebootACPI::HostRebootACPI() : HostRebootMethod(), _method(), _value(), _add
 			break;
 		case 1:
 			if(_addr >= 0x10000)
-				throw Exception(E_NOT_FOUND,"PIO out of range");
+				throw Exception(E_NOT_FOUND,32,"PIO out of range (%Lu)",_addr);
 			_ports = new Ports(_addr,1);
 			break;
 		case 2:

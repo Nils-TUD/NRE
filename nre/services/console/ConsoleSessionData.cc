@@ -24,7 +24,7 @@ using namespace nre;
 void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,uint pages) {
 	ScopedLock<UserSm> guard(&_sm);
 	if(_in_ds != 0)
-		throw Exception(E_EXISTS);
+		throw Exception(E_EXISTS,"Console session already initialized");
 	_in_ds = in_ds;
 	_out_ds = out_ds;
 	if(_in_ds)

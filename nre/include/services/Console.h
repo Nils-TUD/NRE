@@ -142,7 +142,7 @@ public:
 	Console::ReceivePacket receive() {
 		Console::ReceivePacket *pk = _consumer.get();
 		if(!pk)
-			throw Exception(E_ABORT);
+			throw Exception(E_ABORT,"Unable to receive console packet");
 		Console::ReceivePacket res = *pk;
 		_consumer.next();
 		return res;

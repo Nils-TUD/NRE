@@ -139,10 +139,10 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 	// check ELF
 	if(size < sizeof(ElfEh) || sizeof(ElfPh) > elf->e_phentsize ||
 			size < elf->e_phoff + elf->e_phentsize * elf->e_phnum)
-		throw ElfException(E_ELF_INVALID);
+		throw ElfException(E_ELF_INVALID,"Size of ELF file invalid");
 	if(!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' &&
 			elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
-		throw ElfException(E_ELF_SIG);
+		throw ElfException(E_ELF_SIG,"No ELF signature");
 
 	static int exc[] = {
 		CapSelSpace::EV_DIVIDE,CapSelSpace::EV_DEBUG,CapSelSpace::EV_BREAKPOINT,CapSelSpace::EV_OVERFLOW,
@@ -192,11 +192,11 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		for(size_t i = 0; i < elf->e_phnum; i++) {
 			ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
 			if(reinterpret_cast<uintptr_t>(ph) + sizeof(ElfPh) > addr + size)
-				throw ElfException(E_ELF_INVALID);
+				throw ElfException(E_ELF_INVALID,"Program header outside binary");
 			if(ph->p_type != 1)
 				continue;
 			if(size < ph->p_offset + ph->p_filesz)
-				throw ElfException(E_ELF_INVALID);
+				throw ElfException(E_ELF_INVALID,"LOAD segment outside binary");
 
 			uint perms = 0;
 			if(ph->p_flags & PF_R)
@@ -283,7 +283,7 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			uintptr_t stack = uf->rsp & ~(ExecEnv::PAGE_SIZE - 1);
 			ChildMemory::DS *ds = c->reglist().find_by_addr(stack);
 			if(!ds)
-				throw ChildMemoryException(E_NOT_FOUND);
+				throw ChildMemoryException(E_NOT_FOUND,64,"Dataspace not found for stack @ %p",stack);
 			uf->rip = *reinterpret_cast<word_t*>(
 					ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = Mtd::RIP_LEN;
@@ -424,12 +424,12 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 			}
 
 			if(gsi >= Hip::MAX_GSIS)
-				throw Exception(E_ARGS_INVALID);
+				throw Exception(E_ARGS_INVALID,32,"Invalid GSI %u",gsi);
 			// make sure that just the owner can release it
 			if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
-				throw Exception(E_ARGS_INVALID);
+				throw Exception(E_ARGS_INVALID,32,"Can't release GSI %u. Not owner",gsi);
 			if(c->_gsi_next == Hip::MAX_GSIS)
-				throw Exception(E_CAPACITY);
+				throw Exception(E_CAPACITY,"No free GSI slots");
 
 			{
 				UtcbFrame puf;
@@ -664,9 +664,11 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
 						<< "' switches:\n\t" << src->desc() << "\n\t" << dst->desc() << "\n");
 			if(!src || !dst)
-				throw Exception(E_ARGS_INVALID);
-			if(src->desc().size() != dst->desc().size())
-				throw Exception(E_ARGS_INVALID);
+				throw Exception(E_ARGS_INVALID,64,"Unable to switch. DS %u or %u not found",srcsel,dstsel);
+			if(src->desc().size() != dst->desc().size()) {
+				throw Exception(E_ARGS_INVALID,64,"Unable to switch non-equal-sized dataspaces (%zu,%zu)",
+						src->desc().size(),dst->desc().size());
+			}
 
 			// first revoke the memory to prevent further accesses
 			CapRange(src->desc().origin() >> ExecEnv::PAGE_SHIFT,

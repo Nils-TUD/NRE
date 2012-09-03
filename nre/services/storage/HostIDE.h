@@ -87,7 +87,7 @@ private:
 			sector_type sector,size_t offset,size_t bytes,bool write) {
 		HostATA &params = _params[drive];
 		if(bytes & 0x1FF)
-			throw nre::Exception(nre::E_ARGS_INVALID,"Can only transfer complete sectors");
+			throw nre::Exception(nre::E_ARGS_INVALID,32,"Can't transfer half sectors (%zu)",bytes);
 
 		uint8_t command = (params._lba48 ? 0x24 : 0x20);
 		if(write)

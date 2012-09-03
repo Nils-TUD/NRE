@@ -43,8 +43,7 @@ class SessionIterator;
  */
 class ServiceException : public Exception {
 public:
-	explicit ServiceException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(ServiceException)
 };
 
 /**
@@ -187,7 +186,7 @@ public:
 	T *get_session_by_id(size_t id) {
 		T *sess = static_cast<T*>(rcu_dereference(_sessions[id]));
 		if(!sess)
-			throw ServiceException(E_ARGS_INVALID);
+			throw ServiceException(E_ARGS_INVALID,32,"Session %zu does not exist",id);
 		return sess;
 	}
 
@@ -216,7 +215,7 @@ protected:
 				return _sessions[i];
 			}
 		}
-		throw ServiceException(E_CAPACITY);
+		throw ServiceException(E_CAPACITY,"No free sessions");
 	}
 
 private:
@@ -257,7 +256,7 @@ private:
 		LOG(Logging::SERVICES,Serial::get() << "Destroying session " << i << "\n");
 		ServiceSession *sess = _sessions[i];
 		if(!sess)
-			throw ServiceException(E_NOT_FOUND);
+			throw ServiceException(E_NOT_FOUND,32,"Session %zu does not exist",i);
 		remove_session(sess);
 	}
 

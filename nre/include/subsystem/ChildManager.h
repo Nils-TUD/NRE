@@ -27,14 +27,12 @@ namespace nre {
 
 class ElfException : public Exception {
 public:
-	ElfException(ErrorCode code) : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(ElfException)
 };
 
 class ChildException : public Exception {
 public:
-	ChildException(ErrorCode code) : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(ChildException)
 };
 
 class ChildManager {
@@ -97,7 +95,7 @@ public:
 		const ServiceRegistry::Service* s = registry().find(name);
 		if(!s) {
 			if(!ask_parent)
-				throw ChildException(E_NOT_FOUND);
+				throw ChildException(E_NOT_FOUND,64,"Unable to find service '%s'",name.str());
 			BitField<Hip::MAX_CPUS> available;
 			capsel_t caps = get_parent_service(name.str(),available);
 			s = _registry.reg(0,name,caps,1 << CPU::order(),available);
@@ -118,7 +116,7 @@ private:
 			if(_childs[i] == 0)
 				return i;
 		}
-		throw ChildException(E_CAPACITY);
+		throw ChildException(E_CAPACITY,"No free child slots");
 	}
 
 	static inline size_t per_child_caps() {
@@ -131,7 +129,7 @@ private:
 	Child *get_child(capsel_t pid) const {
 		Child *c = rcu_dereference(_childs[((pid - _portal_caps) / per_child_caps())]);
 		if(!c)
-			throw ChildException(E_NOT_FOUND);
+			throw ChildException(E_NOT_FOUND,32,"Child with portal %u does not exist",pid);
 		return c;
 	}
 	uint get_vector(capsel_t pid) const {

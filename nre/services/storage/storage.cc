@@ -65,7 +65,7 @@ public:
 
 	void init(DataSpace *ctrlds,DataSpace *data,size_t ctrl,size_t drive) {
 		if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
-			throw Exception(E_ARGS_INVALID,"Controller/drive does not exist");
+			throw Exception(E_ARGS_INVALID,64,"Controller/drive (%zu,%zu) does not exist",ctrl,drive);
 		if(_ctrlds)
 			throw Exception(E_EXISTS,"Already initialized");
 		_ctrlds = ctrlds;
@@ -128,7 +128,7 @@ void StorageService::portal(capsel_t pid) {
 				Storage::tag_type tag;
 				uf >> tag;
 				uf.finish_input();
-				LOG(Logging::STORAGE,Serial::get().writef("[%u,%#x] FLUSH\n",sess->id(),tag));
+				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u,%#x] FLUSH\n",sess->id(),tag));
 				mng->get(sess->ctrl())->flush(sess->drive(),sess->prod(),tag);
 				uf << E_SUCCESS;
 			}
@@ -136,7 +136,7 @@ void StorageService::portal(capsel_t pid) {
 
 			case Storage::GET_PARAMS: {
 				uf.finish_input();
-				LOG(Logging::STORAGE,Serial::get().writef("[%u] GET_PARAMS\n",sess->id()));
+				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u] GET_PARAMS\n",sess->id()));
 				uf << E_SUCCESS << sess->params();
 			}
 			break;
@@ -152,7 +152,7 @@ void StorageService::portal(capsel_t pid) {
 				if(!sess->initialized())
 					throw Exception(E_ARGS_INVALID,"Not initialized");
 
-				LOG(Logging::STORAGE,Serial::get().writef("[%u,%#x] %s (%Lu..%Lu) @ %zu\n",sess->id(),
+				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u,%#x] %s (%Lu..%Lu) @ %zu\n",sess->id(),
 						tag,cmd == Storage::READ ? "READ" : "WRITE",sector,sector + count - 1,offset));
 
 				if(cmd == Storage::READ) {

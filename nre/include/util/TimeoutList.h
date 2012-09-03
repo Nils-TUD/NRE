@@ -25,8 +25,7 @@ namespace nre {
 
 class TimeoutListException : public Exception {
 public:
-	explicit TimeoutListException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(TimeoutListException)
 };
 
 /**
@@ -65,7 +64,7 @@ public:
 			_entries[i]._free = false;
 			return i;
 		}
-		throw TimeoutListException(E_CAPACITY);
+		throw TimeoutListException(E_CAPACITY,"No free timeout slots");
 	}
 
 	/**

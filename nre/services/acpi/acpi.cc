@@ -33,7 +33,7 @@ PORTAL static void portal_acpi(capsel_t) {
 		uf >> cmd;
 
 		if(!hostacpi)
-			throw Exception(E_NOT_FOUND);
+			throw Exception(E_NOT_FOUND,"No ACPI");
 
 		switch(cmd) {
 			case ACPI::GET_MEM: {

@@ -24,8 +24,7 @@ namespace nre {
 
 class RegionManagerException : public Exception {
 public:
-	explicit RegionManagerException(ErrorCode code) throw() : Exception(code) {
-	}
+	DEFINE_EXCONSTRS(RegionManagerException)
 };
 
 class OStream;
@@ -67,7 +66,7 @@ public:
 	uintptr_t alloc(size_t size) {
 		Region *r = get(size);
 		if(!r)
-			throw RegionManagerException(E_CAPACITY);
+			throw RegionManagerException(E_CAPACITY,32,"Unable to allocate %zu bytes",size);
 		r->addr += size;
 		r->size -= size;
 		return r->addr - size;
@@ -75,8 +74,10 @@ public:
 
 	void alloc(uintptr_t addr,size_t size) {
 		Region *r = get(addr,size);
-		if(!r)
-			throw RegionManagerException(E_EXISTS);
+		if(!r) {
+			throw RegionManagerException(E_EXISTS,128,"Region (%p..%p) overlaps (%p..%p)",
+					r->addr,r->addr + r->size,addr,addr + size);
+		}
 		remove_from(r,addr,size);
 	}
 
@@ -140,7 +141,7 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw RegionManagerException(E_CAPACITY);
+		throw RegionManagerException(E_CAPACITY,"No free regions");
 	}
 
 	void remove_from(Region *r,uintptr_t addr,size_t size) {

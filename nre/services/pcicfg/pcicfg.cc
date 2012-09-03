@@ -31,14 +31,14 @@ static Config *find(PCIConfig::bdf_type bdf,size_t offset) {
 		return mmcfg;
 	if(pcicfg->contains(bdf,offset))
 		return pcicfg;
-	throw Exception(E_NOT_FOUND);
+	throw Exception(E_NOT_FOUND,32,"BDF %#x+%#x not found",bdf,offset);
 }
 
 PORTAL static void portal_pcicfg(capsel_t) {
 	UtcbFrameRef uf;
 	try {
-		PCIConfig::bdf_type bdf;
-		size_t offset;
+		PCIConfig::bdf_type bdf = 0;
+		size_t offset = 0;
 		PCIConfig::Command cmd;
 		uf >> cmd;
 
