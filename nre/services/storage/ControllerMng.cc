@@ -76,8 +76,11 @@ void ControllerMng::find_ide_controller() {
 				}
 			}
 			// we need both ports
-			if(!(bar1 & bar2 & 1))
+			if(!(bar1 & bar2 & 1)) {
+				LOG(Logging::STORAGE,Serial::get().writef("We need both ports: bar1=%#x, bar2=%#x\n",
+						bar1,bar2));
 				continue;
+			}
 
 			LOG(Logging::STORAGE,
 					Serial::get().writef("Disk controller #%x IDE (%02x,%02x,%02x) iobase %#x\n",
