@@ -74,10 +74,8 @@ public:
 
 	void alloc(uintptr_t addr,size_t size) {
 		Region *r = get(addr,size);
-		if(!r) {
-			throw RegionManagerException(E_EXISTS,128,"Region (%p..%p) overlaps (%p..%p)",
-					r->addr,r->addr + r->size,addr,addr + size);
-		}
+		if(!r)
+			throw RegionManagerException(E_EXISTS,64,"Region %p..%p not found",addr,addr + size);
 		remove_from(r,addr,size);
 	}
 
