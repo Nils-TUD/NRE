@@ -225,9 +225,10 @@ private:
 			params.get_disk_parameter(&info);
 			LOG(nre::Logging::STORAGE,
 					nre::Serial::get().writef("%s drive #%zu present (%s)\n"
-							"  %Lu sectors with of %zu bytes, max %zu requests\n",
+							"  %Lu sectors with of %zu bytes (%Lu MiB), max %u requests\n",
 							params._atapi ? "ATAPI" : "ATA",&params - _params,
-							info.name,info.sectors,info.sector_size,info.max_requests));
+							info.name,info.sectors,info.sector_size,
+							(info.sectors * info.sector_size) / (1024 * 1024),info.max_requests));
 		}
 		return res;
 	}

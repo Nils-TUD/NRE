@@ -166,9 +166,10 @@ public:
 			_params.get_disk_parameter(&info);
 			LOG(nre::Logging::STORAGE,
 					nre::Serial::get().writef("%s drive #%zu present (%s)\n"
-							"  %Lu sectors with of %zu bytes, max %zu requests\n",
+							"  %Lu sectors with of %zu bytes (%Lu MiB), max %u requests\n",
 							_regs->sig == SATA_SIG_ATA ? "SATA" : "SATAPI",
-							_disknr,info.name,info.sectors,info.sector_size,info.max_requests));
+							_disknr,info.name,info.sectors,info.sector_size,
+							(info.sectors * info.sector_size) / (1024 * 1024),info.max_requests));
 		}
 		return res;
 		//set_features(0x3, 0x46);
