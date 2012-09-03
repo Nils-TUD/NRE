@@ -28,7 +28,7 @@ ObjCap::~ObjCap() {
 			try {
 				Syscalls::revoke(Crd(sel(),0,Crd::OBJ_ALL),true);
 			}
-			catch(const SyscallException&) {
+			catch(...) {
 				// ignore it
 			}
 		}
