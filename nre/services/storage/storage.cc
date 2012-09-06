@@ -120,6 +120,7 @@ void StorageService::portal(capsel_t pid) {
 				uf >> ctrl >> drive;
 				uf.finish_input();
 				sess->init(new DataSpace(ctrlsel),new DataSpace(datasel),ctrl,drive);
+				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}
 			break;
