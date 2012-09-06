@@ -62,8 +62,7 @@ public:
 		uint8_t packets[18];
 		HostATA &params = _params[drive];
 		// XXX handle RO media
-		if(!make_sector_packets(params,packets,params._lba48 ? 0xea : 0xe7,0,0))
-			throw nre::Exception(nre::E_FAILURE,"Creating packet failed");
+		make_sector_packets(params,packets,params._lba48 ? 0xea : 0xe7,0,0);
 		uint res;
 		if((res = ata_command(packets + 8,0,0,true)))
 			throw nre::Exception(nre::E_FAILURE,32,"ATA command failed with %#x",res);
@@ -88,6 +87,9 @@ private:
 		HostATA &params = _params[drive];
 		if(bytes & 0x1FF)
 			throw nre::Exception(nre::E_ARGS_INVALID,32,"Can't transfer half sectors (%zu)",bytes);
+		// invalid offset or size?
+		if(offset + bytes < offset || offset + bytes > ds.size())
+			throw nre::Exception(nre::E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,bytes);
 
 		uint8_t command = (params._lba48 ? 0x24 : 0x20);
 		if(write)
@@ -97,8 +99,7 @@ private:
 		uint res = 0;
 		while(pos < bytes) {
 			// build sector packet
-			if(!make_sector_packets(params,packets,command,sector,1))
-				throw nre::Exception(nre::E_FAILURE,"Unable to build packet");
+			make_sector_packets(params,packets,command,sector,1);
 			if(params._lba48)
 				send_packet(packets);
 
@@ -174,12 +175,18 @@ private:
 	/**
 	 * Initialize packets for a single sector LBA function.
 	 */
-	bool make_sector_packets(HostATA &params,uint8_t *packets,uint8_t command,
+	void make_sector_packets(HostATA &params,uint8_t *packets,uint8_t command,
 			sector_type sector,size_t count) {
-		if(sector >= params._maxsector || sector > (params._maxsector - count))
-			return false;
+		if(sector >= params._maxsector) {
+			throw nre::Exception(nre::E_FAILURE,64,"Sector %Lu is invalid (available: 0..%Lu)",
+					sector,params._maxsector - 1);
+		}
+		if(sector + count > params._maxsector) {
+			throw nre::Exception(nre::E_FAILURE,64,"Sector %Lu is invalid (available: 0..%Lu)",
+					sector + count - 1,params._maxsector - 1);
+		}
 		if((count >> 16) || (!params._lba48 && count >> 8))
-			return false;
+			throw nre::Exception(nre::E_FAILURE,32,"Invalid sector count (%zu)",count);
 		packets[0] = 0x3c;
 		packets[1] = count >> 8;
 		packets[2] = sector >> 24;
@@ -192,7 +199,6 @@ private:
 		packets[12] = sector >> 16;
 		packets[13] = (params._slave ? 0xf0 : 0xe0) | ((sector >> 24) & (params._lba48 ? 0 : 0xf));
 		packets[14] = command;
-		return true;
 	}
 
 	uint identify_drive(uint16_t *buffer,HostATA &params,bool slave) {

@@ -60,14 +60,24 @@ public:
 		return 0;
 	}
 
+	uint64_t sectors() const {
+		return _maxsector;
+	}
+	void set_sectors(uint64_t sectors) {
+		_maxsector = sectors;
+	}
+	size_t sector_size() const {
+		return _atapi ? 2048 : 512;
+	}
+
 	/**
 	 * Get the disk parameters.
 	 */
 	unsigned get_disk_parameter(nre::Storage::Parameter *params) const {
 		params->flags = _atapi ? nre::Storage::Parameter::FLAG_ATAPI :
 						(_maxsector ? nre::Storage::Parameter::FLAG_HARDDISK : 0);
-		params->sectors = _maxsector;
-		params->sector_size = _atapi ? 2048 : 512;
+		params->sectors = sectors();
+		params->sector_size = sector_size();
 		params->max_requests = _maxcount;
 		memcpy(params->name,_model,40);
 		return 0;

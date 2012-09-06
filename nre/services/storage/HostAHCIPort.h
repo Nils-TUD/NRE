@@ -187,23 +187,36 @@ public:
 			const nre::DataSpace &ds,nre::Storage::sector_type sector,size_t offset,
 			size_t size,bool write) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
+		LOG(nre::Logging::STORAGE_DETAIL,nre::Serial::get().writef(
+				"readwrite sector=%Lu off=%zu size=%zu\n",sector,offset,size));
+		// invalid offset or size?
 		if(size & 0x1FF)
 			throw nre::Exception(nre::E_ARGS_INVALID,32,"Can't transfer half sectors (%zu)",size);
+		if(offset + size < offset || offset + size > ds.size())
+			throw nre::Exception(nre::E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
+		if((size & 1) || size >> 22)
+			throw nre::Exception(nre::E_ARGS_INVALID,32,"Invalid byte count (%zu)",size);
+		if(sector >= _params._maxsector) {
+			throw nre::Exception(nre::E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
+					sector,_params._maxsector - 1);
+		}
+		if(sector + (size / _params.sector_size()) > _params._maxsector) {
+			throw nre::Exception(nre::E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
+					sector + (size / _params.sector_size()) - 1,_params._maxsector - 1);
+		}
+
 		uint8_t command = _params._lba48 ? 0x25 : 0xc8;
 		if(write)
 			command = _params._lba48 ? 0x35 : 0xca;
 		set_command(command,sector,!write,size >> 9);
 
-		// invalid offset or size?
-		if(offset + size < offset || offset + size > ds.size())
-			throw nre::Exception(nre::E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
 		add_dma(ds,offset,size);
 		start_command(prod,tag);
 	}
 
 	void debug() {
-		nre::Serial::get().writef("AHCI is %x ci %x ie %x cmd %x tfd %x\n",
-				_regs->is,_regs->ci,_regs->ie,_regs->cmd,_regs->tfd);
+		nre::Serial::get().writef("AHCI is %x ci %x ie %x cmd %x tfd %x tag %x\n",
+				_regs->is,_regs->ci,_regs->ie,_regs->cmd,_regs->tfd,_tag);
 	}
 
 	void irq() {
@@ -264,31 +277,26 @@ private:
 		memcpy(_ct + _tag * (128 + MAX_PRD_COUNT * 16) / 4,cfis,sizeof(cfis));
 	}
 
-	bool add_dma(const nre::DataSpace &ds,size_t offset,uint count) {
-		if((count & 1) || count >> 22)
-			return true;
-
+	void add_dma(const nre::DataSpace &ds,size_t offset,uint count) {
 		uint32_t prd = _cl[_tag * CL_DWORDS] >> 16;
 		if(prd >= MAX_PRD_COUNT)
-			return true;
+			throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
 		_cl[_tag * CL_DWORDS] += 1 << 16;
 		uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 		addr2phys(ds,reinterpret_cast<void*>(ds.virt() + offset),p);
 		p[3] = count - 1;
-		return false;
 	}
 
-	bool add_prd(const nre::DataSpace &ds,uint count) {
+	void add_prd(const nre::DataSpace &ds,uint count) {
 		uint32_t prd = _cl[_tag * CL_DWORDS] >> 16;
 		assert(~count & 1);
 		assert(!(count >> 22));
 		if(prd >= MAX_PRD_COUNT)
-			return true;
+			throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
 		_cl[_tag * CL_DWORDS] += 1 << 16;
 		uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 		addr2phys(ds,reinterpret_cast<void*>(ds.virt()),p);
 		p[3] = count - 1;
-		return false;
 	}
 
 	size_t start_command(nre::Producer<nre::Storage::Packet> *prod,ulong usertag) {
