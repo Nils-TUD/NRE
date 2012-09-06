@@ -35,8 +35,10 @@ public:
 	 *
 	 * @param sess your console-session
 	 * @param page the console-page to write to
+	 * @param echo whether to echo read characters
 	 */
-	explicit ConsoleStream(ConsoleSession &sess,uint page = 0) : _sess(sess), _page(page), _pos(0) {
+	explicit ConsoleStream(ConsoleSession &sess,uint page = 0,bool echo = true)
+		: _sess(sess), _page(page), _pos(0), _echo(echo) {
 	}
 
 	/**
@@ -86,6 +88,7 @@ private:
 	ConsoleSession &_sess;
 	uint _page;
 	uint _pos;
+	bool _echo;
 };
 
 }

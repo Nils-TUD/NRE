@@ -26,6 +26,8 @@ char ConsoleStream::read() {
 		if(c != '\0' && (~pk.flags & Keyboard::RELEASE))
 			break;
 	}
+	if(_echo)
+		write(c);
 	return c;
 }
 
