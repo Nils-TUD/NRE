@@ -22,7 +22,6 @@
 #include <util/PCI.h>
 #include <Logging.h>
 
-#include "HostATA.h"
 #include "Controller.h"
 
 /**

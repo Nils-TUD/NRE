@@ -19,7 +19,6 @@
 #include <mem/DataSpace.h>
 #include <ipc/Producer.h>
 #include <services/Storage.h>
-#include "HostATA.h"
 
 /**
  * The base class for all disk controllers

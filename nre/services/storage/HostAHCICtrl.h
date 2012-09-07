@@ -25,7 +25,7 @@
 #include <Assert.h>
 #include <CPU.h>
 
-#include "HostAHCIPort.h"
+#include "HostAHCIDevice.h"
 #include "Controller.h"
 
 /**
@@ -34,7 +34,7 @@
  * State: testing
  * Features: Ports
  */
-class HostAHCI : public Controller {
+class HostAHCICtrl : public Controller {
 
 	/**
 	 * The register set of an AHCI controller.
@@ -56,11 +56,11 @@ class HostAHCI : public Controller {
 			};
 			volatile uint32_t generic[0x100 >> 2];
 		};
-		HostAHCIPort::Register ports[32];
+		HostAHCIDevice::Register ports[32];
 	};
 
 public:
-	explicit HostAHCI(nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar)
+	explicit HostAHCICtrl(nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar)
 			: Controller(), _gsi(gsi), _gsigt(gsi_thread,nre::CPU::current().log_id()),
 			  _gsisc(&_gsigt,nre::Qpd()), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
 			  _regs_high(0), _portcount(0), _ports() {
@@ -76,7 +76,7 @@ public:
 		if(_regs->pi >> 30) {
 			_regs_high_ds = new nre::DataSpace(0x1000,
 					nre::DataSpaceDesc::LOCKED,nre::DataSpaceDesc::RW,bar + 0x1000);
-			_regs_high = reinterpret_cast<HostAHCIPort::Register*>(
+			_regs_high = reinterpret_cast<HostAHCIDevice::Register*>(
 					_regs_high_ds->virt() + (bar & 0xfe0));
 		}
 
@@ -100,13 +100,13 @@ public:
 		_regs->ghc |= 2;
 
 		// start the gsi thread
-		_gsigt.set_tls<HostAHCI*>(nre::Thread::TLS_PARAM,this);
+		_gsigt.set_tls<HostAHCICtrl*>(nre::Thread::TLS_PARAM,this);
 		char name[32];
 		nre::OStringStream os(name,sizeof(name));
 		os << "ahci-gsi-" << _gsi->gsi();
 		_gsisc.start(nre::String(name));
 	}
-	virtual ~HostAHCI() {
+	virtual ~HostAHCICtrl() {
 		delete _gsi;
 		delete _regs_ds;
 		delete _regs_high_ds;
@@ -141,29 +141,23 @@ public:
 	}
 
 private:
-	void create_ahci_port(uint nr,HostAHCIPort::Register *portreg,bool dmar) {
+	void create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bool dmar) {
 		// port not implemented
 		if(!(_regs->pi & (1 << nr)))
 			return;
 
 		// check what kind of drive we have, if any
-		uint32_t sig = HostAHCIPort::get_signature(portreg);
-		if(sig != HostAHCIPort::SATA_SIG_NONE) {
-			_ports[nr] = new HostAHCIPort(portreg,_portcount,((_regs->cap >> 8) & 0x1f) + 1,dmar);
-			uint res;
-			if((res = _ports[nr]->init())) {
-				LOG(nre::Logging::STORAGE,
-						nre::Serial::get().writef("AHCI Port %#x init failed: %#x\n",nr,res));
-				delete _ports[nr];
-				_ports[nr] = 0;
-			}
-			else
-				_portcount++;
+		uint32_t sig = HostAHCIDevice::get_signature(portreg);
+		if(sig != HostAHCIDevice::SATA_SIG_NONE) {
+			_ports[nr] = new HostAHCIDevice(portreg,_portcount,((_regs->cap >> 8) & 0x1f) + 1,dmar);
+			_ports[nr]->determine_capacity();
+			LOG(nre::Logging::STORAGE,_ports[nr]->print());
+			_portcount++;
 		}
 	}
 
 	static void gsi_thread(void*) {
-		HostAHCI *ha = nre::Thread::current()->get_tls<HostAHCI*>(nre::Thread::TLS_PARAM);
+		HostAHCICtrl *ha = nre::Thread::current()->get_tls<HostAHCICtrl*>(nre::Thread::TLS_PARAM);
 		while(1) {
 			ha->_gsi->down();
 
@@ -187,7 +181,7 @@ private:
 	nre::DataSpace *_regs_ds;
 	nre::DataSpace *_regs_high_ds;
 	Register *_regs;
-	HostAHCIPort::Register *_regs_high;
+	HostAHCIDevice::Register *_regs_high;
 	size_t _portcount;
-	HostAHCIPort *_ports[32];
+	HostAHCIDevice *_ports[32];
 };

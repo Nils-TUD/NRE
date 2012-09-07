@@ -17,8 +17,8 @@
 #include <kobj/Gsi.h>
 
 #include "ControllerMng.h"
-#include "HostAHCI.h"
-#include "HostIDE.h"
+#include "HostAHCICtrl.h"
+#include "HostIDECtrl.h"
 
 using namespace nre;
 
@@ -45,7 +45,7 @@ void ControllerMng::find_ahci_controller() {
 				_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,_pci.conf_read(bdf,0),
 				_pci.conf_read(bdf,9)));
 
-		_ctrls[_count++] = new HostAHCI(_pci,bdf,gsi,dmar);
+		_ctrls[_count++] = new HostAHCICtrl(_pci,bdf,gsi,dmar);
 		inst++;
 	}
 }
@@ -91,7 +91,14 @@ void ControllerMng::find_ide_controller() {
 					_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,bar1 & ~0x3));
 
 			// create controller
-			_ctrls[_count++] = new HostIDE(bar1 & ~0x3);
+			try {
+				// TODO determine irq
+				Controller *ctrl = new HostIDECtrl(i,i == 0 ? 12 : 13,bar1 & ~0x3,0,0,false);
+				_ctrls[_count++] = ctrl;
+			}
+			catch(const Exception &e) {
+				LOG(Logging::STORAGE,Serial::get() << e.msg() << "\n");
+			}
 		}
 		inst++;
 	}
