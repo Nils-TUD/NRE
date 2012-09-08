@@ -59,6 +59,8 @@ enum {
 	COMMAND_WRITE_DMA			= 0xCA,
 	COMMAND_WRITE_DMA_EXT		= 0x35,
 	COMMAND_PACKET				= 0xA0,
+	COMMAND_FLUSH_CACHE			= 0xE7,
+	COMMAND_FLUSH_CACHE_EXT		= 0xEA,
 	COMMAND_ATAPI_RESET			= 0x8,
 };
 
@@ -136,6 +138,9 @@ enum {
 
 class Device {
 public:
+	typedef nre::Storage::sector_type sector_type;
+	typedef nre::Storage::tag_type tag_type;
+
 	enum Operation {
 		READ,
 		WRITE,
@@ -332,7 +337,7 @@ public:
 	uint id() const {
 		return _id;
 	}
-	uint64_t capacity() const {
+	sector_type capacity() const {
 		return _capacity;
 	}
 	size_t sector_size() const {
@@ -394,7 +399,7 @@ protected:
 
 	uint _id;
 	size_t _sector_size;
-	uint64_t _capacity;
+	sector_type _capacity;
 	Identify _info;
 	char _name[40];
 };

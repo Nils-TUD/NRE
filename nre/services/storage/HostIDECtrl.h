@@ -18,6 +18,8 @@
 
 #include <kobj/Ports.h>
 #include <kobj/Gsi.h>
+#include <kobj/GlobalThread.h>
+#include <kobj/Sc.h>
 #include <util/Clock.h>
 
 #include "Device.h"
@@ -26,23 +28,17 @@
 class HostATADevice;
 
 class HostIDECtrl : public Controller {
-	enum {
-		DEVICE_PRIMARY		= 0,
-		DEVICE_SECONDARY	= 1
-	};
-	enum {
-		DEVICE_COUNT		= 4
-	};
-	enum {
-		DEVICE_PRIM_MASTER	= 0,
-		DEVICE_PRIM_SLAVE	= 1,
-		DEVICE_SEC_MASTER	= 2,
-		DEVICE_SEC_SLAVE	= 3,
-	};
-
 public:
-	explicit HostIDECtrl(uint id,uint irq,nre::Ports::port_t portbase,nre::Ports::port_t bmportbase,
-			uint bmportcount,bool dma = true);
+	/* physical region descriptor */
+	struct PRD {
+		uint32_t buffer;
+		uint16_t byteCount;
+		uint16_t : 15;
+		uint16_t last : 1;
+	} PACKED;
+
+	explicit HostIDECtrl(uint id,uint irq,nre::Ports::port_t portbase,
+			nre::Ports::port_t bmportbase,uint bmportcount,bool dma = true);
 	virtual ~HostIDECtrl() {
 		delete _bm;
 	}
@@ -50,38 +46,48 @@ public:
 	virtual size_t drive_count() const {
 		return (_devs[0] ? 1 : 0) + (_devs[1] ? 1 : 0);
 	}
-
 	virtual bool exists(size_t drive) const {
 		return drive < 2 && _devs[drive];
 	}
 
 	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const;
-
-	virtual void flush(size_t drive,producer_type *prod,tag_type tag) {
-		// TODO
-#if 0
-		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		uint8_t packets[18];
-		HostATA &params = _params[drive];
-		// XXX handle RO media
-		make_sector_packets(params,packets,params._lba48 ? 0xea : 0xe7,0,0);
-		uint res;
-		if((res = ata_command(packets + 8,0,0,true)))
-			throw nre::Exception(nre::E_FAILURE,32,"ATA command failed with %#x",res);
-		prod->produce(nre::Storage::Packet(tag,0));
-#endif
-	}
-
+	virtual void flush(size_t drive,producer_type *prod,tag_type tag);
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,size_t offset,size_t bytes);
+			size_t offset,sector_type sector,sector_type count);
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,size_t offset,size_t bytes);
+			size_t offset,sector_type sector,sector_type count);
 
+	/**
+	 * @return whether DMA should and can be used
+	 */
 	bool dma_enabled() const {
 		return _dma;
 	}
+	/**
+	 * @return whether interrupts should be used
+	 */
 	bool irqs_enabled() const {
 		return _irqs;
+	}
+
+	/**
+	 * Performs a few io-port-reads (just to waste a bit of time ;))
+	 */
+	void wait() {
+		inb(ATA_REG_STATUS);
+		inb(ATA_REG_STATUS);
+		inb(ATA_REG_STATUS);
+		inb(ATA_REG_STATUS);
+	}
+
+	/**
+	 * Waits until an IRQ arrived
+	 */
+	void wait_irq() {
+		if(_gsi) {
+			_gsi->zero();
+			LOG(nre::Logging::STORAGE_DETAIL,nre::Serial::get() << "Got GSI " << _gsi->gsi() << "\n");
+		}
 	}
 
 	/**
@@ -93,13 +99,32 @@ public:
 	int wait_until(timevalue_t timeout,uint8_t set,uint8_t unset);
 
 	/**
-	 * Performs a few io-port-reads (just to waste a bit of time ;))
+	 * Checks whether <res> is OK and throws exceptions with corresponding messages if not
+	 *
+	 * @param device the device-id
+	 * @param res the result from reading the status register
+	 * @param name the name of the operation to display
 	 */
-	void wait() {
-		inb(ATA_REG_STATUS);
-		inb(ATA_REG_STATUS);
-		inb(ATA_REG_STATUS);
-		inb(ATA_REG_STATUS);
+	void handle_status(uint device,int res,const char *name);
+
+	/**
+	 * @return pointer to the PRDT (virtual)
+	 */
+	PRD *prdt() const {
+		return reinterpret_cast<PRD*>(_prdt.virt());
+	}
+	/**
+	 * @return physical address of PRDT
+	 */
+	uintptr_t prdt_addr() const {
+		return _prdt.phys();
+	}
+
+	/**
+	 * Reads a byte from the bus-master-register <reg> of the given controller
+	 */
+	uint8_t inbmrb(uint16_t reg) {
+		return _bm->in<uint8_t>(reg);
 	}
 
 	/**
@@ -113,10 +138,18 @@ public:
 	}
 
 	/**
-	 * Reads a byte from the bus-master-register <reg> of the given controller
+	 * Reads a byte from the controller-register <reg>
 	 */
-	uint8_t inbmrb(uint16_t reg) {
-		return _bm->in<uint8_t>(reg);
+	uint8_t inb(uint16_t reg) {
+		return _ctrl.in<uint8_t>(reg);
+	}
+	/**
+	 * Reads <count> words from the controller-register <reg> into <buf>
+	 */
+	void inwords(uint16_t reg,uint16_t *buf,size_t count) {
+		size_t i;
+		for(i = 0; i < count; i++)
+			buf[i] = _ctrl.in<uint16_t>(reg);
 	}
 
 	/**
@@ -140,33 +173,20 @@ public:
 			_ctrl.out<uint16_t>(buf[i],reg);
 	}
 
-	/**
-	 * Reads a byte from the controller-register <reg>
-	 */
-	uint8_t inb(uint16_t reg) {
-		return _ctrl.in<uint8_t>(reg);
-	}
-
-	/**
-	 * Reads <count> words from the controller-register <reg> into <buf>
-	 */
-	void inwords(uint16_t reg,uint16_t *buf,size_t count) {
-		size_t i;
-		for(i = 0; i < count; i++)
-			buf[i] = _ctrl.in<uint16_t>(reg);
-	}
-
 private:
 	bool is_bus_responding();
 	HostATADevice *detect_drive(uint id);
 	HostATADevice *identify(uint id,uint cmd);
 
-	static void gsi_thread(void *arg) {
-		uint no = reinterpret_cast<word_t>(arg);
-		nre::Gsi gsi(no);
+	static void gsi_thread(void *) {
+#if 0
+		HostIDECtrl *ctrl = nre::Thread::current()->get_tls<HostIDECtrl*>(nre::Thread::TLS_PARAM);
+		nre::Gsi gsi(ctrl->_irq);
 		while(1) {
 			gsi.down();
+			nre::Serial::get() << "Got IRQ " << ctrl->_irq << "\n";
 		}
+#endif
 	}
 
 	uint _id;
@@ -177,5 +197,9 @@ private:
 	nre::Ports *_bm;
 	nre::Clock _clock;
 	nre::UserSm _sm;
+	nre::Gsi *_gsi;
+	nre::DataSpace _prdt;
+	nre::GlobalThread _gsigt;
+	nre::Sc _gsisc;
 	HostATADevice *_devs[2];
 };

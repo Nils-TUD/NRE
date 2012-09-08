@@ -18,8 +18,8 @@
 
 using namespace nre;
 
-bool HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,uint64_t sector,
-		size_t count,size_t secsize) {
+void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,sector_type sector,
+		sector_type count,size_t secsize) {
 	if(secsize == 0)
 		secsize = _sector_size;
 	uint8_t *cmd = cmdaddr();
@@ -29,9 +29,7 @@ bool HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,u
 		cmd[0] = SCSI_CMD_READ_SECTORS;
 	/* no writing here ;) */
 	if(op != READ)
-		return false;
-	if(count == 0)
-		return false;
+		throw Exception(E_ARGS_INVALID,"Writing is not supported for ATAPI");
 	if(cmd[0] == SCSI_CMD_READ_SECTORS_EXT) {
 		cmd[6] = (count >> 24) & 0xFF;
 		cmd[7] = (count >> 16) & 0xFF;
@@ -46,48 +44,35 @@ bool HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,u
     cmd[3] = (sector >> 16) & 0xFF;
     cmd[4] = (sector >> 8) & 0xFF;
     cmd[5] = (sector >> 0) & 0xFF;
-    return request(_cmd,ds,offset,count * _sector_size);
+    request(_cmd,ds,offset,count * _sector_size);
 }
 
 void HostATAPIDevice::determine_capacity() {
-	DataSpace ds(8 + 12,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
-	uint8_t *cmd = reinterpret_cast<uint8_t*>(ds.virt());
+	uint8_t *cmd = cmdaddr();
 	uint8_t *resp = cmd + 8;
 	memset(cmd,0,20);
 	cmd[0] = SCSI_CMD_READ_CAPACITY;
-	bool res = request(ds,ds,8,8);
-	if(!res)
-		_capacity = 0;
-	else
-		_capacity = (resp[0] << 24) | (resp[1] << 16) | (resp[2] << 8) | (resp[3] << 0);
+	request(_cmd,_cmd,8,8);
+	_capacity = (resp[0] << 24) | (resp[1] << 16) | (resp[2] << 8) | (resp[3] << 0);
 }
 
-bool HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,size_t offset,size_t bufSize) {
-	int res;
-	size_t size;
-
+void HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,size_t offset,size_t bufSize) {
 	/* send PACKET command to drive */
-	if(!HostATADevice::readwrite(PACKET,cmd,0,0xFFFF00,1,12))
-		return false;
+	HostATADevice::readwrite(PACKET,cmd,0,0xFFFF00,1,12);
 
 	/* now transfer the data */
-	if(_ctrl.dma_enabled() && has_dma())
-		return transferDMA(READ,data,offset,_sector_size,bufSize / _sector_size);
+	if(_ctrl.dma_enabled() && has_dma()) {
+		transferDMA(READ,data,offset,_sector_size,bufSize / _sector_size);
+		return;
+	}
 
 	/* ok, no DMA, so wait first until the drive is ready */
-	res = _ctrl.wait_until(ATAPI_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
-	if(res == -1) {
-		ATA_LOG("Device %d: Timeout before ATAPI-PIO-transfer",_id);
-		return false;
-	}
-	if(res != 0) {
-		ATA_LOG("Device %d: ATAPI-PIO-transfer failed: %#x",_id,res);
-		return false;
-	}
+	int res = _ctrl.wait_until(ATAPI_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
+	_ctrl.handle_status(_id,res,"ATAPI PIO transfer");
 
 	/* read the actual size per transfer */
 	ATA_LOGDETAIL("Reading response-size");
-	size = ((size_t)_ctrl.inb(ATA_REG_ADDRESS3) << 8) | (size_t)_ctrl.inb(ATA_REG_ADDRESS2);
+	size_t size = ((size_t)_ctrl.inb(ATA_REG_ADDRESS3) << 8) | (size_t)_ctrl.inb(ATA_REG_ADDRESS2);
 	/* do the PIO-transfer (no check at the beginning; seems to cause trouble on some machines) */
-	return transferPIO(READ,data,offset,size,bufSize / size,false);
+	transferPIO(READ,data,offset,size,bufSize / size,false);
 }

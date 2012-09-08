@@ -64,36 +64,44 @@ void ControllerMng::find_ide_controller() {
 		}
 
 		// primary and secondary controller
+		PCI::value_type bar4 = _pci.conf_read(bdf,8);
 		for(uint i = 0; i < 2; i++) {
-			PCI::value_type bar1 = _pci.conf_read(bdf,4 + i * 2);
-			PCI::value_type bar2 = _pci.conf_read(bdf,4 + i * 2 + 1);
+			PCI::value_type bar0 = _pci.conf_read(bdf,4 + i * 2);
+			PCI::value_type bar1 = _pci.conf_read(bdf,4 + i * 2 + 1);
+			uint32_t bmr = bar4 ? ((bar4 & ~0x3) + 8 * i) : 0;
 
 			// try legacy port
-			if(!bar1 && !bar2) {
+			if(!bar0 && !bar1) {
 				if(!i) {
-					bar1 = 0x1f1;
-					bar2 = 0x3f7;
+					bar0 = 0x1f1;
+					bar1 = 0x3f7;
 				}
 				else {
-					bar1 = 0x171;
-					bar2 = 0x377;
+					bar0 = 0x171;
+					bar1 = 0x377;
 				}
 			}
 			// we need both ports
-			if(!(bar1 & bar2 & 1)) {
+			if(!(bar0 & bar1 & 1)) {
 				LOG(Logging::STORAGE,Serial::get().writef("We need both ports: bar1=%#x, bar2=%#x\n",
-						bar1,bar2));
+						bar0,bar1));
 				continue;
 			}
 
-			LOG(Logging::STORAGE,
-					Serial::get().writef("Disk controller #%x IDE (%02x,%02x,%02x) iobase %#x\n",
-					_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,bar1 & ~0x3));
+			// determine irq
+			uint gsi = 0;
+			PCI::value_type progif = _pci.conf_read(bdf,0x2);
+			progif = (progif >> 8) & 0xFF;
+			if(progif == 0x8A || progif == 0x80)
+				gsi = _acpi.irq_to_gsi(14 + i);
+
+			LOG(Logging::STORAGE,Serial::get().writef(
+					"Disk controller #%x IDE (%02x,%02x,%02x) iobase %#x gsi %u bmr %#x\n",
+					_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,bar0 & ~0x3,gsi,bmr));
 
 			// create controller
 			try {
-				// TODO determine irq
-				Controller *ctrl = new HostIDECtrl(i,i == 0 ? 12 : 13,bar1 & ~0x3,0,0,false);
+				Controller *ctrl = new HostIDECtrl(i,gsi,bar0 & ~0x3,bmr,8,true);
 				_ctrls[_count++] = ctrl;
 			}
 			catch(const Exception &e) {

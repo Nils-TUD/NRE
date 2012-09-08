@@ -42,15 +42,18 @@ public:
 	virtual void determine_capacity() {
 		_capacity = has_lba48() ? _info.lba48MaxLBA : _info.userSectorCount;
 	}
-	virtual bool readwrite(Operation op,const nre::DataSpace &ds,size_t offset,uint64_t sector,
-			size_t count,size_t secsize = 0);
+	virtual void readwrite(Operation op,const nre::DataSpace &ds,size_t offset,sector_type sector,
+			sector_type count,size_t secsize = 0);
+	void flush_cache();
 
 protected:
-	bool transferPIO(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,size_t count,bool waitfirst);
-	bool transferDMA(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,size_t count);
+	void transferPIO(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,
+			sector_type count,bool waitfirst);
+	void transferDMA(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,
+			sector_type count);
 
 	uint get_command(Operation op);
-	bool setup_command(uint64_t lba,size_t secCount,uint cmd);
+	void setup_command(sector_type sector,sector_type count,uint cmd);
 
 	HostIDECtrl &_ctrl;
 };

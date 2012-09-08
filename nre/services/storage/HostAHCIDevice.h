@@ -69,23 +69,23 @@ public:
 	 */
 	union Register {
 		struct {
-			volatile uint32_t clb;
-			volatile uint32_t clbu;
-			volatile uint32_t fb;
-			volatile uint32_t fbu;
-			volatile uint32_t is;
-			volatile uint32_t ie;
-			volatile uint32_t cmd;
-			volatile uint32_t res0;
-			volatile uint32_t tfd;
-			volatile uint32_t sig;
-			volatile uint32_t ssts;
-			volatile uint32_t sctl;
-			volatile uint32_t serr;
-			volatile uint32_t sact;
-			volatile uint32_t ci;
-			volatile uint32_t sntf;
-			volatile uint32_t fbs;
+			volatile uint32_t clb;		// command list base address, 1K-byte aligned
+			volatile uint32_t clbu;	// command list base address upper 32 bits
+			volatile uint32_t fb;		// FIS base address, 256-byte aligned
+			volatile uint32_t fbu;		// FIS base address upper 32 bits
+			volatile uint32_t is;		// interrupt status
+			volatile uint32_t ie;		// interrupt enable
+			volatile uint32_t cmd;		// command and status
+			volatile uint32_t : 32;	// reserved
+			volatile uint32_t tfd;		// task file data
+			volatile uint32_t sig;		// signature
+			volatile uint32_t ssts;	// SATA status (SCR0:SStatus)
+			volatile uint32_t sctl;	// SATA control (SCR2:SControl)
+			volatile uint32_t serr;	// SATA error (SCR1:SError)
+			volatile uint32_t sact;	// SATA active (SCR3:SActive)
+			volatile uint32_t ci;		// command issue
+			volatile uint32_t sntf;	// SATA notification (SCR4:SNotification)
+			volatile uint32_t fbs;		// FIS-based switch control
 		};
 		volatile uint32_t regs[32];
 	};
@@ -129,8 +129,7 @@ public:
 		start_command(prod,tag);
 	}
 	void readwrite(nre::Producer<nre::Storage::Packet> *prod,nre::Storage::tag_type tag,
-			const nre::DataSpace &ds,nre::Storage::sector_type sector,size_t offset,
-			size_t size,bool write);
+			const nre::DataSpace &ds,size_t offset,sector_type sector,size_t count,bool write);
 	void irq();
 
 	void debug() {
@@ -152,7 +151,7 @@ private:
 	void addr2phys(const nre::DataSpace &ds,void *ptr,volatile uint32_t *dst) {
 		uintptr_t value = reinterpret_cast<uintptr_t>(ptr);
 		if(!_dmar)
-			value = ds.phys() + (value & (nre::ExecEnv::PAGE_SIZE - 1));
+			value = ds.phys() + (value - ds.virt());
 		dst[0] = value;
 		dst[1] = 0; // support 64bit mode
 	}

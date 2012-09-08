@@ -26,14 +26,14 @@ public:
 	}
 
 	virtual void determine_capacity();
-	virtual bool readwrite(Operation op,const nre::DataSpace &ds,size_t offset,uint64_t sector,
-			size_t count,size_t secsize = 0);
+	virtual void readwrite(Operation op,const nre::DataSpace &ds,size_t offset,sector_type sector,
+			sector_type count,size_t secsize = 0);
 
 private:
 	uint8_t *cmdaddr() const {
 		return reinterpret_cast<uint8_t*>(_cmd.virt());
 	}
-	bool request(const nre::DataSpace &cmd,const nre::DataSpace &data,size_t offset,size_t bufSize);
+	void request(const nre::DataSpace &cmd,const nre::DataSpace &data,size_t offset,size_t bufSize);
 
 	nre::DataSpace _cmd;
 };

@@ -58,5 +58,5 @@ private:
 	nre::ACPISession _acpi;
 	nre::PCI _pci;
 	size_t _count;
-	Controller *_ctrls[];
+	Controller *_ctrls[MAX_CONTROLLER];
 };

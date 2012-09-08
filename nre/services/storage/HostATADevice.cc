@@ -34,12 +34,12 @@ uint HostATADevice::get_command(Operation op) {
 	return commands[offset][has_lba48() ? 1 : 0];
 }
 
-bool HostATADevice::readwrite(Operation op,const DataSpace &ds,size_t offset,uint64_t sector,size_t count,size_t secsize) {
+void HostATADevice::readwrite(Operation op,const DataSpace &ds,size_t offset,sector_type sector,
+		sector_type count,size_t secsize) {
 	if(secsize == 0)
 		secsize = _sector_size;
 	uint cmd = get_command(op);
-	if(!setup_command(sector,count,cmd))
-		return false;
+	setup_command(sector,count,cmd);
 
 	switch(cmd) {
 		case COMMAND_PACKET:
@@ -47,59 +47,71 @@ bool HostATADevice::readwrite(Operation op,const DataSpace &ds,size_t offset,uin
 		case COMMAND_READ_SEC_EXT:
 		case COMMAND_WRITE_SEC:
 		case COMMAND_WRITE_SEC_EXT:
-			return transferPIO(op,ds,offset,secsize,count,true);
+			transferPIO(op,ds,offset,secsize,count,true);
+			break;
 		case COMMAND_READ_DMA:
 		case COMMAND_READ_DMA_EXT:
 		case COMMAND_WRITE_DMA:
 		case COMMAND_WRITE_DMA_EXT:
-			return transferDMA(op,ds,offset,secsize,count);
+			transferDMA(op,ds,offset,secsize,count);
+			break;
+		default:
+			throw Exception(E_ARGS_INVALID,"Invalid command");
 	}
-	return false;
 }
 
-bool HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t offset,size_t secsize,size_t count,bool waitfirst) {
-	size_t i;
+void HostATADevice::flush_cache() {
+	// wait until the drive is ready
+	int res = _ctrl.wait_until(PIO_TRANSFER_TIMEOUT,CMD_ST_READY,0);
+	_ctrl.handle_status(_id,res,"Flush cache");
+
+	// select drive
+	_ctrl.outb(ATA_REG_DRIVE_SELECT,(_id & SLAVE_BIT) << 4);
+
+	// send command
+	_ctrl.outb(ATA_REG_COMMAND,has_lba48() ? COMMAND_FLUSH_CACHE_EXT : COMMAND_FLUSH_CACHE);
+
+	// wait until BSY and DRQ cleared; RDY should be set
+	res = _ctrl.wait_until(PIO_TRANSFER_TIMEOUT,CMD_ST_READY,CMD_ST_BUSY | CMD_ST_DRQ);
+	_ctrl.handle_status(_id,res,"Flush cache");
+}
+
+void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t offset,size_t secsize,
+		sector_type count,bool waitfirst) {
+	sector_type i;
 	int res;
 	uint16_t *buf = reinterpret_cast<uint16_t*>(ds.virt() + offset);
 	for(i = 0; i < count; i++) {
 		if(i > 0 || waitfirst) {
-			/* TODO if(op == READ)
-				ctrl_waitIntrpt(ctrl);*/
+			if(op == READ)
+				_ctrl.wait_irq();
 			res = _ctrl.wait_until(PIO_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
-			if(res == -1) {
-				ATA_LOG("Device %d: Timeout before PIO-transfer",_id);
-				return false;
-			}
-			if(res != 0) {
-				/* TODO ctrl_softReset(ctrl);*/
-				ATA_LOG("Device %d: PIO-transfer failed: %#x",_id,res);
-				return false;
-			}
+			_ctrl.handle_status(_id,res,"PIO transfer");
 		}
 
 		/* now read / write the data */
-		ATA_LOGDETAIL("Ready, starting read/write");
 		if(op == READ)
 			_ctrl.inwords(ATA_REG_DATA,buf,secsize / sizeof(uint16_t));
 		else
 			_ctrl.outwords(ATA_REG_DATA,buf,secsize / sizeof(uint16_t));
 		buf += secsize / sizeof(uint16_t);
-		ATA_LOGDETAIL("Transfer done");
 	}
-	ATA_LOGDETAIL("All sectors done");
-	return true;
 }
 
-bool HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,size_t secSize,size_t secCount) {
-#if 0
+void HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,size_t secSize,
+		sector_type count) {
 	uint8_t status;
-	size_t size = secCount * secSize;
+	size_t size = count * secSize;
 	int res;
 
+	if(((static_cast<uint64_t>(ds.phys()) + offset + size) >= 0x100000000))
+		throw Exception(E_ARGS_INVALID,32,"Physical address %p is too large for DMA",ds.phys());
+
 	/* setup PRDT */
-	ctrl->dma_prdt_virt->buffer = ctrl->dma_buf_phys;
-	ctrl->dma_prdt_virt->byteCount = size;
-	ctrl->dma_prdt_virt->last = 1;
+	// TODO use multiple ones when size is too large
+	_ctrl.prdt()->buffer = static_cast<uint32_t>(ds.phys() + offset);
+	_ctrl.prdt()->byteCount = size;
+	_ctrl.prdt()->last = 1;
 
 	/* stop running transfers */
 	ATA_LOGDETAIL("Stopping running transfers");
@@ -109,12 +121,7 @@ bool HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,s
 
 	/* set PRDT */
 	ATA_LOGDETAIL("Setting PRDT");
-	_ctrl.outbmrl(BMR_REG_PRDT,(uint32_t)ctrl->dma_prdt_phys);
-
-	/* write data to buffer, if we should write */
-	/* TODO we should use the buffer directly when reading from the client */
-	if(op == WRITE || op == PACKET)
-		memcpy(ctrl->dma_buf_virt,buffer,size);
+	_ctrl.outbmrl(BMR_REG_PRDT,static_cast<uint32_t>(_ctrl.prdt_addr()));
 
 	/* it seems to be necessary to read those ports here */
 	ATA_LOGDETAIL("Starting DMA-transfer");
@@ -130,44 +137,26 @@ bool HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,s
 
 	/* now wait for an interrupt */
 	ATA_LOGDETAIL("Waiting for an interrupt");
-	ctrl_waitIntrpt(ctrl);
+	_ctrl.wait_irq();
 
-	res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,DMA_TRANSFER_SLEEPTIME,0,CMD_ST_BUSY | CMD_ST_DRQ);
-	if(res == -1) {
-		ATA_LOG("Device %d: Timeout after DMA-transfer",_id);
-		return false;
-	}
-	if(res != 0) {
-		ATA_LOG("Device %d: DMA-Transfer failed: %#x",_id,res);
-		return false;
-	}
+	res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
+	_ctrl.handle_status(_id,res,"DMA transfer");
 
 	_ctrl.inbmrb(BMR_REG_STATUS);
 	_ctrl.outbmrb(BMR_REG_COMMAND,0);
-	/* copy data when reading */
-	if(op == READ)
-		memcpy(buffer,ctrl->dma_buf_virt,size);
-#endif
-	return true;
+	ATA_LOGDETAIL("DMA transfer done");
 }
 
-bool HostATADevice::setup_command(uint64_t lba,size_t secCount,uint cmd) {
+void HostATADevice::setup_command(sector_type sector,sector_type count,uint cmd) {
 	uint8_t devValue;
-	if(secCount == 0)
-		return false;
-
 	if(!has_lba48()) {
-		if(lba & 0xFFFFFFFFF0000000LL) {
-			ATA_LOG("Trying to read from %#Lx with LBA28",lba);
-			return false;
-		}
-		if(secCount & 0xFF00) {
-			ATA_LOG("Trying to read %u sectors with LBA28",secCount);
-			return false;
-		}
+		if(sector & 0xFFFFFFFFF0000000LL)
+			throw Exception(E_ARGS_INVALID,32,"Trying to read from %#Lx with LBA28",sector);
+		if(count & 0xFF00)
+			throw Exception(E_ARGS_INVALID,32,"Trying to read %Lu sectors with LBA28",count);
 
 		/* For LBA28, the lowest 4 bits are bits 27-24 of LBA */
-		devValue = DEVICE_LBA | ((_id & SLAVE_BIT) << 4) | ((lba >> 24) & 0x0F);
+		devValue = DEVICE_LBA | ((_id & SLAVE_BIT) << 4) | ((sector >> 24) & 0x0F);
 		_ctrl.outb(ATA_REG_DRIVE_SELECT,devValue);
 	}
 	else {
@@ -179,7 +168,6 @@ bool HostATADevice::setup_command(uint64_t lba,size_t secCount,uint cmd) {
 	_ctrl.wait();
 
 	ATA_LOGDETAIL("Resetting control-register");
-	// TODO ctrl_resetIrq(ctrl);
 	/* reset control-register */
 	_ctrl.ctrloutb(_ctrl.irqs_enabled() ? 0 : CTRL_NIEN);
 
@@ -188,34 +176,33 @@ bool HostATADevice::setup_command(uint64_t lba,size_t secCount,uint cmd) {
 		_ctrl.outb(ATA_REG_FEATURES,_ctrl.dma_enabled() && has_dma());
 
 	if(has_lba48()) {
-		ATA_LOGDETAIL("LBA48: setting sector-count %d and LBA %x",secCount,(uint)(lba & 0xFFFFFFFF));
+		ATA_LOGDETAIL("LBA48: setting sector-count %Lu and LBA %Lu",count,sector);
 		/* LBA: | LBA6 | LBA5 | LBA4 | LBA3 | LBA2 | LBA1 | */
 		/*     48             32            16            0 */
 		/* sector-count high-byte */
-		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(secCount >> 8));
+		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(count >> 8));
 		/* LBA4, LBA5 and LBA6 */
-		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(lba >> 24));
-		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(lba >> 32));
-		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(lba >> 40));
+		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(sector >> 24));
+		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 32));
+		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 40));
 		/* sector-count low-byte */
-		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(secCount & 0xFF));
+		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(count & 0xFF));
 		/* LBA1, LBA2 and LBA3 */
-		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(lba & 0xFF));
-		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(lba >> 8));
-		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(lba >> 16));
+		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(sector & 0xFF));
+		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 8));
+		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 16));
 	}
 	else {
-		ATA_LOGDETAIL("LBA28: setting sector-count %d and LBA %x",secCount,(uint)(lba & 0xFFFFFFFF));
+		ATA_LOGDETAIL("LBA28: setting sector-count %Lu and LBA %Lu",count,sector);
 		/* send sector-count */
-		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)secCount);
+		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)count);
 		/* LBA1, LBA2 and LBA3 */
-		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)lba);
-		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(lba >> 8));
-		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(lba >> 16));
+		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)sector);
+		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 8));
+		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 16));
 	}
 
 	/* send command */
 	ATA_LOGDETAIL("Sending command %d",cmd);
 	_ctrl.outb(ATA_REG_COMMAND,cmd);
-	return true;
 }

@@ -74,13 +74,13 @@ public:
 	 * @param prod the producer to notify when the command is finished
 	 * @param tag the tag to use for the notify
 	 * @param ds the dataspace to read into
-	 * @param sector the start-sector
 	 * @param offset the offset in the dataspace where to store the data
-	 * @param bytes the number of bytes to read
+	 * @param sector the start-sector
+	 * @param count the number of sectors to read
 	 * @throws Exception if something goes wrong
 	 */
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,size_t offset,size_t bytes) = 0;
+			size_t offset,sector_type sector,sector_type count) = 0;
 
 	/**
 	 * Writes <bytes> bytes from sector <sector> of drive <drive> to <offset> in <ds>
@@ -95,5 +95,5 @@ public:
 	 * @throws Exception if something goes wrong
 	 */
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,size_t offset,size_t bytes) = 0;
+			size_t offset,sector_type sector,sector_type count) = 0;
 };

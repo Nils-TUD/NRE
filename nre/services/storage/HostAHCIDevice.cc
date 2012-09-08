@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012, Nils Asmussen <nils@os.inf.tu-dresden.de>
+ * Copyright (C) 2008, Bernhard Kauer <bk@vmmon.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
  * This file is part of NRE (NOVA runtime environment).
@@ -67,33 +68,18 @@ void HostAHCIDevice::init() {
 }
 
 void HostAHCIDevice::readwrite(Producer<Storage::Packet> *prod,Storage::tag_type tag,
-		const DataSpace &ds,Storage::sector_type sector,size_t offset,
-		size_t size,bool write) {
+		const DataSpace &ds,size_t offset,sector_type sector,size_t count,bool write) {
 	ScopedLock<UserSm> guard(&_sm);
-	LOG(Logging::STORAGE_DETAIL,Serial::get().writef(
-			"readwrite sector=%Lu off=%zu size=%zu\n",sector,offset,size));
 	// invalid offset or size?
-	if(size & 0x1FF)
-		throw Exception(E_ARGS_INVALID,32,"Can't transfer half sectors (%zu)",size);
-	if(offset + size < offset || offset + size > ds.size())
-		throw Exception(E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
-	if((size & 1) || size >> 22)
-		throw Exception(E_ARGS_INVALID,32,"Invalid byte count (%zu)",size);
-	if(sector >= capacity()) {
-		throw Exception(E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
-				sector,capacity() - 1);
-	}
-	if(sector + (size / sector_size()) > capacity()) {
-		throw Exception(E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
-				sector + (size / sector_size()) - 1,capacity() - 1);
-	}
+	if(count >> 13)
+		throw Exception(E_ARGS_INVALID,32,"Invalid sector count (%zu)",count);
 
 	uint8_t command = has_lba48() ? 0x25 : 0xc8;
 	if(write)
 		command = has_lba48() ? 0x35 : 0xca;
-	set_command(command,sector,!write,size >> 9);
+	set_command(command,sector,!write,count);
 
-	add_dma(ds,offset,size);
+	add_dma(ds,offset,count * _sector_size);
 	start_command(prod,tag);
 }
 
@@ -136,26 +122,26 @@ void HostAHCIDevice::set_command(uint8_t command,uint64_t sector,bool read,uint 
 	memcpy(_ct + _tag * (128 + MAX_PRD_COUNT * 16) / 4,cfis,sizeof(cfis));
 }
 
-void HostAHCIDevice::add_dma(const nre::DataSpace &ds,size_t offset,uint count) {
+void HostAHCIDevice::add_dma(const nre::DataSpace &ds,size_t offset,uint bytes) {
 	uint32_t prd = _cl[_tag * CL_DWORDS] >> 16;
 	if(prd >= MAX_PRD_COUNT)
 		throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
 	_cl[_tag * CL_DWORDS] += 1 << 16;
 	uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 	addr2phys(ds,reinterpret_cast<void*>(ds.virt() + offset),p);
-	p[3] = count - 1;
+	p[3] = bytes - 1;
 }
 
-void HostAHCIDevice::add_prd(const nre::DataSpace &ds,uint count) {
+void HostAHCIDevice::add_prd(const nre::DataSpace &ds,uint bytes) {
 	uint32_t prd = _cl[_tag * CL_DWORDS] >> 16;
-	assert(~count & 1);
-	assert(!(count >> 22));
+	assert(~bytes & 1);
+	assert(!(bytes >> 22));
 	if(prd >= MAX_PRD_COUNT)
 		throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
 	_cl[_tag * CL_DWORDS] += 1 << 16;
 	uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 	addr2phys(ds,reinterpret_cast<void*>(ds.virt()),p);
-	p[3] = count - 1;
+	p[3] = bytes - 1;
 }
 
 size_t HostAHCIDevice::start_command(nre::Producer<nre::Storage::Packet> *prod,ulong usertag) {

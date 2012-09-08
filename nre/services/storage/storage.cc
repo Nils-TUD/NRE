@@ -156,17 +156,30 @@ void StorageService::portal(capsel_t pid) {
 				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u,%#x] %s (%Lu..%Lu) @ %zu\n",sess->id(),
 						tag,cmd == Storage::READ ? "READ" : "WRITE",sector,sector + count - 1,offset));
 
+				// check offset and size
+				size_t size = count * sess->params().sector_size;
+				if(count == 0 || offset + size < offset || offset + size > sess->data().size())
+					throw Exception(E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
+				if(sector >= sess->params().sectors) {
+					throw Exception(E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
+							sector,sess->params().sectors - 1);
+				}
+				if(sector + count > sess->params().sectors) {
+					throw Exception(E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
+							sector + count - 1,sess->params().sectors - 1);
+				}
+
 				if(cmd == Storage::READ) {
 					if(!(sess->data().perm() & DataSpaceDesc::R))
 						throw Exception(E_ARGS_INVALID,"Need to read, but no read permission");
 					mng->get(sess->ctrl())->read(sess->drive(),sess->prod(),tag,
-							sess->data(),sector,offset,count * sess->params().sector_size);
+							sess->data(),offset,sector,count);
 				}
 				else {
 					if(!(sess->data().perm() & DataSpaceDesc::W))
 						throw Exception(E_ARGS_INVALID,"Need to write, but no write permission");
 					mng->get(sess->ctrl())->write(sess->drive(),sess->prod(),tag,
-							sess->data(),sector,offset,count * sess->params().sector_size);
+							sess->data(),offset,sector,count);
 				}
 				uf << E_SUCCESS;
 			}
