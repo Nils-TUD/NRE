@@ -37,27 +37,43 @@ struct TestCase {
 #define WVTEST_PRINT_INFO_BEFORE 0
 
 // Standard WVTEST API
-#define WVSTART(title) Serial::get().writef("Testing \"%s\" in %s:%d:\n", title, WvTest::shortpath(__FILE__), __LINE__);
-#define WVPASS(cond)   ({ WvTest __t(__FILE__, __LINE__, #cond);            __t.check(cond); })
-#define WVNOVA(novaerr)({ WvTest __t(__FILE__, __LINE__, #novaerr);         __t.check_novaerr(novaerr); })
-#define WVPASSEQ(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " == " #b);     __t.check_eq((a), (b), true); })
-#define WVPASSEQPTR(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " == " #b); \
+#define WVSTART(title) \
+	Serial::get().writef("Testing \"%s\" in %s:%d:\n", \
+			title, nre::test::WvTest::shortpath(__FILE__), __LINE__);
+#define WVPASS(cond)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #cond); __t.check(cond); })
+#define WVNOVA(novaerr)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #novaerr); __t.check_novaerr(novaerr); })
+#define WVPASSEQ(a, b)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #a " == " #b); __t.check_eq((a), (b), true); })
+#define WVPASSEQPTR(a, b) \
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #a " == " #b); \
 	__t.check_eq(reinterpret_cast<uintptr_t>(a), reinterpret_cast<uintptr_t>(b), true); })
-#define WVPASSLT(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " < " #b);      __t.check_lt((a), (b)); })
-#define WVPASSGE(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " >= " #b);     __t.check_le((b), (a)); })
-#define WVFAIL(cond)   ({ WvTest __t(__FILE__, __LINE__, "NOT(" #cond ")"); !__t.check(!(cond)); })
-#define WVFAILEQ(a, b) ({ WvTest __t(__FILE__, __LINE__, #a " != " #b);     __t.check_eq((a), (b), false); })
-#define WVPASSNE(a, b) WVFAILEQ(a, b)
+#define WVPASSLT(a, b) \
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #a " < " #b); __t.check_lt((a), (b)); })
+#define WVPASSGE(a, b) \
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #a " >= " #b); __t.check_le((b), (a)); })
+#define WVFAIL(cond)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, "NOT(" #cond ")"); !__t.check(!(cond)); })
+#define WVFAILEQ(a, b)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #a " != " #b); __t.check_eq((a), (b), false); })
+#define WVPASSNE(a, b)	WVFAILEQ(a, b)
 #define WVFAILNE(a, b) WVPASSEQ(a, b)
 
 // Performance monitoring
-#define WVPERF(value, units)  ({ WvTest __t(__FILE__, __LINE__, "PERF: " #value);  __t.check_perf(value, units); })
+#define WVPERF(value, units)	\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, "PERF: " #value);  __t.check_perf(value, units); })
 
 // Debugging
-#define WV(code)    ({ WvTest __t(__FILE__, __LINE__, #code); __t.check(true); code; })
-#define WVSHOW(val) ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show(val); })
-#define WVSHOWHEX(val)  ({ WvTest __t(__FILE__, __LINE__, #val);  __t.show_hex(val); })
-#define WVPRINTF(fmt, ...)  Serial::get().writef("! %s:%d " fmt " ok\n", WvTest::shortpath(__FILE__), __LINE__, ##__VA_ARGS__)
+#define WV(code)				\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #code); __t.check(true); code; })
+#define WVSHOW(val)				\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #val);  __t.show(val); })
+#define WVSHOWHEX(val)			\
+	({ nre::test::WvTest __t(__FILE__, __LINE__, #val);  __t.show_hex(val); })
+#define WVPRINTF(fmt, ...)		\
+	Serial::get().writef("! %s:%d " fmt " ok\n", \
+			nre::test::WvTest::shortpath(__FILE__), __LINE__, ##__VA_ARGS__)
 
 class WvTest {
 	const char *file,*condstr;
