@@ -90,6 +90,7 @@ namespace nre {
 class Exception;
 class UtcbFrameRef;
 static inline OStream &operator<<(OStream &os,const Exception &e);
+UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
 UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
 
 /**
@@ -97,6 +98,7 @@ UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
  * have optionally a message (string).
  */
 class Exception {
+	friend UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
 	friend 	UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
 
 	enum {

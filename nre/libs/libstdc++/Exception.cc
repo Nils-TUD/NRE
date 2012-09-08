@@ -43,7 +43,7 @@ Exception::Exception(ErrorCode code,const String &msg) throw()
 }
 
 UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e) {
-	uf << e.code() << String(e.msg());
+	uf << e.code() << e._msg;
 	return uf;
 }
 
