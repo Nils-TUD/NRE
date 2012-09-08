@@ -27,6 +27,7 @@ int main() {
 	KeyboardSession kb(con);
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
 		if(!srv->handle_keyevent(*pk)) {
+			ScopedLock<RCULock> guard(&RCU::lock());
 			ConsoleSessionData *sess = srv->active();
 			if(sess && sess->prod()) {
 				Console::ReceivePacket rpk;

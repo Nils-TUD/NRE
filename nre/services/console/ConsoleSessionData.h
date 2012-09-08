@@ -25,8 +25,8 @@
 class ConsoleSessionData : public nre::ServiceSession {
 public:
 	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t caps,nre::Pt::portal_func func)
-			: ServiceSession(srv,id,caps,func), _page(0),  _sm(), _in_ds(), _out_ds(), _prod(), _regs(),
-			  _pages(0), _srv(srv) {
+			: ServiceSession(srv,id,caps,func), _has_screen(false), _page(0),  _sm(),
+			  _in_ds(), _out_ds(), _prod(), _regs(), _pages(0), _srv(srv) {
 		_regs.offset = nre::Console::TEXT_OFF >> 1;
 		_regs.mode = 0;
 		_regs.cursor_pos = (nre::Console::ROWS - 1) * nre::Console::COLS + (nre::Console::TEXT_OFF >> 1);
@@ -36,6 +36,16 @@ public:
 		delete _prod;
 		delete _in_ds;
 		delete _out_ds;
+	}
+
+	virtual void invalidate() {
+		if(_srv->active() == this) {
+			// ensure that we don't have the screen; the session might be destroyed before the
+			// viewswitcher can handle the switch and therefore, take away the screen, if necessary.
+			to_back();
+			// choose a different session
+			_srv->next();
+		}
 	}
 
 	uint page() const {
@@ -64,11 +74,17 @@ public:
 	void create(nre::DataSpace *in_ds,nre::DataSpace *out_ds,uint pages);
 
 	void to_front() {
-		swap();
-		activate();
+		if(!_has_screen) {
+			swap();
+			activate();
+			_has_screen = true;
+		}
 	}
 	void to_back() {
-		swap();
+		if(_has_screen) {
+			swap();
+			_has_screen = false;
+		}
 	}
 	void activate() {
 		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
@@ -89,6 +105,7 @@ private:
 		_out_ds->switch_to(_srv->screen()->mem());
 	}
 
+	bool _has_screen;
 	uint _page;
 	nre::UserSm _sm;
 	nre::DataSpace *_in_ds;
