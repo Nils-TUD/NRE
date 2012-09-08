@@ -1,0 +1,18 @@
+# -*- Mode: Python -*-
+
+env = Environment()
+
+diskbuilder = Builder(
+	action = 'dd if=/dev/zero of=$TARGET bs=512 count=4 && dd if=$SOURCE of=$TARGET conv=notrunc',
+	src_suffix = '.hddcontent'
+)
+env.Append(BUILDERS = {'DiskBuilder' : diskbuilder})
+env.DiskBuilder('hd1.img', 'hd1.hddcontent')
+env.DiskBuilder('hd2.img', 'hd2.hddcontent')
+
+isobuilder = Builder(
+	action = 'genisoimage -U -iso-level 3 -input-charset ascii -no-emul-boot -b '
+		'boot/grub/stage2_eltorito -boot-load-size 4 -boot-info-table -f -o $TARGET $SOURCE'
+)
+env.Append(BUILDERS = {'ISOBuilder' : isobuilder})
+env.ISOBuilder('test.iso', Dir('#dist/iso'))
