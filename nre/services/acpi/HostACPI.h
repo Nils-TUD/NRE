@@ -44,6 +44,30 @@ class HostACPI {
 		uint8_t xchecksum;
 	} PACKED;
 
+	/* APIC Structure (5.2.11.4) */
+	struct APIC {
+		enum Type {
+			LAPIC = 0, IOAPIC = 1, INTR = 2,
+		};
+		uint8_t type;
+		uint8_t length;
+	} PACKED;
+
+	/* Interrupt Source Override (5.2.11.8) */
+	struct APICIntr : public APIC {
+		uint8_t bus;
+		uint8_t irq;
+		uint32_t gsi;
+		uint16_t flags;
+	} PACKED;
+
+	/* Multiple APIC Description Table */
+	struct MADT : public nre::ACPI::RSDT {
+		uint32_t apic_addr;
+		uint32_t flags;
+		APIC apic[];
+	} PACKED;
+
 public:
 	explicit HostACPI();
 
@@ -51,6 +75,7 @@ public:
 		return *_ds;
 	}
 	uintptr_t find(const char *name,uint instance,size_t &length);
+	uint irq_to_gsi(uint irq);
 
 private:
 	static char checksum(char *table,unsigned count) {

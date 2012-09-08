@@ -38,6 +38,7 @@ public:
 	enum Command {
 		GET_MEM,
 		FIND_TABLE,
+		IRQ_TO_GSI,
 		GET_GSI,
 	};
 
@@ -101,6 +102,25 @@ public:
 		uintptr_t offset;
 		uf >> offset;
 		return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
+	}
+
+	/**
+	 * Determines the GSI that corresponds to the given ISA IRQ. If the MADT is present, it will
+	 * be searched for an interrupt source override entry for that IRQ. If not found or MADT
+	 * is not present, it will be assumed that the IRQ is identity mapped to the GSI.
+	 *
+	 * @param irq the ISA IRQ
+	 * @return the GSI
+	 */
+	uint irq_to_gsi(uint irq) const {
+		UtcbFrame uf;
+		uf << ACPI::IRQ_TO_GSI << irq;
+		_pts[CPU::current().log_id()]->call(uf);
+
+		uf.check_reply();
+		uint gsi;
+		uf >> gsi;
+		return gsi;
 	}
 
 	/**

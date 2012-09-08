@@ -18,6 +18,7 @@
 
 #include <kobj/Ports.h>
 #include <kobj/Gsi.h>
+#include <services/ACPI.h>
 
 #include "HostTimerDevice.h"
 
@@ -25,13 +26,13 @@ class HostPIT : public HostTimerDevice {
 	enum {
 		FREQ			= 1193180ULL,
 		DEFAULT_PERIOD	= 1000ULL, // ms
-		IRQ				= 2,
+		IRQ				= 0,
 		PORT_BASE		= 0x40
 	};
 
 	class PitTimer : public Timer {
 	public:
-		explicit PitTimer() : Timer(), _gsi(IRQ) {
+		explicit PitTimer() : Timer(), _gsi(irq_to_gsi(IRQ)) {
 		}
 
 		virtual nre::Gsi &gsi() {
@@ -43,6 +44,12 @@ class HostPIT : public HostTimerDevice {
 		}
 
 	private:
+		static uint irq_to_gsi(uint irq) {
+			nre::Connection acpicon("acpi");
+			nre::ACPISession acpi(acpicon);
+			return acpi.irq_to_gsi(irq);
+		}
+
 		nre::Gsi _gsi;
 	};
 

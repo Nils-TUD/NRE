@@ -287,6 +287,7 @@ NORETURN void HostTimer::gsi_thread(void *) {
 	WorkerMessage m;
 	m.type = WorkerMessage::TIMER_IRQ;
 	m.data = 0;
+	LOG(Logging::TIMER,Serial::get().writef("Listening to GSI %u\n",our->timer->gsi().gsi()));
 	while(1) {
 		our->timer->gsi().down();
 

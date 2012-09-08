@@ -54,6 +54,16 @@ PORTAL static void portal_acpi(capsel_t) {
 			}
 			break;
 
+			case ACPI::IRQ_TO_GSI: {
+				uint irq;
+				uf >> irq;
+				uf.finish_input();
+
+				uint gsi = hostacpi->irq_to_gsi(irq);
+				uf << E_SUCCESS << gsi;
+			}
+			break;
+
 			case ACPI::GET_GSI: {
 				HostATARE::bdf_type bdf,parentbdf;
 				uint8_t pin;

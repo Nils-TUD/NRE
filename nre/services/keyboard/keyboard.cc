@@ -19,11 +19,17 @@
 #include <kobj/GlobalThread.h>
 #include <kobj/Gsi.h>
 #include <kobj/Sc.h>
+#include <services/ACPI.h>
 #include <RCU.h>
 
 #include "HostKeyboard.h"
 
 using namespace nre;
+
+enum {
+	KEYBOARD_IRQ	= 1,
+	MOUSE_IRQ		= 12
+};
 
 template<class T>
 class KeyboardSessionData : public ServiceSession {
@@ -86,6 +92,8 @@ private:
 static HostKeyboard *hostkb;
 static KeyboardService<Keyboard::Packet> *kbsrv;
 static KeyboardService<Mouse::Packet> *mousesrv;
+static uint kbgsi;
+static uint msgsi;
 
 template<class T>
 static void broadcast(KeyboardService<T> *srv,const T &data) {
@@ -97,7 +105,7 @@ static void broadcast(KeyboardService<T> *srv,const T &data) {
 }
 
 static void kbhandler(void*) {
-	Gsi gsi(1);
+	Gsi gsi(kbgsi);
 	while(1) {
 		gsi.down();
 
@@ -108,7 +116,7 @@ static void kbhandler(void*) {
 }
 
 static void mousehandler(void*) {
-	Gsi gsi(12);
+	Gsi gsi(msgsi);
 	while(1) {
 		gsi.down();
 
@@ -163,6 +171,14 @@ PORTAL static void portal_mouse(capsel_t pid) {
 }
 
 int main() {
+	// determine GSIs for keyboard and mouse
+	{
+		Connection acpicon("acpi");
+		ACPISession acpi(acpicon);
+		kbgsi = acpi.irq_to_gsi(KEYBOARD_IRQ);
+		msgsi = acpi.irq_to_gsi(MOUSE_IRQ);
+	}
+
 	hostkb = new HostKeyboard(0x60,2,true);
 	hostkb->reset();
 
