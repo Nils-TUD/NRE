@@ -872,10 +872,6 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			// TODO this is not sufficient, in general
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this
 			// one to notify the parent that he should map it?
-			// TODO actually, its worse. there seems to be no way to guarantee that the delegate
-			// works because even if we touch the whole ds, the parent could revoke it again
-			// before we do the delegate. so, IMO NOVA has to raise a pagefault when trying to
-			// delegate not-present memory
 			UNUSED volatile int x = *reinterpret_cast<int*>(src);
 		}
 	}
