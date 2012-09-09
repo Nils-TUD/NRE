@@ -97,10 +97,10 @@ void ViewSwitcher::switch_thread(void*) {
 				ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 
 				// repaint all lines from the buffer except the first
-				uintptr_t offset = Screen::TEXT_OFF + sess->page() * Screen::PAGE_SIZE;
+				uintptr_t start = vs->_srv->screen()->mem().virt();
 				if(sess->out_ds()) {
-					memcpy(reinterpret_cast<void*>(vs->_srv->screen()->mem().virt() + offset + Screen::COLS * 2),
-							reinterpret_cast<void*>(sess->out_ds()->virt() + offset + Screen::COLS * 2),
+					memcpy(reinterpret_cast<void*>(start + sess->offset() + Screen::COLS * 2),
+							reinterpret_cast<void*>(sess->out_ds()->virt() + sess->offset() + Screen::COLS * 2),
 							Screen::PAGE_SIZE - Screen::COLS * 2);
 				}
 
@@ -111,7 +111,7 @@ void ViewSwitcher::switch_thread(void*) {
 					os << "Console " << sessid << "," << sess->page();
 
 					// write console tag
-					char *screen = reinterpret_cast<char*>(vs->_srv->screen()->mem().virt() + offset);
+					char *screen = reinterpret_cast<char*>(start + sess->offset());
 					char *s = _buffer;
 					for(uint x = 0; x < Screen::COLS; ++x, ++s) {
 						screen[x * 2] = *s ? *s : ' ';

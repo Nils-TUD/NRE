@@ -48,6 +48,9 @@ public:
 		}
 	}
 
+	size_t offset() const {
+		return _regs.offset << 1;
+	}
 	uint page() const {
 		return _page;
 	}
@@ -87,12 +90,14 @@ public:
 		}
 	}
 	void activate() {
-		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
+		if(_pages != 0)
+			_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
 		set_regs(_regs);
 	}
 
 	void set_regs(const nre::Console::Register &regs) {
-		_page = (_regs.offset - (nre::Console::TEXT_OFF >> 1)) >> 11;
+		if(_pages != 0)
+			_page = (_regs.offset - (nre::Console::TEXT_OFF >> 1)) >> 11;
 		_regs = regs;
 		if(_srv->active() == this)
 			_srv->screen()->set_regs(_regs);

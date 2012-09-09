@@ -59,7 +59,7 @@ public:
 		uint16_t mode;
 		uint16_t cursor_style;
 		uint32_t cursor_pos;
-		uintptr_t offset;
+		size_t offset;
 	};
 
 	/**
