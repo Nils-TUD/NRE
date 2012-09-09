@@ -126,6 +126,19 @@ int strcmp(const char *str1,const char *str2) {
 	return 1;
 }
 
+int strncmp(const char *str1,const char *str2,size_t count) {
+	ssize_t rem = count;
+	while(*str1 && *str2 && rem-- > 0) {
+		if(*str1++ != *str2++)
+			return str1[-1] < str2[-1] ? -1 : 1;
+	}
+	if(rem <= 0)
+		return 0;
+	if(*str1 && !*str2)
+		return 1;
+	return -1;
+}
+
 char *strchr(const char *str,int ch) {
 	while(*str) {
 		if(*str++ == ch)
