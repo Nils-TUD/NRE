@@ -66,7 +66,7 @@ public:
 	uintptr_t alloc(size_t size) {
 		Region *r = get(size);
 		if(!r)
-			throw RegionManagerException(E_CAPACITY,32,"Unable to allocate %zu bytes",size);
+			throw RegionManagerException(E_CAPACITY,64,"Unable to allocate %zu bytes",size);
 		r->addr += size;
 		r->size -= size;
 		return r->addr - size;
