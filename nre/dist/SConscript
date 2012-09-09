@@ -1,18 +1,29 @@
 # -*- Mode: Python -*-
 
-env = Environment()
+Import('env')
+import os
 
+myenv = Environment()
 diskbuilder = Builder(
 	action = 'dd if=/dev/zero of=$TARGET bs=512 count=4 && dd if=$SOURCE of=$TARGET conv=notrunc',
 	src_suffix = '.hddcontent'
 )
-env.Append(BUILDERS = {'DiskBuilder' : diskbuilder})
-env.DiskBuilder('hd1.img', 'hd1.hddcontent')
-env.DiskBuilder('hd2.img', 'hd2.hddcontent')
+myenv.Append(BUILDERS = {'DiskBuilder' : diskbuilder})
+myenv.DiskBuilder('hd1.img', 'hd1.hddcontent')
+myenv.DiskBuilder('hd2.img', 'hd2.hddcontent')
 
+myenv = Environment()
 isobuilder = Builder(
 	action = 'genisoimage -U -iso-level 3 -input-charset ascii -no-emul-boot -b '
 		'boot/grub/stage2_eltorito -boot-load-size 4 -boot-info-table -f -o $TARGET $SOURCE'
 )
-env.Append(BUILDERS = {'ISOBuilder' : isobuilder})
-env.ISOBuilder('test.iso', Dir('#dist/iso'))
+myenv.Append(BUILDERS = {'ISOBuilder' : isobuilder})
+myenv.ISOBuilder('test.iso', Dir('#dist/iso'))
+
+myenv = Environment()
+symlink = Builder(
+	action = 'ln -s `readlink -f $SOURCE` $TARGET'
+)
+myenv.Append(BUILDERS = {'SymLink' : symlink})
+myenv.SymLink(Dir(env['BUILDDIR'] + '/dist/imgs'), Dir('#dist/imgs'))
+

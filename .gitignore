@@ -1,6 +1,7 @@
 *~
 .scons*
 nre/build
+nre/dist/imgs/*
 kernel/nova
 loader/morbo
 cross/x86_32/build
