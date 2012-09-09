@@ -18,12 +18,12 @@ if [ "$NRE_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	gdb=gdbtui
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom -m 256 -smp 4"
+	export QEMU_FLAGS="-cpu phenom"
 elif [ "$NRE_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	gdb=x86_64-linux-gnu-gdbtui
 	export QEMU="qemu-system-x86_64"
-	export QEMU_FLAGS="-m 256 -smp 4"
+	export QEMU_FLAGS=""
 else
 	echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
 	exit 1

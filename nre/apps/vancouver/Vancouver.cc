@@ -30,6 +30,8 @@
 using namespace nre;
 
 static size_t ncpu = 1;
+static DataSpace *guest_mem = 0;
+static size_t guest_size = 0;
 nre::UserSm globalsm(0);
 
 PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
@@ -41,6 +43,10 @@ PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 
 PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created" ) {
 	ncpu = argv[0];
+}
+PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
+	guest_size = argv[0] * 1024 * 1024;
+	guest_mem = new DataSpace(guest_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX);
 }
 PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
 	for(unsigned count = 0; count < ncpu; count++)
@@ -104,20 +110,20 @@ bool Vancouver::receive(MessageHostOp &msg) {
 		break;
 
 		case MessageHostOp::OP_GUEST_MEM:
-			if(msg.value >= _guest_size)
+			if(msg.value >= guest_size)
 				msg.value = 0;
 			else {
-				msg.len = _guest_size - msg.value;
-				msg.ptr = reinterpret_cast<char*>(_guest_mem.virt() + msg.value);
+				msg.len = guest_size - msg.value;
+				msg.ptr = reinterpret_cast<char*>(guest_mem->virt() + msg.value);
 			}
 			break;
 
 		case MessageHostOp::OP_ALLOC_FROM_GUEST:
 			assert((msg.value & 0xFFF) == 0);
-			if(msg.value <= _guest_size) {
-				_guest_size -= msg.value;
-				msg.phys = _guest_size;
-				Serial::get().writef("Allocating from guest %08lx+%lx\n",_guest_size,msg.value);
+			if(msg.value <= guest_size) {
+				guest_size -= msg.value;
+				msg.phys = guest_size;
+				Serial::get().writef("Allocating from guest %08lx+%lx\n",guest_size,msg.value);
 			}
 			else
 				res = false;
@@ -149,10 +155,10 @@ bool Vancouver::receive(MessageHostOp &msg) {
 				return false;
 
 			// does it fit in guest mem?
-			if(destaddr >= _guest_mem.virt() + _guest_mem.size() ||
-					destaddr + it->size + ExecEnv::PAGE_SIZE * 2 > _guest_mem.virt() + _guest_mem.size()) {
+			if(destaddr >= guest_mem->virt() + guest_mem->size() ||
+					destaddr + it->size + ExecEnv::PAGE_SIZE * 2 > guest_mem->virt() + guest_mem->size()) {
 				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
-						it->addr,it->addr + it->size,destaddr - _guest_mem.virt(),_guest_size);
+						it->addr,it->addr + it->size,destaddr - guest_mem->virt(),guest_size);
 				return false;
 			}
 
@@ -360,8 +366,20 @@ void Vancouver::create_vcpus() {
 	}
 }
 
+static const char *argv_to_str(int argc,char *argv[]) {
+	static char buf[1024];
+	size_t pos = 0;
+	for(int i = 1; i < argc; ++i) {
+		size_t len = strlen(argv[i]);
+		memcpy(buf + pos,argv[i],len);
+		buf[pos + len] = ' ';
+		pos += len + 1;
+	}
+	return buf;
+}
+
 int main(int argc,char *argv[]) {
-	Vancouver *v = new Vancouver("ncpu:1 PC_PS2",ExecEnv::PAGE_SIZE * 1024 * 32);
+	Vancouver *v = new Vancouver(argv_to_str(argc,argv));
 	v->reset();
 
 	Sm sm(0);

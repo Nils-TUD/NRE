@@ -1,7 +1,7 @@
 #!tools/novaboot
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
-QEMU_FLAGS=
+QEMU_FLAGS=-m 256 -smp 4
 bin/apps/hypervisor spinner serial
 bin/apps/root
 bin/apps/acpi provides=acpi
@@ -11,6 +11,6 @@ bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
-bin/apps/vancouver
+bin/apps/vancouver m:32 PC_PS2
 bin/apps/guest_mini
 

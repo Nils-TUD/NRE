@@ -1,7 +1,7 @@
 #!tools/novaboot
 # -*-sh-*-
 KERNEL=bin/apps/chainloader
-QEMU_FLAGS=
+QEMU_FLAGS=-m 64 -smp 4
 bin/apps/hypervisor spinner serial
 bin/apps/root
 bin/apps/acpi provides=acpi
@@ -12,4 +12,3 @@ bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
 bin/apps/cycleburner
-
