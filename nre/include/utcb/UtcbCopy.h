@@ -180,7 +180,7 @@ public:
 			const int utcount = utbackup[0];
 			const int tcount = tbackup[-1];
 			memcpy(this,utbackup + 1,utcount * sizeof(word_t));
-			memcpy(get_top(this) - tcount,tbackup,tcount * sizeof(word_t));
+			memcpy(get_top(this) - tcount,tbackup - tcount - 1,tcount * sizeof(word_t));
 			add_untyped(-(utcount + 1));
 			add_typed(-(tcount + 1));
 		}

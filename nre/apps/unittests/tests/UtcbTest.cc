@@ -41,10 +41,17 @@ static void portal_test(capsel_t) {
 	try {
 		int a,b,c;
 		uf >> a >> b >> c;
+		if(a == 0xDEAD) {
+			uf.get_delegated(0);
+			uf.get_delegated(0);
+			uf.accept_delegates();
+		}
 		uf.clear();
 		uf << c << b << a;
 	}
-	catch(const Exception&) {
+	catch(const Exception &e) {
+		Serial::get() << e;
+		WVPASS(false);
 		uf.clear();
 	}
 }
@@ -52,12 +59,16 @@ static void portal_test(capsel_t) {
 static void test_nesting() {
 	int a,b,c;
 	LocalThread ec(CPU::current().log_id());
+	{
+		UtcbFrameRef uf(ec.utcb());
+		uf.accept_delegates(1);
+	}
 	Pt pt(&ec,portal_test);
 
 	UtcbFrame uf;
-	uf << 4 << 1 << 2;
-	uf.delegate(10);
-	uf.delegate(29);
+	uf << 0xDEAD << 1 << 2;
+	uf.delegate(CapSelSpace::INIT_EC,0);
+	uf.delegate(CapSelSpace::INIT_PD,1);
 
 	{
 		UtcbFrame uf1;
@@ -90,7 +101,7 @@ static void test_nesting() {
 	uf >> a >> b >> c;
 	WVPASSEQ(a,2);
 	WVPASSEQ(b,1);
-	WVPASSEQ(c,4);
+	WVPASSEQ(c,0xDEAD);
 }
 
 static void perform_test_unnested(uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
