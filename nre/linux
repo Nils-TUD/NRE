@@ -1,7 +1,7 @@
 #!tools/novaboot
 # -*-sh-*-
-KERNEL=bin/apps/chainloader
 QEMU_FLAGS=-m 1024 -smp 4
+KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
 bin/apps/root
 bin/apps/acpi provides=acpi

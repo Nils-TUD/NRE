@@ -1,6 +1,6 @@
 #!tools/novaboot
 # -*-sh-*-
+QEMU_FLAGS=-m 1024 -smp 4
 KERNEL=dist/imgs/bzImage-3.1.0-32
 HYPERVISOR_PARAMS=clocksource=tsc console=ttyS0 noapic quiet
-QEMU_FLAGS=-m 1024 -smp 4
 dist/imgs/initrd-js.lzma

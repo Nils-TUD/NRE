@@ -217,7 +217,7 @@ sub generate_configs($$$) {
 	my $config = $$g{content};
 	my $fn = $$g{filename};
 	open(my $f, '>', $fn) || die("$fn: $!");
-	map { s|\brom://([^ ]*)|rom://$base$1|g; print $f "$_"; } @{$config};
+	map { s|\brom://([^ ]*)|$base$1|g; print $f "$_"; } @{$config};
 	close($f);
       } elsif (exists $$g{command} && ! $no_file_gen) {
 	$ENV{SRCDIR} = dirname(File::Spec->rel2abs( $filename, $invocation_dir ));
@@ -243,7 +243,7 @@ sub generate_grub_config($$$$;$)
 	    $kcmd = '' if !defined $kcmd;
 	    print $fg "kernel ${base}$kbin $kcmd\n";
 	} else {
-	    s|\brom://([^ ]*)|rom://$base$1|g; # Translate rom:// files - needed for vdisk parameter of sigma0
+	    s|\brom://([^ ]*)|$base$1|g; # Translate rom:// files - needed for vdisk parameter of sigma0
 	    print $fg "module $base$_\n";
 	}
     }
@@ -271,7 +271,7 @@ sub generate_grub2_config($$$$;$)
 	    my @args = split;
 	    # GRUB2 doesn't pass filename in multiboot info so we have to duplicate it here
 	    $_ = join(' ', ($args[0], @args));
-	    s|\brom://([^ ]*)|rom://$base$1|g; # Translate rom:// files - needed for vdisk parameter of sigma0
+	    s|\brom://([^ ]*)|$base$1|g; # Translate rom:// files - needed for vdisk parameter of sigma0
 	    print $fg "  module $base$_\n";
 	}
     }
@@ -536,6 +536,8 @@ if (!(defined $dhcp_tftp || defined $serial || defined $iprelay || defined $serv
 
 	# Non-patched qemu doesn't like commas, but NUL can live with pluses instead of commans
 	foreach (@$modules) {s/,/+/g;}
+	# for NRE we need to replace rom:// with ''
+	foreach (@$modules) {s|\brom://([^ ]*)|$1|g;}
 	generate_configs("", $generated, $filename);
 
 	my ($kbin, $kcmd) = split(' ', shift(@$modules), 2);

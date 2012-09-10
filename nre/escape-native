@@ -1,0 +1,9 @@
+#!tools/novaboot
+# -*-sh-*-
+QEMU_FLAGS=-m 1024 -smp 4
+KERNEL=dist/imgs/escape.bin
+HYPERVISOR_PARAMS=videomode=vga
+dist/imgs/escape_romdisk.bin /dev/romdisk rom://dist/imgs/escape.iso
+dist/imgs/escape_cmos.bin /dev/cmos
+dist/imgs/escape_fs.bin /dev/fs /dev/romdisk iso9660
+dist/imgs/escape.iso

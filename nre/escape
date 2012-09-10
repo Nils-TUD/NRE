@@ -1,6 +1,6 @@
 #!tools/novaboot
 # -*-sh-*-
-QEMU_FLAGS=-m 256 -smp 4
+QEMU_FLAGS=-m 1024 -smp 4
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
 bin/apps/root
@@ -11,5 +11,9 @@ bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
-bin/apps/test
-bin/apps/sub
+bin/apps/vancouver m:64 ncpu:1 PC_PS2
+dist/imgs/escape.bin videomode=vga
+dist/imgs/escape_romdisk.bin /dev/romdisk rom://dist/imgs/escape.iso
+dist/imgs/escape_cmos.bin /dev/cmos
+dist/imgs/escape_fs.bin /dev/fs /dev/romdisk iso9660
+dist/imgs/escape.iso
