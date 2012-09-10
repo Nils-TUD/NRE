@@ -29,7 +29,7 @@ void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,s
 		cmd[0] = SCSI_CMD_READ_SECTORS;
 	/* no writing here ;) */
 	if(op != READ)
-		throw Exception(E_ARGS_INVALID,"Writing is not supported for ATAPI");
+		throw Exception(E_ARGS_INVALID,64,"Device %u: Writing is not supported for ATAPI",_id);
 	if(cmd[0] == SCSI_CMD_READ_SECTORS_EXT) {
 		cmd[6] = (count >> 24) & 0xFF;
 		cmd[7] = (count >> 16) & 0xFF;

@@ -24,13 +24,13 @@ void HostAHCIDevice::init() {
 		// stop processing by clearing ST
 		_regs->cmd &= ~1;
 		if(wait_timeout(&_regs->cmd,1 << 15,0))
-			throw Exception(E_FAILURE,"Unable to clear ST");
+			throw Exception(E_FAILURE,32,"Device %u: Unable to clear ST",_id);
 
 		// stop FIS receiving
 		_regs->cmd &= ~0x10;
 		// wait until no fis is received anymore
 		if(wait_timeout(&_regs->cmd,1 << 14,0))
-			throw Exception(E_FAILURE,"Unable to stop FIS receiving");
+			throw Exception(E_FAILURE,32,"Device %u: Unable to stop FIS receiving",_id);
 	}
 
 	// set CL and FIS pointer
@@ -45,7 +45,7 @@ void HostAHCIDevice::init() {
 	// enable FIS processing
 	_regs->cmd |= 0x10;
 	if(wait_timeout(&_regs->cmd,1 << 15,0))
-		throw Exception(E_FAILURE,"Unable to enable FIS processing");
+		throw Exception(E_FAILURE,32,"Device %u: Unable to enable FIS processing",_id);
 
 	// CLO clearing
 	_regs->cmd |= 0x8;
@@ -53,7 +53,7 @@ void HostAHCIDevice::init() {
 	// only report an error if CLO is still set. it seems to be ok if res is non-zero
 	// at least, this is what I got from the AHCI spec and /drivers/ata/libahci.c in linux
 	if(res & 0x8)
-		throw Exception(E_FAILURE,32,"CLO did not clear (%#x)",res);
+		throw Exception(E_FAILURE,64,"Device %u: CLO did not clear (%#x)",_id,res);
 	_regs->cmd |= 0x1;
 
 	// nothing in progress anymore
@@ -72,7 +72,7 @@ void HostAHCIDevice::readwrite(Producer<Storage::Packet> *prod,Storage::tag_type
 	ScopedLock<UserSm> guard(&_sm);
 	// invalid offset or size?
 	if(count >> 13)
-		throw Exception(E_ARGS_INVALID,32,"Invalid sector count (%zu)",count);
+		throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid sector count (%zu)",_id,count);
 
 	uint8_t command = has_lba48() ? 0x25 : 0xc8;
 	if(write)
@@ -101,7 +101,7 @@ void HostAHCIDevice::irq() {
 	}
 
 	if((_regs->tfd & 1) && (~_regs->tfd & 0x400)) {
-		nre::Serial::get().writef("command failed with %x\n",_regs->tfd);
+		LOG(nre::Logging::STORAGE,nre::Serial::get().writef("command failed with %x\n",_regs->tfd));
 		init();
 	}
 }
@@ -125,7 +125,7 @@ void HostAHCIDevice::set_command(uint8_t command,uint64_t sector,bool read,uint 
 void HostAHCIDevice::add_dma(const nre::DataSpace &ds,size_t offset,uint bytes) {
 	uint32_t prd = _cl[_tag * CL_DWORDS] >> 16;
 	if(prd >= MAX_PRD_COUNT)
-		throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
+		throw nre::Exception(nre::E_ARGS_INVALID,32,"Device %u: No free PRD slot",_id);
 	_cl[_tag * CL_DWORDS] += 1 << 16;
 	uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 	addr2phys(ds,reinterpret_cast<void*>(ds.virt() + offset),p);
@@ -137,7 +137,7 @@ void HostAHCIDevice::add_prd(const nre::DataSpace &ds,uint bytes) {
 	assert(~bytes & 1);
 	assert(!(bytes >> 22));
 	if(prd >= MAX_PRD_COUNT)
-		throw nre::Exception(nre::E_ARGS_INVALID,"No free PRD slot");
+		throw nre::Exception(nre::E_ARGS_INVALID,32,"Device %u: No free PRD slot",_id);
 	_cl[_tag * CL_DWORDS] += 1 << 16;
 	uint32_t *p = _ct + ((_tag * (128 + MAX_PRD_COUNT * 16) + 0x80 + prd * 16) >> 2);
 	addr2phys(ds,reinterpret_cast<void*>(ds.virt()),p);
@@ -166,7 +166,7 @@ void HostAHCIDevice::identify_drive(nre::DataSpace &buffer) {
 
 	// there is no IRQ on identify, as this is PIO data-in command
 	if(wait_timeout(&_regs->ci,1 << tag,0))
-		throw Exception(E_TIMEOUT,"Timeout while waiting on IDENTIFY to finish");
+		throw Exception(E_TIMEOUT,64,"Device %u: Timeout while waiting on IDENTIFY to finish",_id);
 	_inprogress &= ~(1 << tag);
 
 	// we do not support spinup
