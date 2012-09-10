@@ -23,49 +23,110 @@
 
 namespace nre {
 
+/**
+ * Describes a DMA transfer
+ */
 struct DMADesc {
+	/**
+	 * The offset in a dataspace where to transfer from/to
+	 */
 	size_t offset;
+	/**
+	 * The number of bytes to transfer
+	 */
 	size_t count;
 
+	/**
+	 * Creates an empty descriptor
+	 */
 	explicit DMADesc() : offset(), count() {
 	}
+	/**
+	 * Creates a descriptor with given offset and count
+	 */
 	explicit DMADesc(size_t offset,size_t count) : offset(offset), count(count) {
 	}
 };
 
+/**
+ * A list of DMA descriptors that can be easily passed around
+ *
+ * @param MAX the maximum number of descriptors (directly stored in the object)
+ */
 template<size_t MAX>
 class DMADescList {
 public:
 	typedef const DMADesc *iterator;
 
+	/**
+	 * Creates an empty list
+	 */
 	explicit DMADescList() : _descs(), _count(0), _total(0) {
 	}
 
+	/**
+	 * @return the number of descriptors
+	 */
 	size_t count() const {
 		return _count;
 	}
+	/**
+	 * @return the beginning of the existing descriptors
+	 */
 	iterator begin() const {
 		return _descs;
 	}
+	/**
+	 * @return the end of the existing descriptors
+	 */
 	iterator end() const {
 		return _descs + _count;
 	}
 
+	/**
+	 * @return the total number of bytes in all descriptors
+	 */
 	size_t bytecount() const {
 		return _total;
 	}
 
+	/**
+	 * Adds the given descriptor to the list
+	 *
+	 * @param desc the descriptor
+	 */
 	void add(const DMADesc &desc) {
 		_descs[_count++] = desc;
 		_total += desc.count;
 	}
+	/**
+	 * Resets the list
+	 */
 	void clear() {
 		_count = _total = 0;
 	}
 
+	/**
+	 * Copies <len> bytes from <src>+offset into <dst>
+	 *
+	 * @param dst the destination buffer
+	 * @param len the number of bytes to copy
+	 * @param offset the offset in <src>
+	 * @param src the dataspace to read from
+	 * @return true if successful
+	 */
 	bool in(void *dst,size_t len,size_t offset,const DataSpace &src) const {
 		return inout(dst,len,offset,src,false);
 	}
+	/**
+	 * Copies <len> bytes from <src> to <dst>+offset
+	 *
+	 * @param src the source buffer
+	 * @param len the number of bytes to copy
+	 * @param offset the offset in <dst>
+	 * @param dst the dataspace to write to
+	 * @return true if successful
+	 */
 	bool out(const void *src,size_t len,size_t offset,const DataSpace &dst) const {
 		return inout(const_cast<void*>(src),len,offset,dst,true);
 	}
@@ -100,6 +161,9 @@ private:
 	size_t _total;
 };
 
+/**
+ * Writes a string-representation into <os>
+ */
 template<size_t MAX>
 static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
 	os << "DMADescList[" << l.count() << ", " << l.bytecount() << "] (";
@@ -112,6 +176,9 @@ static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
 	return os;
 }
 
+/**
+ * Writes the list into the UTCB. Note that the UTCB size is limited!
+ */
 template<size_t MAX>
 static inline UtcbFrameRef &operator<<(UtcbFrameRef &uf,const DMADescList<MAX> &l) {
 	uf << l.count();
@@ -119,6 +186,9 @@ static inline UtcbFrameRef &operator<<(UtcbFrameRef &uf,const DMADescList<MAX> &
 		uf << *it;
 	return uf;
 }
+/**
+ * Reads the list back from the UTCB
+ */
 template<size_t MAX>
 static inline UtcbFrameRef &operator>>(UtcbFrameRef &uf,DMADescList<MAX> &l) {
 	size_t count;
