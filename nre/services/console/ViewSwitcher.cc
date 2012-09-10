@@ -39,6 +39,8 @@ void ViewSwitcher::switch_to(ConsoleSessionData *from,ConsoleSessionData *to) {
 	SwitchCommand cmd;
 	cmd.oldsessid = from ? from->id() : -1;
 	cmd.sessid = to->id();
+	LOG(Logging::CONSOLE,
+			Serial::get() << "Going to switch from " << cmd.oldsessid << " to " << cmd.sessid << "\n");
 	// we can't access the producer concurrently
 	ScopedLock<UserSm> guard(&_sm);
 	_prod.produce(cmd);
@@ -56,6 +58,7 @@ void ViewSwitcher::switch_thread(void*) {
 		// are we finished?
 		if(until && clock.source_time() >= until) {
 			ScopedLock<RCULock> guard(&RCU::lock());
+			LOG(Logging::CONSOLE,Serial::get() << "Giving " << sessid << " direct access\n");
 			try {
 				ConsoleSessionData *sess = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 				// finally swap to that session. i.e. give him direct screen access
@@ -70,6 +73,8 @@ void ViewSwitcher::switch_thread(void*) {
 		// either block until the next request, or - if we're switching - check for new requests
 		if(until == 0 || vs->_cons.has_data()) {
 			SwitchCommand *cmd = vs->_cons.get();
+			LOG(Logging::CONSOLE,
+					Serial::get() << "Got switch " << cmd->oldsessid << " to " << cmd->sessid << "\n");
 			// if there is an old one, make a backup and detach him from screen
 			if(cmd->oldsessid != (size_t)-1) {
 				assert(cmd->oldsessid == sessid);
@@ -129,6 +134,10 @@ void ViewSwitcher::switch_thread(void*) {
 		}
 
 		// wait 25ms
+		LOG(Logging::CONSOLE,
+				Serial::get() << "Waiting until " << clock.source_time(REFRESH_DELAY) << "\n");
 		timer.wait_until(clock.source_time(REFRESH_DELAY));
+		LOG(Logging::CONSOLE,
+				Serial::get() << "Waiting done\n");
 	}
 }

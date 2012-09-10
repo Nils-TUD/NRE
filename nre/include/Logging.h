@@ -64,6 +64,7 @@ public:
 		PCI				= 1 << 18,
 		STORAGE			= 1 << 19,
 		STORAGE_DETAIL	= 1 << 20,
+		CONSOLE			= 1 << 21,
 	};
 
 	static UserSm sm;
