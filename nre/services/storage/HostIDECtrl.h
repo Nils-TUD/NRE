@@ -53,9 +53,9 @@ public:
 	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const;
 	virtual void flush(size_t drive,producer_type *prod,tag_type tag);
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count);
+			sector_type sector,const dma_type &dma);
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count);
+			sector_type sector,const dma_type &dma);
 
 	/**
 	 * @return whether DMA should and can be used

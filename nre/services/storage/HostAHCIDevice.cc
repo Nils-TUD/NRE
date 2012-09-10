@@ -68,18 +68,25 @@ void HostAHCIDevice::init() {
 }
 
 void HostAHCIDevice::readwrite(Producer<Storage::Packet> *prod,Storage::tag_type tag,
-		const DataSpace &ds,size_t offset,sector_type sector,size_t count,bool write) {
+		const DataSpace &ds,sector_type sector,const dma_type &dma,bool write) {
 	ScopedLock<UserSm> guard(&_sm);
+	size_t length = dma.bytecount();
 	// invalid offset or size?
-	if(count >> 13)
-		throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid sector count (%zu)",_id,count);
+	if(length >> 13)
+		throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid sector count (%zu)",_id,length >> 13);
 
 	uint8_t command = has_lba48() ? 0x25 : 0xc8;
 	if(write)
 		command = has_lba48() ? 0x35 : 0xca;
-	set_command(command,sector,!write,count);
+	set_command(command,sector,!write,length >> 13);
 
-	add_dma(ds,offset,count * _sector_size);
+	for(dma_type::iterator it = dma.begin(); it != dma.end(); ++it) {
+		if(it->offset > ds.size() || it->offset + it->count > ds.size()) {
+			throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid offset(%zu)/count(%zu)",
+					it->offset,it->count);
+		}
+		add_dma(ds,it->offset,it->count);
+	}
 	start_command(prod,tag);
 }
 

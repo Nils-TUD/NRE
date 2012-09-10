@@ -27,7 +27,8 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 		: Controller(id), _dma(dma && bmportbase), _irqs(true), _ctrl(portbase,9),
 		  _ctrlreg(portbase + ATA_REG_CONTROL,1),
 		  _bm(dma && bmportbase ? new Ports(bmportbase,bmportcount) : 0), _clock(1000), _sm(),
-		  _gsi(gsi ? new Gsi(gsi) : 0), _prdt(8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
+		  _gsi(gsi ? new Gsi(gsi) : 0),
+		  _prdt(Storage::MAX_DMA_DESCS * 8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 		  _gsigt(gsi_thread,CPU::current().log_id()), _gsisc(&_gsigt,Qpd()), _devs() {
 	// check if the bus is empty
 	if(!is_bus_responding())
@@ -61,17 +62,17 @@ void HostIDECtrl::get_params(size_t drive,nre::Storage::Parameter *params) const
 }
 
 void HostIDECtrl::read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-		size_t offset,sector_type sector,sector_type count) {
+		sector_type sector,const dma_type &dma) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[idx(drive)]->readwrite(HostATADevice::READ,ds,offset,sector,count);
+	_devs[idx(drive)]->readwrite(HostATADevice::READ,ds,sector,dma);
 	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }
 
 void HostIDECtrl::write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-		size_t offset,sector_type sector,sector_type count) {
+		sector_type sector,const dma_type &dma) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[idx(drive)]->readwrite(HostATADevice::WRITE,ds,offset,sector,count);
+	_devs[idx(drive)]->readwrite(HostATADevice::WRITE,ds,sector,dma);
 	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }
@@ -182,7 +183,7 @@ int HostIDECtrl::wait_until(timevalue_t timeout,uint8_t set,uint8_t unset) {
 
 void HostIDECtrl::handle_status(uint device,int res,const char *name) {
 	if(res == -1)
-		throw Exception(E_TIMEOUT,32,"Device %u: Timeout during %s",device,name);
+		throw Exception(E_TIMEOUT,64,"Device %u: Timeout during %s",device,name);
 	if(res != 0)
-		throw Exception(E_FAILURE,32,"Device %u: %s failed: %#x",device,name,res);
+		throw Exception(E_FAILURE,64,"Device %u: %s failed: %#x",device,name,res);
 }

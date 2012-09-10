@@ -21,6 +21,7 @@
 #include <ipc/ClientSession.h>
 #include <ipc/Consumer.h>
 #include <utcb/UtcbFrame.h>
+#include <util/DMA.h>
 #include <Exception.h>
 #include <CPU.h>
 
@@ -37,7 +38,10 @@ public:
 	enum {
 		MAX_CONTROLLER	= 8,
 		MAX_DRIVES		= 32,	// per controller
+		MAX_DMA_DESCS	= 64,
 	};
+
+	typedef DMADescList<MAX_DMA_DESCS> dma_type;
 
 	/**
 	 * The available commands
@@ -47,7 +51,6 @@ public:
 		READ,
 		WRITE,
 		FLUSH,
-		GET_PARAMS,
 	};
 
 	/**
@@ -59,7 +62,7 @@ public:
 			FLAG_ATAPI		= 2
 		};
 		uint flags;
-		uint64_t sectors;
+		sector_type sectors;
 		size_t sector_size;
 		uint max_requests;
 		char name[64];
@@ -120,18 +123,10 @@ public:
 	}
 
 	/**
-	 * Requests the parameters of the drive
-	 *
-	 * @return the parameters
+	 * @return the parameters of the drive
 	 */
-	Storage::Parameter get_params() {
-		Storage::Parameter params;
-		UtcbFrame uf;
-		uf << Storage::GET_PARAMS;
-		_pts[CPU::current().log_id()]->call(uf);
-		uf.check_reply();
-		uf >> params;
-		return params;
+	const Storage::Parameter &get_params() {
+		return _params;
 	}
 
 	/**
@@ -155,8 +150,23 @@ public:
 	 * @param offset the offset in the dataspace where to put the data (in bytes)
 	 */
 	void read(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
+		Storage::dma_type dma;
+		dma.add(DMADesc(offset,count * _params.sector_size));
+		read(tag,sector,dma);
+	}
+
+	/**
+	 * Reads sectors starting at <sector> into the dataspace. Which parts of the read sectors to
+	 * put where in the dataspace is described by <dma>. Note that the total bytes in <dma> have
+	 * to be a multiple of the sector size.
+	 *
+	 * @param tag the tag to identify the command on completion
+	 * @param sector the start sector
+	 * @param dma describes what to transfer where
+	 */
+	void read(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
 		UtcbFrame uf;
-		uf << Storage::READ << tag << sector << count << offset;
+		uf << Storage::READ << tag << sector << dma;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
 	}
@@ -171,8 +181,23 @@ public:
 	 * @param offset the offset in the dataspace from where to read the data (in bytes)
 	 */
 	void write(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
+		Storage::dma_type dma;
+		dma.add(DMADesc(offset,count * _params.sector_size));
+		write(tag,sector,dma);
+	}
+
+	/**
+	 * Writes to sectors starting at <sector> from the dataspace. Which parts of the dataspace to
+	 * put where on the drive is described by <dma>. Note that the total bytes in <dma> have
+	 * to be a multiple of the sector size.
+	 *
+	 * @param tag the tag to identify the command on completion
+	 * @param sector the start sector
+	 * @param dma describes what to transfer where
+	 */
+	void write(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
 		UtcbFrame uf;
-		uf << Storage::WRITE << tag << sector << count << offset;
+		uf << Storage::WRITE << tag << sector << dma;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
 	}
@@ -185,10 +210,12 @@ private:
 		uf << Storage::INIT << drive;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
+		uf >> _params;
 	}
 
 	DataSpace _ctrlds;
 	Consumer<Storage::Packet> _cons;
+	Storage::Parameter _params;
 	Pt **_pts;
 };
 

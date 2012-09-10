@@ -129,7 +129,7 @@ public:
 		start_command(prod,tag);
 	}
 	void readwrite(nre::Producer<nre::Storage::Packet> *prod,nre::Storage::tag_type tag,
-			const nre::DataSpace &ds,size_t offset,sector_type sector,size_t count,bool write);
+			const nre::DataSpace &ds,sector_type sector,const dma_type &dma,bool write);
 	void irq();
 
 	void debug() {

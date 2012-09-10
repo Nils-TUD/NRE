@@ -30,7 +30,7 @@
 	do { \
 		if(nre::Logging::level & (lvl)) { \
 			nre::ScopedLock<nre::UserSm> guard(&nre::Logging::sm); \
-			(expr); \
+			expr; \
 		} \
 	} \
 	while(0);

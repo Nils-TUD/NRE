@@ -31,7 +31,8 @@ public:
 	};
 
 	explicit HostATADevice(HostIDECtrl &ctrl,uint id,const Identify &info)
-		: Device(id,info), _ctrl(ctrl) {
+		: Device(id,info), _ctrl(ctrl),
+		  _buffer(nre::ExecEnv::PAGE_SIZE,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RW) {
 	}
 	virtual ~HostATADevice() {
 	}
@@ -42,18 +43,21 @@ public:
 	virtual void determine_capacity() {
 		_capacity = has_lba48() ? _info.lba48MaxLBA : _info.userSectorCount;
 	}
-	virtual void readwrite(Operation op,const nre::DataSpace &ds,size_t offset,sector_type sector,
-			sector_type count,size_t secsize = 0);
+	virtual void readwrite(Operation op,const nre::DataSpace &ds,sector_type sector,
+			const dma_type &dma,size_t secsize = 0);
 	void flush_cache();
 
 protected:
-	void transferPIO(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,
-			sector_type count,bool waitfirst);
-	void transferDMA(Operation op,const nre::DataSpace &ds,size_t offset,size_t secsize,
-			sector_type count);
+	uint8_t *buffer() const {
+		return reinterpret_cast<uint8_t*>(_buffer.virt());
+	}
+	void transferPIO(Operation op,const nre::DataSpace &ds,size_t secsize,const dma_type &dma,
+			bool waitfirst);
+	void transferDMA(Operation op,const nre::DataSpace &ds,const dma_type &dma);
 
 	uint get_command(Operation op);
 	void setup_command(sector_type sector,sector_type count,uint cmd);
 
 	HostIDECtrl &_ctrl;
+	nre::DataSpace _buffer;
 };

@@ -28,6 +28,7 @@ protected:
 	typedef nre::Storage::sector_type sector_type;
 	typedef nre::Storage::tag_type tag_type;
 	typedef nre::Producer<nre::Storage::Packet> producer_type;
+	typedef nre::DMADescList<nre::Storage::MAX_DMA_DESCS> dma_type;
 
 public:
 	explicit Controller(uint id) : _id(id) {
@@ -68,34 +69,32 @@ public:
 	virtual void flush(size_t drive,producer_type *prod,tag_type tag) = 0;
 
 	/**
-	 * Reads <bytes> bytes from <offset> in <ds> from sector <sector> of drive <drive>
+	 * Reads into <ds> from sector <sector> of drive <drive>
 	 *
 	 * @param drive the drive number (has to be valid)
 	 * @param prod the producer to notify when the command is finished
 	 * @param tag the tag to use for the notify
 	 * @param ds the dataspace to read into
-	 * @param offset the offset in the dataspace where to store the data
 	 * @param sector the start-sector
-	 * @param count the number of sectors to read
+	 * @param dma the DMA descriptor list
 	 * @throws Exception if something goes wrong
 	 */
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count) = 0;
+			sector_type sector,const dma_type &dma) = 0;
 
 	/**
-	 * Writes <bytes> bytes from sector <sector> of drive <drive> to <offset> in <ds>
+	 * Writes to sector <sector> of drive <drive> from <ds>
 	 *
 	 * @param drive the drive number (has to be valid)
 	 * @param prod the producer to notify when the command is finished
 	 * @param tag the tag to use for the notify
 	 * @param ds the dataspace to read from
 	 * @param sector the start-sector
-	 * @param offset the offset in the dataspace from where to read the data
-	 * @param bytes the number of bytes to write
+	 * @param dma the DMA descriptor list
 	 * @throws Exception if something goes wrong
 	 */
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count) = 0;
+			sector_type sector,const dma_type &dma) = 0;
 
 protected:
 	uint _id;

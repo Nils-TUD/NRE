@@ -82,14 +82,14 @@ public:
 		_ports[idx(drive)]->flush(prod,tag);
 	}
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count) {
+			sector_type sector,const dma_type &dma) {
 		assert(_ports[idx(drive)]);
-		_ports[idx(drive)]->readwrite(prod,tag,ds,offset,sector,count,false);
+		_ports[idx(drive)]->readwrite(prod,tag,ds,sector,dma,false);
 	}
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			size_t offset,sector_type sector,sector_type count) {
+			sector_type sector,const dma_type &dma) {
 		assert(_ports[idx(drive)]);
-		_ports[idx(drive)]->readwrite(prod,tag,ds,offset,sector,count,true);
+		_ports[idx(drive)]->readwrite(prod,tag,ds,sector,dma,true);
 	}
 
 private:

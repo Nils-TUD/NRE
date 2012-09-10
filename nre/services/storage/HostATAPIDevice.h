@@ -21,20 +21,14 @@
 class HostATAPIDevice : public HostATADevice {
 public:
 	explicit HostATAPIDevice(HostIDECtrl &ctrl,uint id,const Identify &info)
-		: HostATADevice(ctrl,id,info),
-		  _cmd(nre::ExecEnv::PAGE_SIZE,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::RW) {
+		: HostATADevice(ctrl,id,info) {
 	}
 
 	virtual void determine_capacity();
-	virtual void readwrite(Operation op,const nre::DataSpace &ds,size_t offset,sector_type sector,
-			sector_type count,size_t secsize = 0);
+	virtual void readwrite(Operation op,const nre::DataSpace &ds,sector_type sector,
+			const dma_type &dma,size_t secsize = 0);
 
 private:
-	uint8_t *cmdaddr() const {
-		return reinterpret_cast<uint8_t*>(_cmd.virt());
-	}
-	void request(const nre::DataSpace &cmd,const nre::DataSpace &data,size_t offset,size_t bufSize);
-
-	nre::DataSpace _cmd;
+	void request(const nre::DataSpace &cmd,const nre::DataSpace &data,const dma_type &dma);
 };
 

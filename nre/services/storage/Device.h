@@ -140,6 +140,7 @@ class Device {
 public:
 	typedef nre::Storage::sector_type sector_type;
 	typedef nre::Storage::tag_type tag_type;
+	typedef nre::DMADescList<nre::Storage::MAX_DMA_DESCS> dma_type;
 
 	enum Operation {
 		READ,

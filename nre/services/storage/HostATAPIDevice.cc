@@ -18,11 +18,12 @@
 
 using namespace nre;
 
-void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,sector_type sector,
-		sector_type count,size_t secsize) {
+void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,sector_type sector,
+		const dma_type &dma,size_t secsize) {
 	if(secsize == 0)
 		secsize = _sector_size;
-	uint8_t *cmd = cmdaddr();
+	size_t count = dma.bytecount() / _sector_size;
+	uint8_t *cmd = buffer();
 	memset(cmd,0,12);
 	cmd[0] = SCSI_CMD_READ_SECTORS_EXT;
 	if(!has_lba48())
@@ -44,25 +45,29 @@ void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,s
 	cmd[3] = (sector >> 16) & 0xFF;
 	cmd[4] = (sector >> 8) & 0xFF;
 	cmd[5] = (sector >> 0) & 0xFF;
-	request(_cmd,ds,offset,count * _sector_size);
+	request(_buffer,ds,dma);
 }
 
 void HostATAPIDevice::determine_capacity() {
-	uint8_t *cmd = cmdaddr();
+	dma_type dma;
+	dma.add(DMADesc(8,8));
+	uint8_t *cmd = buffer();
 	uint8_t *resp = cmd + 8;
 	memset(cmd,0,20);
 	cmd[0] = SCSI_CMD_READ_CAPACITY;
-	request(_cmd,_cmd,8,8);
+	request(_buffer,_buffer,dma);
 	_capacity = (resp[0] << 24) | (resp[1] << 16) | (resp[2] << 8) | (resp[3] << 0);
 }
 
-void HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,size_t offset,size_t bufSize) {
+void HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,const dma_type &dma) {
 	/* send PACKET command to drive */
-	HostATADevice::readwrite(PACKET,cmd,0,0xFFFF00,1,12);
+	dma_type cdma;
+	cdma.add(DMADesc(0,12));
+	HostATADevice::readwrite(PACKET,cmd,0xFFFF00,cdma,12);
 
 	/* now transfer the data */
 	if(_ctrl.dma_enabled() && has_dma()) {
-		transferDMA(READ,data,offset,_sector_size,bufSize / _sector_size);
+		transferDMA(READ,data,dma);
 		return;
 	}
 
@@ -74,5 +79,5 @@ void HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,size_t 
 	ATA_LOGDETAIL("Reading response-size");
 	size_t size = ((size_t)_ctrl.inb(ATA_REG_ADDRESS3) << 8) | (size_t)_ctrl.inb(ATA_REG_ADDRESS2);
 	/* do the PIO-transfer (no check at the beginning; seems to cause trouble on some machines) */
-	transferPIO(READ,data,offset,size,bufSize / size,false);
+	transferPIO(READ,data,size,dma,false);
 }

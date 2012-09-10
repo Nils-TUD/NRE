@@ -34,12 +34,12 @@ uint HostATADevice::get_command(Operation op) {
 	return commands[offset][has_lba48() ? 1 : 0];
 }
 
-void HostATADevice::readwrite(Operation op,const DataSpace &ds,size_t offset,sector_type sector,
-		sector_type count,size_t secsize) {
+void HostATADevice::readwrite(Operation op,const DataSpace &ds,sector_type sector,
+		const dma_type &dma,size_t secsize) {
 	if(secsize == 0)
 		secsize = _sector_size;
 	uint cmd = get_command(op);
-	setup_command(sector,count,cmd);
+	setup_command(sector,dma.bytecount() / secsize,cmd);
 
 	switch(cmd) {
 		case COMMAND_PACKET:
@@ -47,13 +47,13 @@ void HostATADevice::readwrite(Operation op,const DataSpace &ds,size_t offset,sec
 		case COMMAND_READ_SEC_EXT:
 		case COMMAND_WRITE_SEC:
 		case COMMAND_WRITE_SEC_EXT:
-			transferPIO(op,ds,offset,secsize,count,true);
+			transferPIO(op,ds,secsize,dma,true);
 			break;
 		case COMMAND_READ_DMA:
 		case COMMAND_READ_DMA_EXT:
 		case COMMAND_WRITE_DMA:
 		case COMMAND_WRITE_DMA_EXT:
-			transferDMA(op,ds,offset,secsize,count);
+			transferDMA(op,ds,dma);
 			break;
 		default:
 			throw Exception(E_ARGS_INVALID,"Invalid command");
@@ -76,13 +76,15 @@ void HostATADevice::flush_cache() {
 	_ctrl.handle_status(_id,res,"Flush cache");
 }
 
-void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t offset,size_t secsize,
-		sector_type count,bool waitfirst) {
-	sector_type i;
+void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
+		const dma_type &dma,bool waitfirst) {
+	size_t offset = 0;
+	size_t length = dma.bytecount();
 	int res;
-	uint16_t *buf = reinterpret_cast<uint16_t*>(ds.virt() + offset);
-	for(i = 0; i < count; i++) {
-		if(i > 0 || waitfirst) {
+	while(length > offset) {
+		if(op == WRITE && dma.in(buffer(),secsize,offset,ds))
+			throw Exception(E_ARGS_INVALID,64,"Device %u: Unable to copyin data",_id);
+		if(offset > 0 || waitfirst) {
 			if(op == READ)
 				_ctrl.wait_irq();
 			res = _ctrl.wait_until(PIO_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
@@ -91,32 +93,35 @@ void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t offset,s
 
 		/* now read / write the data */
 		if(op == READ)
-			_ctrl.inwords(ATA_REG_DATA,buf,secsize / sizeof(uint16_t));
+			_ctrl.inwords(ATA_REG_DATA,reinterpret_cast<uint16_t*>(buffer()),secsize / sizeof(uint16_t));
 		else
-			_ctrl.outwords(ATA_REG_DATA,buf,secsize / sizeof(uint16_t));
-		buf += secsize / sizeof(uint16_t);
+			_ctrl.outwords(ATA_REG_DATA,reinterpret_cast<uint16_t*>(buffer()),secsize / sizeof(uint16_t));
+
+		if(op == READ && dma.out(buffer(),secsize,offset,ds))
+			throw Exception(E_ARGS_INVALID,64,"Device %u: Unable to copyout data",_id);
+		offset += secsize;
 	}
 }
 
-void HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,size_t secSize,
-		sector_type count) {
-	uint8_t status;
-	size_t size = count * secSize;
-	int res;
+void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type &dma) {
+	/* setup PRDTs */
+	for(dma_type::iterator it = dma.begin(); it != dma.end(); ) {
+		if(((static_cast<uint64_t>(ds.phys()) + it->offset + it->count) >= 0x100000000))
+			throw Exception(E_ARGS_INVALID,64,"Physical address %p is too large for DMA",ds.phys());
 
-	if(((static_cast<uint64_t>(ds.phys()) + offset + size) >= 0x100000000))
-		throw Exception(E_ARGS_INVALID,32,"Physical address %p is too large for DMA",ds.phys());
-
-	/* setup PRDT */
-	// TODO use multiple ones when size is too large
-	_ctrl.prdt()->buffer = static_cast<uint32_t>(ds.phys() + offset);
-	_ctrl.prdt()->byteCount = size;
-	_ctrl.prdt()->last = 1;
+		if(it->offset > ds.size() || it->offset + it->count > ds.size()) {
+			throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid offset(%zu)/count(%zu)",
+					it->offset,it->count);
+		}
+		_ctrl.prdt()->buffer = static_cast<uint32_t>(ds.phys() + it->offset);
+		_ctrl.prdt()->byteCount = it->count;
+		_ctrl.prdt()->last = ++it == dma.end();
+	}
 
 	/* stop running transfers */
 	ATA_LOGDETAIL("Stopping running transfers");
 	_ctrl.outbmrb(BMR_REG_COMMAND,0);
-	status = _ctrl.inbmrb(BMR_REG_STATUS) | BMR_STATUS_ERROR | BMR_STATUS_IRQ;
+	uint8_t status = _ctrl.inbmrb(BMR_REG_STATUS) | BMR_STATUS_ERROR | BMR_STATUS_IRQ;
 	_ctrl.outbmrb(BMR_REG_STATUS,status);
 
 	/* set PRDT */
@@ -139,7 +144,7 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,s
 	ATA_LOGDETAIL("Waiting for an interrupt");
 	_ctrl.wait_irq();
 
-	res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
+	int res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
 	_ctrl.handle_status(_id,res,"DMA transfer");
 
 	_ctrl.inbmrb(BMR_REG_STATUS);
@@ -151,9 +156,9 @@ void HostATADevice::setup_command(sector_type sector,sector_type count,uint cmd)
 	uint8_t devValue;
 	if(!has_lba48()) {
 		if(sector & 0xFFFFFFFFF0000000LL)
-			throw Exception(E_ARGS_INVALID,32,"Trying to read from %#Lx with LBA28",sector);
+			throw Exception(E_ARGS_INVALID,64,"Trying to read from %#Lx with LBA28",sector);
 		if(count & 0xFF00)
-			throw Exception(E_ARGS_INVALID,32,"Trying to read %Lu sectors with LBA28",count);
+			throw Exception(E_ARGS_INVALID,64,"Trying to read %Lu sectors with LBA28",count);
 
 		/* For LBA28, the lowest 4 bits are bits 27-24 of LBA */
 		devValue = DEVICE_LBA | ((_id & SLAVE_BIT) << 4) | ((sector >> 24) & 0x0F);

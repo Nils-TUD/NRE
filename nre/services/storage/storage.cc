@@ -120,7 +120,7 @@ void StorageService::portal(capsel_t pid) {
 				uf.finish_input();
 				sess->init(new DataSpace(ctrlsel),new DataSpace(datasel),drive);
 				uf.accept_delegates();
-				uf << E_SUCCESS;
+				uf << E_SUCCESS << sess->params();
 			}
 			break;
 
@@ -134,31 +134,27 @@ void StorageService::portal(capsel_t pid) {
 			}
 			break;
 
-			case Storage::GET_PARAMS: {
-				uf.finish_input();
-				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u] GET_PARAMS\n",sess->id()));
-				uf << E_SUCCESS << sess->params();
-			}
-			break;
-
 			case Storage::READ:
 			case Storage::WRITE: {
 				Storage::tag_type tag;
-				Storage::sector_type sector,count;
-				size_t offset;
-				uf >> tag >> sector >> count >> offset;
+				Storage::sector_type sector;
+				DMADescList<Storage::MAX_DMA_DESCS> dma;
+				uf >> tag >> sector >> dma;
 				uf.finish_input();
 
 				if(!sess->initialized())
 					throw Exception(E_ARGS_INVALID,"Not initialized");
 
-				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u,%#x] %s (%Lu..%Lu) @ %zu\n",sess->id(),
-						tag,cmd == Storage::READ ? "READ" : "WRITE",sector,sector + count - 1,offset));
+				LOG(Logging::STORAGE_DETAIL,
+						Serial::get().writef("[%u,%#x] %s @ %Lu with ",sess->id(),
+								tag,cmd == Storage::READ ? "READ" : "WRITE",sector);
+						Serial::get() << dma << "\n");
 
 				// check offset and size
-				size_t size = count * sess->params().sector_size;
-				if(count == 0 || offset + size < offset || offset + size > sess->data().size())
-					throw Exception(E_ARGS_INVALID,64,"Invalid offset (%zu)/size (%zu)",offset,size);
+				size_t size = dma.bytecount();
+				size_t count = size / sess->params().sector_size;
+				if(size == 0 || (size & (sess->params().sector_size - 1)))
+					throw Exception(E_ARGS_INVALID,64,"Invalid size (%zu)",size);
 				if(sector >= sess->params().sectors) {
 					throw Exception(E_ARGS_INVALID,64,"Sector %Lu is invalid (available: 0..%Lu)",
 							sector,sess->params().sectors - 1);
@@ -172,13 +168,13 @@ void StorageService::portal(capsel_t pid) {
 					if(!(sess->data().perm() & DataSpaceDesc::R))
 						throw Exception(E_ARGS_INVALID,"Need to read, but no read permission");
 					mng->get(sess->ctrl())->read(sess->drive(),sess->prod(),tag,
-							sess->data(),offset,sector,count);
+							sess->data(),sector,dma);
 				}
 				else {
 					if(!(sess->data().perm() & DataSpaceDesc::W))
 						throw Exception(E_ARGS_INVALID,"Need to write, but no write permission");
 					mng->get(sess->ctrl())->write(sess->drive(),sess->prod(),tag,
-							sess->data(),offset,sector,count);
+							sess->data(),sector,dma);
 				}
 				uf << E_SUCCESS;
 			}
@@ -192,8 +188,14 @@ void StorageService::portal(capsel_t pid) {
 	}
 }
 
-int main() {
-	mng = new ControllerMng();
+int main(int argc,char *argv[]) {
+	bool idedma = true;
+	for(int i = 1; i < argc; ++i) {
+		if(strcmp(argv[i],"noidedma") == 0)
+			idedma = false;
+	}
+
+	mng = new ControllerMng(idedma);
 	srv = new StorageService("storage");
 	srv->reg();
 	Sm sm(0);

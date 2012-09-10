@@ -102,7 +102,7 @@ void ControllerMng::find_ide_controller() {
 
 			// create controller
 			try {
-				Controller *ctrl = new HostIDECtrl(_count,gsi,bar0 & ~0x3,bmr,8,true);
+				Controller *ctrl = new HostIDECtrl(_count,gsi,bar0 & ~0x3,bmr,8,_idedma);
 				_ctrls[_count++] = ctrl;
 			}
 			catch(const Exception &e) {
