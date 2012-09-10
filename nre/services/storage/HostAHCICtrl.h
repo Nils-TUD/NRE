@@ -59,7 +59,7 @@ class HostAHCICtrl : public Controller {
 	};
 
 public:
-	explicit HostAHCICtrl(nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar);
+	explicit HostAHCICtrl(uint id,nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar);
 	virtual ~HostAHCICtrl() {
 		delete _gsi;
 		delete _regs_ds;
@@ -67,32 +67,35 @@ public:
 	}
 
 	virtual bool exists(size_t drive) const {
-		return drive < ARRAY_SIZE(_ports) && _ports[drive] != 0;
+		return idx(drive) < ARRAY_SIZE(_ports) && _ports[idx(drive)] != 0;
 	}
 	virtual size_t drive_count() const {
 		return _portcount;
 	}
 	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const {
-		assert(_ports[drive]);
-		_ports[drive]->get_params(params);
+		assert(_ports[idx(drive)]);
+		_ports[idx(drive)]->get_params(params);
 	}
 
 	virtual void flush(size_t drive,producer_type *prod,tag_type tag) {
-		assert(_ports[drive]);
-		_ports[drive]->flush(prod,tag);
+		assert(_ports[idx(drive)]);
+		_ports[idx(drive)]->flush(prod,tag);
 	}
 	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 			size_t offset,sector_type sector,sector_type count) {
-		assert(_ports[drive]);
-		_ports[drive]->readwrite(prod,tag,ds,offset,sector,count,false);
+		assert(_ports[idx(drive)]);
+		_ports[idx(drive)]->readwrite(prod,tag,ds,offset,sector,count,false);
 	}
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 			size_t offset,sector_type sector,sector_type count) {
-		assert(_ports[drive]);
-		_ports[drive]->readwrite(prod,tag,ds,offset,sector,count,true);
+		assert(_ports[idx(drive)]);
+		_ports[idx(drive)]->readwrite(prod,tag,ds,offset,sector,count,true);
 	}
 
 private:
+	static size_t idx(size_t drive) {
+		return drive % nre::Storage::MAX_DRIVES;
+	}
 	void create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bool dmar);
 	static void gsi_thread(void*);
 

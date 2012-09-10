@@ -155,7 +155,7 @@ int main() {
 
 	// use AHCI controller
 	{
-		StorageSession storage(storagecon,ds,0,0);
+		StorageSession storage(storagecon,ds,0);
 
 		Storage::Parameter params = storage.get_params();
 		Serial::get().writef("Talking with device %s (%Lu sectors with %zu bytes each, max %zu requests)\n",
@@ -177,7 +177,7 @@ int main() {
 
 	// use IDE controller
 	{
-		StorageSession storage(storagecon,ds,1,0);
+		StorageSession storage(storagecon,ds,1);
 
 		Storage::Parameter params = storage.get_params();
 		Serial::get().writef("Talking with device %s (%Lu sectors with %zu bytes each, max %zu requests)\n",

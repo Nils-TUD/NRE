@@ -36,7 +36,7 @@ static StorageService *srv;
 class StorageServiceSession : public ServiceSession {
 public:
 	explicit StorageServiceSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _ctrlds(), _prod(), _datads(), _ctrl(), _drive() {
+		: ServiceSession(s,id,caps,func), _ctrlds(), _prod(), _datads(), _drive() {
 	}
 	virtual ~StorageServiceSession() {
 		delete _ctrlds;
@@ -47,11 +47,11 @@ public:
 	bool initialized() const {
 		return _ctrlds != 0;
 	}
-	size_t ctrl() const {
-		return _ctrl;
-	}
 	size_t drive() const {
 		return _drive;
+	}
+	size_t ctrl() const {
+		return _drive / Storage::MAX_DRIVES;
 	}
 	const DataSpace &data() const {
 		return *_datads;
@@ -63,7 +63,8 @@ public:
 		return _prod;
 	}
 
-	void init(DataSpace *ctrlds,DataSpace *data,size_t ctrl,size_t drive) {
+	void init(DataSpace *ctrlds,DataSpace *data,size_t drive) {
+		size_t ctrl = drive / Storage::MAX_DRIVES;
 		if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
 			throw Exception(E_ARGS_INVALID,64,"Controller/drive (%zu,%zu) does not exist",ctrl,drive);
 		if(_ctrlds)
@@ -71,16 +72,14 @@ public:
 		_ctrlds = ctrlds;
 		_prod = new Producer<Storage::Packet>(_ctrlds,false,false);
 		_datads = data;
-		_ctrl = ctrl;
 		_drive = drive;
-		mng->get(_ctrl)->get_params(_drive,&_params);
+		mng->get(ctrl)->get_params(_drive,&_params);
 	}
 
 private:
 	DataSpace *_ctrlds;
 	Producer<Storage::Packet> *_prod;
 	DataSpace *_datads;
-	size_t _ctrl;
 	size_t _drive;
 	Storage::Parameter _params;
 };
@@ -116,10 +115,10 @@ void StorageService::portal(capsel_t pid) {
 			case Storage::INIT: {
 				capsel_t ctrlsel = uf.get_delegated(0).offset();
 				capsel_t datasel = uf.get_delegated(0).offset();
-				size_t ctrl,drive;
-				uf >> ctrl >> drive;
+				size_t drive;
+				uf >> drive;
 				uf.finish_input();
-				sess->init(new DataSpace(ctrlsel),new DataSpace(datasel),ctrl,drive);
+				sess->init(new DataSpace(ctrlsel),new DataSpace(datasel),drive);
 				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}

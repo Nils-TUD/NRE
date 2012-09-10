@@ -47,7 +47,7 @@ public:
 		return (_devs[0] ? 1 : 0) + (_devs[1] ? 1 : 0);
 	}
 	virtual bool exists(size_t drive) const {
-		return drive < 2 && _devs[drive];
+		return idx(drive) < ARRAY_SIZE(_devs) && _devs[idx(drive)];
 	}
 
 	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const;
@@ -174,6 +174,9 @@ public:
 	}
 
 private:
+	static size_t idx(size_t drive) {
+		return drive % nre::Storage::MAX_DRIVES;
+	}
 	bool is_bus_responding();
 	HostATADevice *detect_drive(uint id);
 	HostATADevice *identify(uint id,uint cmd);
@@ -189,7 +192,6 @@ private:
 #endif
 	}
 
-	uint _id;
 	bool _dma;
 	bool _irqs;
 	nre::Ports _ctrl;

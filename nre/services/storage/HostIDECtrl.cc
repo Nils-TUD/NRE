@@ -24,7 +24,7 @@ using namespace nre;
  * we are not able to access port (portbase + 7). */
 HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 		Ports::port_t bmportbase,uint bmportcount,bool dma)
-		: _id(id), _dma(dma && bmportbase), _irqs(true), _ctrl(portbase,9),
+		: Controller(id), _dma(dma && bmportbase), _irqs(true), _ctrl(portbase,9),
 		  _ctrlreg(portbase + ATA_REG_CONTROL,1),
 		  _bm(dma && bmportbase ? new Ports(bmportbase,bmportcount) : 0), _clock(1000), _sm(),
 		  _gsi(gsi ? new Gsi(gsi) : 0), _prdt(8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
@@ -36,7 +36,7 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 	// init attached drives; begin with slave
 	for(ssize_t j = 1; j >= 0; --j) {
 		try {
-			_devs[j] = detect_drive(_id * 2 + j);
+			_devs[j] = detect_drive(_id * Storage::MAX_DRIVES + j);
 			LOG(nre::Logging::STORAGE,_devs[j]->print());
 		}
 		catch(const Exception &e) {
@@ -57,13 +57,13 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 }
 
 void HostIDECtrl::get_params(size_t drive,nre::Storage::Parameter *params) const {
-	_devs[drive]->get_params(params);
+	_devs[idx(drive)]->get_params(params);
 }
 
 void HostIDECtrl::read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 		size_t offset,sector_type sector,sector_type count) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[drive]->readwrite(HostATADevice::READ,ds,offset,sector,count);
+	_devs[idx(drive)]->readwrite(HostATADevice::READ,ds,offset,sector,count);
 	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }
@@ -71,14 +71,14 @@ void HostIDECtrl::read(size_t drive,producer_type *prod,tag_type tag,const nre::
 void HostIDECtrl::write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 		size_t offset,sector_type sector,sector_type count) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[drive]->readwrite(HostATADevice::WRITE,ds,offset,sector,count);
+	_devs[idx(drive)]->readwrite(HostATADevice::WRITE,ds,offset,sector,count);
 	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }
 
 void HostIDECtrl::flush(size_t drive,producer_type *prod,tag_type tag) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[drive]->flush_cache();
+	_devs[idx(drive)]->flush_cache();
 	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }

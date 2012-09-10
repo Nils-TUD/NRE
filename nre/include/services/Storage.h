@@ -34,6 +34,11 @@ public:
 	typedef ulong tag_type;
 	typedef uint64_t sector_type;
 
+	enum {
+		MAX_CONTROLLER	= 8,
+		MAX_DRIVES		= 32,	// per controller
+	};
+
 	/**
 	 * The available commands
 	 */
@@ -88,16 +93,15 @@ public:
 	 *
 	 * @param con the connection
 	 * @param ds the dataspace to use for data exchange
-	 * @param ctrl the controller
-	 * @param disk the disk
+	 * @param drive the drive
 	 */
-	explicit StorageSession(Connection &con,DataSpace &ds,size_t ctrl,size_t disk)
+	explicit StorageSession(Connection &con,DataSpace &ds,size_t drive)
 			: ClientSession(con),
 			  _ctrlds(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			  _cons(&_ctrlds,true), _pts(new Pt*[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-		init(ds,ctrl,disk);
+		init(ds,drive);
 	}
 	/**
 	 * Destroys this session
@@ -174,11 +178,11 @@ public:
 	}
 
 private:
-	void init(DataSpace &ds,size_t ctrl,size_t disk) {
+	void init(DataSpace &ds,size_t drive) {
 		UtcbFrame uf;
 		uf.delegate(_ctrlds.sel(),0);
 		uf.delegate(ds.sel(),1);
-		uf << Storage::INIT << ctrl << disk;
+		uf << Storage::INIT << drive;
 		_pts[CPU::current().log_id()]->call(uf);
 		uf.check_reply();
 	}

@@ -25,9 +25,6 @@
 
 class ControllerMng {
 	enum {
-		MAX_CONTROLLER			= 8,
-	};
-	enum {
 		CLASS_STORAGE_CTRL		= 0x1,
 		SUBCLASS_IDE			= 0x1,
 		SUBCLASS_SATA			= 0x6,
@@ -42,7 +39,7 @@ public:
 	}
 
 	bool exists(size_t ctrl) const {
-		return ctrl < MAX_CONTROLLER && _ctrls[ctrl] != 0;
+		return ctrl < nre::Storage::MAX_CONTROLLER && _ctrls[ctrl] != 0;
 	}
 	Controller *get(size_t ctrl) const {
 		return _ctrls[ctrl];
@@ -58,5 +55,5 @@ private:
 	nre::ACPISession _acpi;
 	nre::PCI _pci;
 	size_t _count;
-	Controller *_ctrls[MAX_CONTROLLER];
+	Controller *_ctrls[nre::Storage::MAX_CONTROLLER];
 };

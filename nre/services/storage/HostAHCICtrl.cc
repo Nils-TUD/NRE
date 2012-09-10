@@ -19,29 +19,31 @@
 #include <services/ACPI.h>
 #include "HostAHCICtrl.h"
 
-HostAHCICtrl::HostAHCICtrl(nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar)
-		: Controller(), _gsi(gsi), _gsigt(gsi_thread,nre::CPU::current().log_id()),
-		  _gsisc(&_gsigt,nre::Qpd()), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
+using namespace nre;
+
+HostAHCICtrl::HostAHCICtrl(uint id,PCI &pci,PCI::bdf_type bdf,Gsi *gsi,bool dmar)
+		: Controller(id), _gsi(gsi), _gsigt(gsi_thread,CPU::current().log_id()),
+		  _gsisc(&_gsigt,Qpd()), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
 		  _regs_high(0), _portcount(0), _ports() {
 	assert(!(~pci.conf_read(_bdf,1) & 6) && "we need mem-decode and busmaster dma");
-	nre::PCI::value_type bar = pci.conf_read(_bdf,9);
+	PCI::value_type bar = pci.conf_read(_bdf,9);
 	assert(!(bar & 7) && "we need a 32bit memory bar");
 
-	_regs_ds = new nre::DataSpace(0x1000,
-			nre::DataSpaceDesc::LOCKED,nre::DataSpaceDesc::RW,bar);
+	_regs_ds = new DataSpace(0x1000,
+			DataSpaceDesc::LOCKED,DataSpaceDesc::RW,bar);
 	_regs = reinterpret_cast<Register*>(_regs_ds->virt() + (bar & 0xFFF));
 
 	// map the high ports
 	if(_regs->pi >> 30) {
-		_regs_high_ds = new nre::DataSpace(0x1000,
-				nre::DataSpaceDesc::LOCKED,nre::DataSpaceDesc::RW,bar + 0x1000);
+		_regs_high_ds = new DataSpace(0x1000,
+				DataSpaceDesc::LOCKED,DataSpaceDesc::RW,bar + 0x1000);
 		_regs_high = reinterpret_cast<HostAHCIDevice::Register*>(
 				_regs_high_ds->virt() + (bar & 0xFE0));
 	}
 
 	// enable AHCI
 	_regs->ghc |= 0x80000000;
-	LOG(nre::Logging::STORAGE,nre::Serial::get().writef(
+	LOG(Logging::STORAGE,Serial::get().writef(
 			"AHCI: cap %#x cap2 %#x global %#x ports %#x version %#x bohc %#x\n",
 			_regs->cap,_regs->cap2,_regs->ghc,_regs->pi,_regs->vs,_regs->bohc));
 	assert(!_regs->bohc);
@@ -59,11 +61,11 @@ HostAHCICtrl::HostAHCICtrl(nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bo
 	_regs->ghc |= 2;
 
 	// start the gsi thread
-	_gsigt.set_tls<HostAHCICtrl*>(nre::Thread::TLS_PARAM,this);
+	_gsigt.set_tls<HostAHCICtrl*>(Thread::TLS_PARAM,this);
 	char name[32];
-	nre::OStringStream os(name,sizeof(name));
+	OStringStream os(name,sizeof(name));
 	os << "ahci-gsi-" << _gsi->gsi();
-	_gsisc.start(nre::String(name));
+	_gsisc.start(String(name));
 }
 
 void HostAHCICtrl::create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bool dmar) {
@@ -74,22 +76,23 @@ void HostAHCICtrl::create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bo
 	// check what kind of drive we have, if any
 	uint32_t sig = HostAHCIDevice::get_signature(portreg);
 	if(sig != HostAHCIDevice::SATA_SIG_NONE) {
-		_ports[nr] = new HostAHCIDevice(portreg,_portcount,((_regs->cap >> 8) & 0x1f) + 1,dmar);
+		_ports[nr] = new HostAHCIDevice(portreg,_id * Storage::MAX_DRIVES + _portcount,
+				((_regs->cap >> 8) & 0x1f) + 1,dmar);
 		_ports[nr]->determine_capacity();
-		LOG(nre::Logging::STORAGE,_ports[nr]->print());
+		LOG(Logging::STORAGE,_ports[nr]->print());
 		_portcount++;
 	}
 }
 
 void HostAHCICtrl::gsi_thread(void*) {
-	HostAHCICtrl *ha = nre::Thread::current()->get_tls<HostAHCICtrl*>(nre::Thread::TLS_PARAM);
+	HostAHCICtrl *ha = Thread::current()->get_tls<HostAHCICtrl*>(Thread::TLS_PARAM);
 	while(1) {
 		ha->_gsi->down();
 
 		uint32_t is = ha->_regs->is;
 		uint32_t oldis = is;
 		while(is) {
-			uint32_t port = nre::Math::bit_scan_forward(is);
+			uint32_t port = Math::bit_scan_forward(is);
 			if(ha->_ports[port])
 				ha->_ports[port]->irq();
 			is &= ~(1 << port);

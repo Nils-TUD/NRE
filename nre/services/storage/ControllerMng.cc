@@ -25,7 +25,7 @@ using namespace nre;
 void ControllerMng::find_ahci_controller() {
 	uint inst = 0;
 	PCI::bdf_type bdf;
-	while(_count < MAX_CONTROLLER) {
+	while(_count < Storage::MAX_CONTROLLER) {
 		try {
 			bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL,SUBCLASS_SATA,inst);
 		}
@@ -45,7 +45,8 @@ void ControllerMng::find_ahci_controller() {
 				_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,_pci.conf_read(bdf,0),
 				_pci.conf_read(bdf,9)));
 
-		_ctrls[_count++] = new HostAHCICtrl(_pci,bdf,gsi,dmar);
+		HostAHCICtrl * ctrl = new HostAHCICtrl(_count,_pci,bdf,gsi,dmar);
+		_ctrls[_count++] = ctrl;
 		inst++;
 	}
 }
@@ -53,7 +54,7 @@ void ControllerMng::find_ahci_controller() {
 void ControllerMng::find_ide_controller() {
 	uint inst = 0;
 	PCI::bdf_type bdf;
-	while(_count < MAX_CONTROLLER) {
+	while(_count < Storage::MAX_CONTROLLER) {
 		try {
 			bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL,SUBCLASS_IDE,inst);
 		}
@@ -101,7 +102,7 @@ void ControllerMng::find_ide_controller() {
 
 			// create controller
 			try {
-				Controller *ctrl = new HostIDECtrl(i,gsi,bar0 & ~0x3,bmr,8,true);
+				Controller *ctrl = new HostIDECtrl(_count,gsi,bar0 & ~0x3,bmr,8,true);
 				_ctrls[_count++] = ctrl;
 			}
 			catch(const Exception &e) {

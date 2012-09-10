@@ -30,7 +30,7 @@ protected:
 	typedef nre::Producer<nre::Storage::Packet> producer_type;
 
 public:
-	explicit Controller() {
+	explicit Controller(uint id) : _id(id) {
 	}
 	virtual ~Controller() {
 	}
@@ -96,4 +96,7 @@ public:
 	 */
 	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 			size_t offset,sector_type sector,sector_type count) = 0;
+
+protected:
+	uint _id;
 };
