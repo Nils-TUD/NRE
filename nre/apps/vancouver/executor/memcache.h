@@ -270,7 +270,7 @@ public:
 	}
 
 	MemCache(DBus<MessageMem> &mem,DBus<MessageMemRegion> &memregion)
-			: _mem(mem), _memregion(memregion), _sets() {
+			: _mem(mem), _memregion(memregion), debug(false), _sets() {
 		assert(ASSOZ >= 2);
 		assert(BUFFERS >= 2);
 
