@@ -371,10 +371,13 @@ static const char *argv_to_str(int argc,char *argv[]) {
 	size_t pos = 0;
 	for(int i = 1; i < argc; ++i) {
 		size_t len = strlen(argv[i]);
+		if(pos + len > sizeof(buf) - 1)
+			break;
 		memcpy(buf + pos,argv[i],len);
 		buf[pos + len] = ' ';
 		pos += len + 1;
 	}
+	buf[pos] = '\0';
 	return buf;
 }
 
