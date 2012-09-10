@@ -40,11 +40,11 @@ void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,size_t offset,s
 		cmd[7] = (count >> 8) & 0xFF;
 		cmd[8] = (count >> 0) & 0xFF;
 	}
-    cmd[2] = (sector >> 24) & 0xFF;
-    cmd[3] = (sector >> 16) & 0xFF;
-    cmd[4] = (sector >> 8) & 0xFF;
-    cmd[5] = (sector >> 0) & 0xFF;
-    request(_cmd,ds,offset,count * _sector_size);
+	cmd[2] = (sector >> 24) & 0xFF;
+	cmd[3] = (sector >> 16) & 0xFF;
+	cmd[4] = (sector >> 8) & 0xFF;
+	cmd[5] = (sector >> 0) & 0xFF;
+	request(_cmd,ds,offset,count * _sector_size);
 }
 
 void HostATAPIDevice::determine_capacity() {

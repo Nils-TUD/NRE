@@ -19,17 +19,22 @@
 #pragma once
 
 #define PVAR  ".long"
-#define COUNTER_INC(NAME)						\
-  ({									\
-    asm volatile (".section .data; 1: .string \"" NAME "\";.previous;"	\
-                  ".section .profile; " PVAR " 1b; 2: " PVAR " 0,0;.previous;" \
-		  "incl 2b" : : : "cc");				\
-  })
+#define COUNTER_INC(NAME)													\
+	({																		\
+		asm volatile(														\
+			".section .data; 1: .string \"" NAME "\";.previous;"			\
+			".section .profile; " PVAR " 1b; 2: " PVAR " 0,0;.previous;"	\
+			"incl 2b"														\
+			: : : "cc"														\
+		);																	\
+	})
 
-
-#define COUNTER_SET(NAME, VALUE)					\
-  {									\
-    asm volatile (".section .data; 1: .string \"" NAME "\";.previous;"	\
-		  ".section .profile; "  PVAR " 1b; 2: " PVAR " 0,0;.previous;" \
-		  "mov %0,2b" : : "r"(static_cast<long>(VALUE)));	\
-  }
+#define COUNTER_SET(NAME, VALUE)											\
+	{																		\
+		asm volatile(														\
+			".section .data; 1: .string \"" NAME "\";.previous;"			\
+			".section .profile; "  PVAR " 1b; 2: " PVAR " 0,0;.previous;"	\
+			"mov %0,2b"														\
+			: : "r"(static_cast<long>(VALUE))								\
+		);																	\
+	}

@@ -18,9 +18,9 @@
 #pragma once
 
 #define READ(NAME) ({ _mtr_read |= RMTR_##NAME; _cpu->NAME; })
-#define WRITE(NAME) ({							\
-      _mtr_out |= RMTR_##NAME;						\
-      _cpu->NAME;							\
+#define WRITE(NAME) ({					\
+	_mtr_out |= RMTR_##NAME;			\
+	_cpu->NAME;							\
 })
 #define FAULT(NAME, VALUE) { NAME->_debug_fault_line = __LINE__;  NAME->_fault = VALUE; }
 #define UNIMPLEMENTED(NAME) { return (FAULT(NAME, FAULT_UNIMPLEMENTED)); }
@@ -149,30 +149,30 @@ private:
 	/**
 	 * Move CacheEntries to the front of the usage list.
 	 */
-#define return_move_to_front(set, newest)		\
-  {							\
-    if (~old)						\
-      {							\
-	set[old]._older =  set[entry]._older;		\
-	set[entry]._older = newest;			\
-	newest = entry;					\
-      }							\
-    return set + entry;					\
-  }
+#define return_move_to_front(set, newest)			\
+	{												\
+		if(~old)									\
+		{											\
+			set[old]._older = set[entry]._older;	\
+			set[entry]._older = newest;				\
+			newest = entry;							\
+		}											\
+		return set + entry;							\
+	}
 
 	/*
 	 * Search for an entry starting from the newest one.
 	 */
-#define search_entry(set, newest)					\
-  unsigned old = ~0;							\
-  unsigned entry = newest;						\
-  for (; ~set[entry]._older; old = entry, entry = set[entry]._older)	\
-    if (set[entry].is_valid(phys1, phys2, len))				\
-      return_move_to_front(set, newest);				\
-  /* we have at least an assoziativity of two! */			\
-  assert(~old);								\
-  assert(~entry);							\
-
+#define search_entry(set, newest)											\
+	unsigned old = ~0;														\
+	unsigned entry = newest;												\
+	for(; ~set[entry]._older; old = entry, entry = set[entry]._older)	{	\
+		if(set[entry].is_valid(phys1,phys2,len))							\
+			return_move_to_front(set, newest);								\
+	}																		\
+	/* we have at least an assoziativity of two! */							\
+	assert(~old);															\
+	assert(~entry);
 
 public:
 	/**

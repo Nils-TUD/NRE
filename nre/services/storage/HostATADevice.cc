@@ -127,7 +127,7 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,size_t offset,s
 	ATA_LOGDETAIL("Starting DMA-transfer");
 	_ctrl.inbmrb(BMR_REG_COMMAND);
 	_ctrl.inbmrb(BMR_REG_STATUS);
-    /* start bus-mastering */
+	/* start bus-mastering */
 	if(op == READ)
 		_ctrl.outbmrb(BMR_REG_COMMAND,BMR_CMD_START | BMR_CMD_READ);
 	else

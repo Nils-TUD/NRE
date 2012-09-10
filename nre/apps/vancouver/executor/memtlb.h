@@ -44,14 +44,15 @@ private:
 	};
 	unsigned (*tlb_fill_func)(MemTlb *tlb,unsigned long virt,unsigned type,long unsigned &phys);
 
-#define AD_ASSIST(bits)							\
-  if ((pte & (bits)) != (bits))						\
-    {									\
-    if (features & FEATURE_PAE) {					\
-      if (nre::Atomic::cmpxchg8b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
-    }									\
-    else								\
-      if (nre::Atomic::cmpxchg4b(entry->_ptr, pte, pte | bits) != pte) RETRY;	\
+#define AD_ASSIST(bits)																\
+	if((pte & (bits)) != (bits)) {													\
+		if(features & FEATURE_PAE) {												\
+			if(nre::Atomic::cmpxchg8b(entry->_ptr, pte, pte | bits) != pte)			\
+				RETRY;																\
+		}																			\
+		else																		\
+		if (nre::Atomic::cmpxchg4b(entry->_ptr, pte, pte | bits) != pte)			\
+			RETRY;																	\
     }
 
 	template<unsigned features,typename PTE_TYPE>
