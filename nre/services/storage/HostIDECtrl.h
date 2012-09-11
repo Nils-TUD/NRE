@@ -29,6 +29,12 @@
 class HostATADevice;
 
 class HostIDECtrl : public Controller {
+	struct UserTag {
+		nre::Producer<nre::Storage::Packet> *prod;
+		nre::Storage::tag_type tag;
+		bool dma;
+	};
+
 public:
 	/* physical region descriptor */
 	struct PRD {
@@ -82,13 +88,29 @@ public:
 	}
 
 	/**
-	 * Waits until an IRQ arrived
+	 * Stores that we're waiting for the result of a transfer. You should do that before actually
+	 * starting the transfer.
 	 */
-	void wait_irq() {
-		if(_gsi) {
-			_gsi->zero();
-			LOG(nre::Logging::STORAGE_DETAIL,nre::Serial::get() << "Got GSI " << _gsi->gsi() << "\n");
-		}
+	void start_transfer(producer_type *prod,tag_type tag,bool dma) {
+		_tag.prod = prod;
+		_tag.tag = tag;
+		_tag.dma = dma;
+		_in_progress = true;
+	}
+
+	/**
+	 * Stores that we're not waiting anymore. So, it assumes that the transfer is finished.
+	 */
+	void stop_transfer() {
+		_in_progress = false;
+	}
+
+	/**
+	 * Waits until a new transfer can be started, if necessary
+	 */
+	void wait_ready() {
+		if(_irqs && _in_progress)
+			_ready.zero();
 	}
 
 	/**
@@ -183,18 +205,31 @@ private:
 	HostATADevice *identify(uint id,uint cmd);
 
 	static void gsi_thread(void *) {
-#if 0
 		HostIDECtrl *ctrl = nre::Thread::current()->get_tls<HostIDECtrl*>(nre::Thread::TLS_PARAM);
-		nre::Gsi gsi(ctrl->_irq);
 		while(1) {
-			gsi.down();
-			nre::Serial::get() << "Got IRQ " << ctrl->_irq << "\n";
+			ctrl->_gsi->down();
+
+			LOG(nre::Logging::STORAGE_DETAIL,nre::Serial::get() << "Got GSI " << ctrl->_gsi->gsi() << "\n");
+			uint status = 0;
+			if(ctrl->_tag.dma) {
+				int res = ctrl->wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
+				if(res != 0)
+					status = 1;
+
+				ctrl->inbmrb(BMR_REG_STATUS);
+				ctrl->outbmrb(BMR_REG_COMMAND,0);
+			}
+			if(ctrl->_tag.prod)
+				ctrl->_tag.prod->produce(nre::Storage::Packet(ctrl->_tag.tag,status));
+			ctrl->_ready.up();
+			ctrl->_in_progress = false;
 		}
-#endif
 	}
 
 	bool _dma;
 	bool _irqs;
+	bool _in_progress;
+	nre::Sm _ready;
 	nre::Ports _ctrl;
 	nre::Ports _ctrlreg;
 	nre::Ports *_bm;
@@ -204,5 +239,6 @@ private:
 	nre::DataSpace _prdt;
 	nre::GlobalThread _gsigt;
 	nre::Sc _gsisc;
+	UserTag _tag;
 	HostATADevice *_devs[2];
 };

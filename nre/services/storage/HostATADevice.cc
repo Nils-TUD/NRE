@@ -35,7 +35,7 @@ uint HostATADevice::get_command(Operation op) {
 }
 
 void HostATADevice::readwrite(Operation op,const DataSpace &ds,sector_type sector,
-		const dma_type &dma,size_t secsize) {
+		const dma_type &dma,producer_type *prod,tag_type tag,size_t secsize) {
 	if(secsize == 0)
 		secsize = _sector_size;
 	uint cmd = get_command(op);
@@ -47,13 +47,13 @@ void HostATADevice::readwrite(Operation op,const DataSpace &ds,sector_type secto
 		case COMMAND_READ_SEC_EXT:
 		case COMMAND_WRITE_SEC:
 		case COMMAND_WRITE_SEC_EXT:
-			transferPIO(op,ds,secsize,dma,true);
+			transferPIO(op,ds,secsize,dma,prod,tag,true);
 			break;
 		case COMMAND_READ_DMA:
 		case COMMAND_READ_DMA_EXT:
 		case COMMAND_WRITE_DMA:
 		case COMMAND_WRITE_DMA_EXT:
-			transferDMA(op,ds,dma);
+			transferDMA(op,ds,dma,prod,tag);
 			break;
 		default:
 			throw Exception(E_ARGS_INVALID,"Invalid command");
@@ -77,7 +77,7 @@ void HostATADevice::flush_cache() {
 }
 
 void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
-		const dma_type &dma,bool waitfirst) {
+		const dma_type &dma,producer_type *prod,tag_type tag,bool waitfirst) {
 	size_t offset = 0;
 	size_t length = dma.bytecount();
 	int res;
@@ -86,12 +86,13 @@ void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
 			throw Exception(E_ARGS_INVALID,64,"Device %u: Unable to copyin data",_id);
 		if(offset > 0 || waitfirst) {
 			if(op == READ)
-				_ctrl.wait_irq();
+				_ctrl.wait_ready();
 			res = _ctrl.wait_until(PIO_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
 			_ctrl.handle_status(_id,res,"PIO transfer");
 		}
 
 		/* now read / write the data */
+		_ctrl.start_transfer(0,0,false);
 		if(op == READ)
 			_ctrl.inwords(ATA_REG_DATA,reinterpret_cast<uint16_t*>(buffer()),secsize / sizeof(uint16_t));
 		else
@@ -101,10 +102,19 @@ void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
 			throw Exception(E_ARGS_INVALID,64,"Device %u: Unable to copyout data",_id);
 		offset += secsize;
 	}
+	if(prod)
+		prod->produce(Storage::Packet(tag,0));
 }
 
-void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type &dma) {
+void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type &dma,
+		producer_type *prod,tag_type tag) {
+	/* wait until previous transfers are done */
+	ATA_LOGDETAIL("Waiting for previous transfers");
+	_ctrl.wait_ready();
+
 	/* setup PRDTs */
+	ATA_LOGDETAIL("Setting PRDs");
+	HostIDECtrl::PRD *prd = _ctrl.prdt();
 	for(dma_type::iterator it = dma.begin(); it != dma.end(); ) {
 		if(((static_cast<uint64_t>(ds.phys()) + it->offset + it->count) >= 0x100000000))
 			throw Exception(E_ARGS_INVALID,64,"Physical address %p is too large for DMA",ds.phys());
@@ -113,14 +123,15 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type 
 			throw Exception(E_ARGS_INVALID,64,"Device %u: Invalid offset(%zu)/count(%zu)",
 					it->offset,it->count);
 		}
-		_ctrl.prdt()->buffer = static_cast<uint32_t>(ds.phys() + it->offset);
-		_ctrl.prdt()->byteCount = it->count;
-		_ctrl.prdt()->last = ++it == dma.end();
+		prd->buffer = static_cast<uint32_t>(ds.phys() + it->offset);
+		prd->byteCount = it->count;
+		prd->last = ++it == dma.end();
+		prd++;
 	}
 
 	/* stop running transfers */
-	ATA_LOGDETAIL("Stopping running transfers");
-	_ctrl.outbmrb(BMR_REG_COMMAND,0);
+	//ATA_LOGDETAIL("Stopping running transfers");
+	//_ctrl.outbmrb(BMR_REG_COMMAND,0);
 	uint8_t status = _ctrl.inbmrb(BMR_REG_STATUS) | BMR_STATUS_ERROR | BMR_STATUS_IRQ;
 	_ctrl.outbmrb(BMR_REG_STATUS,status);
 
@@ -132,6 +143,7 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type 
 	ATA_LOGDETAIL("Starting DMA-transfer");
 	_ctrl.inbmrb(BMR_REG_COMMAND);
 	_ctrl.inbmrb(BMR_REG_STATUS);
+	_ctrl.start_transfer(prod,tag,true);
 	/* start bus-mastering */
 	if(op == READ)
 		_ctrl.outbmrb(BMR_REG_COMMAND,BMR_CMD_START | BMR_CMD_READ);
@@ -141,15 +153,15 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type 
 	_ctrl.inbmrb(BMR_REG_STATUS);
 
 	/* now wait for an interrupt */
-	ATA_LOGDETAIL("Waiting for an interrupt");
-	_ctrl.wait_irq();
+	//ATA_LOGDETAIL("Waiting for an interrupt");
+	//_ctrl.wait_irq();
 
-	int res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
-	_ctrl.handle_status(_id,res,"DMA transfer");
+	//int res = _ctrl.wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
+	//_ctrl.handle_status(_id,res,"DMA transfer");
 
-	_ctrl.inbmrb(BMR_REG_STATUS);
-	_ctrl.outbmrb(BMR_REG_COMMAND,0);
-	ATA_LOGDETAIL("DMA transfer done");
+	//_ctrl.inbmrb(BMR_REG_STATUS);
+	//_ctrl.outbmrb(BMR_REG_COMMAND,0);
+	//ATA_LOGDETAIL("DMA transfer done");
 }
 
 void HostATADevice::setup_command(sector_type sector,sector_type count,uint cmd) {

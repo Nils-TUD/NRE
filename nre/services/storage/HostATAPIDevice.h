@@ -26,9 +26,10 @@ public:
 
 	virtual void determine_capacity();
 	virtual void readwrite(Operation op,const nre::DataSpace &ds,sector_type sector,
-			const dma_type &dma,size_t secsize = 0);
+			const dma_type &dma,producer_type *prod,tag_type tag,size_t secsize = 0);
 
 private:
-	void request(const nre::DataSpace &cmd,const nre::DataSpace &data,const dma_type &dma);
+	void request(const nre::DataSpace &cmd,const nre::DataSpace &data,const dma_type &dma,
+			producer_type *prod,tag_type tag);
 };
 

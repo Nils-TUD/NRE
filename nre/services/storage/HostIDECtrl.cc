@@ -24,8 +24,8 @@ using namespace nre;
  * we are not able to access port (portbase + 7). */
 HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 		Ports::port_t bmportbase,uint bmportcount,bool dma)
-		: Controller(id), _dma(dma && bmportbase), _irqs(true), _ctrl(portbase,9),
-		  _ctrlreg(portbase + ATA_REG_CONTROL,1),
+		: Controller(id), _dma(dma && bmportbase), _irqs(gsi), _in_progress(false), _ready(0),
+		  _ctrl(portbase,9), _ctrlreg(portbase + ATA_REG_CONTROL,1),
 		  _bm(dma && bmportbase ? new Ports(bmportbase,bmportcount) : 0), _clock(1000), _sm(),
 		  _gsi(gsi ? new Gsi(gsi) : 0),
 		  _prdt(Storage::MAX_DMA_DESCS * 8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
@@ -33,6 +33,15 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 	// check if the bus is empty
 	if(!is_bus_responding())
 		throw Exception(E_NOT_FOUND,32,"Bus %u is floating",_id);
+
+	// start thread to wait for GSIs
+	if(_irqs) {
+		char name[32];
+		nre::OStringStream os(name,sizeof(name));
+		os << "ide-gsi-" << gsi;
+		_gsigt.set_tls<HostIDECtrl*>(Thread::TLS_PARAM,this);
+		_gsisc.start(nre::String(name));
+	}
 
 	// init attached drives; begin with slave
 	for(ssize_t j = 1; j >= 0; --j) {
@@ -45,16 +54,6 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 			_devs[j] = 0;
 		}
 	}
-
-#if 0
-	if(irq != 0) {
-		char name[32];
-		nre::OStringStream os(name,sizeof(name));
-		os << "ide-gsi-" << irq;
-		_gsigt.set_tls<HostIDECtrl*>(Thread::TLS_PARAM,this);
-		_gsisc.start(nre::String(name));
-	}
-#endif
 }
 
 void HostIDECtrl::get_params(size_t drive,nre::Storage::Parameter *params) const {
@@ -64,23 +63,18 @@ void HostIDECtrl::get_params(size_t drive,nre::Storage::Parameter *params) const
 void HostIDECtrl::read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 		sector_type sector,const dma_type &dma) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[idx(drive)]->readwrite(HostATADevice::READ,ds,sector,dma);
-	// TODO wrong place
-	prod->produce(nre::Storage::Packet(tag,0));
+	_devs[idx(drive)]->readwrite(HostATADevice::READ,ds,sector,dma,prod,tag);
 }
 
 void HostIDECtrl::write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
 		sector_type sector,const dma_type &dma) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
-	_devs[idx(drive)]->readwrite(HostATADevice::WRITE,ds,sector,dma);
-	// TODO wrong place
-	prod->produce(nre::Storage::Packet(tag,0));
+	_devs[idx(drive)]->readwrite(HostATADevice::WRITE,ds,sector,dma,prod,tag);
 }
 
 void HostIDECtrl::flush(size_t drive,producer_type *prod,tag_type tag) {
 	nre::ScopedLock<nre::UserSm> guard(&_sm);
 	_devs[idx(drive)]->flush_cache();
-	// TODO wrong place
 	prod->produce(nre::Storage::Packet(tag,0));
 }
 
