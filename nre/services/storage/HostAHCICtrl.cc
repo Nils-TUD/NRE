@@ -17,6 +17,8 @@
 
 #include <services/PCIConfig.h>
 #include <services/ACPI.h>
+#include <Logging.h>
+
 #include "HostAHCICtrl.h"
 
 using namespace nre;

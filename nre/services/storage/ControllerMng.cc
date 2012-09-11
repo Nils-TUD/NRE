@@ -15,6 +15,7 @@
  */
 
 #include <kobj/Gsi.h>
+#include <Logging.h>
 
 #include "ControllerMng.h"
 #include "HostAHCICtrl.h"

@@ -15,6 +15,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <Logging.h>
+
 #include "HostAHCIDevice.h"
 
 using namespace nre;

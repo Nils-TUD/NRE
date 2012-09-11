@@ -21,6 +21,7 @@
 #include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <util/Clock.h>
+#include <Logging.h>
 
 #include "Device.h"
 #include "Controller.h"

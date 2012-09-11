@@ -18,6 +18,7 @@
 #include <stream/OStringStream.h>
 #include <services/Timer.h>
 #include <util/Clock.h>
+#include <Logging.h>
 
 #include "ViewSwitcher.h"
 #include "ConsoleService.h"

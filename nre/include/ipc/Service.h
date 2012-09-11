@@ -28,7 +28,6 @@
 #include <util/ScopedPtr.h>
 #include <util/CPUSet.h>
 #include <util/BitField.h>
-#include <Logging.h>
 #include <RCU.h>
 #include <CPU.h>
 #include <util/Math.h>
@@ -205,18 +204,7 @@ protected:
 	 * @return the created session
 	 * @throws ServiceException if there are no free slots anymore
 	 */
-	ServiceSession *new_session() {
-		ScopedLock<UserSm> guard(&_sm);
-		for(size_t i = 0; i < MAX_SESSIONS; ++i) {
-			if(_sessions[i] == 0) {
-				LOG(Logging::SERVICES,Serial::get() << "Creating session " << i
-						<< " (caps=" << _caps + (i << CPU::order()) << ")\n");
-				add_session(create_session(i,_caps + (i << CPU::order()),_func));
-				return _sessions[i];
-			}
-		}
-		throw ServiceException(E_CAPACITY,"No free sessions");
-	}
+	ServiceSession *new_session();
 
 private:
 	/**
@@ -249,16 +237,7 @@ private:
 		RCU::invalidate(sess);
 		RCU::gc(true);
 	}
-
-	void destroy_session(capsel_t pid) {
-		ScopedLock<UserSm> guard(&_sm);
-		size_t i = (pid - _caps) >> CPU::order();
-		LOG(Logging::SERVICES,Serial::get() << "Destroying session " << i << "\n");
-		ServiceSession *sess = _sessions[i];
-		if(!sess)
-			throw ServiceException(E_NOT_FOUND,32,"Session %zu does not exist",i);
-		remove_session(sess);
-	}
+	void destroy_session(capsel_t pid);
 
 	Service(const Service&);
 	Service& operator=(const Service&);
