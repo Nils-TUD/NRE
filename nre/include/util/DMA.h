@@ -94,11 +94,22 @@ public:
 	 * Adds the given descriptor to the list
 	 *
 	 * @param desc the descriptor
+	 * @return true on success
 	 */
-	void add(const DMADesc &desc) {
+	void push(const DMADesc &desc) {
+		assert(_count < MAX);
 		_descs[_count++] = desc;
 		_total += desc.count;
 	}
+	/**
+	 * Removes the last added descriptor
+	 */
+	void pop() {
+		assert(_count > 0);
+		_total -= _descs[_count - 1].count;
+		_count--;
+	}
+
 	/**
 	 * Resets the list
 	 */
@@ -170,7 +181,7 @@ template<size_t MAX>
 static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
 	os << "DMADescList[" << l.count() << ", " << l.bytecount() << "] (";
 	for(typename DMADescList<MAX>::iterator it = l.begin(); it != l.end(); ) {
-		os << it->offset << ":" << it->count;
+		os.writef("o=%p s=%#zu",it->offset,it->count);
 		if(++it != l.end())
 			os << ",";
 	}
@@ -199,7 +210,7 @@ static inline UtcbFrameRef &operator>>(UtcbFrameRef &uf,DMADescList<MAX> &l) {
 	while(count-- > 0) {
 		DMADesc desc;
 		uf >> desc;
-		l.add(desc);
+		l.push(desc);
 	}
 	return uf;
 }

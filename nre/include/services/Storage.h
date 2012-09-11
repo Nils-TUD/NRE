@@ -151,7 +151,7 @@ public:
 	 */
 	void read(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
 		Storage::dma_type dma;
-		dma.add(DMADesc(offset,count * _params.sector_size));
+		dma.push(DMADesc(offset,count * _params.sector_size));
 		read(tag,sector,dma);
 	}
 
@@ -182,7 +182,7 @@ public:
 	 */
 	void write(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
 		Storage::dma_type dma;
-		dma.add(DMADesc(offset,count * _params.sector_size));
+		dma.push(DMADesc(offset,count * _params.sector_size));
 		write(tag,sector,dma);
 	}
 
