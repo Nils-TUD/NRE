@@ -223,6 +223,12 @@ private:
 				ctrl->_tag.prod->produce(nre::Storage::Packet(ctrl->_tag.tag,status));
 			ctrl->_ready.up();
 			ctrl->_in_progress = false;
+			// just in case we receive another interrupt
+			// TODO this is not enough. we have to use the session-id and check whether the session
+			// still exists. because the user might have closed it between a transfer-start and
+			// the completion
+			ctrl->_tag.prod = 0;
+			ctrl->_tag.dma = false;
 		}
 	}
 
