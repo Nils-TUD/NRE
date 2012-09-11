@@ -371,7 +371,7 @@ void ChildManager::Portals::service(capsel_t pid) {
 				uf.finish_input();
 
 				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
-				const ServiceRegistry::Service* s = cm->get_service(name,true);
+				const ServiceRegistry::Service* s = cm->get_service(name);
 
 				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
 				uf << E_SUCCESS << s->available();

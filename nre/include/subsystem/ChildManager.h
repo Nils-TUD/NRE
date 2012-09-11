@@ -90,11 +90,11 @@ public:
 		_regsm.up();
 	}
 
-	const ServiceRegistry::Service *get_service(const String &name,bool ask_parent) {
+	const ServiceRegistry::Service *get_service(const String &name) {
 		ScopedLock<UserSm> guard(&_sm);
 		const ServiceRegistry::Service* s = registry().find(name);
 		if(!s) {
-			if(!ask_parent)
+			if(!_startup_info.child)
 				throw ChildException(E_NOT_FOUND,64,"Unable to find service '%s'",name.str());
 			BitField<Hip::MAX_CPUS> available;
 			capsel_t caps = get_parent_service(name.str(),available);
