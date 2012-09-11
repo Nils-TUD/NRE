@@ -191,8 +191,10 @@ void StorageService::portal(capsel_t pid) {
 int main(int argc,char *argv[]) {
 	bool idedma = true;
 	for(int i = 1; i < argc; ++i) {
-		if(strcmp(argv[i],"noidedma") == 0)
+		if(strcmp(argv[i],"noidedma") == 0) {
+			LOG(Logging::STORAGE,Serial::get() << "Disabling DMA for IDE devices\n");
 			idedma = false;
+		}
 	}
 
 	mng = new ControllerMng(idedma);
