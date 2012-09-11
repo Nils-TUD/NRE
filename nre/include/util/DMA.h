@@ -107,11 +107,12 @@ public:
 	}
 
 	/**
-	 * Copies <len> bytes from <src>+offset into <dst>
+	 * Copies <len> bytes from <src> into <dst>. The offset specified the number of bytes you've
+	 * already copied (previous calls), i.e. all descriptors before that offset are skipped.
 	 *
 	 * @param dst the destination buffer
 	 * @param len the number of bytes to copy
-	 * @param offset the offset in <src>
+	 * @param offset the number of bytes already copied
 	 * @param src the dataspace to read from
 	 * @return true if successful
 	 */
@@ -119,11 +120,12 @@ public:
 		return inout(dst,len,offset,src,false);
 	}
 	/**
-	 * Copies <len> bytes from <src> to <dst>+offset
+	 * Copies <len> bytes from <src> to <dst>. The offset specified the number of bytes you've
+	 * already copied (previous calls), i.e. all descriptors before that offset are skipped.
 	 *
 	 * @param src the source buffer
 	 * @param len the number of bytes to copy
-	 * @param offset the offset in <dst>
+	 * @param offset the number of bytes already copied
 	 * @param dst the dataspace to write to
 	 * @return true if successful
 	 */
