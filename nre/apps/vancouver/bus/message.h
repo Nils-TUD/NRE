@@ -21,6 +21,7 @@
 
 #include <arch/Types.h>
 #include <services/Console.h>
+#include <services/Storage.h>
 #include <Compiler.h>
 #include <Desc.h>
 
@@ -683,21 +684,18 @@ class DiskParameter;
  */
 struct MessageDisk {
 	enum Type {
-		DISK_GET_PARAMS,
+		DISK_CONNECT,
 		DISK_READ,
 		DISK_WRITE,
 		DISK_FLUSH_CACHE
 	} type;
-	unsigned disknr;
+	size_t disknr;
 	union {
-		DiskParameter *params;
+		nre::Storage::Parameter *params;
 		struct {
-			unsigned long long sector;
-			unsigned long usertag;
-			unsigned dmacount;
-			DmaDescriptor *dma;
-			unsigned long physoffset; // TODO: Is this needed now?
-			unsigned long physsize;
+			nre::Storage::sector_type sector;
+			nre::Storage::tag_type usertag;
+			const nre::Storage::dma_type *dma;
 		};
 	};
 	enum Status {
@@ -709,14 +707,12 @@ struct MessageDisk {
 		DISK_STATUS_SHIFT = 4,
 		DISK_STATUS_MASK = (1 << DISK_STATUS_SHIFT) - 1
 	} error;
-	MessageDisk(unsigned _disknr,DiskParameter *_params) :
-			type(DISK_GET_PARAMS), disknr(_disknr), params(_params), error(DISK_OK) {
+	MessageDisk(size_t _disknr,nre::Storage::Parameter *_params) :
+			type(DISK_CONNECT), disknr(_disknr), params(_params), error(DISK_OK) {
 	}
-	MessageDisk(Type _type,unsigned _disknr,unsigned long _usertag,unsigned long long _sector,
-			unsigned _dmacount,DmaDescriptor *_dma,unsigned long _physoffset,
-			unsigned long _physsize) :
-			type(_type), disknr(_disknr), sector(_sector), usertag(_usertag), dmacount(_dmacount), dma(
-					_dma), physoffset(_physoffset), physsize(_physsize) {
+	MessageDisk(Type _type,size_t _disknr,nre::Storage::tag_type _usertag,nre::Storage::sector_type _sector,
+			const nre::Storage::dma_type *_dma) :
+			type(_type), disknr(_disknr), sector(_sector), usertag(_usertag), dma(_dma) {
 	}
 };
 
@@ -724,8 +720,8 @@ struct MessageDisk {
  * A disk.request is completed.
  */
 struct MessageDiskCommit {
-	unsigned disknr;
-	unsigned long usertag;
+	size_t disknr;
+	nre::Storage::tag_type usertag;
 	MessageDisk::Status status;
 	MessageDiskCommit(unsigned _disknr = 0,unsigned long _usertag = 0,MessageDisk::Status _status =
 			MessageDisk::DISK_OK) :

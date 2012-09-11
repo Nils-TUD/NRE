@@ -24,13 +24,22 @@
 
 #include "bus/motherboard.h"
 #include "Timeouts.h"
+#include "StorageDevice.h"
 
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	Vancouver(const char *args)
 			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
 			  _sc_input(&_lt_input,nre::Qpd()), _mb(), _timeouts(_mb),
-			  _conscon("console"), _conssess(_conscon,0) {
+			  _conscon("console"), _conssess(_conscon,0), _stcon(),
+			  _stdevs() {
+		// storage is optional
+		try {
+			_stcon = new nre::Connection("storage");
+		}
+		catch(const nre::Exception &e) {
+			nre::Serial::get() << "Unable to connect to storage: " << e.msg() << "\n";
+		}
 		create_devices(args);
 		create_vcpus();
 		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
@@ -46,6 +55,7 @@ public:
 	bool receive(MessageTime &msg);
 	bool receive(MessageLegacy &msg);
 	bool receive(MessageConsoleView &msg);
+	bool receive(MessageDisk &msg);
 
 private:
 	static void keyboard_thread(void*);
@@ -58,6 +68,8 @@ private:
 	Timeouts _timeouts;
 	nre::Connection _conscon;
 	nre::ConsoleSession _conssess;
+	nre::Connection *_stcon;
+	StorageDevice *_stdevs[nre::Storage::MAX_CONTROLLER * nre::Storage::MAX_DRIVES];
 };
 
 extern nre::UserSm globalsm;

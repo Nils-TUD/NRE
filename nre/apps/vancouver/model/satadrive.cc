@@ -36,7 +36,7 @@ using namespace nre;
 class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 #include "simplemem.h"
 	DBus<MessageDisk> &_bus_disk;
-	unsigned _hostdisk;
+	size_t _hostdisk;
 	unsigned char _multiple;
 	unsigned _regs[4];
 	unsigned char _ctrl;
@@ -44,9 +44,8 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	unsigned char _error;
 	unsigned _dsf[7];
 	unsigned _splits[32];
-	DiskParameter _params;
-	static unsigned const DMA_DESCRIPTORS = 64;
-	DmaDescriptor _dma[DMA_DESCRIPTORS];
+	Storage::Parameter _params;
+	Storage::dma_type _dma;
 
 	/**
 	 * A command is completed.
@@ -183,8 +182,9 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 			if(lastoffset)
 				prd--;
 
-			unsigned dmacount = 0;
-			for(; prd < _dsf[3] && dmacount < DMA_DESCRIPTORS && len > transfer; prd++,dmacount++) {
+			_dma.clear();
+			size_t dmacount = 0;
+			for(; prd < _dsf[3] && dmacount < Storage::MAX_DMA_DESCS && len > transfer; prd++,dmacount++) {
 				unsigned prdvalue[4];
 				copy_in(prdbase + prd * 16,prdvalue,16);
 
@@ -192,8 +192,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				if(sublen > len - transfer)
 					sublen = len - transfer;
 
-				_dma[dmacount].byteoffset = union64(prdvalue[1],prdvalue[0]) + lastoffset;
-				_dma[dmacount].bytecount = sublen;
+				_dma.push(DMADesc(union64(prdvalue[1],prdvalue[0]) + lastoffset,sublen));
 				transfer += sublen;
 				lastoffset = 0;
 			}
@@ -201,13 +200,14 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 			// remove all entries that completly contribute to the even entry and split larger ones
 			while(transfer & 0x1ff) {
 				assert(dmacount);
-				if(_dma[dmacount - 1].bytecount > transfer & 0x1ff) {
-					lastoffset = _dma[dmacount - 1].bytecount - transfer & 0x1ff;
+				Storage::dma_type::iterator last = _dma.end() - 1;
+				if(last->count > transfer & 0x1ff) {
+					lastoffset = last->count - transfer & 0x1ff;
 					transfer &= ~0x1ff;
 				}
 				else {
-					transfer -= _dma[dmacount - 1].bytecount;
-					dmacount--;
+					transfer -= last->count;
+					_dma.pop();
 				}
 			}
 
@@ -226,7 +226,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 			_splits[_dsf[6]]++;
 
 			MessageDisk msg(read ? MessageDisk::DISK_READ : MessageDisk::DISK_WRITE,_hostdisk,
-					_dsf[6],sector,dmacount,_dma,0,~0ul);
+					_dsf[6],sector,&_dma);
 			check1(1,!_bus_disk.send(msg),"DISK operation failed");
 
 			sector += transfer >> 9;
@@ -234,7 +234,6 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 			len -= transfer;
 			transfer = 0;
 			// XXX check error code
-
 		}
 		return 0;
 	}
@@ -319,9 +318,8 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 			default:
 				Util::panic("should execute command %x\n",_regs[0] >> 16);
 				break;
-		};
+		}
 	}
-	;
 
 public:
 	void comreset() {
@@ -340,7 +338,7 @@ public:
 	 * Receive a FIS from the controller.
 	 */
 	void receive_fis(unsigned fislen,unsigned *fis) {
-		if(fislen >= 2)
+		if(fislen >= 2) {
 			switch(fis[0] & 0xff) {
 				case 0x27: // register FIS
 					assert(fislen ==5);
@@ -375,6 +373,7 @@ public:
 					assert(!"Invalid H2D FIS!");
 					break;
 			}
+		}
 	}
 
 	bool receive(MessageDiskCommit &msg) {
@@ -392,22 +391,21 @@ public:
 	}
 
 	SataDrive(DBus<MessageDisk> &bus_disk,DBus<MessageMemRegion> *bus_memregion,
-			DBus<MessageMem> *bus_mem,unsigned hostdisk,DiskParameter params) :
+			DBus<MessageMem> *bus_mem,size_t hostdisk,Storage::Parameter params) :
 			_bus_memregion(bus_memregion), _bus_mem(bus_mem), _bus_disk(bus_disk), _hostdisk(
 					hostdisk), _multiple(0), _ctrl(0), _params(params) {
-		Serial::get().writef("SATA disk %x flags %x sectors %llx\n",
-				hostdisk,_params.flags,_params.sectors);
+		Serial::get().writef("SATA disk %#x (%s) flags %#x sectors %Lu\n",
+				hostdisk,_params.name,_params.flags,_params.sectors);
 	}
 };
 
 PARAM_HANDLER(drive,
 		"drive:sigma0drive,controller,port - put a drive to the given port of an ahci controller by using a drive from sigma0 as backend.",
 		"Example: 'drive:0,1,2' to put the first sigma0 drive on the third port of the second controller.") {
-	DiskParameter params;
-	unsigned hostdisk = argv[0];
+	Storage::Parameter params;
+	size_t hostdisk = argv[0];
 	MessageDisk msg0(hostdisk,&params);
-	check0(!mb.bus_disk.send(msg0) || msg0.error != MessageDisk::DISK_OK,
-			"%s could not get disk %x parameters error %x",__PRETTY_FUNCTION__,hostdisk,msg0.error);
+	mb.bus_disk.send(msg0);
 
 	SataDrive *drive = new SataDrive(mb.bus_disk,&mb.bus_memregion,&mb.bus_mem,hostdisk,params);
 	mb.bus_diskcommit.add(drive,SataDrive::receive_static<MessageDiskCommit>);

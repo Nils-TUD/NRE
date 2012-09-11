@@ -29,6 +29,7 @@
 
 using namespace nre;
 
+static size_t modoff = 8;
 static size_t ncpu = 1;
 static DataSpace *guest_mem = 0;
 static size_t guest_size = 0;
@@ -43,6 +44,9 @@ PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 
 PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created" ) {
 	ncpu = argv[0];
+}
+PARAM_HANDLER(modoff, "modoff - specify the offset of the multiboot-modules (default 8)") {
+	modoff = argv[0];
 }
 PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
 	guest_size = argv[0] * 1024 * 1024;
@@ -145,7 +149,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			// TODO that's extremly hardcoded here ;)
 			const Hip &hip = Hip::get();
 			uintptr_t destaddr = reinterpret_cast<uintptr_t>(msg.start);
-			uint module = msg.module + 8;
+			uint module = msg.module + modoff;
 			Hip::mem_iterator it;
 			for(it = hip.mem_begin(); it != hip.mem_end(); ++it) {
 				if(it->type == HipMem::MB_MODULE && module-- == 0)
@@ -301,6 +305,36 @@ bool Vancouver::receive(MessageConsoleView &msg) {
 	return true;
 }
 
+bool Vancouver::receive(MessageDisk &msg) {
+	if(msg.type != MessageDisk::DISK_CONNECT && (msg.disknr >= ARRAY_SIZE(_stdevs) || !_stdevs[msg.disknr]))
+		return false;
+	switch(msg.type) {
+		case MessageDisk::DISK_CONNECT:
+			try {
+				_stdevs[msg.disknr] = new StorageDevice(_mb.bus_diskcommit,*guest_mem,*_stcon,msg.disknr);
+				_stdevs[msg.disknr]->get_params(msg.params);
+			}
+			catch(const Exception &e) {
+				Serial::get() << "Disk connect failed: " << e.msg() << "\n";
+				msg.error = MessageDisk::DISK_STATUS_DEVICE;
+			}
+			return true;
+		case MessageDisk::DISK_READ:
+			_stdevs[msg.disknr]->read(msg.usertag,msg.sector,msg.dma);
+			msg.error = MessageDisk::DISK_OK;
+			return true;
+		case MessageDisk::DISK_WRITE:
+			_stdevs[msg.disknr]->write(msg.usertag,msg.sector,msg.dma);
+			msg.error = MessageDisk::DISK_OK;
+			return true;
+		case MessageDisk::DISK_FLUSH_CACHE:
+			_stdevs[msg.disknr]->flush_cache(msg.usertag);
+			msg.error = MessageDisk::DISK_OK;
+			return true;
+	}
+	return false;
+}
+
 void Vancouver::keyboard_thread(void*) {
 	Vancouver *vc = Thread::current()->get_tls<Vancouver*>(Thread::TLS_PARAM);
 	while(1) {
@@ -334,7 +368,7 @@ void Vancouver::create_devices(const char *args) {
 	_mb.bus_hostop.add(this,receive_static<MessageHostOp>);
 	_mb.bus_consoleview.add(this,receive_static<MessageConsoleView>);
 	// TODO _mb.bus_console.add(this,receive_static<MessageConsole>);
-	// TODO _mb.bus_disk.add(this,receive_static<MessageDisk>);
+	_mb.bus_disk.add(this,receive_static<MessageDisk>);
 	_mb.bus_timer.add(this,receive_static<MessageTimer>);
 	_mb.bus_time.add(this,receive_static<MessageTime>);
 	// TODO _mb.bus_network.add(this,receive_static<MessageNetwork>);

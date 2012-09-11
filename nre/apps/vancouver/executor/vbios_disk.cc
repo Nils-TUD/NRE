@@ -32,7 +32,7 @@ using namespace nre;
  */
 class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommon {
 	enum {
-		MAX_DISKS = 8,
+		MAX_DISKS = Storage::MAX_CONTROLLER * Storage::MAX_DRIVES,
 		MAGIC_DISK_TAG = ~0u,
 		FREQ = 1000,
 		DISK_TIMEOUT = 5000,
@@ -41,9 +41,11 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 		WAKEUP_IRQ = 1,
 	};
 	unsigned _timer;
-	DiskParameter _disk_params[MAX_DISKS];
-	unsigned _disk_count;
+	Storage::Parameter _disk_params[MAX_DISKS];
+	size_t _disk_count;
 	bool _diskop_inprogress;
+	uintptr_t _lastaddr;
+	size_t _lastcount;
 
 	void init_params() {
 		// get sectors of the disk
@@ -55,7 +57,7 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 		write_bda(DISK_COUNT,_disk_count,1);
 	}
 
-	bool check_drive(MessageBios &msg,unsigned &disk_nr) {
+	bool check_drive(MessageBios &msg,size_t &disk_nr) {
 		if(!~_disk_count)
 			init_params();
 		disk_nr = msg.cpu->dl & 0x7f;
@@ -68,14 +70,15 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 	/**
 	 * Read/Write disk helper.
 	 */
-	bool disk_op(MessageBios &msg,unsigned disk_nr,unsigned long long blocknr,unsigned long address,
-			unsigned count,bool write) {
-		DmaDescriptor dma;
-		dma.bytecount = 512 * count;
-		dma.byteoffset = address;
+	bool disk_op(MessageBios &msg,size_t disk_nr,Storage::sector_type blocknr,uintptr_t address,
+			size_t count,bool write) {
+		Storage::dma_type dma;
+		dma.push(DMADesc(address,512 * count));
 
+		_lastaddr = address;
+		_lastcount = 512 * count;
 		MessageDisk msg2(write ? MessageDisk::DISK_WRITE : MessageDisk::DISK_READ,disk_nr,
-				MAGIC_DISK_TAG,blocknr,1,&dma,0,~0ul);
+				MAGIC_DISK_TAG,blocknr,&dma);
 		if(!_mb.bus_disk.send(msg2) || msg2.error) {
 			Serial::get().writef("msg2.error %x\n",msg2.error);
 			error(msg,0x01);
@@ -130,7 +133,7 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 			unsigned long long block;
 		} da;
 
-		unsigned disk_nr;
+		size_t disk_nr;
 
 		// default clears CF
 		msg.cpu->efl &= ~1;
