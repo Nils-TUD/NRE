@@ -189,7 +189,7 @@ public:
 		return 0;
 	}
 
-	AhciPort() : _drive(0), _parent(0) {
+	AhciPort() : _drive(0), _parent(0), _ccs(), _inprogress(), _need_initial_fis() {
 		AhciPort_reset();
 	}
 };

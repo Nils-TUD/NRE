@@ -15,12 +15,19 @@
  * General Public License version 2 for more details.
  */
 
-#if 0
 #ifndef REGBASE
 #include "../bus/motherboard.h"
+#include "../bus/helper.h"
 #include "pci.h"
 
 using namespace nre;
+
+//#define DEBUG
+#ifdef DEBUG
+#define LOG(fmt,...)	Serial::get().writef(fmt,## __VA_ARGS__)
+#else
+#define LOG(fmt,...)
+#endif
 
 /**
  * An IDE controller on a PCI card.
@@ -37,12 +44,15 @@ public:
 	};
 
 private:
+
+#define  REGBASE "idecontroller.cc"
+#include "reg.h"
 	DBus<MessageDisk> &_bus_disk;
 	DBus<MessageIrqLines> &_bus_irqlines;
 	unsigned char _irq;
 	unsigned _bdf;
-	unsigned _disknr;
-	DiskParameter _params;
+	size_t _disknr;
+	Storage::Parameter _params;
 	union {
 		struct {
 			unsigned short _features,_count,_lbalow,_lbamid,_lbahigh,_drive;
@@ -53,9 +63,6 @@ private:
 	char *_buffer;
 	unsigned long _baddr;
 	unsigned _bufferoffset;
-
-#define  REGBASE "idecontroller.cc"
-#include "reg.h"
 
 	unsigned long long get_sector(bool lba48) {
 		unsigned long long res = (_lbalow & 0xff) | (_lbamid & 0xff) << 8 | (_lbahigh & 0xff) << 16;
@@ -84,7 +91,7 @@ private:
 
 	void update_irq(bool assert) {
 		assert = assert && (~_control & 2);
-		Serial::get().writef("update irq %x\n",assert);
+		LOG("update irq %x\n",assert);
 		MessageIrqLines msg(assert ? MessageIrqLines::ASSERT_IRQ : MessageIrqLines::DEASSERT_IRQ,_irq);
 		_bus_irqlines.send(msg);
 	}
@@ -138,8 +145,9 @@ private:
 		_status = (_status & ~0x81) | 0x80;
 		_bufferoffset = 0;
 		memset(_buffer,0xff,512);
-		DmaDescriptor dma = {_baddr,512};
-		MessageDisk msg(MessageDisk::DISK_READ,_disknr,0,sector,1,&dma,0,~0ul);
+		Storage::dma_type dma;
+		dma.push(DMADesc(_baddr,512));
+		MessageDisk msg(MessageDisk::DISK_READ,_disknr,0,sector,&dma);
 		if(!_bus_disk.send(msg)) {
 			_status = (_status & ~0x80) | 0x1;
 			_error |= 1 << 5; // device fault
@@ -187,7 +195,7 @@ private:
 				update_irq(true);
 				break;
 			case 0xef: // SET FEATURES
-				Serial::get().writef("SET FEATURES %x sc %x\n",_features,_count);
+				LOG("SET FEATURES %x sc %x\n",_features,_count);
 				_status = _status & ~0x89;
 				update_irq(true);
 				break;
@@ -232,8 +240,9 @@ public:
 					if(_bufferoffset >= 512)
 						return false;
 					cpu_move(&msg.value,_buffer + _bufferoffset,msg.type);
-					if(!_bufferoffset)
-						Serial::get().writef("data[%d] = %04x\n",_bufferoffset,msg.value);
+					if(!_bufferoffset) {
+						LOG("data[%d] = %04x\n",_bufferoffset,msg.value);
+					}
 					_bufferoffset += 1 << msg.type;
 					// reissue the command if work left
 					if(_bufferoffset >= 512)
@@ -254,14 +263,15 @@ public:
 					assert(0);
 					break;
 			}
-			if(port)
-				Serial::get().writef("in<%d>[%d] = %x\n",msg.type,port,msg.value);
+			if(port) {
+				LOG("in<%d>[%d] = %x\n",msg.type,port,msg.value);
+			}
 			return true;
 		}
 		// alternate status register
 		if(!((msg.port ^ PCI_BAR1) & PCI_BAR1_mask) and msg.type == MessageIOIn::TYPE_INB
 		        and ((msg.port & ~PCI_BAR1_mask) == 2)) {
-			Serial::get().writef("alternate status %x\n",_status);
+			LOG("alternate status %x\n",_status);
 			msg.value = _status;
 			return true;
 		}
@@ -293,7 +303,7 @@ public:
 					return true;
 				case 7:
 					_command = msg.value;
-					Serial::get().writef("issue command %x\n",_command);
+					LOG("issue command %x\n",_command);
 					issue_command(true);
 					return true;
 			}
@@ -304,7 +314,7 @@ public:
 			if((_control & 4) && (~msg.value & 4))
 				reset_device();
 			_control = msg.value;
-			Serial::get().writef("control %x\n",_control);
+			LOG("control %x\n",_control);
 			return true;
 		}
 		return false;
@@ -315,13 +325,13 @@ public:
 	}
 
 	IdeController(DBus<MessageDisk> &bus_disk,DBus<MessageIrqLines> &bus_irqlines,unsigned char irq,
-	        unsigned bdf,unsigned disknr,DiskParameter params,char *buffer,unsigned long baddr) :
+	        unsigned bdf,size_t disknr,Storage::Parameter params,char *buffer,unsigned long baddr) :
 			_bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr), _params(
 			        params), _buffer(buffer), _baddr(baddr), _bufferoffset(0) {
 		PCI_reset();
 		reset_device();
-		Serial::get().writef("instanciate IDE controller with bdf %x for disk '%s' sectors %llx\n",
-				bdf,params.name,params.sectors);
+		Serial::get().writef("IDE controller (bdf %#x)\n",bdf);
+		Serial::get().writef("Attaching disk '%s' (%Lu sectors) to it\n",params.name,params.sectors);
 	}
 };
 
@@ -329,9 +339,10 @@ PARAM_HANDLER(ide,
 		"ide:port0,port1,irq,bdf,disk - attach an IDE controller to a PCI bus.",
 		"Example: Use 'ide:0x1f0,0x3f6,14,0x38' to attach an IDE controller to 00:07.0 on legacy ports 0x1f0/0x3f6 with irq 14.",
 		"If no bdf is given, the first free one is searched.") {
-	DiskParameter params;
-	MessageDisk msg(argv[4],&params);
-	check0(!mb.bus_disk.send(msg),"could not find disk #%x",msg.disknr);
+	Storage::Parameter params;
+	size_t hostdisk = argv[4];
+	MessageDisk msg0(hostdisk,&params);
+	mb.bus_disk.send(msg0);
 
 	MessageHostOp msg1(MessageHostOp::OP_ALLOC_FROM_GUEST,
 	        (unsigned long)IdeController::BUFFER_SIZE);
@@ -339,8 +350,8 @@ PARAM_HANDLER(ide,
 	if(!mb.bus_hostop.send(msg1) || !mb.bus_hostop.send(msg2))
 		Util::panic("%s failed to alloc %d from guest memory\n",__PRETTY_FUNCTION__,IdeController::BUFFER_SIZE);
 
-	unsigned bdf = PciHelper::find_free_bdf(mb.bus_pcicfg,argv[3]);
-	IdeController *dev = new IdeController(mb.bus_disk,mb.bus_irqlines,argv[2],bdf,msg.disknr,
+	unsigned bdf = PciHelper::find_free_bdf(mb.bus_pcicfg,argv[3] == 0 ? ~0UL : argv[3]);
+	IdeController *dev = new IdeController(mb.bus_disk,mb.bus_irqlines,argv[2],bdf,hostdisk,
 	        params,msg2.ptr + msg1.phys,msg1.phys);
 	mb.bus_pcicfg.add(dev,IdeController::receive_static<MessagePciConfig>);
 	mb.bus_ioin.add(dev,IdeController::receive_static<MessageIOIn>);
@@ -365,5 +376,4 @@ REGSET(PCI,
 		REG_RO(PCI_SS, 0xb, 0x275c8086)
 		REG_RO(PCI_CAP, 0xd, 0x00)
 		REG_RW(PCI_INTR, 0xf, 0x0100, 0xff,));
-#endif
 #endif

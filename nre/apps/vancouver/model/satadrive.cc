@@ -316,7 +316,8 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				complete_command();
 				break;
 			default:
-				Util::panic("should execute command %x\n",_regs[0] >> 16);
+				Serial::get().writef("Command %x is unsupported\n",_regs[0] >> 16);
+				_error |= 4;
 				break;
 		}
 	}
@@ -338,10 +339,16 @@ public:
 	 * Receive a FIS from the controller.
 	 */
 	void receive_fis(unsigned fislen,unsigned *fis) {
+		Serial::get().writef("receive_fis: %u %p %u\n",fislen,fis,fis[0]);
 		if(fislen >= 2) {
 			switch(fis[0] & 0xff) {
 				case 0x27: // register FIS
 					assert(fislen ==5);
+
+					Serial::get().writef("regs: ");
+					for(int i = 0; i < 4; ++i)
+						Serial::get().writef("%u ",_regs[i]);
+					Serial::get() << "\n";
 
 					// remain in reset asserted state when receiving a normal command
 					if((_ctrl & 0x4) && (_regs[0] & 0x8000)) {
@@ -391,9 +398,10 @@ public:
 	}
 
 	SataDrive(DBus<MessageDisk> &bus_disk,DBus<MessageMemRegion> *bus_memregion,
-			DBus<MessageMem> *bus_mem,size_t hostdisk,Storage::Parameter params) :
-			_bus_memregion(bus_memregion), _bus_mem(bus_mem), _bus_disk(bus_disk), _hostdisk(
-					hostdisk), _multiple(0), _ctrl(0), _params(params) {
+			DBus<MessageMem> *bus_mem,size_t hostdisk,Storage::Parameter params)
+		: _bus_memregion(bus_memregion), _bus_mem(bus_mem), _bus_disk(bus_disk),
+		  _hostdisk(hostdisk), _multiple(0), _regs(), _ctrl(0), _status(), _error(), _dsf(),
+		  _splits(), _params(params), _dma() {
 		Serial::get().writef("SATA disk %#x (%s) flags %#x sectors %Lu\n",
 				hostdisk,_params.name,_params.flags,_params.sectors);
 	}
