@@ -3,6 +3,7 @@
 Import('env')
 import os
 
+# build dummy disk files
 myenv = Environment()
 diskbuilder = Builder(
 	action = 'dd if=/dev/zero of=$TARGET bs=512 count=4 && dd if=$SOURCE of=$TARGET conv=notrunc',
@@ -12,6 +13,7 @@ myenv.Append(BUILDERS = {'DiskBuilder' : diskbuilder})
 myenv.DiskBuilder('hd1.img', 'hd1.hddcontent')
 myenv.DiskBuilder('hd2.img', 'hd2.hddcontent')
 
+# build an iso image
 myenv = Environment()
 isobuilder = Builder(
 	action = 'genisoimage -U -iso-level 3 -input-charset ascii -no-emul-boot -b '
@@ -20,6 +22,15 @@ isobuilder = Builder(
 myenv.Append(BUILDERS = {'ISOBuilder' : isobuilder})
 myenv.ISOBuilder('test.iso', Dir('#dist/iso'))
 
+# build a 20MB disk with 2 ext3 partitions
+myenv = Environment()
+fsbuilder = Builder(
+	action = File('#tools/disk.sh').path + ' $TARGET 20 $SOURCE'
+)
+myenv.Append(BUILDERS = {'FSBuilder' : fsbuilder})
+myenv.FSBuilder('hd3.img', Dir('#dist/iso'))
+
+# make a link to imgs to prevent a copy
 myenv = Environment()
 symlink = Builder(
 	action = 'ln -s `readlink -f $SOURCE` $TARGET'
