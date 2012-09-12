@@ -139,6 +139,14 @@ case "$1" in
 	elf=*)
 		$crossdir/bin/$cross-readelf -a $build/bin/apps/${1#elf=} | less
 		;;
+	straddr=*)
+		# find base address of .rodata
+		base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${1#straddr=} | grep .rodata | cut -d ' ' -f 24`
+		# grep for matching lines, prepare for better use of awk and finally add offset to base
+		$crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${1#straddr=} | grep $2 | \
+			sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
+			awk '{ printf("0x%x: %s\n",0x'$base' + strtonum($1),$2) }'
+		;;
 	trace=*)
 		tools/backtrace $build/bin/apps/${1#trace=}
 		;;
