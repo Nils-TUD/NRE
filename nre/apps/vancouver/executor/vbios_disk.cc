@@ -44,8 +44,6 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 	Storage::Parameter _disk_params[MAX_DISKS];
 	size_t _disk_count;
 	bool _diskop_inprogress;
-	uintptr_t _lastaddr;
-	size_t _lastcount;
 
 	void init_params() {
 		// get sectors of the disk
@@ -75,8 +73,6 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 		Storage::dma_type dma;
 		dma.push(DMADesc(address,512 * count));
 
-		_lastaddr = address;
-		_lastcount = 512 * count;
 		MessageDisk msg2(write ? MessageDisk::DISK_WRITE : MessageDisk::DISK_READ,disk_nr,
 				MAGIC_DISK_TAG,blocknr,&dma);
 		if(!_mb.bus_disk.send(msg2) || msg2.error) {
