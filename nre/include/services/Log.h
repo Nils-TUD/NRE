@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <ipc/Connection.h>
 #include <utcb/UtcbFrame.h>
 #include <kobj/Pt.h>
@@ -26,24 +26,14 @@ namespace nre {
 /**
  * Represents a session at the log-service
  */
-class LogSession : public ClientSession {
+class LogSession : public PtClientSession {
 public:
 	/**
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
 	 */
-	explicit LogSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	/**
-	 * Destroys this session
-	 */
-	virtual ~LogSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	explicit LogSession(Connection &con) : PtClientSession(con) {
 	}
 
 	/**
@@ -55,11 +45,8 @@ public:
 	void write(const String &line) {
 		UtcbFrame uf;
 		uf << line;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 	}
-
-private:
-	Pt **_pts;
 };
 
 }

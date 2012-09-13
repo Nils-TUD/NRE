@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <CPU.h>
@@ -50,28 +50,23 @@ private:
 /**
  * Represents a session at the timer service
  */
-class TimerSession : public ClientSession {
+class TimerSession : public PtClientSession {
 public:
 	/**
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
 	 */
-	explicit TimerSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+	explicit TimerSession(Connection &con) : PtClientSession(con) {
 		get_sms();
 	}
 	/**
 	 * Destroys this session
 	 */
 	virtual ~TimerSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
+		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _sms[cpu];
-			delete _pts[cpu];
-		}
 		delete[] _sms;
-		delete[] _pts;
 		CapSelSpace::get().free(_caps,1 << CPU::order());
 	}
 
@@ -113,7 +108,7 @@ public:
 	void program(timevalue_t cycles) {
 		UtcbFrame uf;
 		uf << Timer::PROG_TIMER << cycles;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -126,7 +121,7 @@ public:
 	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
 		UtcbFrame uf;
 		uf << Timer::GET_TIME;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uf >> uptime >> unixts;
 	}
@@ -137,7 +132,7 @@ private:
 		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
 		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
 		uf << Timer::GET_SMS;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		_caps = caps.release();
 		_sms = new Sm*[CPU::count()];
@@ -147,7 +142,6 @@ private:
 
 	capsel_t _caps;
 	Sm **_sms;
-	Pt **_pts;
 };
 
 }

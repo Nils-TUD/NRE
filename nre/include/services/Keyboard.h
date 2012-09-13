@@ -17,7 +17,7 @@
 #pragma once
 
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <ipc/Consumer.h>
 #include <mem/DataSpace.h>
 
@@ -186,7 +186,7 @@ private:
 /**
  * Represents a session at the keyboard service
  */
-class KeyboardSession : public ClientSession {
+class KeyboardSession : public PtClientSession {
 	enum {
 		DS_SIZE = ExecEnv::PAGE_SIZE
 	};
@@ -197,20 +197,9 @@ public:
 	 *
 	 * @param con the connection
 	 */
-	explicit KeyboardSession(Connection &con) : ClientSession(con),
-			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true),
-			_pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+	explicit KeyboardSession(Connection &con) : PtClientSession(con),
+			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
 		share();
-	}
-	/**
-	 * Destroys the session
-	 */
-	virtual ~KeyboardSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
 	}
 
 	/**
@@ -241,7 +230,7 @@ public:
 	void reboot() {
 		UtcbFrame uf;
 		uf << Keyboard::REBOOT;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -250,13 +239,12 @@ private:
 		UtcbFrame uf;
 		uf.delegate(_ds.sel());
 		uf << Keyboard::SHARE_DS;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
 	DataSpace _ds;
 	Consumer<Keyboard::Packet> _consumer;
-	Pt **_pts;
 };
 
 }

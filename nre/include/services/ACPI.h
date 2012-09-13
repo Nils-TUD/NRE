@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <services/PCIConfig.h>
 #include <mem/DataSpace.h>
 #include <utcb/UtcbFrame.h>
@@ -64,25 +64,20 @@ private:
 /**
  * Represents a session at the ACPI service
  */
-class ACPISession : public ClientSession {
+class ACPISession : public PtClientSession {
 public:
 	/**
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
 	 */
-	explicit ACPISession(Connection &con) : ClientSession(con), _ds(), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+	explicit ACPISession(Connection &con) : PtClientSession(con), _ds() {
 		get_mem();
 	}
 	/**
 	 * Destroys this session
 	 */
 	virtual ~ACPISession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
 		delete _ds;
 	}
 
@@ -96,7 +91,7 @@ public:
 	ACPI::RSDT *find_table(const String &name,uint instance = 0) const {
 		UtcbFrame uf;
 		uf << ACPI::FIND_TABLE << name << instance;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 
 		uf.check_reply();
 		uintptr_t offset;
@@ -115,7 +110,7 @@ public:
 	uint irq_to_gsi(uint irq) const {
 		UtcbFrame uf;
 		uf << ACPI::IRQ_TO_GSI << irq;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 
 		uf.check_reply();
 		uint gsi;
@@ -134,7 +129,7 @@ public:
 	uint get_gsi(PCIConfig::bdf_type bdf,uint8_t pin,PCIConfig::bdf_type parent_bdf) const {
 		UtcbFrame uf;
 		uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 
 		uf.check_reply();
 		uint gsi;
@@ -146,7 +141,7 @@ private:
 	void get_mem() {
 		UtcbFrame uf;
 		uf << ACPI::GET_MEM;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 
 		uf.check_reply();
 		DataSpaceDesc desc;
@@ -155,7 +150,6 @@ private:
 	}
 
 	DataSpace *_ds;
-	Pt **_pts;
 };
 
 }

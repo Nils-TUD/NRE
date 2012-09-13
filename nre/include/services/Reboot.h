@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <CPU.h>
@@ -28,24 +28,14 @@ namespace nre {
 /**
  * Represents a session at the reboot service
  */
-class RebootSession : public ClientSession {
+class RebootSession : public PtClientSession {
 public:
 	/**
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
 	 */
-	explicit RebootSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	/**
-	 * Destroys the session
-	 */
-	virtual ~RebootSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	explicit RebootSession(Connection &con) : PtClientSession(con) {
 	}
 
 	/**
@@ -53,12 +43,9 @@ public:
 	 */
 	void reboot() {
 		UtcbFrame uf;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
-
-private:
-	Pt **_pts;
 };
 
 }

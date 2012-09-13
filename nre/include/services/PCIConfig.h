@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <CPU.h>
@@ -52,7 +52,7 @@ private:
 /**
  * Represents a session at the PCI configuration service
  */
-class PCIConfigSession : public ClientSession {
+class PCIConfigSession : public PtClientSession {
 	typedef PCIConfig::bdf_type bdf_type;
 	typedef PCIConfig::value_type value_type;
 
@@ -62,17 +62,7 @@ public:
 	 *
 	 * @param con the connection
 	 */
-	explicit PCIConfigSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	/**
-	 * Destroys the session
-	 */
-	virtual ~PCIConfigSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	explicit PCIConfigSession(Connection &con) : PtClientSession(con) {
 	}
 
 	/**
@@ -86,7 +76,7 @@ public:
 	value_type read(bdf_type bdf,size_t offset) const {
 		UtcbFrame uf;
 		uf << PCIConfig::READ << bdf << offset;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uint32_t value;
 		uf >> value;
@@ -104,7 +94,7 @@ public:
 	void write(bdf_type bdf,size_t offset,value_type value) {
 		UtcbFrame uf;
 		uf << PCIConfig::WRITE << bdf << offset << value;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -119,7 +109,7 @@ public:
 	uintptr_t addr(bdf_type bdf,size_t offset) const {
 		UtcbFrame uf;
 		uf << PCIConfig::ADDR << bdf << offset;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uintptr_t addr;
 		uf >> addr;
@@ -138,7 +128,7 @@ public:
 	bdf_type search_device(value_type theclass = ~0U,value_type subclass = ~0U,uint inst = ~0U) const {
 		UtcbFrame uf;
 		uf << PCIConfig::SEARCH_DEVICE << theclass << subclass << inst;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		bdf_type bdf;
 		uf >> bdf;
@@ -155,7 +145,7 @@ public:
 	bdf_type search_bridge(value_type dst) const {
 		UtcbFrame uf;
 		uf << PCIConfig::SEARCH_BRIDGE << dst;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		bdf_type bdf;
 		uf >> bdf;
@@ -168,12 +158,9 @@ public:
 	void reboot() {
 		UtcbFrame uf;
 		uf << PCIConfig::REBOOT;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
-
-private:
-	Pt **_pts;
 };
 
 }

@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <ipc/Consumer.h>
 #include <utcb/UtcbFrame.h>
 #include <util/DMA.h>
@@ -86,7 +86,7 @@ private:
 /**
  * Represents a session at the storage service
  */
-class StorageSession : public ClientSession {
+class StorageSession : public PtClientSession {
 	typedef Storage::tag_type tag_type;
 	typedef Storage::sector_type sector_type;
 
@@ -99,20 +99,10 @@ public:
 	 * @param drive the drive
 	 */
 	explicit StorageSession(Connection &con,DataSpace &ds,size_t drive)
-			: ClientSession(con),
+			: PtClientSession(con),
 			  _ctrlds(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			  _cons(&_ctrlds,true), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+			  _cons(&_ctrlds,true) {
 		init(ds,drive);
-	}
-	/**
-	 * Destroys this session
-	 */
-	virtual ~StorageSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
 	}
 
 	/**
@@ -137,7 +127,7 @@ public:
 	void flush(tag_type tag) {
 		UtcbFrame uf;
 		uf << Storage::FLUSH << tag;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -167,7 +157,7 @@ public:
 	void read(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
 		UtcbFrame uf;
 		uf << Storage::READ << tag << sector << dma;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -198,7 +188,7 @@ public:
 	void write(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
 		UtcbFrame uf;
 		uf << Storage::WRITE << tag << sector << dma;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 	}
 
@@ -208,7 +198,7 @@ private:
 		uf.delegate(_ctrlds.sel(),0);
 		uf.delegate(ds.sel(),1);
 		uf << Storage::INIT << drive;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uf >> _params;
 	}
@@ -216,7 +206,6 @@ private:
 	DataSpace _ctrlds;
 	Consumer<Storage::Packet> _cons;
 	Storage::Parameter _params;
-	Pt **_pts;
 };
 
 }

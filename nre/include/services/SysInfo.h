@@ -18,7 +18,7 @@
 
 #include <arch/Types.h>
 #include <ipc/Connection.h>
-#include <ipc/ClientSession.h>
+#include <ipc/PtClientSession.h>
 #include <utcb/UtcbFrame.h>
 #include <Exception.h>
 #include <CPU.h>
@@ -61,30 +61,20 @@ public:
 /**
  * Represents a session at the sysinfo service
  */
-class SysInfoSession : public ClientSession {
+class SysInfoSession : public PtClientSession {
 public:
 	/**
 	 * Creates a new session with given connection
 	 *
 	 * @param con the connection
 	 */
-	explicit SysInfoSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	/**
-	 * Destroys the session
-	 */
-	virtual ~SysInfoSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
+	explicit SysInfoSession(Connection &con) : PtClientSession(con) {
 	}
 
 	void get_mem(size_t &total,size_t &free) {
 		UtcbFrame uf;
 		uf << SysInfo::GET_MEM;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uf >> total >> free;
 	}
@@ -93,7 +83,7 @@ public:
 		timevalue_t res;
 		UtcbFrame uf;
 		uf << SysInfo::GET_TOTALTIME << cpu << update;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		uf >> res;
 		return res;
@@ -102,7 +92,7 @@ public:
 	bool get_timeuser(size_t idx,SysInfo::TimeUser &tu) {
 		UtcbFrame uf;
 		uf << SysInfo::GET_TIMEUSER << idx;
-		_pts[CPU::current().log_id()]->call(uf);
+		pt().call(uf);
 		uf.check_reply();
 		bool found;
 		uf >> found;
@@ -111,9 +101,6 @@ public:
 		uf >> tu._name >> tu._cpu >> tu._time;
 		return true;
 	}
-
-private:
-	Pt **_pts;
 };
 
 }
