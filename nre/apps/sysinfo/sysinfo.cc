@@ -94,34 +94,25 @@ static void refresh_console(bool update) {
 }
 
 static void input_thread(void*) {
-	TimerSession timer(timercon);
-	Clock clock(1000);
+	size_t lasttop = top;
 	while(1) {
-		bool changed = false;
-		while(cons.consumer().has_data()) {
-			Console::ReceivePacket *pk = cons.consumer().get();
-			if(pk->flags & Keyboard::RELEASE) {
-				switch(pk->keycode) {
-					case Keyboard::VK_UP:
-						if(top > 0) {
-							top--;
-							changed = true;
-						}
-						break;
-					case Keyboard::VK_DOWN:
-						top++;
-						changed = true;
-						break;
-				}
+		Console::ReceivePacket *pk = cons.consumer().get();
+		if(!(pk->flags & Keyboard::RELEASE)) {
+			switch(pk->keycode) {
+				case Keyboard::VK_UP:
+					if(top > 0)
+						top--;
+					break;
+				case Keyboard::VK_DOWN:
+					top++;
+					break;
 			}
-			cons.consumer().next();
 		}
-
-		if(changed)
+		cons.consumer().next();
+		if(top != lasttop) {
 			refresh_console(false);
-
-		// wait a bit
-		timer.wait_until(clock.source_time(50));
+			lasttop = top;
+		}
 	}
 }
 
