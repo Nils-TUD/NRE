@@ -32,7 +32,7 @@ public:
 		_gt.set_tls<StorageDevice*>(nre::Thread::TLS_PARAM,this);
 		char buffer[32];
 		nre::OStringStream os(buffer,sizeof(buffer));
-		os << "storage-" << no;
+		os << "vmm-storage-" << no;
 		_sc.start(nre::String(buffer));
 	}
 

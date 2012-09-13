@@ -6,8 +6,9 @@ Import('env')
 vcenv = env.Clone()
 if vcenv['ARCH'] == 'x86_32':
 	# turn off these warnings. vancouver produces too many of them :(
-	vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
-	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses');
+	# -fno-strict-aliasing is needed e.g. for cpu_move
+	vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
+	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
 	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
 	# an asm constraint is impossible. strange :/
 	btype = os.environ.get('NRE_BUILD')

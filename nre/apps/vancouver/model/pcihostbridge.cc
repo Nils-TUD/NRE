@@ -97,8 +97,7 @@ public:
 			// PCI spec: the lower two bits are hardwired and must return 0 when read
 			_confaddress = msg.value & ~0x3;
 		else if(in_range(msg.port,_iobase + 4,4) && (_confaddress & 0x80000000)) {
-			// FIXME actually, we might overwrite a part of our stack here
-			unsigned value = 0;
+			unsigned long long value = 0;
 			bool res = true;
 			if(msg.type != MessageIOOut::TYPE_OUTL)
 				value = read_pcicfg(res);
