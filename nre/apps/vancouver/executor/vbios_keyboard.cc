@@ -17,9 +17,11 @@
  */
 
 #include <util/Util.h>
+#include <services/Keyboard.h>
 #include <Desc.h>
 
 #include "../bus/motherboard.h"
+#include "../model/keyboardutil.h"
 #include "bios.h"
 
 using namespace nre;
@@ -33,83 +35,92 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 	Motherboard *_hostmb;
 	unsigned _lastkey;
 
-	// TODO
-#if 0
 	/**
 	 * Converts our internal keycode format into the BIOS one.
 	 */
-	static unsigned keycode2bios(unsigned value)
-	{
+	static unsigned keycode2bios(unsigned value) {
 		static struct {
 			unsigned short code;
 			unsigned keycode;
-		}bios_key_map[] = {
-			{	72 << 8, KBFLAG_EXTEND0 | 0x75}, // up
-			{	80 << 8, KBFLAG_EXTEND0 | 0x72}, // down
-			{	77 << 8, KBFLAG_EXTEND0 | 0x74}, // right
-			{	75 << 8, KBFLAG_EXTEND0 | 0x6b}, // left
-			{	59 << 8, 0x05}, // F1
-			{	60 << 8, 0x06}, // F2
-			{	61 << 8, 0x04}, // F3
-			{	62 << 8, 0x0c}, // F4
-			{	63 << 8, 0x03}, // F5
-			{	64 << 8, 0x0b}, // F6
-			{	65 << 8, 0x83}, // F7
-			{	66 << 8, 0x0a}, // F8
-			{	67 << 8, 0x01}, // F9
-			{	68 << 8, 0x09}, // F10
-			{	133 << 8, 0x78}, // F11
-			{	134 << 8, 0x07}, // F12
-			{	71 << 8, KBFLAG_EXTEND0 | 0x6c}, // home
-			{	82 << 8, KBFLAG_EXTEND0 | 0x70}, // insert
-			{	83 << 8, KBFLAG_EXTEND0 | 0x71}, // delete
-			{	79 << 8, KBFLAG_EXTEND0 | 0x69}, // end
-			{	73 << 8, KBFLAG_EXTEND0 | 0x7d}, // pgup
-			{	81 << 8, KBFLAG_EXTEND0 | 0x7a}, // pgdown
-			{	110 << 8, 0x76}, // esc
-			{	8, 0x66}, // backspace
+		} bios_key_map[] = {
+			{72 << 8,Keyboard::EXTEND0 | 0x75},		// up
+			{80 << 8,Keyboard::EXTEND0 | 0x72},		// down
+			{77 << 8,Keyboard::EXTEND0 | 0x74},		// right
+			{75 << 8,Keyboard::EXTEND0 | 0x6b},		// left
+			{59 << 8,0x05},							// F1
+			{60 << 8,0x06},							// F2
+			{61 << 8,0x04},							// F3
+			{62 << 8,0x0c},							// F4
+			{63 << 8,0x03},							// F5
+			{64 << 8,0x0b},							// F6
+			{65 << 8,0x83},							// F7
+			{66 << 8,0x0a},							// F8
+			{67 << 8,0x01},							// F9
+			{68 << 8,0x09},							// F10
+			{133 << 8,0x78},						// F11
+			{134 << 8,0x07},						// F12
+			{71 << 8,Keyboard::EXTEND0 | 0x6c},		// home
+			{82 << 8,Keyboard::EXTEND0 | 0x70},		// insert
+			{83 << 8,Keyboard::EXTEND0 | 0x71},		// delete
+			{79 << 8,Keyboard::EXTEND0 | 0x69},		// end
+			{73 << 8,Keyboard::EXTEND0 | 0x7d}, 	// pgup
+			{81 << 8,Keyboard::EXTEND0 | 0x7a},		// pgdown
+			{110 << 8,0x76},						// esc
+			{8,0x66},								// backspace
 		};
 
-		value = value & ~KBFLAG_NUM;
+		value = value & ~Keyboard::NUM;
 
 		// handle both shifts the same
-		if (value & KBFLAG_RSHIFT) value = value & ~KBFLAG_RSHIFT | KBFLAG_LSHIFT;
-		for (unsigned i=0; i < ARRAY_SIZE(bios_key_map); i++)
-		if (bios_key_map[i].keycode == value)
-		return bios_key_map[i].code;
-		unsigned *ascii_map = GenericKeyboard::get_ascii_map();
-		for (unsigned i=0; i<128; i++)
-		if (ascii_map[i] == value)
-		return (value << 8) | i;
+		if(value & Keyboard::RSHIFT)
+			value = (value & ~Keyboard::RSHIFT) | Keyboard::LSHIFT;
+		for(unsigned i = 0; i < ARRAY_SIZE(bios_key_map); i++) {
+			if(bios_key_map[i].keycode == value)
+				return bios_key_map[i].code;
+		}
+		unsigned *ascii_map = KeyboardUtil::get_ascii_map();
+		for(unsigned i = 0; i < 128; i++) {
+			if(ascii_map[i] == value)
+				return (value << 8) | i;
+		}
 		return 0;
 	}
 
-	void check_key(unsigned &status, unsigned key, unsigned bit, unsigned keycode) {
-		if ((key & (0xff | KBFLAG_EXTEND0 | KBFLAG_EXTEND1)) == keycode) {
-			if (~key & KBFLAG_RELEASE) status |= (1 << bit);
-			else status &= ~(1 << bit);
+	void check_key(unsigned &status,unsigned key,unsigned bit,unsigned keycode) {
+		if((key & (0xff | Keyboard::EXTEND0 | Keyboard::EXTEND1)) == keycode) {
+			if(~key & Keyboard::RELEASE)
+				status |= (1 << bit);
+			else
+				status &= ~(1 << bit);
 		}
 	}
 
 	void update_status(unsigned key) {
 		unsigned status = read_bda(0x17) & ~0x2f;
-		if (key & KBFLAG_RSHIFT) status |= 1 << 0;
-		if (key & KBFLAG_LSHIFT) status |= 1 << 1;
-		if (key & (KBFLAG_LCTRL | KBFLAG_RCTRL)) status |= (1 << 2) | (1 << 8);
-		if (key & (KBFLAG_LALT | KBFLAG_RALT)) status |= (1 << 3) | (1 << 9);
-		if (key & KBFLAG_NUM) status |= 1 << 5;
-		if ((key & (0xff | KBFLAG_RELEASE)) == KBCODE_SCROLL) status ^= 1 << 4;
-		if ((key & (0xff | KBFLAG_RELEASE)) == KBCODE_CAPS) status ^= 1 << 6;
-		if ((key & (0xff | KBFLAG_RELEASE)) == KBCODE_NUM) status ^= 1 << 7;
-		check_key(status, key, 10, KBCODE_SYSREQ);
-		check_key(status, key, 11, KBCODE_PAUSE);
-		check_key(status, key, 12, KBCODE_SCROLL);
-		check_key(status, key, 13, KBCODE_NUM);
-		check_key(status, key, 14, KBCODE_CAPS);
-		check_key(status, key, 15, KBCODE_INSERT);
-		write_bda(0x17, status, 2);
+		if(key & Keyboard::RSHIFT)
+			status |= 1 << 0;
+		if(key & Keyboard::LSHIFT)
+			status |= 1 << 1;
+		if(key & (Keyboard::LCTRL | Keyboard::RCTRL))
+			status |= (1 << 2) | (1 << 8);
+		if(key & (Keyboard::LALT | Keyboard::RALT))
+			status |= (1 << 3) | (1 << 9);
+		if(key & Keyboard::NUM)
+			status |= 1 << 5;
+		if((key & (0xff | Keyboard::RELEASE)) == KeyboardUtil::KBCODE_SCROLL)
+			status ^= 1 << 4;
+		if((key & (0xff | Keyboard::RELEASE)) == KeyboardUtil::KBCODE_CAPS)
+			status ^= 1 << 6;
+		if((key & (0xff | Keyboard::RELEASE)) == KeyboardUtil::KBCODE_NUM)
+			status ^= 1 << 7;
+		check_key(status,key,10,KeyboardUtil::KBCODE_SYSREQ);
+		check_key(status,key,11,KeyboardUtil::KBCODE_PAUSE);
+		check_key(status,key,12,KeyboardUtil::KBCODE_SCROLL);
+		check_key(status,key,13,KeyboardUtil::KBCODE_NUM);
+		check_key(status,key,14,KeyboardUtil::KBCODE_CAPS);
+		check_key(status,key,15,KeyboardUtil::KBCODE_INSERT);
+		write_bda(0x17,status,2);
 	}
-#endif
 
 	/**
 	 * Handle the Keyboard IRQ.
@@ -179,12 +190,8 @@ public:
 	 */
 	bool receive(MessageInput &msg) {
 		if(msg.device == 0x10) {
-			// TODO
-#if 0
 			update_status(msg.data);
 			unsigned value = keycode2bios(msg.data);
-#endif
-			unsigned value = 0;
 			unsigned short next = read_bda(0x1a);
 			unsigned short first = read_bda(0x1c);
 			unsigned short start = read_bda(0x80);
