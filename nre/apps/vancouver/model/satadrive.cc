@@ -25,6 +25,14 @@
 
 using namespace nre;
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define LOG(fmt,...)	Serial::get().writef(fmt,## __VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
 /**
  * A SATA drive. It contains the register set of a SATA drive and
  * speaks the SATA transport layer protocol with its FISes.
@@ -128,7 +136,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 		if(!_dsf[3])
 			return 0;
 		unsigned long prdbase = union64(_dsf[2],_dsf[1]);
-		Serial::get().writef("push data %x prdbase %lx _dsf %x %x %x\n",length,prdbase,_dsf[1],_dsf[2],_dsf[3]);
+		LOG("push data %x prdbase %lx _dsf %x %x %x\n",length,prdbase,_dsf[1],_dsf[2],_dsf[3]);
 		unsigned prd = 0;
 		unsigned offset = 0;
 		while(offset < length && prd < _dsf[3]) {
@@ -291,14 +299,14 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				complete_command();
 				break;
 			case 0xe0: // STANDBY IMMEDIATE
-				Serial::get().writef("STANDBY IMMEDIATE\n");
+				LOG("STANDBY IMMEDIATE\n");
 				_error |= 4;
 				_status |= 1;
 				complete_command();
 				break;
 			case 0xec: // IDENTIFY
 			{
-				Serial::get().writef("IDENTIFY\n");
+				LOG("IDENTIFY\n");
 
 				// start pio command
 				send_pio_setup_fis(512);
@@ -307,12 +315,12 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				build_identify_buffer(identify);
 				bool irq = false;
 				push_data(512,identify,irq);
-				Serial::get().writef("IDENTIFY transfered\n");
+				LOG("IDENTIFY transfered\n");
 				complete_command();
 			}
 			break;
 			case 0xef: // SET FEATURES
-				Serial::get().writef("SET FEATURES %x sc %x\n",_regs[0] >> 24,_regs[3] & 0xff);
+				LOG("SET FEATURES %x sc %x\n",_regs[0] >> 24,_regs[3] & 0xff);
 				complete_command();
 				break;
 			default:
@@ -339,16 +347,11 @@ public:
 	 * Receive a FIS from the controller.
 	 */
 	void receive_fis(unsigned fislen,unsigned *fis) {
-		Serial::get().writef("receive_fis: %u %p %u\n",fislen,fis,fis[0]);
+		LOG("receive_fis: %u %p %u\n",fislen,fis,fis[0]);
 		if(fislen >= 2) {
 			switch(fis[0] & 0xff) {
 				case 0x27: // register FIS
 					assert(fislen ==5);
-
-					Serial::get().writef("regs: ");
-					for(int i = 0; i < 4; ++i)
-						Serial::get().writef("%u ",_regs[i]);
-					Serial::get() << "\n";
 
 					// remain in reset asserted state when receiving a normal command
 					if((_ctrl & 0x4) && (_regs[0] & 0x8000)) {

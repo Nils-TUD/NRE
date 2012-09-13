@@ -27,6 +27,14 @@
 
 using namespace nre;
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define LOG(fmt,...)	Serial::get().writef(fmt,## __VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
 class ParentIrqProvider {
 public:
 	virtual void trigger_irq(void * child) = 0;
@@ -93,8 +101,9 @@ public:
 					PxCI &= ~mask;
 					PxSACT &= ~mask;
 				}
-				else
-					Serial::get().writef("not finished %x,%x inprogress %x\n",fis[0],fis[4],_inprogress);
+				else {
+					LOG("not finished %x,%x inprogress %x\n",fis[0],fis[4],_inprogress);
+				}
 				break;
 			case 0x41: // dma setup fis
 				assert(fislen == 7);
@@ -104,7 +113,7 @@ public:
 				assert(fislen == 5);
 				copy_offset = 0x20;
 
-				Serial::get().writef("PIO setup fis\n");
+				LOG("PIO setup fis\n");
 				break;
 			default:
 				Util::panic("Invalid D2H FIS!");
