@@ -63,13 +63,13 @@ public:
 
 	void prev() {
 		if(_pages != 0) {
-			_page = (_page - 1) % _pages;
+			set_page((_page - 1) % _pages);
 			_srv->switcher().switch_to(this,this);
 		}
 	}
 	void next() {
 		if(_pages != 0) {
-			_page = (_page + 1) % _pages;
+			set_page((_page + 1) % _pages);
 			_srv->switcher().switch_to(this,this);
 		}
 	}
@@ -90,8 +90,6 @@ public:
 		}
 	}
 	void activate() {
-		if(_pages != 0)
-			_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
 		set_regs(_regs);
 	}
 
@@ -106,6 +104,10 @@ public:
 	PORTAL static void portal(capsel_t pid);
 
 private:
+	void set_page(uint page) {
+		_page = page;
+		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
+	}
 	void swap() {
 		_out_ds->switch_to(_srv->screen()->mem());
 	}
