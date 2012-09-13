@@ -58,7 +58,7 @@ public:
 		return *this;
 	}
 	~String() {
-		delete _str;
+		delete[] _str;
 	}
 
 	/**
@@ -94,7 +94,7 @@ public:
 	 * @param ap the arguments
 	 */
 	void vformat(size_t size,const char *fmt,va_list ap) {
-		delete _str;
+		delete[] _str;
 		_str = new char[size];
 		OStringStream os(_str,size);
 		os.vwritef(fmt,ap);
@@ -109,7 +109,7 @@ public:
 	 * @param len the length of the string (-1 by default, which means: use strlen())
 	 */
 	void reset(const char *str,size_t len = static_cast<size_t>(-1)) {
-		delete _str;
+		delete[] _str;
 		init(str,len);
 	}
 

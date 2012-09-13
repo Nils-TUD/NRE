@@ -70,6 +70,10 @@ class HostACPI {
 
 public:
 	explicit HostACPI();
+	~HostACPI() {
+		delete[] _tables;
+		delete _ds;
+	}
 
 	const nre::DataSpace &mem() const {
 		return *_ds;
