@@ -170,7 +170,16 @@ PORTAL static void portal_mouse(capsel_t pid) {
 	}
 }
 
-int main() {
+int main(int argc,char *argv[]) {
+	bool mouse = true;
+	int scset = 2;
+	for(int i = 1; i < argc; ++i) {
+		if(strcmp(argv[i],"nomouse") == 0)
+			mouse = false;
+		if(strcmp(argv[i],"scset1") == 0)
+			scset = 1;
+	}
+
 	// determine GSIs for keyboard and mouse
 	{
 		Connection acpicon("acpi");
@@ -179,7 +188,7 @@ int main() {
 		msgsi = acpi.irq_to_gsi(MOUSE_IRQ);
 	}
 
-	hostkb = new HostKeyboard(0x60,2,true);
+	hostkb = new HostKeyboard(scset,mouse);
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);

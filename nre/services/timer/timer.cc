@@ -105,8 +105,20 @@ PORTAL static void portal_timer(capsel_t pid) {
 	}
 }
 
-int main() {
-	timer = new HostTimer();
+int main(int argc,char *argv[]) {
+	bool forcepit = false;
+	bool forcehpetlegacy = false;
+	bool slowrtc = false;
+	for(int i = 1; i < argc; ++i) {
+		if(strcmp(argv[i],"forcepit") == 0)
+			forcepit = true;
+		if(strcmp(argv[i],"forcehpetlegacy") == 0)
+			forcehpetlegacy = true;
+		if(strcmp(argv[i],"slowrtc") == 0)
+			slowrtc = true;
+	}
+
+	timer = new HostTimer(forcepit,forcehpetlegacy,slowrtc);
 	srv = new TimerService("timer",portal_timer);
 	srv->reg();
 	Sm sm(0);

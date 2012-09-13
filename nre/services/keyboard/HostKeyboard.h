@@ -36,6 +36,7 @@ class HostKeyboard {
 	enum {
 		FREQ						= 1000,
 		TIMEOUT						= 50,
+		PORT_BASE					= 0x60,
 	};
 
 	enum {
@@ -87,9 +88,9 @@ public:
 		uint8_t ext1;
 	};
 
-	explicit HostKeyboard(nre::Ports::port_t base = 0x60,int scset = 2,bool mouse = false,bool verbose = false)
-		: _clock(FREQ), _port_ctrl(base + 4,1), _port_data(base,1), _flags(0), _mousestate(),
-		  _mouse_enabled(mouse), _wheel(false), _scset1(scset == 1), _verbose(verbose) {
+	explicit HostKeyboard(int scset = 2,bool mouse = false)
+		: _clock(FREQ), _port_ctrl(PORT_BASE + 4,1), _port_data(PORT_BASE,1), _flags(0), _mousestate(),
+		  _mouse_enabled(mouse), _wheel(false), _scset1(scset == 1) {
 	}
 
 	bool mouse_enabled() const {
@@ -129,6 +130,5 @@ private:
 	bool _mouse_enabled;
 	bool _wheel;
 	bool _scset1;
-	bool _verbose;
 	static ScanCodeEntry scset2[];
 };
