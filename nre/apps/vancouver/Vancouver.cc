@@ -311,7 +311,8 @@ bool Vancouver::receive(MessageDisk &msg) {
 	switch(msg.type) {
 		case MessageDisk::DISK_CONNECT:
 			try {
-				_stdevs[msg.disknr] = new StorageDevice(_mb.bus_diskcommit,*guest_mem,*_stcon,msg.disknr);
+				if(!_stdevs[msg.disknr])
+					_stdevs[msg.disknr] = new StorageDevice(_mb.bus_diskcommit,*guest_mem,*_stcon,msg.disknr);
 				_stdevs[msg.disknr]->get_params(msg.params);
 			}
 			catch(const Exception &e) {
