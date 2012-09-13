@@ -1,0 +1,15 @@
+#!tools/novaboot
+# -*-sh-*-
+QEMU_FLAGS=-m 1024 -smp 4 -hda dist/imgs/escape-hd.img
+KERNEL=bin/apps/chainloader
+bin/apps/hypervisor spinner serial
+bin/apps/root
+bin/apps/acpi provides=acpi
+bin/apps/keyboard provides=keyboard
+bin/apps/reboot provides=reboot
+bin/apps/pcicfg provides=pcicfg
+bin/apps/timer provides=timer
+bin/apps/console provides=console
+bin/apps/sysinfo
+bin/apps/storage provides=storage
+bin/apps/vancouver modoff:9 m:64 ncpu:1 PC_PS2 ide:0x1f0,0x3f6,14,0,0
