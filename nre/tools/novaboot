@@ -83,7 +83,7 @@ my %opt_spec = (
     "on"	     => \$on_opt,
     "pulsar|p:s"     => \$pulsar,
     "qemu|Q=s" 	     => \$qemu,
-    "qemu-append=s"  => \$qemu_append,
+    "qemu-append:s"  => \$qemu_append,
     "qemu-flags|q=s" => \$qemu_flags_cmd,
     "scons:s"	     => \$scons,
     "scriptmod=s"    => \@scriptmod,
