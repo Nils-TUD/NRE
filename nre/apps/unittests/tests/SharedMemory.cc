@@ -42,7 +42,6 @@ struct Item {
 };
 class ShmService;
 
-static Hip::mem_iterator get_self();
 static void test_shm();
 
 const TestCase sharedmem = {
@@ -184,29 +183,26 @@ static int shm_client(int,char *argv[]) {
 	return 0;
 }
 
-static Hip::mem_iterator get_self() {
-	int i = 0;
-	const Hip &hip = Hip::get();
-	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// we're the second module
-		if(it->type == HipMem::MB_MODULE && i++ > 0)
-			return it;
-	}
-	return hip.mem_end();
-}
-
 static void test_shm() {
 	char cmdline[64];
+	Hip::mem_iterator self = Hip::get().mem_begin();
 	size_t ds_sizes[] = {ExecEnv::PAGE_SIZE,ExecEnv::PAGE_SIZE * 2,ExecEnv::PAGE_SIZE * 4};
 	for(size_t i = 0; i < ARRAY_SIZE(ds_sizes); ++i) {
 		ChildManager *mng = new ChildManager();
-		Hip::mem_iterator self = get_self();
 		// map the memory of the module
 		DataSpace *ds = new DataSpace(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
-		OStringStream os(cmdline,sizeof(cmdline));
-		os << "shm_client " << ds_sizes[i];
-		mng->load(ds->virt(),self->size,"shm_service provides=shm",reinterpret_cast<uintptr_t>(shm_service));
-		mng->load(ds->virt(),self->size,cmdline,reinterpret_cast<uintptr_t>(shm_client));
+		{
+			ChildConfig cfg(0);
+			cfg.entry(reinterpret_cast<uintptr_t>(shm_service));
+			mng->load(ds->virt(),self->size,"shm_service provides=shm",cfg);
+		}
+		{
+			ChildConfig cfg(0);
+			cfg.entry(reinterpret_cast<uintptr_t>(shm_client));
+			OStringStream os(cmdline,sizeof(cmdline));
+			os << "shm_client " << ds_sizes[i];
+			mng->load(ds->virt(),self->size,cmdline,cfg);
+		}
 		mng->wait_for_all();
 		delete ds;
 		delete mng;

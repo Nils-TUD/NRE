@@ -143,11 +143,6 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 				flags = DataSpaceDesc::R;
 				return true;
 			}
-			// TODO temporary. we need a better facility to access modules
-			if(phys == Math::round_dn<uint64_t>(it->aux,ExecEnv::PAGE_SIZE)) {
-				flags = DataSpaceDesc::R;
-				return true;
-			}
 		}
 	}
 	// check if the child wants to request none-device-memory

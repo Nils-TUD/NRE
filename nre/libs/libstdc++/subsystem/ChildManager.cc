@@ -15,6 +15,7 @@
  */
 
 #include <subsystem/ChildManager.h>
+#include <subsystem/ChildHip.h>
 #include <stream/Serial.h>
 #include <ipc/Service.h>
 #include <kobj/Gsi.h>
@@ -22,6 +23,7 @@
 #include <arch/Elf.h>
 #include <util/Math.h>
 #include <Logging.h>
+#include <new>
 
 namespace nre {
 
@@ -133,7 +135,48 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	*ptrs++ = 0;
 }
 
-void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main,cpu_t eccpu) {
+void ChildManager::build_hip(Child *c,const ChildConfig &config) {
+	// create ds for cmdlines in Hip mem-items
+	uintptr_t cmdlinesaddr = c->reglist().find_free(MAX_MODAUX_LEN);
+	const DataSpace &auxds = _dsm.create(
+			DataSpaceDesc(MAX_MODAUX_LEN,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX));
+	char *cmdlines = reinterpret_cast<char*>(auxds.virt());
+	char *cmdlinesend = cmdlines + MAX_MODAUX_LEN;
+	c->reglist().add(auxds.desc(),cmdlinesaddr,ChildMemory::R,auxds.unmapsel());
+
+	// create ds for hip
+	const DataSpace &ds = _dsm.create(
+			DataSpaceDesc(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
+	c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
+	ChildHip *hip = reinterpret_cast<ChildHip*>(ds.virt());
+
+	// setup Hip
+	new (hip) ChildHip(config.cpus());
+	size_t memidx = 0;
+	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
+		if(config.has_module_access(memidx)) {
+			uint32_t aux = 0;
+			if(mem->type == HipMem::MB_MODULE) {
+				size_t len = strlen(mem->cmdline()) + 1;
+				if(cmdlines + len <= cmdlinesend) {
+					memcpy(cmdlines,mem->cmdline(),len);
+					aux = cmdlinesaddr;
+				}
+				cmdlines += len;
+				cmdlinesaddr += len;
+			}
+			hip->add_mem(mem->addr,mem->size,aux,mem->type);
+		}
+		memidx++;
+	}
+	hip->finalize();
+
+	// add to region list
+	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.unmapsel());
+}
+
+void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
+		cpu_t eccpu) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
@@ -186,7 +229,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		// now create Pd and pass portals
 		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
 		c->_entry = elf->e_entry;
-		c->_main = main;
+		c->_main = config.entry();
 
 		// check load segments and add them to regions
 		for(size_t i = 0; i < elf->e_phnum; i++) {
@@ -229,15 +272,8 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t
 		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
 				c->stack(),ChildMemory::RW);
 
-		// and a HIP
-		{
-			const DataSpace &ds = _dsm.create(
-					DataSpaceDesc(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
-			c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
-			memcpy(reinterpret_cast<void*>(ds.virt()),&Hip::get(),ExecEnv::PAGE_SIZE);
-			// TODO we need to adjust the hip
-			c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.unmapsel());
-		}
+		// and a Hip
+		build_hip(c,config);
 
 		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting client '" << c->cmdline() << "'...\n");
 		LOG(Logging::CHILD_CREATE,Serial::get() << *c << "\n");

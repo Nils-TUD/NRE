@@ -12,7 +12,7 @@ bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
 bin/apps/storage provides=storage
-bin/apps/vancouver modoff:9 m:128 ncpu:1 PC_PS2 ahci:0xe0800000,14,0x30 drive:0,1,2
+bin/apps/vancouver m:128 ncpu:1 PC_PS2 ahci:0xe0800000,14,0x30 drive:0,1,2
 bin/apps/guest_munich
 dist/imgs/bzImage-3.1.0-32 clocksource=tsc console=ttyS0 noapic quiet
 dist/imgs/initrd-js.lzma

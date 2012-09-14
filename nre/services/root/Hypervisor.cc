@@ -94,6 +94,10 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 	}
 }
 
+void Hypervisor::unmap_mem(uintptr_t virt,size_t size) {
+	CapRange(virt,Math::blockcount<size_t>(size,ExecEnv::PAGE_SHIFT),Crd::MEM_ALL).revoke(true);
+}
+
 char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 	if(!phys)
 		return 0;
@@ -116,6 +120,17 @@ char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 	// ok, limit reached, so terminate it
 	*reinterpret_cast<char*>(auxvirt - 1) = '\0';
 	return vaddr;
+}
+
+void Hypervisor::unmap_string(const char *str) {
+	uintptr_t begin = reinterpret_cast<uintptr_t>(str) & ~(ExecEnv::PAGE_SIZE - 1);
+	size_t len = reinterpret_cast<uintptr_t>(str) - begin + strlen(str);
+	VirtualMemory::free(begin,len);
+	size_t pages = Math::blockcount<size_t>(len,ExecEnv::PAGE_SIZE);
+	while(pages-- > 0) {
+		CapRange(begin,1,Crd::MEM_ALL).revoke(true);
+		begin += ExecEnv::PAGE_SIZE;
+	}
 }
 
 void Hypervisor::portal_map(capsel_t) {

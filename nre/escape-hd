@@ -12,7 +12,7 @@ bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
 bin/apps/storage provides=storage
-bin/apps/vancouver modoff:9 m:64 ncpu:1 PC_PS2 ide:0x1f0,0x3f6,14,0,0
+bin/apps/vancouver m:64 ncpu:1 PC_PS2 ide:0x1f0,0x3f6,14,0,0
 dist/imgs/escape.bin videomode=vga
 dist/imgs/escape_pci.bin /dev/pci
 dist/imgs/escape_ata.bin /system/devices/ata

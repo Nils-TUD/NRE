@@ -44,9 +44,9 @@ public:
 		return *_startup_info.hip;
 	}
 
-private:
-	uint32_t : 32;			// HIP signature
-	uint16_t : 16;			// HIP checksum
+protected:
+	uint32_t signature;		// HIP signature
+	uint16_t checksum;		// HIP checksum
 	uint16_t length;		// HIP length
 	uint16_t cpu_offs;		// Offset of first CPU descriptor
 	uint16_t cpu_size;
@@ -63,6 +63,13 @@ public:
 	uint32_t cfg_utcb;		// UTCB sizes
 	uint32_t freq_tsc;		// TSC freq in khz
 	uint32_t freq_bus;		// BUS freq in khz
+
+	/**
+	 * @return true if the checksum of the Hip is valid
+	 */
+	bool is_valid() const {
+		return calc_checksum() == 0;
+	}
 
 	/**
 	 * @return the number of capabilities used by the HV for exceptions and for service-portals
@@ -137,6 +144,16 @@ public:
 	cpu_iterator cpu_end() const {
 		return reinterpret_cast<cpu_iterator>(reinterpret_cast<const char*>(this) + mem_offs);
 	}
+
+protected:
+	uint16_t calc_checksum() const {
+		uint16_t sum = 0;
+		for(const uint16_t *ptr = reinterpret_cast<const uint16_t*>(this);
+				ptr < reinterpret_cast<const uint16_t*>(this) + length / 2;
+				sum = static_cast<uint16_t>(sum - *ptr++))
+			;
+		return sum;
+	}
 };
 
 /**
@@ -180,8 +197,14 @@ public:
 	uint64_t addr;
 	uint64_t size;
 	int32_t type;
-	uint32_t aux;
+	word_t aux;
 
+	/**
+	 * @return the commandline of the memory item or ""
+	 */
+	const char *cmdline() const {
+		return aux ? reinterpret_cast<const char*>(aux) : "";
+	}
 	/**
 	 * @return true if the memory region is reserved
 	 */

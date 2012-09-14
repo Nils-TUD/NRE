@@ -14,20 +14,16 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/Pt.h>
-#include <kobj/Sm.h>
-#include <subsystem/ChildManager.h>
+#pragma once
 
-using namespace nre;
+#include <arch/Types.h>
 
-static uint8_t prog[] = {
-#include "../../test.dump"
-};
-
-int main() {
-	// don't put it on the stack since its too large :)
-	ChildManager *cm = new ChildManager();
-	cm->load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test",ChildConfig(0));
-	cm->wait_for_all();
-	return 0;
+/**
+ * Placement new
+ */
+inline void *operator new(size_t,void* ptr) throw() {
+	return ptr;
+}
+inline void *operator new[](size_t,void *ptr) throw() {
+	return ptr;
 }

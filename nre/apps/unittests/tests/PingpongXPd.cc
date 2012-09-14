@@ -134,24 +134,21 @@ static int pingpong_client() {
 	return 0;
 }
 
-static Hip::mem_iterator get_self() {
-	int i = 0;
-	const Hip &hip = Hip::get();
-	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// we're the second module
-		if(it->type == HipMem::MB_MODULE && i++ > 0)
-			return it;
-	}
-	return hip.mem_end();
-}
-
 static void test_pingpong() {
 	ChildManager *mng = new ChildManager();
-	Hip::mem_iterator self = get_self();
+	Hip::mem_iterator self = Hip::get().mem_begin();
 	// map the memory of the module
 	DataSpace ds(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
-	mng->load(ds.virt(),self->size,"pingpongservice provides=pingpong",reinterpret_cast<uintptr_t>(pingpong_server));
-	mng->load(ds.virt(),self->size,"pingpongclient",reinterpret_cast<uintptr_t>(pingpong_client));
+	{
+		ChildConfig cfg(0);
+		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_server));
+		mng->load(ds.virt(),self->size,"pingpongservice provides=pingpong",cfg);
+	}
+	{
+		ChildConfig cfg(0);
+		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
+		mng->load(ds.virt(),self->size,"pingpongclient",cfg);
+	}
 	mng->wait_for_all();
 	delete mng;
 }

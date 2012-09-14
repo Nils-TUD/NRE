@@ -18,6 +18,7 @@
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <subsystem/ChildManager.h>
+#include <subsystem/ChildHip.h>
 #include <ipc/Service.h>
 #include <util/Math.h>
 #include <util/Cycler.h>
@@ -27,6 +28,7 @@
 #include <Exception.h>
 #include <Logging.h>
 #include <cstring>
+#include <new>
 #include <Assert.h>
 
 #include "PhysicalMemory.h"
@@ -37,6 +39,10 @@
 #include "Log.h"
 
 using namespace nre;
+
+enum {
+	MAX_CMDLINES_LEN	= ExecEnv::PAGE_SIZE
+};
 
 class CPU0Init {
 	CPU0Init();
@@ -87,72 +93,103 @@ CPU0Init::CPU0Init() {
 }
 
 int main() {
-	const Hip &hip = Hip::get();
+	{
+		const Hip &hip = Hip::get();
 
-	// add all available memory
-	LOG(Logging::PLATFORM,Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
-			hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi));
-	LOG(Logging::PLATFORM,Serial::get().writef("CPU runs @ %u Mhz, bus @ %u Mhz\n",
-			Hip::get().freq_tsc / 1000,Hip::get().freq_bus / 1000));
-	LOG(Logging::MEM_MAP,Serial::get().writef("Memory:\n"));
-	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		LOG(Logging::MEM_MAP,Serial::get().writef(
-				"\taddr=%#Lx, size=%#Lx, type=%d, aux=%#x\n",it->addr,it->size,it->type,it->aux));
-		// FIXME: why can't we use the memory above 4G?
-		if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
-			PhysicalMemory::add(it->addr,it->size);
-	}
-
-	// remove all not available memory
-	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		// also remove the BIOS-area (make it available as device-memory)
-		if(it->type != HipMem::AVAILABLE || it->addr == 0)
-			PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
-		// make sure that we don't overwrite the next two pages behind the cmdline
-		if(it->type == HipMem::MB_MODULE && it->aux)
-			PhysicalMemory::remove(it->aux & ~(ExecEnv::PAGE_SIZE - 1),ExecEnv::PAGE_SIZE * 2);
-	}
-
-	// now allocate the available memory from the hypervisor
-	PhysicalMemory::map_all();
-	LOG(Logging::MEM_MAP,Serial::get() << "Virtual memory:\n" << VirtualMemory::regions());
-	LOG(Logging::MEM_MAP,Serial::get() << "Physical memory:\n" << PhysicalMemory::regions());
-
-	LOG(Logging::CPUS,Serial::get().writef("CPUs:\n"));
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LOG(Logging::CPUS,Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
-				it->package(),it->core(),it->thread(),it->flags()));
-	}
-
-	// now we can use dlmalloc (map-pt created and available memory added to pool)
-	dlmalloc_init();
-
-	// create memory mapping portals for the other CPUs
-	Hypervisor::init();
-	Admission::init();
-
-	// now init the stuff for all other CPUs (using dlmalloc)
-	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		if(it->log_id() != CPU::current().log_id()) {
-			LocalThread *ec = new LocalThread(it->log_id());
-			it->ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
-			it->gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
-			it->io_pt(new Pt(ec,Hypervisor::portal_io));
-			it->sc_pt(new Pt(ec,Admission::portal_sc));
-			// accept translated caps
-			UtcbFrameRef defuf(ec->utcb());
-			defuf.accept_translates();
-			defuf.accept_delegates(0);
-			new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
-			new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
-					Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
-
-			// register portal for the log service
-			LocalThread *regec = new LocalThread(it->log_id());
-			UtcbFrameRef reguf(ec->utcb());
-			reguf.accept_delegates(CPU::order());
-			it->srv_pt(new Pt(regec,portal_service));
+		// add all available memory
+		LOG(Logging::PLATFORM,Serial::get() << "Hip checksum is "
+				<< (hip.is_valid() ? "valid" : "not valid") << "\n");
+		LOG(Logging::PLATFORM,Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
+				hip.cfg_cap,hip.cfg_exc,hip.cfg_vm,hip.cfg_gsi));
+		LOG(Logging::PLATFORM,Serial::get().writef("CPU runs @ %u Mhz, bus @ %u Mhz\n",
+				Hip::get().freq_tsc / 1000,Hip::get().freq_bus / 1000));
+		for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+			// FIXME: why can't we use the memory above 4G?
+			if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
+				PhysicalMemory::add(it->addr,it->size);
 		}
+
+		// remove all not available memory
+		for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+			// also remove the BIOS-area (make it available as device-memory)
+			if(it->type != HipMem::AVAILABLE || it->addr == 0)
+				PhysicalMemory::remove(it->addr,Math::round_up<size_t>(it->size,ExecEnv::PAGE_SIZE));
+			// make sure that we don't overwrite the next two pages behind the cmdline
+			if(it->type == HipMem::MB_MODULE && it->aux)
+				PhysicalMemory::remove(it->aux & ~(ExecEnv::PAGE_SIZE - 1),ExecEnv::PAGE_SIZE * 2);
+		}
+
+		// now allocate the available memory from the hypervisor
+		PhysicalMemory::map_all();
+		LOG(Logging::MEM_MAP,Serial::get() << "Virtual memory:\n" << VirtualMemory::regions());
+		LOG(Logging::MEM_MAP,Serial::get() << "Physical memory:\n" << PhysicalMemory::regions());
+
+		LOG(Logging::CPUS,Serial::get().writef("CPUs:\n"));
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+			LOG(Logging::CPUS,Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
+					it->package(),it->core(),it->thread(),it->flags()));
+		}
+
+		// now we can use dlmalloc (map-pt created and available memory added to pool)
+		dlmalloc_init();
+
+		// create memory mapping portals for the other CPUs
+		Hypervisor::init();
+		Admission::init();
+
+		// now init the stuff for all other CPUs (using dlmalloc)
+		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+			if(it->log_id() != CPU::current().log_id()) {
+				LocalThread *ec = new LocalThread(it->log_id());
+				it->ds_pt(new Pt(ec,PhysicalMemory::portal_dataspace));
+				it->gsi_pt(new Pt(ec,Hypervisor::portal_gsi));
+				it->io_pt(new Pt(ec,Hypervisor::portal_io));
+				it->sc_pt(new Pt(ec,Admission::portal_sc));
+				// accept translated caps
+				UtcbFrameRef defuf(ec->utcb());
+				defuf.accept_translates();
+				defuf.accept_delegates(0);
+				new Pt(ec,ec->event_base() + CapSelSpace::EV_STARTUP,portal_startup,Mtd(Mtd::RSP));
+				new Pt(ec,ec->event_base() + CapSelSpace::EV_PAGEFAULT,portal_pagefault,
+						Mtd(Mtd::RSP | Mtd::GPR_BSD | Mtd::RIP_LEN | Mtd::QUAL));
+
+				// register portal for the log service
+				LocalThread *regec = new LocalThread(it->log_id());
+				UtcbFrameRef reguf(ec->utcb());
+				reguf.accept_delegates(CPU::order());
+				it->srv_pt(new Pt(regec,portal_service));
+			}
+		}
+
+		// change the Hip to allow us direct access to the mb-module-cmdlines
+		char *cmdlines = new char[MAX_CMDLINES_LEN];
+		char *curcmd = cmdlines;
+		ChildHip *chip = new ChildHip(CPUSet(CPUSet::ALL));
+		for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+			if(it->type != HipMem::MB_MODULE)
+				chip->add_mem(it->addr,it->size,it->aux,it->type);
+			else {
+				char *cmdline = Hypervisor::map_string(it->aux);
+				size_t len = strlen(cmdline) + 1;
+				if(curcmd + len > cmdlines + MAX_CMDLINES_LEN)
+					Util::panic("Not enough memory for cmdlines");
+				memcpy(curcmd,cmdline,len);
+				chip->add_module(it->addr,it->size,curcmd);
+				Hypervisor::unmap_string(cmdline);
+				curcmd += len;
+			}
+		}
+		chip->finalize();
+
+		// exchange hip
+		_startup_info.hip = chip;
+	}
+
+	const Hip &hip = Hip::get();
+	LOG(Logging::MEM_MAP,Serial::get().writef("Memory map:\n"));
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+		LOG(Logging::MEM_MAP,Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux='%s'\n",
+				it->addr,it->size,it->type,it->cmdline()));
 	}
 
 	mng = new ChildManager();
@@ -168,21 +205,23 @@ int main() {
 }
 
 static void start_childs() {
-	int i = 0;
+	size_t mod = 0,i = 0;
 	ForwardCycler<CPU::iterator> cpus(CPU::begin(),CPU::end());
 	const Hip &hip = Hip::get();
-	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it, ++mod) {
 		// we are the first one :)
 		if(it->type == HipMem::MB_MODULE && i++ >= 1) {
 			// map the memory of the module
 			uintptr_t virt = VirtualMemory::alloc(it->size);
 			Hypervisor::map_mem(it->addr,virt,it->size);
-			// map command-line, if necessary
-			char *aux = Hypervisor::map_string(it->aux);
-			mng->load(virt,it->size,aux,0,cpus.next()->log_id());
 
 			// TODO temporary. skip everything behind vancouver
-			if(aux && strstr(aux,"vancouver"))
+			bool isvmmng = strstr(it->cmdline(),"vancouver") != 0;
+			ChildConfig cfg(mod);
+			if(isvmmng)
+				cfg.module_access(ChildConfig::FOLLOWING);
+			mng->load(virt,it->size,it->cmdline(),cfg,cpus.next()->log_id());
+			if(isvmmng)
 				break;
 		}
 	}

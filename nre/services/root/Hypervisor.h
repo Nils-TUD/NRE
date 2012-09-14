@@ -31,8 +31,27 @@ public:
 	PORTAL static void portal_gsi(capsel_t pid);
 	PORTAL static void portal_io(capsel_t pid);
 
+	/**
+	 * Maps <size> bytes at <phys> to <virt>. It assumes that both the virtual and the physical
+	 * pages are available.
+	 */
 	static void map_mem(uintptr_t phys,uintptr_t virt,size_t size);
+	/**
+	 * Undos the operation of map_mem(). That is, unmaps <size> bytes at <virt>.
+	 */
+	static void unmap_mem(uintptr_t virt,size_t size);
+
+	/**
+	 * Maps the string at physical address <phys> to a free virtual address. The string can be
+	 * at most <max_pages> long, starting at the beginning of the page of <phys>.
+	 * This function is intended for Hip-module cmdlines.
+	 */
 	static char *map_string(uintptr_t phys,uint max_pages = 2);
+	/**
+	 * Undos the operation of map_string(). That is, it unmaps the pages the given string touches
+	 * and free's the virtual memory that has been allocated.
+	 */
+	static void unmap_string(const char *str);
 
 	static void allocate_gsi(uint &gsi,void *pcicfg = 0) {
 		nre::ScopedLock<nre::UserSm> guard(&_gsi_sm);

@@ -29,7 +29,6 @@
 
 using namespace nre;
 
-static size_t modoff = 8;
 static size_t ncpu = 1;
 static DataSpace *guest_mem = 0;
 static size_t guest_size = 0;
@@ -44,9 +43,6 @@ PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 
 PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created" ) {
 	ncpu = argv[0];
-}
-PARAM_HANDLER(modoff, "modoff - specify the offset of the multiboot-modules (default 8)") {
-	modoff = argv[0];
 }
 PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
 	guest_size = argv[0] * 1024 * 1024;
@@ -146,35 +142,32 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			break;
 
 		case MessageHostOp::OP_GET_MODULE: {
-			// TODO that's extremly hardcoded here ;)
 			const Hip &hip = Hip::get();
 			uintptr_t destaddr = reinterpret_cast<uintptr_t>(msg.start);
-			uint module = msg.module + modoff;
+			uint module = msg.module - 1;
 			Hip::mem_iterator it;
-			for(it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+			for(it = hip.mem_begin(), ++it; it != hip.mem_end(); ++it) {
 				if(it->type == HipMem::MB_MODULE && module-- == 0)
 					break;
 			}
 			if(it == hip.mem_end())
 				return false;
 
+			msg.size = it->size;
+			msg.cmdline = msg.start + it->size;
+			msg.cmdlen = strlen(it->cmdline());
+
 			// does it fit in guest mem?
 			if(destaddr >= guest_mem->virt() + guest_mem->size() ||
-					destaddr + it->size + ExecEnv::PAGE_SIZE * 2 > guest_mem->virt() + guest_mem->size()) {
+					destaddr + it->size + msg.cmdlen + 1 > guest_mem->virt() + guest_mem->size()) {
 				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
-						it->addr,it->addr + it->size,destaddr - guest_mem->virt(),guest_size);
+						it->addr,it->addr + it->size + msg.cmdlen,destaddr - guest_mem->virt(),guest_size);
 				return false;
 			}
 
 			DataSpace ds(it->size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->addr);
 			memcpy(msg.start,reinterpret_cast<void*>(ds.virt()),ds.size());
-			msg.size = it->size;
-			DataSpace cmdds(ExecEnv::PAGE_SIZE * 2,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->aux);
-			uintptr_t offset = it->aux & (ExecEnv::PAGE_SIZE - 1);
-			memcpy(msg.start + it->size,reinterpret_cast<void*>(cmdds.virt() + offset),cmdds.size() - offset);
-			memset(msg.start + it->size + ExecEnv::PAGE_SIZE * 2 - 1,0,1);
-			msg.cmdlen = strlen(msg.start + it->size);
-			msg.cmdline = msg.start + it->size;
+			memcpy(msg.cmdline,it->cmdline(),msg.cmdlen + 1);
 			return true;
 		}
 		break;

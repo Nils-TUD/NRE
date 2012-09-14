@@ -19,6 +19,7 @@
 #include <kobj/Pt.h>
 #include <kobj/LocalThread.h>
 #include <subsystem/ServiceRegistry.h>
+#include <subsystem/ChildConfig.h>
 #include <mem/DataSpaceManager.h>
 #include <util/Sync.h>
 #include <Exception.h>
@@ -60,7 +61,8 @@ class ChildManager {
 	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
 	enum {
 		MAX_CHILDS		= 32,
-		MAX_CMDLINE_LEN	= 256
+		MAX_CMDLINE_LEN	= 256,
+		MAX_MODAUX_LEN	= ExecEnv::PAGE_SIZE
 	};
 	enum ExitType {
 		THREAD_EXIT,
@@ -76,7 +78,7 @@ public:
 		return _registry;
 	}
 
-	void load(uintptr_t addr,size_t size,const char *cmdline,uintptr_t main = 0,
+	void load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
 			cpu_t cpu = CPU::current().log_id());
 
 	void wait_for_all() {
@@ -140,6 +142,7 @@ private:
 	void destroy_child(capsel_t pid);
 
 	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
+	void build_hip(Child *c,const ChildConfig &config);
 
 	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
 	void map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type);
