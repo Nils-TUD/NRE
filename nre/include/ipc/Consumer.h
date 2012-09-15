@@ -21,6 +21,8 @@
 #include <util/Sync.h>
 #include <util/Math.h>
 
+#include <stream/Serial.h>
+
 namespace nre {
 
 template<typename T>
@@ -57,7 +59,7 @@ public:
 	explicit Consumer(DataSpace *ds,bool init = false)
 		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
 		  _max(Math::prev_pow2((ds->size() - sizeof(Interface)) / sizeof(T))),
-		  _sm(_ds->sel(),true), _empty(_ds->unmapsel(),true), _stop(false) {
+		  _sm(_ds->sel(),true), _stop(false) {
 		if(init) {
 			_if->rpos = 0;
 			_if->wpos = 0;
@@ -108,7 +110,6 @@ public:
 				return 0;
 			// they might fail if someone revokes the Sm-caps
 			try {
-				_empty.up();
 				_sm.zero();
 			}
 			catch(...) {
@@ -124,10 +125,6 @@ public:
 	 */
 	void next() {
 		_if->rpos = (_if->rpos + 1) & (_max - 1);
-		if(((_if->wpos + 1) & (_max - 1)) == _if->rpos) {
-			Sync::memory_barrier();
-			_empty.up();
-		}
 	}
 
 private:
@@ -135,7 +132,6 @@ private:
 	Interface *_if;
 	size_t _max;
 	Sm _sm;
-	Sm _empty;
 	bool _stop;
 };
 

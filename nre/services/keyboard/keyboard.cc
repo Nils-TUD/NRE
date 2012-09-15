@@ -50,7 +50,7 @@ public:
 		if(_ds != 0)
 			throw Exception(E_EXISTS,"Keyboard session already initialized");
 		_ds = ds;
-		_prod = new Producer<T>(ds,false,false);
+		_prod = new Producer<T>(ds,false);
 	}
 
 private:

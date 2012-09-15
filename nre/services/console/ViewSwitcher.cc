@@ -31,7 +31,7 @@ char ViewSwitcher::_buffer[Screen::COLS + 1];
 
 ViewSwitcher::ViewSwitcher(ConsoleService *srv) : _sm(1),
 		_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-		_prod(&_ds,true,true), _cons(&_ds,false), _ec(switch_thread,CPU::current().log_id()),
+		_prod(&_ds,true), _cons(&_ds,false), _ec(switch_thread,CPU::current().log_id()),
 		_sc(&_ec,Qpd()), _srv(srv) {
 	_ec.set_tls<ViewSwitcher*>(Thread::TLS_PARAM,this);
 }

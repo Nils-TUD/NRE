@@ -70,7 +70,7 @@ public:
 		if(_ctrlds)
 			throw Exception(E_EXISTS,"Already initialized");
 		_ctrlds = ctrlds;
-		_prod = new Producer<Storage::Packet>(_ctrlds,false,false);
+		_prod = new Producer<Storage::Packet>(_ctrlds,false);
 		_datads = data;
 		_drive = drive;
 		mng->get(ctrl)->get_params(_drive,&_params);

@@ -162,7 +162,7 @@ static int shm_client(int,char *argv[]) {
 	Connection con("shm");
 	ClientSession sess(con);
 	DataSpace ds(ds_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
-	Producer<Item> prod(&ds,true,true);
+	Producer<Item> prod(&ds,true);
 	{
 		UtcbFrame uf;
 		uf.delegate(ds.sel());

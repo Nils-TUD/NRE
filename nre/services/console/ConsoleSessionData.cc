@@ -28,7 +28,7 @@ void ConsoleSessionData::create(DataSpace *in_ds,DataSpace *out_ds,uint pages) {
 	_in_ds = in_ds;
 	_out_ds = out_ds;
 	if(_in_ds)
-		_prod = new Producer<Console::ReceivePacket>(in_ds,false,false);
+		_prod = new Producer<Console::ReceivePacket>(in_ds,false);
 	_pages = pages;
 	_srv->session_ready(this);
 }
