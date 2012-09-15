@@ -77,14 +77,11 @@ void ViewSwitcher::switch_thread(void*) {
 			LOG(Logging::CONSOLE,
 					Serial::get() << "Got switch " << cmd->oldsessid << " to " << cmd->sessid << "\n");
 			// if there is an old one, make a backup and detach him from screen
-			if(cmd->oldsessid != (size_t)-1) {
-				assert(cmd->oldsessid == sessid);
+			if(cmd->oldsessid == sessid && until == 0) {
 				ScopedLock<RCULock> guard(&RCU::lock());
 				try {
-					ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(cmd->oldsessid);
-					// if we have already given him the screen, take it away
-					if(until == 0)
-						old->to_back();
+					ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
+					old->to_back();
 				}
 				catch(...) {
 					// just ignore it
