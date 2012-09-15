@@ -50,11 +50,12 @@ public:
 		uint nr;
 		cpu_t cpu;
 		nre::Sm *sm;
+		size_t sid;
 
-		explicit ClientData() : abstimeout(0), count(0), nr(0), cpu(0), sm(0) {
+		explicit ClientData() : abstimeout(0), count(0), nr(0), cpu(0), sm(0), sid() {
 		}
 
-		void init(cpu_t cpu,HostTimer::PerCpu *per_cpu);
+		void init(size_t sid,cpu_t cpu,HostTimer::PerCpu *per_cpu);
 	};
 
 private:
@@ -100,8 +101,8 @@ private:
 public:
 	explicit HostTimer(bool force_pit = false,bool force_hpet_legacy = false,bool slow_rtc = false);
 
-	void setup_clientdata(ClientData *data,cpu_t cpu) {
-		data->init(cpu,_per_cpu[cpu]);
+	void setup_clientdata(size_t sid,ClientData *data,cpu_t cpu) {
+		data->init(sid,cpu,_per_cpu[cpu]);
 	}
 
 	void program_timer(ClientData *data,timevalue_t time) {

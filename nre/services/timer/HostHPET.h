@@ -165,7 +165,18 @@ public:
 
 private:
 	static timevalue_t correct_overflow(timevalue_t last,uint32_t newv) {
-		bool of = (static_cast<uint32_t>(newv) < static_cast<uint32_t>(last));
+		// the problem is that e.g. in current_ticks() it might happen that we read the counter
+		// register and are interrupted by the scheduler before we read the last value. when we
+		// wake up, the read counter register might be smaller than the last value if the last
+		// value has been updated in between. thus, newv is smaller than last in this case, so that
+		// we think an overflow has happened. this causes us to add 1 to the upper 32-bit, which
+		// leads to a quite high value, so that we program a timeout that is quite far in the
+		// future.
+		// to prevent that (without using a lock here), we check the difference of the numbers. if
+		// its a real overflow, the difference should be really large. if it's that false overflow
+		// from above, its typically small.
+		bool of = (static_cast<uint32_t>(newv) < static_cast<uint32_t>(last) &&
+				static_cast<uint32_t>(last) - static_cast<uint32_t>(newv) > 100000000);
 		return (((last >> 32) + of) << 32) | newv;
 	}
 

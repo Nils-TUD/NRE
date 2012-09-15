@@ -28,10 +28,11 @@
 
 using namespace nre;
 
-void HostTimer::ClientData::init(cpu_t cpuno,HostTimer::PerCpu *per_cpu) {
+void HostTimer::ClientData::init(size_t _sid,cpu_t cpuno,HostTimer::PerCpu *per_cpu) {
 	sm = new nre::Sm(0);
 	nr = per_cpu->abstimeouts.alloc(this);
 	cpu = cpuno;
+	sid = _sid;
 }
 
 HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
@@ -181,6 +182,7 @@ bool HostTimer::per_cpu_client_request(PerCpu *per_cpu,ClientData *data) {
 	// XXX Set abstimeout to zero here?
 	// timer in the past?
 	if(t == 0) {
+		LOG(Logging::TIMER_DETAIL,Serial::get().writef("Timeout in past\n"));
 		data->sm->up();
 		return false;
 	}
@@ -246,6 +248,7 @@ again:
 		per_cpu->timer->program_timeout(next_to);
 		// Check whether we might have missed that interrupt.
 		if(ht->_timer->is_in_past(next_to)) {
+			LOG(Logging::TIMER_DETAIL,Serial::get().writef("Missed interrupt...goto again\n"));
 			m.type = WorkerMessage::TIMER_IRQ;
 			goto again;
 		}

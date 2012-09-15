@@ -32,7 +32,7 @@ public:
 	explicit TimerSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
 		: ServiceSession(s,id,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			timer->setup_clientdata(_data + it->log_id(),it->log_id());
+			timer->setup_clientdata(id,_data + it->log_id(),it->log_id());
 	}
 	virtual ~TimerSessionData() {
 		delete[] _data;
@@ -81,7 +81,7 @@ PORTAL static void portal_timer(capsel_t pid) {
 				uf.finish_input();
 
 				LOG(Logging::TIMER_DETAIL,Serial::get().writef(
-						"TIMER: (%u) Programming for %#Lx\n",sess->id(),time));
+						"TIMER: (%u) Programming for %#Lx on %u\n",sess->id(),time,CPU::current().log_id()));
 				timer->program_timer(sess->data(CPU::current().log_id()),time);
 				uf << E_SUCCESS;
 			}
