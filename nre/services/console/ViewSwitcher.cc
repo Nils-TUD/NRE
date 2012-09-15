@@ -65,7 +65,8 @@ void ViewSwitcher::switch_thread(void*) {
 				// finally swap to that session. i.e. give him direct screen access
 				sess->to_front();
 			}
-			catch(...) {
+			catch(const Exception &e) {
+				LOG(Logging::CONSOLE,Serial::get() << e);
 				// just ignore it
 			}
 			until = 0;
@@ -83,7 +84,8 @@ void ViewSwitcher::switch_thread(void*) {
 					ConsoleSessionData *old = vs->_srv->get_session_by_id<ConsoleSessionData>(sessid);
 					old->to_back();
 				}
-				catch(...) {
+				catch(const Exception &e) {
+					LOG(Logging::CONSOLE,Serial::get() << e);
 					// just ignore it
 				}
 			}
@@ -111,7 +113,7 @@ void ViewSwitcher::switch_thread(void*) {
 					// write tag into buffer
 					memset(_buffer,0,sizeof(_buffer));
 					OStringStream os(_buffer,sizeof(_buffer));
-					os << "Console " << sessid << "," << sess->page();
+					os << "Console " << sess->console() << ": " << sess->title() << " (" << sess->id() << ")";
 
 					// write console tag
 					char *screen = reinterpret_cast<char*>(start + sess->offset());
@@ -124,7 +126,8 @@ void ViewSwitcher::switch_thread(void*) {
 					tag_done = true;
 				}
 			}
-			catch(...) {
+			catch(const Exception &e) {
+				LOG(Logging::CONSOLE,Serial::get() << e);
 				// if the session is dead, stop switching to it
 				until = 0;
 				continue;

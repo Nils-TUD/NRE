@@ -22,11 +22,11 @@
 
 #include "ConsoleService.h"
 
-class ConsoleSessionData : public nre::ServiceSession {
+class ConsoleSessionData : public nre::ServiceSession, public nre::DListItem {
 public:
 	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t caps,nre::Pt::portal_func func)
-			: ServiceSession(srv,id,caps,func), _has_screen(false), _page(0),  _sm(),
-			  _in_ds(), _out_ds(), _prod(), _regs(), _pages(0), _srv(srv) {
+			: ServiceSession(srv,id,caps,func), DListItem(), _has_screen(false), _console(),
+			  _title(), _sm(), _in_ds(), _out_ds(), _prod(), _regs(), _srv(srv) {
 		_regs.offset = nre::Console::TEXT_OFF >> 1;
 		_regs.mode = 0;
 		_regs.cursor_pos = (nre::Console::ROWS - 1) * nre::Console::COLS + (nre::Console::TEXT_OFF >> 1);
@@ -43,16 +43,19 @@ public:
 			// ensure that we don't have the screen; the session might be destroyed before the
 			// viewswitcher can handle the switch and therefore, take away the screen, if necessary.
 			to_back();
-			// choose a different session
-			_srv->next();
 		}
+		// remove us from service
+		_srv->remove(this);
 	}
 
+	size_t console() const {
+		return _console;
+	}
+	const nre::String &title() const {
+		return _title;
+	}
 	size_t offset() const {
 		return _regs.offset << 1;
-	}
-	uint page() const {
-		return _page;
 	}
 	nre::Producer<nre::Console::ReceivePacket> *prod() {
 		return _prod;
@@ -61,20 +64,7 @@ public:
 		return _out_ds;
 	}
 
-	void prev() {
-		if(_pages != 0) {
-			set_page((_page - 1) % _pages);
-			_srv->switcher().switch_to(this,this);
-		}
-	}
-	void next() {
-		if(_pages != 0) {
-			set_page((_page + 1) % _pages);
-			_srv->switcher().switch_to(this,this);
-		}
-	}
-
-	void create(nre::DataSpace *in_ds,nre::DataSpace *out_ds,uint pages);
+	void create(nre::DataSpace *in_ds,nre::DataSpace *out_ds,size_t con,const nre::String &title);
 
 	void to_front() {
 		if(!_has_screen) {
@@ -93,9 +83,10 @@ public:
 		set_regs(_regs);
 	}
 
+	void set_page(uint page) {
+		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (page << 11);
+	}
 	void set_regs(const nre::Console::Register &regs) {
-		if(_pages != 0)
-			_page = (_regs.offset - (nre::Console::TEXT_OFF >> 1)) >> 11;
 		_regs = regs;
 		if(_srv->active() == this)
 			_srv->screen()->set_regs(_regs);
@@ -104,21 +95,17 @@ public:
 	PORTAL static void portal(capsel_t pid);
 
 private:
-	void set_page(uint page) {
-		_page = page;
-		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (_page << 11);
-	}
 	void swap() {
 		_out_ds->switch_to(_srv->screen()->mem());
 	}
 
 	bool _has_screen;
-	uint _page;
+	size_t _console;
+	nre::String _title;
 	nre::UserSm _sm;
 	nre::DataSpace *_in_ds;
 	nre::DataSpace *_out_ds;
 	nre::Producer<nre::Console::ReceivePacket> *_prod;
 	nre::Console::Register _regs;
-	uint _pages;
 	ConsoleService *_srv;
 };

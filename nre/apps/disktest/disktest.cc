@@ -59,7 +59,7 @@ static void prepare_buffer(const DataSpace &buffer,size_t offset,size_t size) {
 
 int main() {
 	Connection conscon("console");
-	ConsoleSession cons(conscon,1);
+	ConsoleSession cons(conscon,1,String("DiskTest"));
 	ConsoleStream s(cons,0);
 	s << "Welcome to the disk test program!\n\n";
 	s << "WARNING: This test will write on every sector of all harddisks!!!\n";

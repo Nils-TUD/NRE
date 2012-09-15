@@ -32,7 +32,7 @@ static Connection timercon("timer");
 static Connection sysinfocon("sysinfo");
 static SysInfoSession sysinfo(sysinfocon);
 static Connection conscon("console");
-static ConsoleSession cons(conscon,1);
+static ConsoleSession cons(conscon,0,String("SysInfo"));
 static size_t top = 0;
 
 static const char *getname(const String &name,size_t &len) {

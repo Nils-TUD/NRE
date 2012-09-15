@@ -410,7 +410,8 @@ static const char *argv_to_str(int argc,char *argv[]) {
 }
 
 int main(int argc,char *argv[]) {
-	Vancouver *v = new Vancouver(argv_to_str(argc,argv));
+	// TODO determine subcons
+	Vancouver *v = new Vancouver(argv_to_str(argc,argv),1);
 	v->reset();
 
 	Sm sm(0);

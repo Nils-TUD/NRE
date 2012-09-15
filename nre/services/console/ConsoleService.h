@@ -21,6 +21,7 @@
 #include <services/Keyboard.h>
 #include <services/Reboot.h>
 #include <util/Cycler.h>
+#include <util/DList.h>
 
 #include "Screen.h"
 #include "ViewSwitcher.h"
@@ -29,24 +30,23 @@ class ConsoleSessionData;
 
 class ConsoleService : public nre::Service {
 public:
-	typedef nre::SessionIterator<ConsoleSessionData> iterator;
+	typedef nre::DList<ConsoleSessionData>::iterator iterator;
 
 	ConsoleService(const char *name);
 
 	ConsoleSessionData *active() {
-		iterator it = _sess_cycler.current();
-		return it != sessions_end() ? &*it : 0;
+		if(_concyc[_console] == 0)
+			return 0;
+		iterator it = _concyc[_console]->current();
+		return it != _cons[_console]->end() ? &*it : 0;
 	}
 
-	void prev();
-	void next();
-
-	iterator sessions_begin() {
-		return Service::sessions_begin<ConsoleSessionData>();
-	}
-	iterator sessions_end() {
-		return Service::sessions_end<ConsoleSessionData>();
-	}
+	void remove(ConsoleSessionData *sess);
+	void up();
+	void down();
+	void left();
+	void left_unlocked();
+	void right();
 
 	ViewSwitcher &switcher() {
 		return _switcher;
@@ -59,10 +59,14 @@ public:
 
 private:
 	virtual nre::ServiceSession *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
+	void create_dummy(uint page,const nre::String &title);
 
-	nre::Connection _con;
+	nre::Connection _rbcon;
 	nre::RebootSession _reboot;
 	Screen *_screen;
-	nre::Cycler<iterator> _sess_cycler;
+	size_t _console;
+	nre::DList<ConsoleSessionData> *_cons[nre::Console::SUBCONS];
+	nre::Cycler<iterator> *_concyc[nre::Console::SUBCONS];
+	nre::UserSm _sm;
 	ViewSwitcher _switcher;
 };

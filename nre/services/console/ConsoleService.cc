@@ -21,8 +21,8 @@
 using namespace nre;
 
 ConsoleService::ConsoleService(const char *name)
-	: Service(name,CPUSet(CPUSet::ALL),ConsoleSessionData::portal), _con("reboot"), _reboot(_con),
-	  _screen(new HostVGA()), _sess_cycler(sessions_begin(),sessions_end()), _switcher(this) {
+	: Service(name,CPUSet(CPUSet::ALL),ConsoleSessionData::portal), _rbcon("reboot"), _reboot(_rbcon),
+	  _screen(new HostVGA()), _cons(), _concyc(), _switcher(this) {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalThread *t = get_thread(it->log_id());
@@ -32,25 +32,60 @@ ConsoleService::ConsoleService(const char *name)
 	}
 
 	// add dummy session for boot screen and HV screen
-	ConsoleSessionData *sess = static_cast<ConsoleSessionData*>(new_session());
-	DataSpace *ds = new DataSpace(ExecEnv::PAGE_SIZE * Screen::PAGES,DataSpaceDesc::ANONYMOUS,
-			DataSpaceDesc::RW);
-	// copy screen to buffer
-	memcpy(reinterpret_cast<void*>(ds->virt()),reinterpret_cast<void*>(_screen->mem().virt()),
-			ExecEnv::PAGE_SIZE * Screen::PAGES);
-	sess->create(0,ds,2);
+	create_dummy(0,String("Bootloader"));
+	create_dummy(1,String("Hypervisor"));
 	_switcher.start();
 }
 
-void ConsoleService::prev() {
+void ConsoleService::create_dummy(uint page,const String &title) {
+	ConsoleSessionData *sess = static_cast<ConsoleSessionData*>(new_session());
+	sess->set_page(page);
+	DataSpace *ds = new DataSpace(ExecEnv::PAGE_SIZE * Screen::PAGES,DataSpaceDesc::ANONYMOUS,
+			DataSpaceDesc::RW);
+	memset(reinterpret_cast<void*>(ds->virt()),0,ExecEnv::PAGE_SIZE * Screen::PAGES);
+	memcpy(reinterpret_cast<void*>(ds->virt() + sess->offset()),
+			reinterpret_cast<void*>(_screen->mem().virt() + sess->offset()),
+			ExecEnv::PAGE_SIZE);
+	sess->create(0,ds,0,title);
+}
+
+void ConsoleService::up() {
+	ScopedLock<UserSm> guard(&_sm);
 	ConsoleSessionData *old = active();
-	iterator it = _sess_cycler.prev();
+	iterator it = _concyc[_console]->prev();
 	_switcher.switch_to(old,&*it);
 }
 
-void ConsoleService::next() {
+void ConsoleService::down() {
+	ScopedLock<UserSm> guard(&_sm);
 	ConsoleSessionData *old = active();
-	iterator it = _sess_cycler.next();
+	iterator it = _concyc[_console]->next();
+	_switcher.switch_to(old,&*it);
+}
+
+void ConsoleService::left() {
+	ScopedLock<UserSm> guard(&_sm);
+	left_unlocked();
+}
+
+void ConsoleService::left_unlocked() {
+	ConsoleSessionData *old = active();
+	do {
+		_console = (_console - 1) % Console::SUBCONS;
+	}
+	while(_cons[_console] == 0);
+	iterator it = _concyc[_console]->current();
+	_switcher.switch_to(old,&*it);
+}
+
+void ConsoleService::right() {
+	ScopedLock<UserSm> guard(&_sm);
+	ConsoleSessionData *old = active();
+	do {
+		_console = (_console + 1) % Console::SUBCONS;
+	}
+	while(_cons[_console] == 0);
+	iterator it = _concyc[_console]->current();
 	_switcher.switch_to(old,&*it);
 }
 
@@ -58,11 +93,42 @@ ServiceSession *ConsoleService::create_session(size_t id,capsel_t caps,Pt::porta
 	return new ConsoleSessionData(this,id,caps,func);
 }
 
+void ConsoleService::remove(ConsoleSessionData *sess) {
+	ScopedLock<UserSm> guard(&_sm);
+	size_t con = sess->console();
+	_cons[con]->remove(sess);
+	if(_cons[con]->length() == 0) {
+		delete _cons[con];
+		delete _concyc[con];
+		_cons[con] = 0;
+		_concyc[con] = 0;
+		if(_console == con)
+			left_unlocked();
+	}
+	else {
+		iterator it = _cons[con]->begin();
+		_concyc[con]->reset(it,it,_cons[con]->end());
+		if(_console == con)
+			_switcher.switch_to(0,&*it);
+	}
+}
+
 void ConsoleService::session_ready(ConsoleSessionData *sess) {
+	ScopedLock<UserSm> guard(&_sm);
 	ConsoleSessionData *old = active();
-	iterator it = iterator(this,sess->id());
-	_sess_cycler.reset(sessions_begin(),it,sessions_end());
-	_switcher.switch_to(old,&*it);
+	_console = sess->console();
+	if(_cons[_console] == 0) {
+		_cons[_console] = new nre::DList<ConsoleSessionData>();
+		_cons[_console]->append(sess);
+		_concyc[_console] = new Cycler<iterator>(
+				_cons[_console]->begin(),_cons[_console]->end());
+	}
+	else {
+		iterator it = _cons[_console]->append(sess);
+		_concyc[_console]->reset(
+				_cons[_console]->begin(),it,_cons[_console]->end());
+	}
+	_switcher.switch_to(old,sess);
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
@@ -74,21 +140,19 @@ bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
 			return true;
 
 		case Keyboard::VK_LEFT:
-			prev();
+			left();
 			return true;
 
 		case Keyboard::VK_RIGHT:
-			next();
+			right();
 			return true;
 
 		case Keyboard::VK_UP:
-			if(active())
-				active()->prev();
+			up();
 			return true;
 
 		case Keyboard::VK_DOWN:
-			if(active())
-				active()->next();
+			down();
 			return true;
 	}
 	return false;

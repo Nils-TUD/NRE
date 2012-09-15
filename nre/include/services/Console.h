@@ -41,7 +41,8 @@ public:
 		PAGES		= 32,
 		TEXT_OFF	= 0x18000,
 		TEXT_PAGES	= 8,
-		PAGE_SIZE	= 0x1000
+		PAGE_SIZE	= 0x1000,
+		SUBCONS		= 32,
 	};
 
 	/**
@@ -84,15 +85,17 @@ class ConsoleSession : public ClientSession {
 
 public:
 	/**
-	 * Creates a new session with given connection
+	 * Creates a new session with given connection. That is, it creates a new subconsole attached
+	 * to the given console.
 	 *
 	 * @param con the connection
-	 * @param pages the number of text-pages to let the user switch between (0 = no switching)
+	 * @param console the console to attach to
+	 * @param title the subconsole title
 	 */
-	explicit ConsoleSession(Connection &con,uint pages = 0)
+	explicit ConsoleSession(Connection &con,size_t console,const String &title)
 			: ClientSession(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
 			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
-		create(pages);
+		create(console,title);
 	}
 
 	/**
@@ -149,9 +152,9 @@ public:
 	}
 
 private:
-	void create(uint pages) {
+	void create(size_t console,const String &title) {
 		UtcbFrame uf;
-		uf << Console::CREATE << pages;
+		uf << Console::CREATE << console << title;
 		uf.delegate(_in_ds.sel(),0);
 		uf.delegate(_out_ds.sel(),1);
 		Pt pt(caps() + CPU::current().log_id());

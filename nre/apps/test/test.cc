@@ -97,16 +97,18 @@ static void writer(void*) {
 #endif
 
 static Connection *conscon;
-static ConsoleSession *conssess;
 static Connection *timercon;
 static TimerSession *timer;
 static UserSm sm;
 
 static void view0(void*) {
-	uint page = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
-	ConsoleStream view(*conssess,page % Console::TEXT_PAGES);
+	char title[64];
+	size_t subcon = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
+	OStringStream::format(title,sizeof(title),"Test-%zu",subcon);
+	ConsoleSession conssess(*conscon,subcon,String(title));
+	ConsoleStream view(conssess,0);
 	int i = 0;
-	while(1) {
+	while(i < 10000) {
 		//char c = view.read();
 		view << "Huhu, from page " << view.page() << ": " << i << "\n";
 		i++;
@@ -131,10 +133,9 @@ static void tick_thread(void*) {
 
 int main() {
 	conscon = new Connection("console");
-	conssess = new ConsoleSession(*conscon,CPU::count());
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		GlobalThread *gt = new GlobalThread(view0,it->log_id());
-		gt->set_tls<uint>(Thread::TLS_PARAM,it->log_id());
+		gt->set_tls<size_t>(Thread::TLS_PARAM,1 + it->log_id());
 		Sc *sc = new Sc(gt,Qpd());
 		sc->start(String("test-thread"));
 	}

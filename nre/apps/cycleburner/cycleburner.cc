@@ -302,7 +302,7 @@ int main() {
 	Connection timercon("timer");
 	TimerSession timer(timercon);
 	Connection conscon("console");
-	ConsoleSession console(conscon,1);
+	ConsoleSession console(conscon,1,String("CycleBurner"));
 
 	gen_sinlut();
 	gen_sqrtlut();

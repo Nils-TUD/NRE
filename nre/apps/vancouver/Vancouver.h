@@ -28,10 +28,11 @@
 
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
-	Vancouver(const char *args)
+	explicit Vancouver(const char *args,size_t subcon)
 			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
 			  _sc_input(&_lt_input,nre::Qpd()), _mb(), _timeouts(_mb),
-			  _conscon("console"), _conssess(_conscon,0), _stcon(),
+			  // TODO find a good name
+			  _conscon("console"), _conssess(_conscon,subcon,nre::String("VM")), _stcon(),
 			  _stdevs() {
 		// storage is optional
 		try {
