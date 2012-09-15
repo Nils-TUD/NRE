@@ -18,7 +18,7 @@ if [ "$NRE_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
 	gdb=gdbtui
 	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom"
+	export QEMU_FLAGS="-cpu phenom "
 elif [ "$NRE_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
 	gdb=x86_64-linux-gnu-gdbtui
@@ -159,7 +159,7 @@ case "$1" in
 		# terminates. to prevent that we use a small program (ignoreint) no block SIGINT,
 		# which replaces itself with the given program afterwards
 		$build/tools/ignoreint/ignoreint ./$2 --qemu="$QEMU" \
-			--build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS -S -s" > log.txt &
+			--build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s" > log.txt &
 		$gdb $build/bin/apps/${1#dbg=} --command=$tmp
 		rm -f $tmp
 		kill `pgrep qemu` 2>/dev/null
