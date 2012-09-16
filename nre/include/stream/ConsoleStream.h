@@ -38,7 +38,7 @@ public:
 	 * @param echo whether to echo read characters
 	 */
 	explicit ConsoleStream(ConsoleSession &sess,uint page = 0,bool echo = true)
-		: _sess(sess), _page(page), _pos(0), _echo(echo) {
+		: _sess(sess), _page(page), _pos(0), _color(0x0F), _echo(echo) {
 	}
 
 	/**
@@ -46,6 +46,34 @@ public:
 	 */
 	uint page() const {
 		return _page;
+	}
+
+	/**
+	 * @return the current color
+	 */
+	uint8_t color() const {
+		return _color;
+	}
+	/**
+	 * Sets the color to given value
+	 *
+	 * @param color the color
+	 */
+	void color(uint8_t color) {
+		_color = color;
+	}
+
+	/**
+	 * @return the current x-position on the screen
+	 */
+	uint x() const {
+		return _pos % Console::COLS;
+	}
+	/**
+	 * @return the current y-position on the screen
+	 */
+	uint y() const {
+		return _pos / Console::ROWS;
 	}
 
 	/**
@@ -61,7 +89,7 @@ public:
 	 * @param c the character
 	 */
 	virtual void write(char c) {
-		put(0x0F00 | c,_pos);
+		put((static_cast<ushort>(_color) << 8) | c,_pos);
 	}
 
 	/**
@@ -88,6 +116,7 @@ private:
 	ConsoleSession &_sess;
 	uint _page;
 	uint _pos;
+	uint8_t _color;
 	bool _echo;
 };
 
