@@ -329,7 +329,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 		if((value & EVENT_MASK) == EVENT_INIT)
 			_sipi = 0;
 
-		if((value & EVENT_MASK) == EVENT_SIPI)
+		if((value & EVENT_MASK) == EVENT_SIPI) {
 			/**
 			 * try to claim the SIPI field, if it is empty, we are waiting
 			 * for a SIPI. If it fails, somebody else was faster and we do
@@ -337,6 +337,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 			 */
 			if(Atomic::cmpxchg4b(&_sipi,0,value))
 				return;
+		}
 
 		Atomic::bit_or<volatile unsigned>(&_event,
 				STATE_WAKEUP | (value & (EVENT_MASK | EVENT_DEBUG | EVENT_HOST)));
@@ -367,7 +368,7 @@ public:
 		}
 
 		// BSP receives only legacy signals if the LAPIC is disabled
-		if(is_ap() || CPUID_EDX1 & (1 << 9))
+		if(is_ap() || (CPUID_EDX1 & (1 << 9)))
 			return false;
 
 		if(msg.type == MessageLegacy::INTR)
@@ -399,8 +400,8 @@ public:
 
 	bool receive(CpuMessage &msg) {
 		// TSC drift compensation
-		if(msg.type != CpuMessage::TYPE_CPUID_WRITE && msg.mtr_in & Mtd::TSC
-				&& ~msg.mtr_out & Mtd::TSC) {
+		if(msg.type != CpuMessage::TYPE_CPUID_WRITE && (msg.mtr_in & Mtd::TSC)
+				&& (~msg.mtr_out & Mtd::TSC)) {
 			COUNTER_INC("tsc adoption");
 			msg.cpu->tsc_off = _reset_tsc_off - msg.cpu->tsc_off;
 			msg.mtr_out |= Mtd::TSC;
@@ -410,7 +411,7 @@ public:
 			case CpuMessage::TYPE_CPUID:
 				return handle_cpuid(msg);
 			case CpuMessage::TYPE_CPUID_WRITE: {
-				unsigned reg = (msg.nr << 4) | msg.reg | msg.nr & 0x80000000;
+				unsigned reg = (msg.nr << 4) | msg.reg | (msg.nr & 0x80000000);
 				unsigned old;
 				if(CPUID_read(reg,old) && CPUID_write(reg,(old & msg.mask) | msg.value)) {
 					CPUID_read(reg,old);
