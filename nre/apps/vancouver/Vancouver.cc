@@ -430,9 +430,9 @@ int main(int argc,char *argv[]) {
 	size_t console = 1;
 	String constitle("VM");
 	for(int i = 1; i < argc; ++i) {
-		if(strncmp(argv[i],"console=",8) == 0)
+		if(strncmp(argv[i],"console:",8) == 0)
 			console = IStringStream::read_from<size_t>(argv[i] + 8);
-		else if(strncmp(argv[i],"constitle=",10) == 0)
+		else if(strncmp(argv[i],"constitle:",10) == 0)
 			constitle = String(argv[i] + 10);
 	}
 

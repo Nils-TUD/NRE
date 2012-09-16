@@ -42,7 +42,7 @@ Child::id_type VMConfig::start(ChildManager &cm,size_t console,cpu_t cpu) {
 	VMChildConfig cfg(_mods);
 	SList<Module>::iterator first = _mods.begin();
 	OStringStream os(args,sizeof(args));
-	os << first->args() << " console=" << console << " constitle=" << _name;
+	os << first->args() << " console:" << console << " constitle:" << _name;
 
 	Hip::mem_iterator mod = get_module(first->name());
 	DataSpace ds(mod->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mod->addr);
