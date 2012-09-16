@@ -125,6 +125,8 @@ case "$1" in
 		./tools/novaboot --build-dir="$PWD/$build" --iso -- $2
 		sed --in-place -e \
 			's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='`echo $build/ | sed -e 's/\//\\\\\//g'`'\2,/g' $bochscfg
+		sed --in-place -e \
+			's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='`echo $build/$2.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
 		bochs -f $bochscfg -q
 		;;
 	run)
