@@ -53,6 +53,17 @@ static void input_thread(void*) {
 					pages[page]->top(pages[page]->top() + 1);
 					changed = true;
 					break;
+				case Keyboard::VK_PGUP:
+					if(pages[page]->top() >= SysInfoPage::DATA_ROWS)
+						pages[page]->top(pages[page]->top() - SysInfoPage::DATA_ROWS);
+					else
+						pages[page]->top(0);
+					changed = true;
+					break;
+				case Keyboard::VK_PGDOWN:
+					pages[page]->top(pages[page]->top() + SysInfoPage::DATA_ROWS);
+					changed = true;
+					break;
 				case Keyboard::VK_LEFT:
 					page = (page - 1) % ARRAY_SIZE(pages);
 					changed = true;

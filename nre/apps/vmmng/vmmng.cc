@@ -64,7 +64,10 @@ static void refresh_console() {
 			uint8_t oldcol = cs.color();
 			if(vmidx == i)
 				cs.color(CUR_ROW_COLOR);
-			cs << "  [" << (i + 1) << "] on CPU " << c->cpu() << ": " << vm->cfg()->args();
+			size_t virt,phys;
+			c->reglist().memusage(virt,phys);
+			cs << "  [" << (i + 1) << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
+			cs << "K CFG:" << vm->cfg()->name();
 			while(cs.x() != 0)
 				cs << ' ';
 			if(vmidx == i)
