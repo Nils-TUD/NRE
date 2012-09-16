@@ -60,6 +60,7 @@ public:
 private:
 	virtual nre::ServiceSession *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
 	void create_dummy(uint page,const nre::String &title);
+	void switch_to(size_t console);
 
 	nre::Connection _rbcon;
 	nre::RebootSession _reboot;

@@ -89,6 +89,16 @@ void ConsoleService::right() {
 	_switcher.switch_to(old,&*it);
 }
 
+void ConsoleService::switch_to(size_t console) {
+	ScopedLock<UserSm> guard(&_sm);
+	if(_cons[console]) {
+		ConsoleSessionData *old = active();
+		_console = console;
+		iterator it = _concyc[_console]->current();
+		_switcher.switch_to(old,&*it);
+	}
+}
+
 ServiceSession *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
 	return new ConsoleSessionData(this,id,caps,func);
 }
@@ -132,27 +142,43 @@ void ConsoleService::session_ready(ConsoleSessionData *sess) {
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
-	if((~pk.flags & Keyboard::LCTRL) || (~pk.flags & Keyboard::RELEASE))
+	if(~pk.flags & Keyboard::LCTRL)
 		return false;
 	switch(pk.keycode) {
+		case Keyboard::VK_1...Keyboard::VK_9:
+			if(~pk.flags & Keyboard::RELEASE)
+				switch_to(1 + pk.keycode - Keyboard::VK_1);
+			return true;
+
+		case Keyboard::VK_0:
+		case Keyboard::VK_ESC:
+			if(~pk.flags & Keyboard::RELEASE)
+				switch_to(0);
+			return true;
+
 		case Keyboard::VK_END:
-			_reboot.reboot();
+			if(~pk.flags & Keyboard::RELEASE)
+				_reboot.reboot();
 			return true;
 
 		case Keyboard::VK_LEFT:
-			left();
+			if(~pk.flags & Keyboard::RELEASE)
+				left();
 			return true;
 
 		case Keyboard::VK_RIGHT:
-			right();
+			if(~pk.flags & Keyboard::RELEASE)
+				right();
 			return true;
 
 		case Keyboard::VK_UP:
-			up();
+			if(~pk.flags & Keyboard::RELEASE)
+				up();
 			return true;
 
 		case Keyboard::VK_DOWN:
-			down();
+			if(~pk.flags & Keyboard::RELEASE)
+				down();
 			return true;
 	}
 	return false;
