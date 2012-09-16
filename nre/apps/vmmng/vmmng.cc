@@ -139,7 +139,7 @@ static void input_thread(void*) {
 	}
 }
 
-static void refresh_thread() {
+static void refresh_thread(void*) {
 	Connection timercon("timer");
 	TimerSession timer(timercon);
 	Clock clock(1000);
@@ -167,9 +167,11 @@ int main() {
 	Sc *sc = new Sc(gt,Qpd());
 	sc->start(String("vmmng-input"));
 
-	VMMngService *srv = VMMngService::create("vmmanager");
-	srv->reg();
+	gt = new GlobalThread(refresh_thread,CPU::current().log_id());
+	sc = new Sc(gt,Qpd());
+	sc->start(String("vmmng-refresh"));
 
-	refresh_thread();
+	VMMngService *srv = VMMngService::create("vmmanager");
+	srv->start();
 	return 0;
 }

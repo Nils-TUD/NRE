@@ -30,6 +30,7 @@ ServiceCPUHandler::ServiceCPUHandler(Service* s,capsel_t pt,cpu_t cpu)
 	UtcbFrameRef ecuf(_service_ec.utcb());
 	// for session-identification
 	ecuf.accept_translates(s->_caps,Service::MAX_SESSIONS_ORDER + CPU::order());
+	ecuf.accept_delegates(0);
 }
 
 void ServiceCPUHandler::portal(capsel_t) {
@@ -40,10 +41,12 @@ void ServiceCPUHandler::portal(capsel_t) {
 		uf >> cmd;
 		switch(cmd) {
 			case ClientSession::OPEN: {
+				capsel_t cap = uf.get_delegated(0).offset();
 				uf.finish_input();
 
-				ServiceSession *sess = s->new_session();
-				uf.delegate(CapRange(sess->caps(),1 << CPU::order(),Crd::OBJ_ALL));
+				ServiceSession *sess = s->new_session(cap);
+				uf.delegate(CapRange(sess->portal_caps(),1 << CPU::order(),Crd::OBJ_ALL));
+				uf.accept_delegates();
 			}
 			break;
 

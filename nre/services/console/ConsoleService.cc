@@ -38,7 +38,7 @@ ConsoleService::ConsoleService(const char *name)
 }
 
 void ConsoleService::create_dummy(uint page,const String &title) {
-	ConsoleSessionData *sess = static_cast<ConsoleSessionData*>(new_session());
+	ConsoleSessionData *sess = static_cast<ConsoleSessionData*>(new_session(Pd::current()->sel()));
 	sess->set_page(page);
 	DataSpace *ds = new DataSpace(ExecEnv::PAGE_SIZE * Screen::PAGES,DataSpaceDesc::ANONYMOUS,
 			DataSpaceDesc::RW);
@@ -99,8 +99,9 @@ void ConsoleService::switch_to(size_t console) {
 	}
 }
 
-ServiceSession *ConsoleService::create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-	return new ConsoleSessionData(this,id,caps,func);
+ServiceSession *ConsoleService::create_session(size_t id,capsel_t cap,capsel_t caps,
+		Pt::portal_func func) {
+	return new ConsoleSessionData(this,id,cap,caps,func);
 }
 
 void ConsoleService::remove(ConsoleSessionData *sess) {

@@ -70,7 +70,8 @@ public:
 	enum Command {
 		REGISTER,
 		GET,
-		UNREGISTER
+		UNREGISTER,
+		CLIENT_DIED
 	};
 
 	/**
@@ -85,8 +86,8 @@ public:
 	explicit Service(const char *name,const CPUSet &cpus,Pt::portal_func portal)
 		: _regcaps(CapSelSpace::get().allocate(1 << CPU::order(),1 << CPU::order())),
 		  _caps(CapSelSpace::get().allocate(MAX_SESSIONS << CPU::order(),MAX_SESSIONS << CPU::order())),
-		  _sm(), _name(name), _func(portal), _insts(new ServiceCPUHandler*[CPU::count()]),
-		  _reg_cpus(cpus.get()), _sessions() {
+		  _sm(), _kill_sm(), _stop(false), _name(name), _func(portal),
+		  _insts(new ServiceCPUHandler*[CPU::count()]), _reg_cpus(cpus.get()), _sessions() {
 		for(size_t i = 0; i < CPU::count(); ++i) {
 			if(_reg_cpus.is_set(i))
 				_insts[i] = new ServiceCPUHandler(this,_regcaps + i,i);
@@ -111,23 +112,25 @@ public:
 	}
 
 	/**
-	 * Registers the service at the parent
+	 * Registers and starts the service
 	 */
-	void reg() {
-		UtcbFrame uf;
-		uf.delegate(CapRange(_regcaps,1 << CPU::order(),Crd::OBJ_ALL));
-		uf << REGISTER << String(_name) << _reg_cpus;
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
+	void start() {
+		_stop = false;
+		reg();
+		while(!_stop) {
+			_kill_sm->down();
+			check_sessions();
+		}
+		unreg();
 	}
+
 	/**
-	 * Unregisters the service at the parent
+	 * Requests a stop of the service loop
 	 */
-	void unreg() {
-		UtcbFrame uf;
-		uf << UNREGISTER << String(_name);
-		CPU::current().srv_pt().call(uf);
-		uf.check_reply();
+	void stop() {
+		_stop = true;
+		Sync::memory_barrier();
+		_kill_sm->up();
 	}
 
 	/**
@@ -201,22 +204,24 @@ protected:
 	/**
 	 * Creates a new session in a free slot.
 	 *
+	 * @param cap a cap of the client that will be valid as long as the client exists
 	 * @return the created session
 	 * @throws ServiceException if there are no free slots anymore
 	 */
-	ServiceSession *new_session();
+	ServiceSession *new_session(capsel_t cap);
 
 private:
 	/**
 	 * May be overwritten to create an inherited class from ServiceSession.
 	 *
 	 * @param id the session-id
+	 * @param cap a cap of the client that will be valid as long as the client exists
 	 * @param pts the capabilities
 	 * @param func the portal-function
 	 * @return the session-object
 	 */
-	virtual ServiceSession *create_session(size_t id,capsel_t pts,Pt::portal_func func) {
-		return new ServiceSession(this,id,pts,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t pts,Pt::portal_func func) {
+		return new ServiceSession(this,id,cap,pts,func);
 	}
 	/**
 	 * Is called after a session has been created and put into the corresponding slot. May be
@@ -225,6 +230,22 @@ private:
 	 * @param id the session-id
 	 */
 	virtual void created_session(UNUSED size_t id) {
+	}
+
+	void reg() {
+		UtcbFrame uf;
+		uf.accept_delegates(0);
+		uf.delegate(CapRange(_regcaps,1 << CPU::order(),Crd::OBJ_ALL));
+		uf << REGISTER << String(_name) << _reg_cpus;
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
+		_kill_sm = new Sm(uf.get_delegated(0).offset(),true);
+	}
+	void unreg() {
+		UtcbFrame uf;
+		uf << UNREGISTER << String(_name);
+		CPU::current().srv_pt().call(uf);
+		uf.check_reply();
 	}
 
 	void add_session(ServiceSession *sess) {
@@ -237,6 +258,7 @@ private:
 		RCU::invalidate(sess);
 		RCU::gc(true);
 	}
+	void check_sessions();
 	void destroy_session(capsel_t pid);
 
 	Service(const Service&);
@@ -245,6 +267,8 @@ private:
 	capsel_t _regcaps;
 	capsel_t _caps;
 	UserSm _sm;
+	Sm *_kill_sm;
+	bool _stop;
 	const char *_name;
 	Pt::portal_func _func;
 	ServiceCPUHandler **_insts;

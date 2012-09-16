@@ -378,7 +378,9 @@ void ChildManager::Portals::service(capsel_t pid) {
 		Child *c = cm->get_child(pid);
 		String name;
 		Service::Command cmd;
-		uf >> cmd >> name;
+		uf >> cmd;
+		if(cmd != Service::CLIENT_DIED)
+			uf >> name;
 		switch(cmd) {
 			case Service::REGISTER: {
 				BitField<Hip::MAX_CPUS> available;
@@ -387,8 +389,9 @@ void ChildManager::Portals::service(capsel_t pid) {
 				uf.finish_input();
 
 				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
-				cm->reg_service(c,cap,name,available);
+				capsel_t sm = cm->reg_service(c,cap,name,available);
 				uf.accept_delegates();
+				uf.delegate(sm);
 				uf << E_SUCCESS;
 			}
 			break;
@@ -410,6 +413,16 @@ void ChildManager::Portals::service(capsel_t pid) {
 
 				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
 				uf << E_SUCCESS << s->available();
+			}
+			break;
+
+			case Service::CLIENT_DIED: {
+				uf.finish_input();
+
+				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' says clients died\n");
+				cm->notify_services();
+
+				uf << E_SUCCESS;
 			}
 			break;
 		}
@@ -997,6 +1010,7 @@ void ChildManager::destroy_child(capsel_t pid) {
 	// (we need new portals at the same place, so that they have to be revoked first)
 	RCU::gc(true);
 	_child_count--;
+	notify_services();
 	Sync::memory_barrier();
 	_diesm.up();
 }

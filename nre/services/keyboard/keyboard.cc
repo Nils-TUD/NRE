@@ -34,8 +34,8 @@ enum {
 template<class T>
 class KeyboardSessionData : public ServiceSession {
 public:
-	explicit KeyboardSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _prod(), _ds() {
+	explicit KeyboardSessionData(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,cap,caps,func), _prod(), _ds() {
 	}
 	virtual ~KeyboardSessionData() {
 		delete _ds;
@@ -84,8 +84,8 @@ public:
 	}
 
 private:
-	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new KeyboardSessionData<T>(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
+		return new KeyboardSessionData<T>(this,id,cap,caps,func);
 	}
 };
 
@@ -170,6 +170,14 @@ PORTAL static void portal_mouse(capsel_t pid) {
 	}
 }
 
+static void mouseservice(void*) {
+	mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
+	GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
+	Sc *sc = new Sc(gt,Qpd());
+	sc->start(String("mouse-broadcast"));
+	mousesrv->start();
+}
+
 int main(int argc,char *argv[]) {
 	bool mouse = true;
 	int scset = 2;
@@ -192,15 +200,15 @@ int main(int argc,char *argv[]) {
 	hostkb->reset();
 
 	kbsrv = new KeyboardService<Keyboard::Packet>("keyboard",portal_keyboard);
-	kbsrv->reg();
 	if(hostkb->mouse_enabled()) {
-		mousesrv = new KeyboardService<Mouse::Packet>("mouse",portal_mouse);
-		GlobalThread *gt = new GlobalThread(mousehandler,CPU::current().log_id());
+		GlobalThread *gt = new GlobalThread(mouseservice,CPU::current().log_id());
 		Sc *sc = new Sc(gt,Qpd());
 		sc->start(String("mouse"));
-		mousesrv->reg();
 	}
 
-	kbhandler(0);
+	GlobalThread *gt = new GlobalThread(kbhandler,CPU::current().log_id());
+	Sc *sc = new Sc(gt,Qpd());
+	sc->start(String("keyboard-broadcast"));
+	kbsrv->start();
 	return 0;
 }

@@ -46,9 +46,9 @@ Log::Log() : BaseSerial(), _ports(PORT_BASE,6), _sm(1) {
 	_ports.out<uint8_t>(3,MCR);
 }
 
-void Log::reg() {
+void Log::start() {
 	_srv = new Service("log",CPUSet(CPUSet::ALL),portal);
-	_srv->reg();
+	_srv->start();
 }
 
 void Log::write(uint sessid,const char *line,size_t len) {

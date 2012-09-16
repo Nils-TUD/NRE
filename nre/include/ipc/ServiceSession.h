@@ -39,11 +39,12 @@ public:
 	 *
 	 * @param s the service-instance
 	 * @param id the id of this session
+	 * @param cap a cap of the client that will be valid as long as the client exists
 	 * @param pts the portal selectors
 	 * @param func the portal function
 	 * 	Otherwise, portals are created
 	 */
-	explicit ServiceSession(Service *s,size_t id,capsel_t pts,Pt::portal_func func);
+	explicit ServiceSession(Service *s,size_t id,capsel_t cap,capsel_t pts,Pt::portal_func func);
 	/**
 	 * Destroyes this session
 	 */
@@ -60,9 +61,15 @@ public:
 		return _id;
 	}
 	/**
+	 * @return a cap of the client that will be valid as long as the client exists
+	 */
+	capsel_t cap() const {
+		return _cap;
+	}
+	/**
 	 * @return the capabilities
 	 */
-	capsel_t caps() const {
+	capsel_t portal_caps() const {
 		return _caps;
 	}
 
@@ -76,6 +83,7 @@ protected:
 
 private:
 	size_t _id;
+	capsel_t _cap;
 	capsel_t _caps;
 	Pt **_pts;
 };

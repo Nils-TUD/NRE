@@ -20,9 +20,9 @@
 
 using namespace nre;
 
-int main() {
-	ConsoleService *srv = new ConsoleService("console");
-	srv->reg();
+static ConsoleService *srv;
+
+static void input_thread(void*) {
 	Connection con("keyboard");
 	KeyboardSession kb(con);
 	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
@@ -39,5 +39,15 @@ int main() {
 			}
 		}
 	}
+}
+
+int main() {
+	srv = new ConsoleService("console");
+
+	GlobalThread gt(input_thread,CPU::current().log_id());
+	Sc sc(&gt,Qpd());
+	sc.start(String("console-input"));
+
+	srv->start();
 	return 0;
 }

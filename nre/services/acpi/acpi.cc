@@ -92,8 +92,6 @@ int main() {
 	}
 
 	Service *srv = new Service("acpi",CPUSet(CPUSet::ALL),portal_acpi);
-	srv->reg();
-	Sm sm(0);
-	sm.down();
+	srv->start();
 	return 0;
 }

@@ -100,6 +100,7 @@ static Connection *conscon;
 static Connection *timercon;
 static TimerSession *timer;
 static UserSm sm;
+static Sm done(0);
 
 static void view0(void*) {
 	char title[64];
@@ -113,6 +114,7 @@ static void view0(void*) {
 		view << "Huhu, from page " << view.page() << ": " << i << "\n";
 		i++;
 	}
+	done.up();
 }
 
 static void tick_thread(void*) {
@@ -139,6 +141,10 @@ int main() {
 		Sc *sc = new Sc(gt,Qpd());
 		sc->start(String("test-thread"));
 	}
+
+	// wait until all are finished
+	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+		done.down();
 
 	/*
 	{
@@ -202,8 +208,5 @@ int main() {
 		Sc *sc = new Sc(new GlobalThread(read,it->id),Qpd());
 		sc->start();
 	}*/
-
-	Sm sm(0);
-	sm.down();
 	return 0;
 }

@@ -70,6 +70,11 @@ private:
 		UtcbFrame uf;
 		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
 		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
+		// we delegate our pd-cap because it will be revoked if we get killed. of course, the service
+		// can't validate that easily whether its our pd-cap. later, this doesn't matter because
+		// NOVA will revoke all caps of this Pd. until that is implemented, we use something that
+		// is explicitly revoked by the parent.
+		uf.delegate(Pd::current()->sel());
 		uf << OPEN;
 		con.pt(CPU::current().log_id())->call(uf);
 		uf.check_reply();

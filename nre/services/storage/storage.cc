@@ -35,8 +35,8 @@ static StorageService *srv;
 
 class StorageServiceSession : public ServiceSession {
 public:
-	explicit StorageServiceSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _ctrlds(), _prod(), _datads(), _drive() {
+	explicit StorageServiceSession(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,cap,caps,func), _ctrlds(), _prod(), _datads(), _drive() {
 	}
 	virtual ~StorageServiceSession() {
 		delete _ctrlds;
@@ -97,8 +97,8 @@ public:
 	}
 
 private:
-	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new StorageServiceSession(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
+		return new StorageServiceSession(this,id,cap,caps,func);
 	}
 
 	PORTAL static void portal(capsel_t pid);
@@ -199,8 +199,6 @@ int main(int argc,char *argv[]) {
 
 	mng = new ControllerMng(idedma);
 	srv = new StorageService("storage");
-	srv->reg();
-	Sm sm(0);
-	sm.down();
+	srv->start();
 	return 0;
 }

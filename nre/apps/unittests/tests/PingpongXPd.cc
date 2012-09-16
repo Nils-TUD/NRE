@@ -41,8 +41,8 @@ static PingpongService *srv;
 
 class PingpongSession : public ServiceSession {
 public:
-	explicit PingpongSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func) {
+	explicit PingpongSession(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,cap,caps,func) {
 	}
 
 	virtual void invalidate();
@@ -50,28 +50,19 @@ public:
 
 class PingpongService : public Service {
 public:
-	explicit PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal), _sm(0) {
-	}
-
-	void wait() {
-		_sm.down();
-	}
-	void notify() {
-		_sm.up();
+	explicit PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal) {
 	}
 
 private:
-	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new PingpongSession(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
+		return new PingpongSession(this,id,cap,caps,func);
 	}
 
 	PORTAL static void portal(capsel_t pid);
-
-	Sm _sm;
 };
 
 void PingpongSession::invalidate() {
-	srv->notify();
+	srv->stop();
 }
 
 void PingpongService::portal(capsel_t) {
@@ -89,9 +80,7 @@ void PingpongService::portal(capsel_t) {
 
 static int pingpong_server() {
 	srv = new PingpongService();
-	srv->reg();
-	srv->wait();
-	srv->unreg();
+	srv->start();
 	delete srv;
 	return 0;
 }

@@ -58,7 +58,8 @@ public:
 	bool handle_keyevent(const nre::Keyboard::Packet &pk);
 
 private:
-	virtual nre::ServiceSession *create_session(size_t id,capsel_t caps,nre::Pt::portal_func func);
+	virtual nre::ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,
+			nre::Pt::portal_func func);
 	void create_dummy(uint page,const nre::String &title);
 	void switch_to(size_t console);
 

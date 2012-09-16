@@ -51,7 +51,7 @@ public:
 		 */
 		explicit Service(Child *child,const String &name,capsel_t pts,size_t count,
 				const BitField<Hip::MAX_CPUS> &available)
-			: SListItem(), _child(child), _name(name), _pts(pts), _count(count),
+			: SListItem(), _child(child), _name(name), _pts(pts), _count(count), _sm(0),
 			  _available(available) {
 		}
 		/**
@@ -87,12 +87,22 @@ public:
 		capsel_t pts() const {
 			return _pts;
 		}
+		/**
+		 * A semaphore that can be used to notify the service about potentially destroyed sessions
+		 */
+		Sm &sm() {
+			return _sm;
+		}
+		const Sm &sm() const {
+			return _sm;
+		}
 
 	private:
 		Child *_child;
 		String _name;
 		capsel_t _pts;
 		size_t _count;
+		Sm _sm;
 		BitField<Hip::MAX_CPUS> _available;
 	};
 

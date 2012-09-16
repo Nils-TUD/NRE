@@ -49,7 +49,7 @@ public:
 	static Log &get() {
 		return _inst;
 	}
-	void reg();
+	void start();
 
 private:
 	explicit Log();

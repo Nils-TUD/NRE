@@ -18,6 +18,7 @@
 
 #include <kobj/Pt.h>
 #include <kobj/LocalThread.h>
+#include <ipc/Service.h>
 #include <subsystem/ServiceRegistry.h>
 #include <subsystem/ChildConfig.h>
 #include <mem/DataSpaceManager.h>
@@ -93,8 +94,8 @@ public:
 		return _registry;
 	}
 
-	void reg_service(capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
-		reg_service(0,cap,name,available);
+	capsel_t reg_service(capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
+		return reg_service(0,cap,name,available);
 	}
 
 	void unreg_service(const String& name) {
@@ -135,20 +136,32 @@ private:
 			if(!_startup_info.child)
 				throw ChildException(E_NOT_FOUND,64,"Unable to find service '%s'",name.str());
 			BitField<Hip::MAX_CPUS> available;
-			capsel_t caps = get_parent_service(name.str(),available);
-			s = _registry.reg(0,name,caps,1 << CPU::order(),available);
+			capsel_t pts = get_parent_service(name.str(),available);
+			s = _registry.reg(0,name,pts,1 << CPU::order(),available);
 			_regsm.up();
 		}
 		return s;
 	}
-	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
+	capsel_t reg_service(Child *c,capsel_t pts,const String& name,
+			const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
-		_registry.reg(c,name,cap,1 << CPU::order(),available);
+		const ServiceRegistry::Service *srv = _registry.reg(c,name,pts,1 << CPU::order(),available);
 		_regsm.up();
+		return srv->sm().sel();
 	}
 	void unreg_service(Child *c,const String& name) {
 		ScopedLock<UserSm> guard(&_sm);
 		_registry.unreg(c,name);
+	}
+	void notify_services() {
+		{
+			ScopedLock<UserSm> guard(&_sm);
+			for(ServiceRegistry::iterator it = _registry.begin(); it != _registry.end(); ++it)
+				it->sm().up();
+		}
+		UtcbFrame uf;
+		uf << Service::CLIENT_DIED;
+		CPU::current().srv_pt().call(uf);
 	}
 
 	void term_child(capsel_t pid,UtcbExcFrameRef &uf);

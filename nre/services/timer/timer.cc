@@ -29,8 +29,8 @@ static TimerService *srv;
 
 class TimerSessionData : public ServiceSession {
 public:
-	explicit TimerSessionData(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
+	explicit TimerSessionData(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,cap,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
 			timer->setup_clientdata(id,_data + it->log_id(),it->log_id());
 	}
@@ -53,8 +53,8 @@ public:
 	}
 
 private:
-	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new TimerSessionData(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
+		return new TimerSessionData(this,id,cap,caps,func);
 	}
 };
 
@@ -120,8 +120,6 @@ int main(int argc,char *argv[]) {
 
 	timer = new HostTimer(forcepit,forcehpetlegacy,slowrtc);
 	srv = new TimerService("timer",portal_timer);
-	srv->reg();
-	Sm sm(0);
-	sm.down();
+	srv->start();
 	return 0;
 }

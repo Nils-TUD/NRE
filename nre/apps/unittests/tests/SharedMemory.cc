@@ -33,7 +33,7 @@ using namespace nre::test;
 
 enum {
 	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,
-	ITEM_COUNT	= 1000000,
+	ITEM_COUNT	= 1000,
 	WORD_COUNT	= 1,
 };
 
@@ -51,8 +51,9 @@ static ShmService *srv;
 
 class ShmSession : public ServiceSession {
 public:
-	explicit ShmSession(Service *s,size_t id,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,caps,func), _ec(receiver,CPU::current().log_id()), _sc(), _cons(), _ds() {
+	explicit ShmSession(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
+		: ServiceSession(s,id,cap,caps,func), _ec(receiver,CPU::current().log_id()), _sc(),
+		  _cons(), _ds() {
 		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
 	virtual ~ShmSession() {
@@ -85,26 +86,17 @@ private:
 
 class ShmService : public Service {
 public:
-	explicit ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal), _sm(0) {
+	explicit ShmService() : Service("shm",CPUSet(CPUSet::ALL),portal) {
 		UtcbFrameRef uf(get_thread(CPU::current().log_id())->utcb());
 		uf.accept_delegates(0);
-	}
-
-	void wait() {
-		_sm.down();
-	}
-	void notify() {
-		_sm.up();
 	}
 
 private:
 	PORTAL static void portal(capsel_t pid);
 
-	virtual ServiceSession *create_session(size_t id,capsel_t caps,Pt::portal_func func) {
-		return new ShmSession(this,id,caps,func);
+	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
+		return new ShmSession(this,id,cap,caps,func);
 	}
-
-	Sm _sm;
 };
 
 void ShmService::portal(capsel_t pid) {
@@ -123,7 +115,6 @@ void ShmService::portal(capsel_t pid) {
 }
 
 void ShmSession::invalidate() {
-	srv->notify();
 	if(_cons)
 		_cons->stop();
 }
@@ -142,7 +133,7 @@ void ShmSession::receiver(void*) {
 		cons->next();
 	}
 	WVPASSEQ(count,static_cast<size_t>(ITEM_COUNT));
-	srv->notify();
+	srv->stop();
 }
 
 static int shm_service(int argc,char *argv[]) {
@@ -150,9 +141,7 @@ static int shm_service(int argc,char *argv[]) {
 		Serial::get() << "arg " << i << ": " << argv[i] << "\n";
 
 	srv = new ShmService();
-	srv->reg();
-	srv->wait();
-	srv->unreg();
+	srv->start();
 	delete srv;
 	return 0;
 }
@@ -172,8 +161,10 @@ static int shm_client(int,char *argv[]) {
 	}
 	Item i;
 	uint64_t start = Util::tsc();
-	for(uint x = 0; x < ITEM_COUNT; ++x)
-		prod.produce(i);
+	for(uint x = 0; x < ITEM_COUNT; ) {
+		if(prod.produce(i))
+			x++;
+	}
 	uint64_t end = Util::tsc();
 	uint64_t total = end - start;
 	uint64_t avg = total / ITEM_COUNT;

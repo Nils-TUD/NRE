@@ -126,8 +126,6 @@ int main() {
 	}
 
 	Service *srv = new Service("pcicfg",CPUSet(CPUSet::ALL),portal_pcicfg);
-	srv->reg();
-	Sm sm(0);
-	sm.down();
+	srv->start();
 	return 0;
 }

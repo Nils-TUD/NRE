@@ -24,8 +24,9 @@
 
 class ConsoleSessionData : public nre::ServiceSession, public nre::DListItem {
 public:
-	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t caps,nre::Pt::portal_func func)
-			: ServiceSession(srv,id,caps,func), DListItem(), _has_screen(false), _console(),
+	ConsoleSessionData(ConsoleService *srv,size_t id,capsel_t cap,capsel_t caps,
+			nre::Pt::portal_func func)
+			: ServiceSession(srv,id,cap,caps,func), DListItem(), _has_screen(false), _console(),
 			  _title(), _sm(), _in_ds(), _out_ds(), _prod(), _regs(), _srv(srv) {
 		_regs.offset = nre::Console::TEXT_OFF >> 1;
 		_regs.mode = 0;

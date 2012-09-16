@@ -50,6 +50,8 @@ class CPU0Init {
 };
 
 EXTERN_C void dlmalloc_init();
+static void log_thread(void*);
+static void sysinfo_thread(void*);
 PORTAL static void portal_service(capsel_t);
 PORTAL static void portal_pagefault(capsel_t);
 PORTAL static void portal_startup(capsel_t pid);
@@ -193,15 +195,35 @@ int main() {
 	}
 
 	mng = new ChildManager();
-	Log::get().reg();
-	SysInfoService *sysinfo = new SysInfoService();
-	sysinfo->reg();
+	{
+		GlobalThread *gt = new GlobalThread(log_thread,CPU::current().log_id());
+		Sc *sc = new Sc(gt,Qpd());
+		sc->start(String("root-log"));
+	}
+	{
+		GlobalThread *gt = new GlobalThread(sysinfo_thread,CPU::current().log_id());
+		Sc *sc = new Sc(gt,Qpd());
+		sc->start(String("root-sysinfo"));
+	}
+
+	// wait until log and sysinfo are registered
+	while(mng->registry().find(String("log")) == 0 || mng->registry().find(String("sysinfo")) == 0)
+		Util::pause();
 
 	start_childs();
 
 	Sm sm(0);
 	sm.down();
 	return 0;
+}
+
+static void log_thread(void*) {
+	Log::get().start();
+}
+
+static void sysinfo_thread(void*) {
+	SysInfoService *sysinfo = new SysInfoService();
+	sysinfo->start();
 }
 
 static void start_childs() {
@@ -240,14 +262,16 @@ static void portal_service(capsel_t) {
 				uf >> available;
 				uf.finish_input();
 
-				mng->reg_service(cap,name,available);
+				capsel_t sm = mng->reg_service(cap,name,available);
 				uf.accept_delegates();
+				uf.delegate(sm);
 				uf << E_SUCCESS;
 			}
 			break;
 
 			case Service::GET:
 			case Service::UNREGISTER:
+			case Service::CLIENT_DIED:
 				uf.clear();
 				uf << E_NOT_FOUND;
 				break;
