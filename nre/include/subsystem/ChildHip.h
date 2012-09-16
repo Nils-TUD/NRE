@@ -22,16 +22,39 @@
 
 namespace nre {
 
+/**
+ * This class allows to configure the Hip for a child Pd.
+ */
 class ChildHip : public Hip {
 public:
+	/**
+	 * Creates a basic Hip for a Child based on your Hip
+	 *
+	 * @param cpuset the CPUs to mark available
+	 */
 	explicit ChildHip(const CPUSet &cpuset = CPUSet(CPUSet::ALL)) : cpus(), reserved() {
 		// the cast is necessary to access the protected members of Hip
 		copy(static_cast<const ChildHip&>(Hip::get()),cpuset);
 	}
 
+	/**
+	 * Adds a module with given parameters to the memory list
+	 *
+	 * @param addr the physical address
+	 * @param size the size (in bytes)
+	 * @param cmdline the command line
+	 */
 	void add_module(uint64_t addr,uint64_t size,const char *cmdline) {
 		add_mem(addr,size,reinterpret_cast<word_t>(cmdline),HipMem::MB_MODULE);
 	}
+	/**
+	 * Adds a memory item to the list.
+	 *
+	 * @param addr the physical address
+	 * @param size the size (in bytes)
+	 * @param aux the aux field (the commandline for modules)
+	 * @param type the type of item
+	 */
 	void add_mem(uint64_t addr,uint64_t size,word_t aux,int32_t type) {
 		assert(size > 0);
 		size_t i = memcount();
@@ -43,6 +66,9 @@ public:
 		mems[i].aux = aux;
 	}
 
+	/**
+	 * Finalizes the Hip, i.e. calculates the length and the checksum
+	 */
 	void finalize() {
 		length = mem_offs + memcount() * mem_size;
 		checksum = calc_checksum();

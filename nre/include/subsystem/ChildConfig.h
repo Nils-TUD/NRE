@@ -21,18 +21,31 @@
 
 namespace nre {
 
+/**
+ * This class is used to configure a child. You can specify the CPUs presented to him, the
+ * main-function and the modules. Later this will also be used to restrict access to resources.
+ * You may create a subclass to have more flexibility regarding the modules.
+ */
 class ChildConfig {
 public:
 	enum ModuleAccess {
-		OWN,
-		FOLLOWING
+		OWN,				// access only to its own module
+		FOLLOWING			// access to its own and all following modules
 	};
 
+	/**
+	 * Creates a new child config for the module <no> in Hip
+	 *
+	 * @param no the number of the module in Hip
+	 */
 	explicit ChildConfig(size_t no) : _no(no), _modaccess(OWN), _cpus(), _entry(0) {
 	}
 	virtual ~ChildConfig() {
 	}
 
+	/**
+	 * @return the CPUs that should be marked available in the Hip
+	 */
 	const CPUSet &cpus() const {
 		return _cpus;
 	}
@@ -40,6 +53,9 @@ public:
 		_cpus = cpus;
 	}
 
+	/**
+	 * The entry of the module, i.e. the main-function to call
+	 */
 	uintptr_t entry() const {
 		return _entry;
 	}
@@ -47,12 +63,21 @@ public:
 		_entry = entry;
 	}
 
+	/**
+	 * Sets the module access type
+	 */
 	void module_access(ModuleAccess access) {
 		_modaccess = access;
 	}
+	/**
+	 * @return true if it should get the module <i>
+	 */
 	virtual bool has_module_access(size_t i) const {
 		return (_modaccess == OWN) ? (i == _no) : (i >= _no);
 	}
+	/**
+	 * @return the command line of module <i>
+	 */
 	virtual const char *module_cmdline(size_t i) const {
 		Hip::mem_iterator mem = Hip::get().mem_begin() + i;
 		if(mem->type == HipMem::MB_MODULE)
