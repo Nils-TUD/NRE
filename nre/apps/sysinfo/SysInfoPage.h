@@ -45,9 +45,9 @@ public:
 protected:
 	void display_footer(nre::ConsoleStream &cs,size_t i) {
 		cs.pos(0,nre::Console::ROWS - 1);
-		cs.color(i == 0 ? 0xF0 : 0x70);
+		cs.color(i == 0 ? 0x17 : 0x71);
 		cs.writef("%*s",nre::Console::COLS / 2,"Threads");
-		cs.color(i == 1 ? 0xF0 : 0x70);
+		cs.color(i == 1 ? 0x17 : 0x71);
 		cs.writef("%*s",nre::Console::COLS / 2,"Childs");
 	}
 
