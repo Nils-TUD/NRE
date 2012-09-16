@@ -29,8 +29,9 @@ void ThreadInfoPage::refresh_console(bool update) {
 	cs.writef("%*s: ",MAX_NAME_LEN,"CPU");
 	for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
 		cs.writef("%*u ",MAX_TIME_LEN - 1,cpu->log_id());
+	cs.writef("%*s",MAX_SUMTIME_LEN + 1,"Total");
 	cs.writef("\n");
-	for(int i = 0; i < Console::COLS - 2; i++)
+	for(int i = 0; i < Console::COLS - 1; i++)
 		cs << '-';
 	cs << '\n';
 
@@ -47,6 +48,7 @@ void ThreadInfoPage::refresh_console(bool update) {
 
 		size_t namelen = 0;
 		const char *name = getname(tu.name(),namelen);
+		namelen = Math::min<size_t>(namelen,MAX_NAME_LEN);
 		// writef doesn't support floats, so calculate it with 1000 as base and use the last decimal
 		// for the first fraction-digit.
 		timevalue_t permil;
@@ -54,8 +56,9 @@ void ThreadInfoPage::refresh_console(bool update) {
 			permil = 0;
 		else
 			permil = (timevalue_t)(1000 / ((float)cputotal[tu.cpu()] / tu.time()));
-		cs.writef("%*.*s: %*s%3Lu.%Lu\n",MAX_NAME_LEN,namelen,name,tu.cpu() * MAX_TIME_LEN,"",
-				permil / 10,permil % 10);
+		cs.writef("%*.*s: %*s%3Lu.%Lu%*s%*Lums\n",MAX_NAME_LEN,namelen,name,tu.cpu() * MAX_TIME_LEN,"",
+				permil / 10,permil % 10,(CPU::count() - tu.cpu() - 1) * MAX_TIME_LEN,"",
+				MAX_SUMTIME_LEN,tu.totaltime() / 1000);
 	}
 	display_footer(cs,0);
 }

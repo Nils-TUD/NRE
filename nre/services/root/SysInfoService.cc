@@ -54,11 +54,11 @@ void SysInfoService::portal(capsel_t) {
 
 				String name;
 				cpu_t cpu = 0;
-				timevalue_t time = 0;
-				bool res = Admission::get_sched_entity(idx,name,cpu,time);
+				timevalue_t total = 0,time = 0;
+				bool res = Admission::get_sched_entity(idx,name,cpu,time,total);
 				uf << E_SUCCESS;
 				if(res)
-					uf << true << name << cpu << time;
+					uf << true << name << cpu << time << total;
 				else
 					uf << false;
 			}
@@ -69,12 +69,9 @@ void SysInfoService::portal(capsel_t) {
 				uf >> idx;
 				uf.finish_input();
 
-				if(idx >= ChildManager::MAX_CHILDS)
-					throw Exception(E_ARGS_INVALID,32,"Invalid child index %zu",idx);
-
 				size_t virt,phys;
 				ScopedLock<RCULock> guard(&RCU::lock());
-				const Child *c = srv->_cm->get_at(idx);
+				const Child *c = idx >= ChildManager::MAX_CHILDS ? 0 : srv->_cm->get_at(idx);
 				if(c) {
 					size_t threads = c->scs().length();
 					c->reglist().memusage(virt,phys);

@@ -35,7 +35,7 @@ public:
 	class TimeUser {
 		friend class SysInfoSession;
 	public:
-		explicit TimeUser() : _name(), _cpu(), _time() {
+		explicit TimeUser() : _name(), _cpu(), _time(), _totaltime() {
 		}
 
 		/**
@@ -51,16 +51,23 @@ public:
 			return _cpu;
 		}
 		/**
-		 * @return the total time run so far (in microseconds)
+		 * @return the time run since the last update (in microseconds)
 		 */
 		timevalue_t time() const {
 			return _time;
+		}
+		/**
+		 * @return the total time run so far (in microseconds)
+		 */
+		timevalue_t totaltime() const {
+			return _totaltime;
 		}
 
 	private:
 		nre::String _name;
 		cpu_t _cpu;
 		timevalue_t _time;
+		timevalue_t _totaltime;
 	};
 
 	/**
@@ -175,7 +182,7 @@ public:
 		uf >> found;
 		if(!found)
 			return false;
-		uf >> tu._name >> tu._cpu >> tu._time;
+		uf >> tu._name >> tu._cpu >> tu._time >> tu._totaltime;
 		return true;
 	}
 

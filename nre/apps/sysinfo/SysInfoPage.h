@@ -22,9 +22,9 @@
 class SysInfoPage {
 public:
 	enum {
-		MAX_NAME_LEN	= 20,
-		MAX_TIME_LEN	= 6,
-		ROWS			= nre::Console::ROWS - 3
+		MAX_NAME_LEN	= 16,
+		ROWS			= nre::Console::ROWS - 3,
+		DATA_ROWS		= ROWS - 2
 	};
 
 	explicit SysInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
@@ -73,6 +73,10 @@ protected:
 };
 
 class ThreadInfoPage : public SysInfoPage {
+	enum {
+		MAX_TIME_LEN	= 6,
+		MAX_SUMTIME_LEN	= 12,
+	};
 public:
 	explicit ThreadInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
 		: SysInfoPage(cons,sysinfo) {

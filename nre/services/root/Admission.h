@@ -53,6 +53,9 @@ class Admission {
 			_lastdiff = res;
 			return res;
 		}
+		timevalue_t totaltime() const {
+			return _last;
+		}
 
 	private:
 		nre::String _name;
@@ -77,7 +80,8 @@ public:
 		return total;
 	}
 
-	static bool get_sched_entity(size_t idx,nre::String &name,cpu_t &cpu,timevalue_t &time) {
+	static bool get_sched_entity(size_t idx,nre::String &name,cpu_t &cpu,timevalue_t &time,
+			timevalue_t &totaltime) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		if(idx < _list.length()) {
 			nre::SList<SchedEntity>::iterator s;
@@ -86,6 +90,7 @@ public:
 			name = s->name();
 			cpu = s->cpu();
 			time = s->ms_last_sec(false);
+			totaltime = s->totaltime();
 			return true;
 		}
 		return false;
