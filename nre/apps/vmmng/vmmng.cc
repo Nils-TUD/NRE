@@ -59,18 +59,16 @@ static void refresh_console() {
 	if(vmidx >= RunningVMList::get().count())
 		vmidx = RunningVMList::get().count() - 1;
 	for(size_t i = 0; (vm = RunningVMList::get().get(i)) != 0; ++i) {
-		try {
-			const Child &c = cm.get(vm->id());
+		const Child *c = cm.get(vm->id());
+		if(c) {
 			uint8_t oldcol = cs.color();
 			if(vmidx == i)
 				cs.color(CUR_ROW_COLOR);
-			cs << "  [" << (i + 1) << "] on CPU " << c.cpu() << ": " << vm->cfg()->args();
+			cs << "  [" << (i + 1) << "] on CPU " << c->cpu() << ": " << vm->cfg()->args();
 			while(cs.x() != 0)
 				cs << ' ';
 			if(vmidx == i)
 				cs.color(oldcol);
-		}
-		catch(...) {
 		}
 	}
 	cs << "\nPress R to reset or K to kill the selected VM";

@@ -222,7 +222,7 @@ static void log_thread(void*) {
 }
 
 static void sysinfo_thread(void*) {
-	SysInfoService *sysinfo = new SysInfoService();
+	SysInfoService *sysinfo = new SysInfoService(mng);
 	sysinfo->start();
 }
 

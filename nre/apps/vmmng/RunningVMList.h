@@ -39,8 +39,9 @@ public:
 		size_t console = count() + 1;
 		nre::Child::id_type id = cfg->start(cm,console,cpu);
 		nre::ScopedLock<nre::RCULock> rcuguard(&nre::RCU::lock());
-		const nre::Child &child = cm.get(id);
-		_list.append(new RunningVM(cfg,id,child.pd()));
+		const nre::Child *child = cm.get(id);
+		if(child)
+			_list.append(new RunningVM(cfg,id,child->pd()));
 	}
 	RunningVM *get(size_t idx) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);

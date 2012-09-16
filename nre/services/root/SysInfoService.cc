@@ -24,6 +24,7 @@ using namespace nre;
 
 void SysInfoService::portal(capsel_t) {
 	UtcbFrameRef uf;
+	SysInfoService *srv = Thread::current()->get_tls<SysInfoService*>(Thread::TLS_PARAM);
 	try {
 		SysInfo::Command cmd;
 		uf >> cmd;
@@ -60,6 +61,28 @@ void SysInfoService::portal(capsel_t) {
 					uf << true << name << cpu << time;
 				else
 					uf << false;
+			}
+			break;
+
+			case SysInfo::GET_CHILD: {
+				size_t idx;
+				uf >> idx;
+				uf.finish_input();
+
+				if(idx >= ChildManager::MAX_CHILDS)
+					throw Exception(E_ARGS_INVALID,32,"Invalid child index %zu",idx);
+
+				size_t virt,phys;
+				ScopedLock<RCULock> guard(&RCU::lock());
+				const Child *c = srv->_cm->get_at(idx);
+				if(c) {
+					size_t threads = c->scs().length();
+					c->reglist().memusage(virt,phys);
+
+					uf << E_SUCCESS << true << c->cmdline() << virt << phys << threads;
+				}
+				else
+					uf << E_SUCCESS << false;
 			}
 			break;
 		}

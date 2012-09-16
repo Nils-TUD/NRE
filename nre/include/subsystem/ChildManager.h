@@ -60,7 +60,6 @@ class ChildManager {
 	};
 
 	enum {
-		MAX_CHILDS		= 32,
 		MAX_CMDLINE_LEN	= 256,
 		MAX_MODAUX_LEN	= ExecEnv::PAGE_SIZE
 	};
@@ -71,14 +70,21 @@ class ChildManager {
 	};
 
 public:
+	enum {
+		MAX_CHILDS		= 32,
+	};
+
 	explicit ChildManager();
 	~ChildManager();
 
 	Child::id_type load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
 			cpu_t cpu = CPU::current().log_id());
 
-	const Child &get(Child::id_type id) const {
-		return *const_cast<ChildManager*>(this)->get_child(id);
+	const Child *get(Child::id_type id) const {
+		return get_at((id - _portal_caps) / per_child_caps());
+	}
+	const Child *get_at(size_t idx) const {
+		return rcu_dereference(_childs[idx]);
 	}
 
 	void kill(Child::id_type id) {
@@ -113,9 +119,12 @@ private:
 	}
 
 	Child *get_child(Child::id_type id) {
-		Child *c = rcu_dereference(_childs[((id - _portal_caps) / per_child_caps())]);
+		return get_child_at((id - _portal_caps) / per_child_caps());
+	}
+	Child *get_child_at(size_t idx) {
+		Child *c = rcu_dereference(_childs[idx]);
 		if(!c)
-			throw ChildException(E_NOT_FOUND,32,"Child with id %u does not exist",id);
+			throw ChildException(E_NOT_FOUND,32,"Child with idx %zu does not exist",idx);
 		return c;
 	}
 	static inline size_t per_child_caps() {

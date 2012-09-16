@@ -77,6 +77,16 @@ public:
 	}
 
 	/**
+	 * Sets the cursor position to <x>,<y>
+	 *
+	 * @param x the x-position
+	 * @param y the y-position
+	 */
+	void pos(uint x,uint y) {
+		_pos = y * Console::COLS + x;
+	}
+
+	/**
 	 * Reads one character from the console
 	 *
 	 * @return the character
