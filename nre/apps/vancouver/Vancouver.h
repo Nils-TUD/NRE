@@ -21,19 +21,23 @@
 #include <kobj/GlobalThread.h>
 #include <kobj/Sc.h>
 #include <mem/DataSpace.h>
+#include <services/VMManager.h>
 
 #include "bus/motherboard.h"
 #include "Timeouts.h"
 #include "StorageDevice.h"
+#include "VCPUBackend.h"
+
+extern nre::UserSm globalsm;
 
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
-	explicit Vancouver(const char *args,size_t subcon)
-			: _lt_input(keyboard_thread,nre::CPU::current().log_id()),
-			  _sc_input(&_lt_input,nre::Qpd()), _mb(), _timeouts(_mb),
-			  // TODO find a good name
-			  _conscon("console"), _conssess(_conscon,subcon,nre::String("VM")), _stcon(),
-			  _stdevs() {
+	explicit Vancouver(const char *args,size_t console,const nre::String &constitle)
+			: _gt_input(keyboard_thread,nre::CPU::current().log_id()),
+			  _sc_input(&_gt_input,nre::Qpd()),
+			  _gt_vmmng(vmmng_thread,nre::CPU::current().log_id()), _sc_vmmng(&_gt_vmmng,nre::Qpd()),
+			  _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon,console,constitle),
+			  _stcon(), _vmmngcon("vmmanager"), _vmmng(_vmmngcon), _vcpus(), _stdevs() {
 		// storage is optional
 		try {
 			_stcon = new nre::Connection("storage");
@@ -43,8 +47,11 @@ public:
 		}
 		create_devices(args);
 		create_vcpus();
-		_lt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+
+		_gt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
 		_sc_input.start(nre::String("vmm-input"));
+		_gt_vmmng.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+		_sc_vmmng.start(nre::String("vmm-vmmng"));
 	}
 
 	void reset();
@@ -60,17 +67,21 @@ public:
 
 private:
 	static void keyboard_thread(void*);
+	static void vmmng_thread(void*);
 	void create_devices(const char *args);
 	void create_vcpus();
 
-	nre::GlobalThread _lt_input;
+	nre::GlobalThread _gt_input;
 	nre::Sc _sc_input;
+	nre::GlobalThread _gt_vmmng;
+	nre::Sc _sc_vmmng;
 	Motherboard _mb;
 	Timeouts _timeouts;
 	nre::Connection _conscon;
 	nre::ConsoleSession _conssess;
 	nre::Connection *_stcon;
+	nre::Connection _vmmngcon;
+	nre::VMManagerSession _vmmng;
+	nre::SList<VCPUBackend> _vcpus;
 	StorageDevice *_stdevs[nre::Storage::MAX_CONTROLLER * nre::Storage::MAX_DRIVES];
 };
-
-extern nre::UserSm globalsm;

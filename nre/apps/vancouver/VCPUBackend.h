@@ -24,6 +24,7 @@
 #include <kobj/VCpu.h>
 #include <kobj/Sc.h>
 #include <utcb/UtcbFrame.h>
+#include <util/SList.h>
 #include <Assert.h>
 #include <Compiler.h>
 
@@ -31,7 +32,7 @@
 #include "bus/profile.h"
 #include "bus/vcpu.h"
 
-class VCPUBackend {
+class VCPUBackend : public nre::SListItem {
 	enum {
 		PT_VMX = 0x100,
 		PT_SVM = 0x200
@@ -44,7 +45,7 @@ class VCPUBackend {
 
 public:
 	VCPUBackend(Motherboard *mb,VCVCpu *vcpu,bool use_svm,cpu_t cpu)
-			: _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
+			: SListItem(), _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
 			  _sc(&_vcpu,nre::Qpd()) {
 		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
 		_sc.start(nre::String("vmm-vcpu"));

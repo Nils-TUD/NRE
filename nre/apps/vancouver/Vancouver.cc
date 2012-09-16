@@ -41,7 +41,7 @@ PARAM_ALIAS(PC_PS2, "an alias to create an PS2 compatible PC",
 	     " vbios_disk vbios_keyboard vbios_mem vbios_time vbios_reset vbios_multiboot"
 	     " msi ioapic pcihostbridge:0,0x10,0xcf8,0xe0000000 pmtimer:0x8000 vcpus")
 
-PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created" ) {
+PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created") {
 	ncpu = argv[0];
 }
 PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
@@ -196,6 +196,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			VCPUBackend *v = new VCPUBackend(&_mb,msg.vcpu,Hip::get().has_svm(),cpu);
 			msg.value = reinterpret_cast<ulong>(v);
 			msg.vcpu->executor.add(this,receive_static<CpuMessage>);
+			_vcpus.append(v);
 		}
 		break;
 
@@ -337,9 +338,7 @@ void Vancouver::keyboard_thread(void*) {
 		if((pk.flags & Keyboard::RELEASE) && (pk.flags & Keyboard::LCTRL)) {
 			switch(pk.keycode) {
 				case Keyboard::VK_HOME: {
-					ScopedLock<UserSm> guard(&globalsm);
-					MessageLegacy msg2(MessageLegacy::RESET, 0);
-				    vc->_mb.bus_legacy.send_fifo(msg2);
+					vc->reset();
 				    continue;
 				}
 				break;
@@ -355,6 +354,24 @@ void Vancouver::keyboard_thread(void*) {
 		ScopedLock<UserSm> guard(&globalsm);
 		MessageInput msg(0x10000,pk.scancode | pk.flags);
 		vc->_mb.bus_input.send(msg);
+	}
+}
+
+void Vancouver::vmmng_thread(void*) {
+	Vancouver *vc = Thread::current()->get_tls<Vancouver*>(Thread::TLS_PARAM);
+	Consumer<VMManager::Packet> &cons = vc->_vmmng.consumer();
+	while(1) {
+		VMManager::Packet *pk = cons.get();
+		switch(pk->cmd) {
+			case VMManager::RESET:
+				vc->reset();
+				break;
+			case VMManager::KILL:
+			case VMManager::TERMINATE:
+				// TODO
+				break;
+		}
+		cons.next();
 	}
 }
 
@@ -410,8 +427,16 @@ static const char *argv_to_str(int argc,char *argv[]) {
 }
 
 int main(int argc,char *argv[]) {
-	// TODO determine subcons
-	Vancouver *v = new Vancouver(argv_to_str(argc,argv),1);
+	size_t console = 1;
+	String constitle("VM");
+	for(int i = 1; i < argc; ++i) {
+		if(strncmp(argv[i],"console=",8) == 0)
+			console = IStringStream::read_from<size_t>(argv[i] + 8);
+		else if(strncmp(argv[i],"constitle=",10) == 0)
+			constitle = String(argv[i] + 10);
+	}
+
+	Vancouver *v = new Vancouver(argv_to_str(argc,argv),console,constitle);
 	v->reset();
 
 	Sm sm(0);

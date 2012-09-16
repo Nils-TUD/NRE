@@ -18,6 +18,9 @@ dist/imgs/escape_romdisk.bin
 dist/imgs/escape_cmos.bin
 dist/imgs/escape_fs.bin
 dist/imgs/escape.iso
+bin/apps/guest_munich
+dist/imgs/bzImage-3.1.0-32
+dist/imgs/initrd-js.lzma
 escape.vmconfig <<EOF
 bin/apps/vancouver m:64 ncpu:1 PC_PS2
 dist/imgs/escape.bin videomode=vga
@@ -25,4 +28,10 @@ dist/imgs/escape_romdisk.bin /dev/romdisk rom://dist/imgs/escape.iso
 dist/imgs/escape_cmos.bin /dev/cmos
 dist/imgs/escape_fs.bin /dev/fs /dev/romdisk iso9660
 dist/imgs/escape.iso
+EOF
+linux.vmconfig <<EOF
+bin/apps/vancouver m:128 ncpu:1 PC_PS2
+bin/apps/guest_munich
+dist/imgs/bzImage-3.1.0-32 clocksource=tsc console=ttyS0 noapic quiet
+dist/imgs/initrd-js.lzma
 EOF

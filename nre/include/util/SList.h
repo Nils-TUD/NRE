@@ -170,15 +170,16 @@ public:
 	 * Does NOT expect that the item is in the list!
 	 *
 	 * @param e the list item
+	 * @return true if the item has been found and removed
 	 */
-	void remove(T *e) {
+	bool remove(T *e) {
 		T *t = _head, *p = 0;
 		while(t && t != e) {
 			p = t;
 			t = static_cast<T*>(t->next());
 		}
 		if(!t)
-			return;
+			return false;
 		if(p)
 			p->next(e->next());
 		else
@@ -186,6 +187,7 @@ public:
 		if(!e->next())
 			_tail = p;
 		_len--;
+		return true;
 	}
 
 private:

@@ -18,23 +18,89 @@
 
 #include <mem/DataSpace.h>
 #include <subsystem/ChildManager.h>
+#include <util/SList.h>
 
-class VMConfig {
+class VMConfig;
+
+nre::OStream &operator<<(nre::OStream &os,const VMConfig &cfg);
+
+class VMConfig : public nre::SListItem {
+	enum {
+		MAX_ARGS_LEN	= 256
+	};
+
+	friend nre::OStream &operator<<(nre::OStream &os,const VMConfig &cfg);
+
+	class Module : public nre::SListItem {
+	public:
+		explicit Module(const char *line,size_t namelen,size_t linelen)
+			: nre::SListItem(), _name(line,namelen), _args(line,linelen) {
+		}
+
+		const nre::String &name() const {
+			return _name;
+		}
+		const nre::String &args() const {
+			return _args;
+		}
+
+	private:
+		nre::String _name;
+		nre::String _args;
+	};
+
+	class VMChildConfig : public nre::ChildConfig {
+	public:
+		explicit VMChildConfig(const nre::SList<Module> &mods)
+			: nre::ChildConfig(0), _mods(mods) {
+		}
+
+		virtual bool has_module_access(size_t i) const {
+			return get_module(i) != _mods.end();
+		}
+		virtual const char *module_cmdline(size_t i) const {
+			nre::SList<Module>::iterator mod = get_module(i);
+			return mod->args().str();
+		}
+
+	private:
+		nre::SList<Module>::iterator get_module(size_t i) const {
+			nre::Hip::mem_iterator mem = nre::Hip::get().mem_begin() + i;
+			for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it) {
+				if(strcmp(mem->cmdline(),it->name().str()) == 0)
+					return it;
+			}
+			return _mods.end();
+		}
+
+		const nre::SList<Module> &_mods;
+	};
+
 public:
-	explicit VMConfig(uintptr_t phys,size_t size,const char *cmdline)
-		: _ds(size,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::R,phys), _name(cmdline) {
+	explicit VMConfig(uintptr_t phys,size_t size,const char *name)
+		: nre::SListItem(), _ds(size,nre::DataSpaceDesc::ANONYMOUS,nre::DataSpaceDesc::R,phys),
+		  _name(name), _mods() {
+		find_mods(size);
+	}
+	~VMConfig() {
+		for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it)
+			delete &*it;
 	}
 
 	const char *name() const {
 		return _name;
 	}
-	void start(nre::ChildManager *cm);
+	const nre::String &args() const {
+		nre::SList<Module>::iterator first = _mods.begin();
+		return first->args();
+	}
+	nre::Child::id_type start(nre::ChildManager &cm,size_t console,cpu_t cpu);
 
 private:
-	static const char *get_cmdline(const char *begin);
-	static nre::Hip::mem_iterator get_module(const char *name,size_t namelen);
-	static const char *get_name(const char *str,size_t &len);
+	void find_mods(size_t len);
+	static nre::Hip::mem_iterator get_module(const nre::String &name);
 
 	nre::DataSpace _ds;
 	const char *_name;
+	nre::SList<Module> _mods;
 };

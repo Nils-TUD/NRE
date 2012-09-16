@@ -18,41 +18,49 @@
 
 using namespace nre;
 
-void VMConfig::start(ChildManager *cm) {
+void VMConfig::find_mods(size_t len) {
 	const char *lines = reinterpret_cast<const char*>(_ds.virt());
-	const char *end = lines + strlen(lines);
-	for(size_t i = 0; lines < end; ++i) {
-		size_t namelen;
-		const char *name = get_name(lines,namelen);
-		Hip::mem_iterator mod = get_module(name,namelen);
-		DataSpace ds(mod->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mod->addr);
-		ChildConfig cfg(i);
-		cm->load(ds.virt(),mod->size,get_cmdline(lines),cfg);
+	const char *end = lines + len;
+	while(lines < end) {
+		size_t space = 0;
+		ssize_t pos;
+		for(pos = 0; pos < end - lines; ++pos) {
+			if(!space && lines[pos] == ' ')
+				space = pos;
+			else if(lines[pos] == '\n')
+				break;
+		}
+		if(space == 0)
+			space = pos;
+		_mods.append(new Module(lines,space,pos));
+		lines += pos + 1;
 	}
 }
 
-const char *VMConfig::get_cmdline(const char *begin) {
-	static char buffer[256];
-	const char *end = strchr(begin,'\n');
-	if(!end)
-		end = begin + strlen(begin);
-	memcpy(buffer,begin,end - begin + 1);
-	return buffer;
+Child::id_type VMConfig::start(ChildManager &cm,size_t console,cpu_t cpu) {
+	char args[MAX_ARGS_LEN];
+	VMChildConfig cfg(_mods);
+	SList<Module>::iterator first = _mods.begin();
+	OStringStream os(args,sizeof(args));
+	os << first->args() << " console=" << console << " constitle=" << _name;
+
+	Hip::mem_iterator mod = get_module(first->name());
+	DataSpace ds(mod->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mod->addr);
+	return cm.load(ds.virt(),mod->size,args,cfg,cpu);
 }
 
-Hip::mem_iterator VMConfig::get_module(const char *name,size_t namelen) {
+Hip::mem_iterator VMConfig::get_module(const String &name) {
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
-		if(strncmp(mem->cmdline(),name,namelen) == 0)
+		if(strcmp(mem->cmdline(),name.str()) == 0)
 			return mem;
 	}
-	throw Exception(E_NOT_FOUND,64,"Unable to find module '%.*s'",name,namelen);
+	throw Exception(E_NOT_FOUND,64,"Unable to find module '%s'",name.str());
 }
 
-const char *VMConfig::get_name(const char *str,size_t &len) {
-	const char *space = strchr(str,' ');
-	if(!space)
-		space = str + strlen(str);
-	len = space - str;
-	return str;
+OStream &operator<<(OStream &os,const VMConfig &cfg) {
+	os << "VMConfig[" << cfg.name() << "]:\n";
+	for(SList<VMConfig::Module>::iterator it = cfg._mods.begin(); it != cfg._mods.end(); ++it)
+		os << "  name='" << it->name() << "' args='" << it->args() << "'\n";
+	return os;
 }
