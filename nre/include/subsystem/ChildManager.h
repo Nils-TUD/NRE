@@ -58,7 +58,6 @@ class ChildManager {
 		PORTAL static void exception(capsel_t pid);
 	};
 
-	// TODO we need a data structure that allows an arbitrary number of childs or whatsoever
 	enum {
 		MAX_CHILDS		= 32,
 		MAX_CMDLINE_LEN	= 256,
@@ -74,22 +73,59 @@ public:
 	explicit ChildManager();
 	~ChildManager();
 
-	const ServiceRegistry &registry() const {
-		return _registry;
+	Child::id_type load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
+			cpu_t cpu = CPU::current().log_id());
+
+	const Child &get(Child::id_type id) const {
+		return *const_cast<ChildManager*>(this)->get_child(id);
 	}
 
-	void load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
-			cpu_t cpu = CPU::current().log_id());
+	void kill(Child::id_type id) {
+		destroy_child(id);
+	}
 
 	void wait_for_all() {
 		while(_child_count > 0)
 			_diesm.zero();
 	}
 
-	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
-		ScopedLock<UserSm> guard(&_sm);
-		_registry.reg(c,name,cap,1 << CPU::order(),available);
-		_regsm.up();
+	const ServiceRegistry &registry() const {
+		return _registry;
+	}
+
+	void reg_service(capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
+		reg_service(0,cap,name,available);
+	}
+
+	void unreg_service(const String& name) {
+		unreg_service(0,name);
+	}
+
+private:
+	size_t free_slot() const {
+		ScopedLock<UserSm> guard(&_slotsm);
+		for(size_t i = 0; i < MAX_CHILDS; ++i) {
+			if(_childs[i] == 0)
+				return i;
+		}
+		throw ChildException(E_CAPACITY,"No free child slots");
+	}
+
+	Child *get_child(Child::id_type id) {
+		Child *c = rcu_dereference(_childs[((id - _portal_caps) / per_child_caps())]);
+		if(!c)
+			throw ChildException(E_NOT_FOUND,32,"Child with id %u does not exist",id);
+		return c;
+	}
+	static inline size_t per_child_caps() {
+		return Math::next_pow2(Hip::get().service_caps() * CPU::count());
+	}
+	cpu_t get_cpu(capsel_t pid) const {
+		size_t off = (pid - _portal_caps) % per_child_caps();
+		return off / Hip::get().service_caps();
+	}
+	uint get_vector(capsel_t pid) const {
+		return (pid - _portal_caps) % Hip::get().service_caps();
 	}
 
 	const ServiceRegistry::Service *get_service(const String &name) {
@@ -105,38 +141,16 @@ public:
 		}
 		return s;
 	}
-
+	void reg_service(Child *c,capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
+		ScopedLock<UserSm> guard(&_sm);
+		_registry.reg(c,name,cap,1 << CPU::order(),available);
+		_regsm.up();
+	}
 	void unreg_service(Child *c,const String& name) {
 		ScopedLock<UserSm> guard(&_sm);
 		_registry.unreg(c,name);
 	}
 
-private:
-	size_t free_slot() const {
-		ScopedLock<UserSm> guard(&_slotsm);
-		for(size_t i = 0; i < MAX_CHILDS; ++i) {
-			if(_childs[i] == 0)
-				return i;
-		}
-		throw ChildException(E_CAPACITY,"No free child slots");
-	}
-
-	static inline size_t per_child_caps() {
-		return Math::next_pow2(Hip::get().service_caps() * CPU::count());
-	}
-	cpu_t get_cpu(capsel_t pid) const {
-		size_t off = (pid - _portal_caps) % per_child_caps();
-		return off / Hip::get().service_caps();
-	}
-	Child *get_child(capsel_t pid) const {
-		Child *c = rcu_dereference(_childs[((pid - _portal_caps) / per_child_caps())]);
-		if(!c)
-			throw ChildException(E_NOT_FOUND,32,"Child with portal %u does not exist",pid);
-		return c;
-	}
-	uint get_vector(capsel_t pid) const {
-		return (pid - _portal_caps) % Hip::get().service_caps();
-	}
 	void term_child(capsel_t pid,UtcbExcFrameRef &uf);
 	void kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type);
 	void destroy_child(capsel_t pid);

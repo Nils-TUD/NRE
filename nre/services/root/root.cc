@@ -240,7 +240,7 @@ static void portal_service(capsel_t) {
 				uf >> available;
 				uf.finish_input();
 
-				mng->reg_service(0,cap,name,available);
+				mng->reg_service(cap,name,available);
 				uf.accept_delegates();
 				uf << E_SUCCESS;
 			}

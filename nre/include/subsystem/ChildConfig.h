@@ -53,6 +53,12 @@ public:
 	virtual bool has_module_access(size_t i) const {
 		return (_modaccess == OWN) ? (i == _no) : (i >= _no);
 	}
+	virtual const char *module_cmdline(size_t i) const {
+		Hip::mem_iterator mem = Hip::get().mem_begin() + i;
+		if(mem->type == HipMem::MB_MODULE)
+			return mem->cmdline();
+		return 0;
+	}
 
 private:
 	size_t _no;

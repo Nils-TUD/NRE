@@ -155,17 +155,18 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 	size_t memidx = 0;
 	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
 		if(config.has_module_access(memidx)) {
-			uint32_t aux = 0;
-			if(mem->type == HipMem::MB_MODULE) {
-				size_t len = strlen(mem->cmdline()) + 1;
+			const char *aux = config.module_cmdline(memidx);
+			uintptr_t auxaddr = 0;
+			if(aux) {
+				size_t len = strlen(aux) + 1;
 				if(cmdlines + len <= cmdlinesend) {
-					memcpy(cmdlines,mem->cmdline(),len);
-					aux = cmdlinesaddr;
+					memcpy(cmdlines,aux,len);
+					auxaddr = cmdlinesaddr;
 				}
 				cmdlines += len;
 				cmdlinesaddr += len;
 			}
-			hip->add_mem(mem->addr,mem->size,aux,mem->type);
+			hip->add_mem(mem->addr,mem->size,auxaddr,mem->type);
 		}
 		memidx++;
 	}
@@ -175,8 +176,8 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.unmapsel());
 }
 
-void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
-		cpu_t eccpu) {
+Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,
+		const ChildConfig &config,cpu_t eccpu) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
@@ -196,11 +197,11 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const Chi
 	};
 
 	// create child
-	Child *c = new Child(this,cmdline);
 	size_t idx = free_slot();
+	capsel_t pts = _portal_caps + idx * per_child_caps();
+	Child *c = new Child(this,pts,cmdline);
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
-		capsel_t pts = _portal_caps + idx * per_child_caps();
 		c->_ptcount = CPU::count() * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
 		c->_pts = new Pt*[c->_ptcount];
 		memset(c->_pts,0,c->_ptcount * sizeof(Pt*));
@@ -219,10 +220,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const Chi
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_INIT,Portals::init_caps,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SERVICE,Portals::service,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_IO,Portals::io,Mtd(0));
-			// note that we have to handle the sc-portal with regecs because otherwise we might cause
-			// a deadlock, since the sc portal calls (finally) to the timetracker service, which can
-			// cause e.g. pagefaults. so they can't be handled with the same ec.
-			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SC,Portals::sc,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_SC,Portals::sc,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_GSI,Portals::gsi,Mtd(0));
 			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_DS,Portals::dataspace,Mtd(0));
 		}
@@ -275,7 +273,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const Chi
 		// and a Hip
 		build_hip(c,config);
 
-		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting client '" << c->cmdline() << "'...\n");
+		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting child '" << c->cmdline() << "'...\n");
 		LOG(Logging::CHILD_CREATE,Serial::get() << *c << "\n");
 
 		// start child; we have to put the child into the list before that
@@ -307,6 +305,7 @@ void ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,const Chi
 			_regsm.down();
 		LOG(Logging::CHILD_CREATE,Serial::get() << "Found '" << name << "'!\n");
 	}
+	return c->id();
 }
 
 void ChildManager::Portals::startup(capsel_t pid) {
@@ -577,11 +576,7 @@ void ChildManager::Portals::sc(capsel_t pid) {
 					sc = puf.get_delegated(0).offset();
 					puf >> qpd;
 				}
-
-				{
-					ScopedLock<UserSm> guard(&c->_sm);
-					c->_scs.append(new Child::SchedEntity(name,cpu,sc));
-				}
+				c->add_sc(name,cpu,sc);
 
 				LOG(Logging::ADMISSION,Serial::get().writef("Child '%s' created sc '%s' on cpu %u (%u)\n",
 							c->cmdline().str(),name.str(),cpu,sc));
@@ -596,21 +591,11 @@ void ChildManager::Portals::sc(capsel_t pid) {
 				capsel_t sc = uf.get_translated(0).offset();
 				uf.finish_input();
 
-				{
-					ScopedLock<UserSm> guard(&c->_sm);
-					for(SList<Child::SchedEntity>::iterator it = c->_scs.begin(); it != c->_scs.end(); ++it) {
-						if(it->cap() == sc) {
-							c->_scs.remove(&*it);
-							delete &*it;
-							break;
-						}
-					}
-				}
-
+				c->remove_sc(sc);
 				{
 					UtcbFrame puf;
 					puf << Sc::STOP;
-					puf.delegate(sc);
+					puf.translate(sc);
 					CPU::current().sc_pt().call(puf);
 					puf.check_reply();
 				}
