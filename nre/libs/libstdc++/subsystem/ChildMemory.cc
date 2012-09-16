@@ -25,8 +25,9 @@ OStream &operator<<(OStream &os,const ChildMemory &cm) {
 	for(ChildMemory::iterator it = cm.begin(); it != cm.end(); ++it) {
 		uint flags = it->desc().perm();
 		os.writef(
-			"\t\t%p .. %p (%#0"FMT_WORD_HEXLEN"x bytes) %c%c%c <- %p\n",it->desc().virt(),
+			"\t\t%p .. %p (%#0"FMT_WORD_HEXLEN"x bytes) %c%c%c%c <- %p\n",it->desc().virt(),
 				it->desc().virt() + it->desc().size(),it->desc().size(),
+				(flags & ChildMemory::OWN) ? 'o' : '-',
 				(flags & ChildMemory::R) ? 'r' : '-',
 				(flags & ChildMemory::W) ? 'w' : '-',
 				(flags & ChildMemory::X) ? 'x' : '-',

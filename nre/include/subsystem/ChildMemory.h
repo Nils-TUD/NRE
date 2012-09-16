@@ -46,13 +46,15 @@ class ChildMemory {
 	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
 
 public:
-	enum Perm {
+	enum Flags {
 		R	= DataSpaceDesc::R,
 		W	= DataSpaceDesc::W,
 		X	= DataSpaceDesc::X,
 		RW	= R | W,
 		RX	= R | X,
 		RWX	= R | W | X,
+		// indicates that the memory has been requested by us, i.e. we haven't just joined the DS
+		OWN = 0x10,
 	};
 
 	/**
@@ -160,6 +162,22 @@ public:
 	}
 
 	/**
+	 * Determines the memory usage
+	 *
+	 * @param virt will be set to the total amount of virtual memory that is in use
+	 * @param phys will be set to the total amount of physical memory that this child has aquired
+	 */
+	void memusage(size_t &virt,size_t &phys) const {
+		virt = 0;
+		phys = 0;
+		for(iterator it = begin(); it != end(); ++it) {
+			virt += it->desc().size();
+			if(it->desc().type() != DataSpaceDesc::VIRTUAL && (it->desc().perm() & OWN))
+				phys += it->desc().size();
+		}
+	}
+
+	/**
 	 * @return the first dataspace
 	 */
 	iterator begin() const {
@@ -219,11 +237,11 @@ public:
 	 * @param desc the dataspace descriptor (desc.virt() is expected to contain the address where
 	 * 	the memory is located in the parent (=us))
 	 * @param addr the virtual address where to map it to in the child
-	 * @param perm the permissions to use (desc.perm() is ignored)
+	 * @param flags the flags to use (desc.perm() is ignored)
 	 * @param sel the selector for the dataspace
 	 */
-	void add(const DataSpaceDesc& desc,uintptr_t addr,uint perm,capsel_t sel = ObjCap::INVALID) {
-		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),perm,desc.phys(),addr,desc.virt()),sel);
+	void add(const DataSpaceDesc& desc,uintptr_t addr,uint flags,capsel_t sel = ObjCap::INVALID) {
+		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),flags,desc.phys(),addr,desc.virt()),sel);
 		_list.insert(ds);
 	}
 

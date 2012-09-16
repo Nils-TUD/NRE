@@ -142,7 +142,7 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 			DataSpaceDesc(MAX_MODAUX_LEN,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX));
 	char *cmdlines = reinterpret_cast<char*>(auxds.virt());
 	char *cmdlinesend = cmdlines + MAX_MODAUX_LEN;
-	c->reglist().add(auxds.desc(),cmdlinesaddr,ChildMemory::R,auxds.unmapsel());
+	c->reglist().add(auxds.desc(),cmdlinesaddr,ChildMemory::R | ChildMemory::OWN,auxds.unmapsel());
 
 	// create ds for hip
 	const DataSpace &ds = _dsm.create(
@@ -173,7 +173,7 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 	hip->finalize();
 
 	// add to region list
-	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R,ds.unmapsel());
+	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R | ChildMemory::OWN,ds.unmapsel());
 }
 
 Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,
@@ -239,7 +239,7 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 			if(size < ph->p_offset + ph->p_filesz)
 				throw ElfException(E_ELF_INVALID,"LOAD segment outside binary");
 
-			uint perms = 0;
+			uint perms = ChildMemory::OWN;
 			if(ph->p_flags & PF_R)
 				perms |= ChildMemory::R;
 			if(ph->p_flags & PF_W)
@@ -261,14 +261,14 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 		// utcb
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
-		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::ANONYMOUS,0),c->_utcb,0);
+		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0),c->_utcb,0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
 				eccpu,c->_pd,c->_utcb);
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
 		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
-				c->stack(),ChildMemory::RW);
+				c->stack(),ChildMemory::RW | ChildMemory::OWN);
 
 		// and a Hip
 		build_hip(c,config);
@@ -652,8 +652,9 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 
 		// add it to the regions of the child
 		try {
+			uint flags = ds.perm() | (type != DataSpace::JOIN ? ChildMemory::OWN : 0);
 			addr = c->reglist().find_free(ds.size());
-			c->reglist().add(ds.desc(),addr,ds.perm(),ds.unmapsel());
+			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}
 		catch(...) {
 			_dsm.release(desc,ds.unmapsel());
@@ -854,7 +855,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		kill = !ds || !ds->desc().perm();
 		if(!kill) {
 			flags = ds->page_perms(pfaddr);
-			perms = ds->desc().perm();
+			perms = ds->desc().perm() & ChildMemory::RWX;
 		}
 		// check if the access rights are violated
 		if(flags) {
