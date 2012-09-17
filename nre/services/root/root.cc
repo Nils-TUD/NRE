@@ -206,8 +206,11 @@ int main() {
 	const Hip &hip = Hip::get();
 	LOG(Logging::MEM_MAP,Serial::get().writef("Memory map:\n"));
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		LOG(Logging::MEM_MAP,Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux='%s'\n",
-				it->addr,it->size,it->type,it->cmdline()));
+		LOG(Logging::MEM_MAP,Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%p",
+				it->addr,it->size,it->type,it->aux));
+		if(it->aux)
+			LOG(Logging::MEM_MAP,Serial::get().writef(" (%s)",it->cmdline()));
+		LOG(Logging::MEM_MAP,Serial::get() << '\n');
 	}
 
 	mng = new ChildManager();
