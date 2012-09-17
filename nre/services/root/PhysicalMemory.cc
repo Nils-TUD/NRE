@@ -73,7 +73,10 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 		revoke_mem(_desc.virt(),_desc.size(),false);
 		PhysicalMemory::_mem.free(_desc.phys(),_desc.size());
 	}
-	// TODO what to do with device memory?
+	else {
+		revoke_mem(_desc.virt(),_desc.size(),true);
+		VirtualMemory::free(_desc.virt(),_desc.size());
+	}
 
 	// revoke caps and free selectors
 	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);
