@@ -24,7 +24,6 @@ public:
 	enum {
 		MAX_NAME_LEN	= 16,
 		ROWS			= nre::Console::ROWS - 3,
-		DATA_ROWS		= ROWS - 2
 	};
 
 	explicit SysInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)

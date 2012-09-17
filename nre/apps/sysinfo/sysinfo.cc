@@ -54,14 +54,14 @@ static void input_thread(void*) {
 					changed = true;
 					break;
 				case Keyboard::VK_PGUP:
-					if(pages[page]->top() >= SysInfoPage::DATA_ROWS)
-						pages[page]->top(pages[page]->top() - SysInfoPage::DATA_ROWS);
+					if(pages[page]->top() >= SysInfoPage::ROWS)
+						pages[page]->top(pages[page]->top() - SysInfoPage::ROWS);
 					else
 						pages[page]->top(0);
 					changed = true;
 					break;
 				case Keyboard::VK_PGDOWN:
-					pages[page]->top(pages[page]->top() + SysInfoPage::DATA_ROWS);
+					pages[page]->top(pages[page]->top() + SysInfoPage::ROWS);
 					changed = true;
 					break;
 				case Keyboard::VK_LEFT:
