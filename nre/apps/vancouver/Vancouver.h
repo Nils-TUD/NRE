@@ -34,10 +34,9 @@ class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	explicit Vancouver(const char *args,size_t console,const nre::String &constitle)
 			: _gt_input(keyboard_thread,nre::CPU::current().log_id()),
-			  _sc_input(&_gt_input,nre::Qpd()),
-			  _gt_vmmng(vmmng_thread,nre::CPU::current().log_id()), _sc_vmmng(&_gt_vmmng,nre::Qpd()),
+			  _sc_input(&_gt_input,nre::Qpd()),  _gt_vmmng(), _sc_vmmng(),
 			  _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon,console,constitle),
-			  _stcon(), _vmmngcon("vmmanager"), _vmmng(_vmmngcon), _vcpus(), _stdevs() {
+			  _stcon(), _vmmngcon(), _vmmng(), _vcpus(), _stdevs() {
 		// storage is optional
 		try {
 			_stcon = new nre::Connection("storage");
@@ -50,8 +49,19 @@ public:
 
 		_gt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
 		_sc_input.start(nre::String("vmm-input"));
-		_gt_vmmng.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-		_sc_vmmng.start(nre::String("vmm-vmmng"));
+
+		// vmmanager is optional
+		try {
+			_vmmngcon = new nre::Connection("vmmanager");
+			_vmmng = new nre::VMManagerSession(*_vmmngcon);
+			_gt_vmmng = new nre::GlobalThread(vmmng_thread,nre::CPU::current().log_id());
+			_sc_vmmng = new nre::Sc(_gt_vmmng,nre::Qpd());
+			_gt_vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+			_sc_vmmng->start(nre::String("vmm-vmmng"));
+		}
+		catch(const nre::Exception &e) {
+			nre::Serial::get() << "Unable to connect to vmmanager: " << e.msg() << "\n";
+		}
 	}
 
 	void reset();
@@ -73,15 +83,15 @@ private:
 
 	nre::GlobalThread _gt_input;
 	nre::Sc _sc_input;
-	nre::GlobalThread _gt_vmmng;
-	nre::Sc _sc_vmmng;
+	nre::GlobalThread *_gt_vmmng;
+	nre::Sc *_sc_vmmng;
 	Motherboard _mb;
 	Timeouts _timeouts;
 	nre::Connection _conscon;
 	nre::ConsoleSession _conssess;
 	nre::Connection *_stcon;
-	nre::Connection _vmmngcon;
-	nre::VMManagerSession _vmmng;
+	nre::Connection *_vmmngcon;
+	nre::VMManagerSession *_vmmng;
 	nre::SList<VCPUBackend> _vcpus;
 	StorageDevice *_stdevs[nre::Storage::MAX_CONTROLLER * nre::Storage::MAX_DRIVES];
 };

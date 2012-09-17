@@ -257,7 +257,8 @@ static void start_childs() {
 			Hypervisor::map_mem(it->addr,virt,it->size);
 
 			// TODO temporary. skip everything behind vancouver
-			bool isvmmng = strstr(it->cmdline(),"vmmng") != 0;
+			bool isvmmng = strstr(it->cmdline(),"vmmng") != 0 ||
+					strstr(it->cmdline(),"vancouver") != 0;
 			ChildConfig cfg(mod);
 			if(isvmmng)
 				cfg.module_access(ChildConfig::FOLLOWING);

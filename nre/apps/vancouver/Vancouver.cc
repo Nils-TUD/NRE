@@ -359,7 +359,7 @@ void Vancouver::keyboard_thread(void*) {
 
 void Vancouver::vmmng_thread(void*) {
 	Vancouver *vc = Thread::current()->get_tls<Vancouver*>(Thread::TLS_PARAM);
-	Consumer<VMManager::Packet> &cons = vc->_vmmng.consumer();
+	Consumer<VMManager::Packet> &cons = vc->_vmmng->consumer();
 	while(1) {
 		VMManager::Packet *pk = cons.get();
 		switch(pk->cmd) {
