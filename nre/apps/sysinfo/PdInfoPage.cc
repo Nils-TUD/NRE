@@ -20,7 +20,7 @@
 
 using namespace nre;
 
-void ChildInfoPage::refresh_console(bool) {
+void PdInfoPage::refresh_console(bool) {
 	ScopedLock<UserSm> guard(&_sm);
 	_cons.clear(0);
 	ConsoleStream cs(_cons,0);
@@ -28,7 +28,7 @@ void ChildInfoPage::refresh_console(bool) {
 	// display header
 	size_t memtotal,memfree;
 	_sysinfo.get_mem(memtotal,memfree);
-	cs.writef("%*s: %24s%24s%8s\n",MAX_NAME_LEN,"Child","VirtMem","PhysMem","Threads");
+	cs.writef("%*s: %24s%24s%8s\n",MAX_NAME_LEN,"Pd","VirtMem","PhysMem","Threads");
 	for(int i = 0; i < Console::COLS - 2; i++)
 		cs << '-';
 	cs << '\n';

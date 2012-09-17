@@ -19,12 +19,49 @@
 #include "SysInfoService.h"
 #include "Admission.h"
 #include "PhysicalMemory.h"
+#include "VirtualMemory.h"
 
 using namespace nre;
 
+// text start and end
+extern void *_init;
+extern void *__fini_array_end;
+// data start and end
+extern void *__fini_array_end;
+extern void *end;
+
+const char *SysInfoService::get_root_info(size_t &virt,size_t &phys,size_t &threads) {
+	// find our own module; we're always the first one
+	const char *cmdline = "";
+	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
+		if(mem->type == HipMem::MB_MODULE) {
+			cmdline = mem->cmdline();
+			break;
+		}
+	}
+	// determine physical memory by taking the total amount of used mem and substracting the amount
+	// we've passed to children
+	phys = PhysicalMemory::total_size() - PhysicalMemory::free_size();
+	const Child *c;
+	for(size_t i = 0; (c = _cm->get_at(i)) != 0; ++i) {
+		size_t cvirt,cphys;
+		c->reglist().memusage(cvirt,cphys);
+		phys -= cphys;
+	}
+	// determine virtual memory by calculating the mem for our text and data area and the one we
+	// assign dynamically.
+	size_t textsize = reinterpret_cast<uintptr_t>(&__fini_array_end)
+			- reinterpret_cast<uintptr_t>(&_init);
+	size_t datasize = reinterpret_cast<uintptr_t>(&end)
+			- reinterpret_cast<uintptr_t>(&__fini_array_end);
+	virt = VirtualMemory::used() + textsize + datasize;
+	// log and sysinfo
+	threads = 2;
+	return cmdline;
+}
+
 void SysInfoService::portal(capsel_t) {
 	UtcbFrameRef uf;
-	SysInfoService *srv = Thread::current()->get_tls<SysInfoService*>(Thread::TLS_PARAM);
 	try {
 		SysInfo::Command cmd;
 		uf >> cmd;
@@ -65,22 +102,31 @@ void SysInfoService::portal(capsel_t) {
 			break;
 
 			case SysInfo::GET_CHILD: {
+				SysInfoService *srv = Thread::current()->get_tls<SysInfoService*>(Thread::TLS_PARAM);
 				size_t idx;
 				uf >> idx;
 				uf.finish_input();
 
-				size_t virt,phys;
-				ScopedLock<RCULock> guard(&RCU::lock());
-				const Child *c = idx >= ChildManager::MAX_CHILDS ? 0 : srv->_cm->get_at(idx);
-				if(c) {
-					// the main thread is not included in the sc-list
-					size_t threads = c->scs().length() + 1;
-					c->reglist().memusage(virt,phys);
+				size_t virt,phys,threads;
+				if(idx > 0) {
+					ScopedLock<RCULock> guard(&RCU::lock());
+					idx--;
+					const Child *c = idx >= ChildManager::MAX_CHILDS ? 0 : srv->_cm->get_at(idx);
+					if(c) {
+						// the main thread is not included in the sc-list
+						threads = c->scs().length() + 1;
+						c->reglist().memusage(virt,phys);
 
-					uf << E_SUCCESS << true << c->cmdline() << virt << phys << threads;
+						uf << E_SUCCESS << true << c->cmdline() << virt << phys << threads;
+					}
+					else
+						uf << E_SUCCESS << false;
 				}
-				else
-					uf << E_SUCCESS << false;
+				// idx 0 is root
+				else {
+					const char *cmdline = srv->get_root_info(virt,phys,threads);
+					uf << E_SUCCESS << true << String(cmdline) << virt << phys << threads;
+				}
 			}
 			break;
 		}

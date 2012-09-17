@@ -28,6 +28,7 @@ public:
 	}
 
 private:
+	const char *get_root_info(size_t &virt,size_t &phys,size_t &threads);
 	PORTAL static void portal(capsel_t pid);
 
 	nre::ChildManager *_cm;

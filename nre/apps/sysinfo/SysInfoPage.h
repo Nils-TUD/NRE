@@ -46,9 +46,9 @@ protected:
 	void display_footer(nre::ConsoleStream &cs,size_t i) {
 		cs.pos(0,nre::Console::ROWS - 1);
 		cs.color(i == 0 ? 0x17 : 0x71);
-		cs.writef("%*s",nre::Console::COLS / 2,"Threads");
+		cs.writef("%*s",nre::Console::COLS / 2,"Scs");
 		cs.color(i == 1 ? 0x17 : 0x71);
-		cs.writef("%*s",nre::Console::COLS / 2,"Childs");
+		cs.writef("%*s",nre::Console::COLS / 2,"Pds");
 	}
 
 	const char *getname(const nre::String &name,size_t &len) {
@@ -72,21 +72,21 @@ protected:
 	nre::UserSm _sm;
 };
 
-class ThreadInfoPage : public SysInfoPage {
+class ScInfoPage : public SysInfoPage {
 	enum {
 		MAX_TIME_LEN	= 6,
 		MAX_SUMTIME_LEN	= 12,
 	};
 public:
-	explicit ThreadInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
+	explicit ScInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
 		: SysInfoPage(cons,sysinfo) {
 	}
 	virtual void refresh_console(bool update);
 };
 
-class ChildInfoPage : public SysInfoPage {
+class PdInfoPage : public SysInfoPage {
 public:
-	explicit ChildInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
+	explicit PdInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
 		: SysInfoPage(cons,sysinfo) {
 	}
 	virtual void refresh_console(bool update);

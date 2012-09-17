@@ -33,13 +33,13 @@ static Connection conscon("console");
 static ConsoleSession cons(conscon,0,String("SysInfo"));
 static size_t page = 0;
 static SysInfoPage *pages[] = {
-	new ThreadInfoPage(cons,sysinfo),
-	new ChildInfoPage(cons,sysinfo)
+	new ScInfoPage(cons,sysinfo),
+	new PdInfoPage(cons,sysinfo)
 };
 
 static void input_thread(void*) {
 	while(1) {
-		bool changed = false;
+		bool changed = false, update = false;
 		Console::ReceivePacket *pk = cons.consumer().get();
 		if(!(pk->flags & Keyboard::RELEASE)) {
 			switch(pk->keycode) {
@@ -66,17 +66,17 @@ static void input_thread(void*) {
 					break;
 				case Keyboard::VK_LEFT:
 					page = (page - 1) % ARRAY_SIZE(pages);
-					changed = true;
+					changed = update = true;
 					break;
 				case Keyboard::VK_RIGHT:
 					page = (page + 1) % ARRAY_SIZE(pages);
-					changed = true;
+					changed = update = true;
 					break;
 			}
 		}
 		cons.consumer().next();
 		if(changed)
-			pages[page]->refresh_console(false);
+			pages[page]->refresh_console(update);
 	}
 }
 

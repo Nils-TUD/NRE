@@ -42,13 +42,21 @@ public:
 		return virt - RAM_BEGIN;
 	}
 
+	static size_t used() {
+		return _used;
+	}
 	static uintptr_t alloc(size_t size) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		return _regs.alloc(nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE));
+		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
+		uintptr_t addr = _regs.alloc(size);
+		_used += size;
+		return addr;
 	}
 	static void free(uintptr_t addr,size_t size) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		_regs.free(addr,nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE));
+		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
+		_regs.free(addr,size);
+		_used -= size;
 	}
 
 	static const nre::RegionManager &regions() {
@@ -61,4 +69,5 @@ private:
 	static nre::RegionManager _regs;
 	static nre::UserSm _sm;
 	static VirtualMemory _init;
+	static size_t _used;
 };

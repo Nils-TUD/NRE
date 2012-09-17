@@ -20,15 +20,15 @@
 
 using namespace nre;
 
-void ThreadInfoPage::refresh_console(bool update) {
+void ScInfoPage::refresh_console(bool update) {
 	ScopedLock<UserSm> guard(&_sm);
 	_cons.clear(0);
 	ConsoleStream cs(_cons,0);
 
 	// display header
-	cs.writef("%*s: ",MAX_NAME_LEN,"CPU");
+	cs.writef("%*s: ",MAX_NAME_LEN,"Sc");
 	for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
-		cs.writef("%*u ",MAX_TIME_LEN - 1,cpu->log_id());
+		cs.writef(" CPU%u ",cpu->log_id());
 	cs.writef("%*s",MAX_SUMTIME_LEN + 1,"Total");
 	cs.writef("\n");
 	for(int i = 0; i < Console::COLS - 1; i++)
