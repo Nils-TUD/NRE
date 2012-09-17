@@ -95,7 +95,8 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 }
 
 void Hypervisor::unmap_mem(uintptr_t virt,size_t size) {
-	CapRange(virt,Math::blockcount<size_t>(size,ExecEnv::PAGE_SHIFT),Crd::MEM_ALL).revoke(true);
+	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SHIFT);
+	CapRange(virt >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM_ALL).revoke(true);
 }
 
 char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
@@ -128,7 +129,7 @@ void Hypervisor::unmap_string(const char *str) {
 	VirtualMemory::free(begin,len);
 	size_t pages = Math::blockcount<size_t>(len,ExecEnv::PAGE_SIZE);
 	while(pages-- > 0) {
-		CapRange(begin,1,Crd::MEM_ALL).revoke(true);
+		CapRange(begin >> ExecEnv::PAGE_SHIFT,1,Crd::MEM_ALL).revoke(true);
 		begin += ExecEnv::PAGE_SIZE;
 	}
 }
