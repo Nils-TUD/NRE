@@ -652,7 +652,10 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 
 		// add it to the regions of the child
 		try {
-			uint flags = ds.perm() | (type != DataSpace::JOIN ? ChildMemory::OWN : 0);
+			uint flags = ds.perm();
+			// only create creations and non-device-memory
+			if(type != DataSpace::JOIN && desc.phys() == 0)
+				flags |= ChildMemory::OWN;
 			addr = c->reglist().find_free(ds.size());
 			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}

@@ -73,7 +73,8 @@ void SysInfoService::portal(capsel_t) {
 				ScopedLock<RCULock> guard(&RCU::lock());
 				const Child *c = idx >= ChildManager::MAX_CHILDS ? 0 : srv->_cm->get_at(idx);
 				if(c) {
-					size_t threads = c->scs().length();
+					// the main thread is not included in the sc-list
+					size_t threads = c->scs().length() + 1;
 					c->reglist().memusage(virt,phys);
 
 					uf << E_SUCCESS << true << c->cmdline() << virt << phys << threads;
