@@ -108,7 +108,7 @@ if ($qemu) { $CFG::qemu = $qemu; }
 $qemu_append ||= '';
 if ($builddir) { $CFG::builddir = $builddir; }
 
-if (defined $pulsar) {
+if (defined $pulsar && $pulsar) {
     $CFG::pulsar_mac = $pulsar;
 }
 
