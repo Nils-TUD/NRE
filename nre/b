@@ -8,6 +8,7 @@ else
 fi
 opts="-j$cpus"
 bochscfg="bochs.cfg"
+tftpdir=/var/lib/tftpboot
 
 if [ -z "$NRE_TARGET" ]; then
 	echo "Defaulting to NRE_TARGET=x86_64"
@@ -129,11 +130,17 @@ case "$1" in
 			's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='`echo $build/$2.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
 		bochs -f $bochscfg -q
 		;;
-	run)
+	qemu)
 		./$2 --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+		;;
+	qemunet)
+		$QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $tftpdir
 		;;
 	srv)
 		./$2 --server --build-dir="$PWD/$build"
+		;;
+	srvp)
+		./$2 --server -p --build-dir="$PWD/$build"
 		;;
 	dis=*)
 		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1#dis=} | less

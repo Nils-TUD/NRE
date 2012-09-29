@@ -290,9 +290,12 @@ sub generate_pulsar_config($$)
 	    $first = 0;
 	    my ($kbin, $kcmd) = split(' ', $_, 2);
 	    $kcmd = '' if !defined $kcmd;
+	    # remove rom:// from cmdline
+	    $kcmd =~ s|\brom://([^ ]*)|$1|g;
 	    print $fg "exec $kbin $kcmd\n";
 	} else {
 	    my @args = split;
+	    $_ =~ s|\brom://([^ ]*)|$1|g;
 	    print $fg "load $_\n";
 	}
     }
@@ -396,6 +399,7 @@ foreach my $script (@scripts) {
 	    generate_grub2_config($grub2_config, $config_name, $server_grub_prefix, $modules);
 	} elsif (defined $pulsar) {
 	    $bootloader_config = $pulsar_config;
+	    $server = $server . "/" . $CFG::pulsar_root;
 	} else {
 	    generate_configs($server_grub_prefix, $generated, $filename);
 	    $bootloader_config ||= "menu.lst";
@@ -415,6 +419,7 @@ foreach my $script (@scripts) {
 	system_verbose("rsync $progress -RLp $files $server");
 	my $cmd = "cd $path/.. && cat */menu.lst > menu.lst";
 	if ($combined_menu_lst) { system_verbose($hostname ? "ssh $hostname '$cmd'" : $cmd); }
+	if (defined $pulsar && !$hostname) { system_verbose("mv $server/$bootloader_config $server/.."); }
     }
 
     if (defined $iso_image) {
