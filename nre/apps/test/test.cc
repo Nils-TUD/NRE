@@ -136,10 +136,9 @@ static void tick_thread(void*) {
 int main() {
 	conscon = new Connection("console");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		GlobalThread *gt = new GlobalThread(view0,it->log_id());
+		GlobalThread *gt = GlobalThread::create(view0,it->log_id(),String("test-thread"));
 		gt->set_tls<size_t>(Thread::TLS_PARAM,1 + it->log_id());
-		Sc *sc = new Sc(gt,Qpd());
-		sc->start(String("test-thread"));
+		gt->start();
 	}
 
 	// wait until all are finished

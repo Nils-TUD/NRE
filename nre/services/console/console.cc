@@ -43,11 +43,7 @@ static void input_thread(void*) {
 
 int main() {
 	srv = new ConsoleService("console");
-
-	GlobalThread gt(input_thread,CPU::current().log_id());
-	Sc sc(&gt,Qpd());
-	sc.start(String("console-input"));
-
+	GlobalThread::create(input_thread,CPU::current().log_id(),String("console-input"))->start();
 	srv->start();
 	return 0;
 }

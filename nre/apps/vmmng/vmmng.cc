@@ -164,13 +164,8 @@ int main() {
 		}
 	}
 
-	GlobalThread *gt = new GlobalThread(input_thread,CPU::current().log_id());
-	Sc *sc = new Sc(gt,Qpd());
-	sc->start(String("vmmng-input"));
-
-	gt = new GlobalThread(refresh_thread,CPU::current().log_id());
-	sc = new Sc(gt,Qpd());
-	sc->start(String("vmmng-refresh"));
+	GlobalThread::create(input_thread,CPU::current().log_id(),String("vmmng-input"))->start();
+	GlobalThread::create(refresh_thread,CPU::current().log_id(),String("vmmng-refresh"))->start();
 
 	VMMngService *srv = VMMngService::create("vmmanager");
 	srv->start();

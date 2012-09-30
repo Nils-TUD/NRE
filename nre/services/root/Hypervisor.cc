@@ -39,7 +39,7 @@ Hypervisor::Hypervisor() {
 	// note that we have to use a different Thread for the mem-portal than for all the other portals
 	// in the root-task, because the map portal uses the mem-portal.
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
-	LocalThread *ec = new LocalThread(CPU::current().log_id(),ObjCap::INVALID,
+	LocalThread *ec = LocalThread::create(CPU::current().log_id(),ObjCap::INVALID,
 			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
 	_map_pts[CPU::current().log_id()] = new Pt(ec,portal_map);
 	// make all I/O ports available
@@ -50,7 +50,7 @@ void Hypervisor::init() {
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		if(it->log_id() == CPU::current().log_id())
 			continue;
-		LocalThread *ec = new LocalThread(it->log_id());
+		LocalThread *ec = LocalThread::create(it->log_id());
 		_map_pts[it->log_id()] = new Pt(ec,portal_map);
 	}
 }

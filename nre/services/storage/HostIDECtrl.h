@@ -243,8 +243,6 @@ private:
 	nre::UserSm _sm;
 	nre::Gsi *_gsi;
 	nre::DataSpace _prdt;
-	nre::GlobalThread _gsigt;
-	nre::Sc _gsisc;
 	UserTag _tag;
 	HostATADevice *_devs[2];
 };

@@ -35,7 +35,7 @@ ChildManager::ChildManager() : _child_count(), _childs(),
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalThread **ecs[] = {_ecs,_regecs};
 		for(size_t i = 0; i < ARRAY_SIZE(ecs); ++i) {
-			ecs[i][it->log_id()] = new LocalThread(it->log_id());
+			ecs[i][it->log_id()] = LocalThread::create(it->log_id());
 			ecs[i][it->log_id()]->set_tls(Thread::TLS_PARAM,this);
 		}
 
@@ -263,7 +263,7 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 		// just reserve the virtual memory with no permissions; it will not be requested
 		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0),c->_utcb,0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
-				eccpu,c->_pd,c->_utcb);
+				eccpu,c->cmdline(),c->_pd,c->_utcb);
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
@@ -278,8 +278,7 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 
 		// start child; we have to put the child into the list before that
 		rcu_assign_pointer(_childs[idx],c);
-		c->_sc = new Sc(c->_ec,Qpd(),c->_pd);
-		c->_sc->start(c->cmdline());
+		c->_ec->start(Qpd(),c->_pd);
 	}
 	catch(...) {
 		delete c;
@@ -360,7 +359,7 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 		uf.delegate(c->_pd->sel(),0,UtcbFrame::NONE,Crd::OBJ | Crd::PD_EC |
 				Crd::PD_PD | Crd::PD_PT | Crd::PD_SM);
 		uf.delegate(c->_ec->sel(),1);
-		uf.delegate(c->_sc->sel(),2);
+		uf.delegate(c->_ec->sc()->sel(),2);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
@@ -568,6 +567,33 @@ void ChildManager::Portals::sc(capsel_t pid) {
 		uf >> cmd;
 
 		switch(cmd) {
+			case Sc::CREATE: {
+				uintptr_t stackaddr = 0,utcbaddr = 0;
+				bool stack,utcb;
+				uf >> stack >> utcb;
+				uf.finish_input();
+
+				// TODO we might leak resources here if something fails
+				if(stack) {
+					const DataSpace &ds = cm->_dsm.create(
+							DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
+					stackaddr = c->reglist().find_free(ds.size());
+					c->reglist().add(ds.desc(),stackaddr,ds.perm() | ChildMemory::OWN,ds.unmapsel());
+				}
+				if(utcb) {
+					DataSpaceDesc desc(ExecEnv::PAGE_SIZE,DataSpaceDesc::VIRTUAL,DataSpaceDesc::RW);
+					utcbaddr = c->reglist().find_free(ExecEnv::PAGE_SIZE);
+					c->reglist().add(desc,utcbaddr,desc.perm());
+				}
+
+				uf << E_SUCCESS;
+				if(stack)
+					uf << stackaddr;
+				if(utcb)
+					uf << utcbaddr;
+			}
+			break;
+
 			case Sc::START: {
 				String name;
 				Qpd qpd;
@@ -979,6 +1005,20 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
 			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing child\n"));
 		}
+		// if its a thread exit, free stack and utcb
+		else if(type == THREAD_EXIT) {
+			ScopedLock<UserSm> guard(&c->_sm);
+			uintptr_t stack = uf->rsi;
+			uintptr_t utcb = uf->rdi;
+			// 0 indicates that this thread has used its own stack
+			if(stack) {
+				capsel_t sel;
+				DataSpaceDesc desc = c->reglist().remove_by_addr(stack,&sel);
+				_dsm.release(desc,sel);
+			}
+			if(utcb)
+				c->reglist().remove_by_addr(utcb);
+		}
 		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
 		LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
 		addr = addrs;
@@ -986,6 +1026,13 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
 			addr++;
 		}
+	}
+	catch(const ChildMemoryException &e) {
+		// this happens if removing the stack or utcb fails. we consider this as a protocol violation
+		// of the child and thus kill it.
+		LOG(Logging::CHILD_KILL,Serial::get() << "Child thread violated exit protocol ("
+				<< e.msg() << "); killing it\n");
+		type = FAULT;
 	}
 	catch(...) {
 		// ignore the exception here. this may happen if the child is already gone

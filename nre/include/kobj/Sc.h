@@ -25,16 +25,51 @@
 namespace nre {
 
 /**
- * Represents a scheduling context. A Sc can be bound to a GlobalThread to run it with a specified
- * priority and time quantum.
+ * Represents a scheduling context. You can't create an instance of this class, because this is
+ * done by GlobalThread or VCpu.
  */
 class Sc : public ObjCap {
+	friend class GlobalThread;
+	friend class VCpu;
+
 public:
 	enum Command {
+		CREATE,
 		START,
 		STOP
 	};
 
+	/**
+	 * @return the ec it is bound to
+	 */
+	Ec *ec() {
+		return _ec;
+	}
+	/**
+	 * @return the quantum-priority descriptor (might be changed by start())
+	 */
+	Qpd qpd() const {
+		return _qpd;
+	}
+	/**
+	 * @return the protection-domain it belongs to
+	 */
+	Pd *pd() {
+		return _pd;
+	}
+
+private:
+	/**
+	 * Binds this object to the given sc-selector for thread <gt>. This is intended for the main
+	 * thread of each application.
+	 *
+	 * @param gt the global thread
+	 * @param sel the selector
+	 * @param pd the protection domain
+	 */
+	explicit Sc(GlobalThread *gt,capsel_t sel,Pd *pd)
+		: ObjCap(sel,ObjCap::KEEP_SEL_BIT | ObjCap::KEEP_CAP_BIT), _ec(gt), _qpd(), _pd(pd) {
+	}
 	/**
 	 * Creates a new Sc that is bound to the given GlobalThread. Note that it does NOT start it. Please
 	 * call start() afterwards.
@@ -62,30 +97,10 @@ public:
 	virtual ~Sc();
 
 	/**
-	 * @return the ec it is bound to
-	 */
-	Ec *ec() {
-		return _ec;
-	}
-	/**
-	 * @return the quantum-priority descriptor (might be changed by start())
-	 */
-	Qpd qpd() const {
-		return _qpd;
-	}
-	/**
-	 * @return the protection-domain it belongs to
-	 */
-	Pd *pd() {
-		return _pd;
-	}
-
-	/**
 	 * Starts the Sc, i.e. the attached GlobalThread.
 	 */
 	void start(const String &name);
 
-private:
 	Sc(const Sc&);
 	Sc& operator=(const Sc&);
 

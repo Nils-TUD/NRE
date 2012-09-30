@@ -45,10 +45,10 @@ class VCPUBackend : public nre::SListItem {
 
 public:
 	VCPUBackend(Motherboard *mb,VCVCpu *vcpu,bool use_svm,cpu_t cpu)
-			: SListItem(), _ec(cpu), _caps(get_portals(use_svm)), _sm(0), _vcpu(cpu,_caps),
-			  _sc(&_vcpu,nre::Qpd()) {
-		_ec.set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
-		_sc.start(nre::String("vmm-vcpu"));
+			: SListItem(), _ec(nre::LocalThread::create(cpu)), _caps(get_portals(use_svm)), _sm(0),
+			  _vcpu(cpu,_caps,nre::String("vmm-vcpu")) {
+		_ec->set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
+		_vcpu.start();
 		_mb = mb;
 	}
 
@@ -98,11 +98,10 @@ private:
 	PORTAL static void svm_startup(capsel_t pid);
 	PORTAL static void svm_recall(capsel_t pid);
 
-	nre::LocalThread _ec;
+	nre::LocalThread *_ec;
 	capsel_t _caps;
 	nre::Sm _sm;
 	nre::VCpu _vcpu;
-	nre::Sc _sc;
 	static Motherboard *_mb;
 	static bool _tsc_offset;
 	static bool _rdtsc_exit;

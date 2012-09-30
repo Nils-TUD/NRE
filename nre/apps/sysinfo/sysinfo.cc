@@ -93,9 +93,7 @@ static void refresh_thread() {
 }
 
 int main() {
-	GlobalThread gt(input_thread,CPU::current().log_id());
-	Sc sc(&gt,Qpd());
-	sc.start(String("sysinfo-input"));
+	GlobalThread::create(input_thread,CPU::current().log_id(),String("sysinfo-input"))->start();
 	refresh_thread();
 	return 0;
 }

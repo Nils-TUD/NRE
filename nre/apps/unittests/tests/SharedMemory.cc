@@ -52,14 +52,14 @@ static ShmService *srv;
 class ShmSession : public ServiceSession {
 public:
 	explicit ShmSession(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,cap,caps,func), _ec(receiver,CPU::current().log_id()), _sc(),
+		: ServiceSession(s,id,cap,caps,func),
+		  _ec(GlobalThread::create(receiver,CPU::current().log_id(),String("shm-receiver"))),
 		  _cons(), _ds() {
-		_ec.set_tls<capsel_t>(Thread::TLS_PARAM,caps);
+		_ec->set_tls<capsel_t>(Thread::TLS_PARAM,caps);
 	}
 	virtual ~ShmSession() {
 		delete _ds;
 		delete _cons;
-		delete _sc;
 	}
 
 	virtual void invalidate();
@@ -71,15 +71,13 @@ public:
 	void set_ds(DataSpace *ds) {
 		_ds = ds;
 		_cons = new Consumer<Item>(ds);
-		_sc = new Sc(&_ec,Qpd());
-		_sc->start(String("shm-receiver"));
+		_ec->start();
 	}
 
 private:
 	static void receiver(void *);
 
-	GlobalThread _ec;
-	Sc *_sc;
+	GlobalThread *_ec;
 	Consumer<Item> *_cons;
 	DataSpace *_ds;
 };

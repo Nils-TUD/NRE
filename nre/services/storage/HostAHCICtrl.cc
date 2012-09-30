@@ -24,8 +24,7 @@
 using namespace nre;
 
 HostAHCICtrl::HostAHCICtrl(uint id,PCI &pci,PCI::bdf_type bdf,Gsi *gsi,bool dmar)
-		: Controller(id), _gsi(gsi), _gsigt(gsi_thread,CPU::current().log_id()),
-		  _gsisc(&_gsigt,Qpd()), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
+		: Controller(id), _gsi(gsi), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
 		  _regs_high(0), _portcount(0), _ports() {
 	assert(!(~pci.conf_read(_bdf,1) & 6) && "we need mem-decode and busmaster dma");
 	PCI::value_type bar = pci.conf_read(_bdf,9);
@@ -63,11 +62,12 @@ HostAHCICtrl::HostAHCICtrl(uint id,PCI &pci,PCI::bdf_type bdf,Gsi *gsi,bool dmar
 	_regs->ghc |= 2;
 
 	// start the gsi thread
-	_gsigt.set_tls<HostAHCICtrl*>(Thread::TLS_PARAM,this);
 	char name[32];
 	OStringStream os(name,sizeof(name));
 	os << "ahci-gsi-" << _gsi->gsi();
-	_gsisc.start(String(name));
+	GlobalThread *gt = GlobalThread::create(gsi_thread,CPU::current().log_id(),String(name));
+	gt->set_tls<HostAHCICtrl*>(Thread::TLS_PARAM,this);
+	gt->start();
 }
 
 void HostAHCICtrl::create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bool dmar) {

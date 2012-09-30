@@ -16,11 +16,42 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/UserSm.h>
+#include <kobj/Thread.h>
 #include <util/ScopedLock.h>
 #include <Compiler.h>
 #include <util/Math.h>
 
 namespace nre {
+
+void ExecEnv::exit(int code) {
+	// jump to that address to cause a pagefault. this way, we tell our parent that we exited
+	// voluntarily with given exit code
+	asm volatile (
+		"jmp	*%0;"
+		:
+		: "r"(EXIT_START + (code & (EXIT_CODE_NUM - 1)))
+	);
+	UNREACHED;
+}
+
+void ExecEnv::thread_exit() {
+	Thread *t = Thread::current();
+	// tell our parent the stack and utcb address, if we've got it from him, via rsi and rdi and
+	// announce our termination via pagefault at THREAD_EXIT. he will free the resources.
+	uintptr_t stack = t->stack();
+	uintptr_t utcb = reinterpret_cast<uintptr_t>(t->utcb());
+	uint flags = t->flags();
+	// now its safe to delete our thread object
+	delete t;
+	asm volatile (
+		"jmp	*%0;"
+		:
+		: "r"(THREAD_EXIT),
+		  "S"((~flags & Thread::HAS_OWN_STACK) ? stack : 0),
+		  "D"((~flags & Thread::HAS_OWN_UTCB) ? utcb : 0)
+	);
+	UNREACHED;
+}
 
 void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uintptr_t stack) {
 	void **sp = reinterpret_cast<void**>(stack);

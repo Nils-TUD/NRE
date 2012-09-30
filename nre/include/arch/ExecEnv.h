@@ -53,19 +53,8 @@ public:
 		EXIT_FAILURE		= 1,
 	};
 
-	NORETURN static void exit(int code) {
-		// jump to that address to cause a pagefault. this way, we tell our parent that we exited
-		// voluntarily with given exit code
-		void (*target)() = reinterpret_cast<void (*)()>(EXIT_START + (code & (EXIT_CODE_NUM - 1)));
-		target();
-		UNREACHED;
-	}
-
-	NORETURN static void thread_exit() {
-		void (*target)() = reinterpret_cast<void (*)()>(THREAD_EXIT);
-		target();
-		UNREACHED;
-	}
+	NORETURN static void exit(int code);
+	NORETURN static void thread_exit();
 
 	static inline Pd *get_current_pd() {
 		return static_cast<Pd*>(get_current(2));

@@ -18,8 +18,11 @@
 #include <utcb/UtcbFrame.h>
 #include <Syscalls.h>
 #include <Logging.h>
+
 #include "Admission.h"
 #include "Hypervisor.h"
+#include "VirtualMemory.h"
+#include "PhysicalMemory.h"
 
 using namespace nre;
 
@@ -44,6 +47,29 @@ void Admission::portal_sc(capsel_t) {
 		uf >> cmd;
 
 		switch(cmd) {
+			case Sc::CREATE: {
+				uintptr_t stackaddr = 0,utcbaddr = 0;
+				bool stack,utcb;
+				uf >> stack >> utcb;
+				uf.finish_input();
+
+				// TODO we might leak resources here if something fails
+				if(stack) {
+					uintptr_t phys = PhysicalMemory::alloc(ExecEnv::STACK_SIZE);
+					stackaddr = VirtualMemory::alloc(ExecEnv::STACK_SIZE);
+					Hypervisor::map_mem(phys,stackaddr,ExecEnv::STACK_SIZE);
+				}
+				if(utcb)
+					utcbaddr = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
+
+				uf << E_SUCCESS;
+				if(stack)
+					uf << stackaddr;
+				if(utcb)
+					uf << utcbaddr;
+			}
+			break;
+
 			case Sc::START: {
 				String name;
 				Qpd qpd;

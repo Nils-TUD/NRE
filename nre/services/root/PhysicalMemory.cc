@@ -44,7 +44,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		Hypervisor::map_mem(_desc.phys(),_desc.virt(),_desc.size());
 	}
 	else {
-		_desc.phys(PhysicalMemory::_mem.alloc(_desc.size()));
+		_desc.phys(alloc(_desc.size()));
 		_desc.origin(_desc.phys());
 		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
 	}
@@ -71,7 +71,7 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	bool isdev = PhysicalMemory::can_map(_desc.phys(),_desc.size(),flags);
 	if(!isdev) {
 		revoke_mem(_desc.virt(),_desc.size(),false);
-		PhysicalMemory::_mem.free(_desc.phys(),_desc.size());
+		free(_desc.phys(),_desc.size());
 	}
 	else {
 		revoke_mem(_desc.virt(),_desc.size(),true);
@@ -88,7 +88,7 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {
 	RootDataSpace *res;
 	if(_free == 0) {
-		uintptr_t phys = PhysicalMemory::_mem.alloc(ExecEnv::PAGE_SIZE);
+		uintptr_t phys = alloc(ExecEnv::PAGE_SIZE);
 		uintptr_t virt = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
 		Hypervisor::map_mem(phys,virt,ExecEnv::PAGE_SIZE);
 		RootDataSpace *ds = reinterpret_cast<RootDataSpace*>(virt);
@@ -117,7 +117,7 @@ void PhysicalMemory::RootDataSpace::revoke_mem(uintptr_t addr,size_t size,bool s
 
 void PhysicalMemory::add(uintptr_t addr,size_t size) {
 	if(VirtualMemory::alloc_ram(addr,size))
-		_mem.free(addr,size);
+		free(addr,size);
 }
 
 void PhysicalMemory::remove(uintptr_t addr,size_t size) {

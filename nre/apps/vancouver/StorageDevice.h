@@ -27,13 +27,14 @@ class StorageDevice {
 public:
 	explicit StorageDevice(DBus<MessageDiskCommit> &bus,nre::DataSpace &guestmem,
 			nre::Connection &con,size_t no)
-		: _no(no), _bus(bus), _con(con), _sess(_con,guestmem,no),
-		  _gt(thread,nre::CPU::current().log_id()), _sc(&_gt,nre::Qpd()) {
-		_gt.set_tls<StorageDevice*>(nre::Thread::TLS_PARAM,this);
+		: _no(no), _bus(bus), _con(con), _sess(_con,guestmem,no) {
 		char buffer[32];
 		nre::OStringStream os(buffer,sizeof(buffer));
 		os << "vmm-storage-" << no;
-		_sc.start(nre::String(buffer));
+		nre::GlobalThread *gt = nre::GlobalThread::create(
+				thread,nre::CPU::current().log_id(),nre::String(buffer));
+		gt->set_tls<StorageDevice*>(nre::Thread::TLS_PARAM,this);
+		gt->start();
 	}
 
 	void get_params(nre::Storage::Parameter *params) {
@@ -65,6 +66,4 @@ private:
 	DBus<MessageDiskCommit> &_bus;
 	nre::Connection &_con;
 	nre::StorageSession _sess;
-	nre::GlobalThread _gt;
-	nre::Sc _sc;
 };

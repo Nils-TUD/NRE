@@ -100,8 +100,6 @@ private:
 	static void gsi_thread(void*);
 
 	nre::Gsi *_gsi;
-	nre::GlobalThread _gsigt;
-	nre::Sc _gsisc;
 	nre::PCI::bdf_type _bdf;
 	uint _hostirq;
 	nre::DataSpace *_regs_ds;

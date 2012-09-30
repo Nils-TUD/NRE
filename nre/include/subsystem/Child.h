@@ -118,7 +118,7 @@ public:
 
 private:
 	explicit Child(ChildManager *cm,id_type id,const char *cmdline)
-			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
+			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
 			  _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
 			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),
 			  _main(), _stack(), _utcb(), _hip(), _last_fault_addr(), _last_fault_cpu(), _sm() {
@@ -127,8 +127,6 @@ private:
 		for(size_t i = 0; i < _ptcount; ++i)
 			delete _pts[i];
 		delete[] _pts;
-		if(_sc)
-			delete _sc;
 		if(_ec)
 			delete _ec;
 		if(_pd)
@@ -169,7 +167,6 @@ private:
 	bool _started;
 	Pd *_pd;
 	GlobalThread *_ec;
-	Sc *_sc;
 	Pt **_pts;
 	size_t _ptcount;
 	ChildMemory _regs;
