@@ -28,6 +28,7 @@ int main() {
 	// don't put it on the stack since its too large :)
 	ChildManager *cm = new ChildManager();
 	cm->load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test",ChildConfig(0));
-	cm->wait_for_all();
+	while(cm->count() > 0)
+		cm->dead_sm().down();
 	return 0;
 }

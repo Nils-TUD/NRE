@@ -80,6 +80,12 @@ public:
 	Child::id_type load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
 			cpu_t cpu = CPU::current().log_id());
 
+	size_t count() const {
+		return _child_count;
+	}
+	Sm &dead_sm() {
+		return _diesm;
+	}
 	const Child *get(Child::id_type id) const {
 		return get_at((id - _portal_caps) / per_child_caps());
 	}
@@ -89,11 +95,6 @@ public:
 
 	void kill(Child::id_type id) {
 		destroy_child(id);
-	}
-
-	void wait_for_all() {
-		while(_child_count > 0)
-			_diesm.zero();
 	}
 
 	const ServiceRegistry &registry() const {

@@ -192,7 +192,8 @@ static void test_shm() {
 			os << "shm_client " << ds_sizes[i];
 			mng->load(ds->virt(),self->size,cmdline,cfg);
 		}
-		mng->wait_for_all();
+		while(mng->count() > 0)
+			mng->dead_sm().down();
 		delete ds;
 		delete mng;
 	}
