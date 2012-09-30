@@ -27,21 +27,36 @@
 
 namespace nre {
 
+/**
+ * The exception used for errors during loading of the ELF file
+ */
 class ElfException : public Exception {
 public:
 	DEFINE_EXCONSTRS(ElfException)
 };
 
+/**
+ * For all other exceptions regarding child handling
+ */
 class ChildException : public Exception {
 public:
 	DEFINE_EXCONSTRS(ChildException)
 };
 
+/**
+ * This class is responsible for managing child tasks. That is, it provides portals for the child
+ * tasks for various purposes (dataspaces, I/O ports, GSIs, services, ...). It will also handle
+ * exceptions like pagefaults, division by zero and so on and react appropriately. It allows you
+ * to load child tasks and get information about the running ones.
+ */
 class ChildManager {
 	class Portals;
 	friend class Portals;
 	friend class Child;
 
+	/**
+	 * Holds all portals for the child tasks
+	 */
 	class Portals {
 	public:
 		enum {
@@ -59,10 +74,9 @@ class ChildManager {
 		PORTAL static void exception(capsel_t pid);
 	};
 
-	enum {
-		MAX_CMDLINE_LEN	= 256,
-		MAX_MODAUX_LEN	= ExecEnv::PAGE_SIZE
-	};
+	/**
+	 * The different exit types
+	 */
 	enum ExitType {
 		THREAD_EXIT,
 		PROC_EXIT,
@@ -70,41 +84,111 @@ class ChildManager {
 	};
 
 public:
+	/**
+	 * Some settings
+	 */
 	enum {
 		MAX_CHILDS		= 32,
+		MAX_CMDLINE_LEN	= 256,
+		MAX_MODAUX_LEN	= ExecEnv::PAGE_SIZE
 	};
 
+	/**
+	 * Creates a new child manager. It will already create all Ecs that are required
+	 */
 	explicit ChildManager();
+	/**
+	 * Deletes this child manager, i.e. it kills and deletes all childs and deletes all Ecs
+	 */
 	~ChildManager();
 
+	/**
+	 * Loads a child task. That is, it treats <addr>...<addr>+<size> as an ELF file, creates a new
+	 * Pd, adds the correspondings segments to that Pd, creates a main thread and finally starts
+	 * the main thread. Afterwards, if the command line contains "provides=..." it waits until
+	 * the service with given name is registered.
+	 *
+	 * @param addr the address of the ELF file
+	 * @param size the size of the ELF file
+	 * @param cmdline the command line of the child
+	 * @param config the config to use. this allows you to specify the access to the modules, the
+	 * 	presented CPUs and other things
+	 * @param cpu the CPU to put the childs main thread on (default = current)
+	 * @return the id of the created child
+	 * @throws ELFException if the ELF is invalid
+	 * @throws Exception if something else failed
+	 */
 	Child::id_type load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
 			cpu_t cpu = CPU::current().log_id());
 
+	/**
+	 * @return the number of childs
+	 */
 	size_t count() const {
 		return _child_count;
 	}
+	/**
+	 * @return a semaphore that is up'ed as soon as a child has been killed
+	 */
 	Sm &dead_sm() {
 		return _diesm;
 	}
+
+	/**
+	 * Returns the child with given id. Note that the childs are managed by RCU. So, you should
+	 * use a RCULock to mark the read access and just use this method once at the beginning and
+	 * store it in a variable. If its none-zero, you can use it without trouble.
+	 *
+	 * @param id the child id
+	 * @return the child with given id or 0 if not existing
+	 */
 	const Child *get(Child::id_type id) const {
 		return get_at((id - _portal_caps) / per_child_caps());
 	}
+	/**
+	 * Returns the child at given index. Note that the childs are managed by RCU. So, you should
+	 * use a RCULock to mark the read access and just use this method once at the beginning and
+	 * store it in a variable. If its none-zero, you can use it without trouble.
+	 *
+	 * @param idx the index of the child
+	 * @return the child at given index or 0 if not existing
+	 */
 	const Child *get_at(size_t idx) const {
 		return rcu_dereference(_childs[idx]);
 	}
 
+	/**
+	 * Kills the child with given id
+	 *
+	 * @param id the child id
+	 */
 	void kill(Child::id_type id) {
 		destroy_child(id);
 	}
 
+	/**
+	 * @return the service registry
+	 */
 	const ServiceRegistry &registry() const {
 		return _registry;
 	}
-
+	/**
+	 * Registers the given service. This is used to let the task that hosts the childmanager
+	 * register services as well (by default, only its child tasks do so).
+	 *
+	 * @param cap the portal capabilities
+	 * @param name the service name
+	 * @param available the CPUs it is available on
+	 * @return a semaphore cap that is used to notify the service about potentially destroyed sessions
+	 */
 	capsel_t reg_service(capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
 		return reg_service(0,cap,name,available);
 	}
-
+	/**
+	 * Unregisters the service with given name
+	 *
+	 * @param name the service name
+	 */
 	void unreg_service(const String& name) {
 		unreg_service(0,name);
 	}
