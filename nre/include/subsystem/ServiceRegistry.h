@@ -109,9 +109,18 @@ public:
 	typedef SListIterator<Service> iterator;
 
 	/**
-	 * Constructor
+	 * Creates an empty service registry
 	 */
 	explicit ServiceRegistry() : _srvs() {
+	}
+	/**
+	 * Deletes all registered services
+	 */
+	~ServiceRegistry() {
+		for(iterator it = _srvs.begin(); it != _srvs.end(); ) {
+			iterator old = it++;
+			delete &*old;
+		}
 	}
 
 	/**

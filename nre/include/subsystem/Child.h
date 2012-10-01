@@ -38,22 +38,45 @@ class ChildManager;
 
 OStream &operator<<(OStream &os,const Child &c);
 
+/**
+ * Represents a running child task. This is used by the ChildManager to keep track of all its
+ * children. You can't create instances of it but only get instances from the ChildManager.
+ */
 class Child : public RCUObject {
 	friend class ChildManager;
 	friend OStream &operator<<(OStream &os,const Child &c);
 
+	/**
+	 * Holds the properties of an Sc that has been announced by a child
+	 */
 	class SchedEntity : public nre::SListItem {
 	public:
+		/**
+		 * Creates a new sched-entity
+		 *
+		 * @param name the name of the thread
+		 * @param cpu the cpu its running on
+		 * @param cap the Sc capability
+		 */
 		explicit SchedEntity(const nre::String &name,cpu_t cpu,capsel_t cap)
 			: nre::SListItem(), _name(name), _cpu(cpu), _cap(cap) {
 		}
 
+		/**
+		 * @return the name of the thread
+		 */
 		const nre::String &name() const {
 			return _name;
 		}
+		/**
+		 * @return the cpu its running on
+		 */
 		cpu_t cpu() const {
 			return _cpu;
 		}
+		/**
+		 * @return the Sc capability
+		 */
 		capsel_t cap() const {
 			return _cap;
 		}
@@ -67,48 +90,89 @@ class Child : public RCUObject {
 public:
 	typedef capsel_t id_type;
 
+	/**
+	 * @return the id of this child
+	 */
 	id_type id() const {
 		return _id;
 	}
+	/**
+	 * @return the cpu its main-thread is running on
+	 */
 	cpu_t cpu() const {
 		return _ec->cpu();
 	}
+	/**
+	 * @return the protection domain cap
+	 */
 	capsel_t pd() const {
 		return _pd->sel();
 	}
+	/**
+	 * @return its command line
+	 */
 	const String &cmdline() const {
 		return _cmdline;
 	}
+
+	/**
+	 * @return the entry-point (0 = main)
+	 */
+	uintptr_t entry() const {
+		return _entry;
+	}
+	/**
+	 * @return the stack address of the main thread
+	 */
+	uintptr_t stack() const {
+		return _stack;
+	}
+	/**
+	 * @return the UTCB address of the main thread
+	 */
+	uintptr_t utcb() const {
+		return _utcb;
+	}
+	/**
+	 * @return the address of the Hip
+	 */
+	uintptr_t hip() const {
+		return _hip;
+	}
+
+	/**
+	 * @return the virtual memory regions
+	 */
 	ChildMemory &reglist() {
 		return _regs;
 	}
 	const ChildMemory &reglist() const {
 		return _regs;
 	}
+
+	/**
+	 * @return the allocated IO ports
+	 */
 	RegionManager &io() {
 		return _io;
 	}
 	const RegionManager &io() const {
 		return _io;
 	}
-	uintptr_t entry() const {
-		return _entry;
-	}
-	uintptr_t stack() const {
-		return _stack;
-	}
-	uintptr_t utcb() const {
-		return _utcb;
-	}
-	uintptr_t hip() const {
-		return _hip;
-	}
+
+	/**
+	 * @return the allocated GSIs
+	 */
 	BitField<Hip::MAX_GSIS> &gsis() {
 		return _gsis;
 	}
 	const BitField<Hip::MAX_GSIS> &gsis() const {
 		return _gsis;
 	}
+
+	/**
+	 * @return the announced Scs
+	 */
 	SList<SchedEntity> &scs() {
 		return _scs;
 	}
@@ -118,7 +182,7 @@ public:
 
 private:
 	explicit Child(ChildManager *cm,id_type id,const char *cmdline)
-			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(), _sc(),
+			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
 			  _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
 			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),
 			  _main(), _stack(), _utcb(), _hip(), _last_fault_addr(), _last_fault_cpu(), _sm() {
@@ -127,8 +191,6 @@ private:
 		for(size_t i = 0; i < _ptcount; ++i)
 			delete _pts[i];
 		delete[] _pts;
-		if(_sc)
-			delete _sc;
 		if(_ec)
 			delete _ec;
 		if(_pd)
@@ -169,7 +231,6 @@ private:
 	bool _started;
 	Pd *_pd;
 	GlobalThread *_ec;
-	Sc *_sc;
 	Pt **_pts;
 	size_t _ptcount;
 	ChildMemory _regs;

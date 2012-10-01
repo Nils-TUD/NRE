@@ -16,11 +16,33 @@
 
 #include <kobj/Thread.h>
 #include <kobj/LocalThread.h>
+#include <kobj/Sc.h>
+#include <kobj/Pt.h>
+#include <utcb/UtcbFrame.h>
 #include <Compiler.h>
 #include <CPU.h>
 #include <RCU.h>
 
 namespace nre {
+
+Thread::Thread(cpu_t cpu,capsel_t evb,capsel_t cap,uintptr_t stack,uintptr_t uaddr)
+		: Ec(cpu,evb,cap), SListItem(), _rcu_counter(0), _utcb_addr(uaddr), _stack_addr(stack),
+		  _flags(), _tls() {
+	if(stack == 0 || uaddr == 0) {
+		UtcbFrame uf;
+		uf << Sc::CREATE << (stack == 0) << (uaddr == 0);
+		CPU::current().sc_pt().call(uf);
+		uf.check_reply();
+		if(stack == 0)
+			uf >> _stack_addr;
+		else
+			_flags |= HAS_OWN_STACK;
+		if(uaddr == 0)
+			uf >> _utcb_addr;
+		else
+			_flags |= HAS_OWN_UTCB;
+	}
+}
 
 void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 	ScopedCapSels scs;
@@ -32,20 +54,6 @@ void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 
 Thread::~Thread() {
 	RCU::remove(this);
-	// FIXME: it seems to be very difficult to know when localthreads can be destroyed. because
-	// there is no easy way to determine whether a call is currently in progress. the only way
-	// that I can see is having one globalthread running for every CPU and causing the one that
-	// runs on the same CPU as the localthread to call a dummyportal that is handled by the
-	// localthread. this way, we know after the call (assuming that all other portals handled
-	// by that localthread have been revoked before that) that the localthread is in kernel
-	// and will never leave it again. thus, we can destroy his stack (which is the most critical
-	// thing). but having all these globalthreads is too much overhead and not worth it.
-	// this raises the question whether the localthread+portal concept of NOVA is really a good
-	// thing. because assuming that it works like in other kernels, where you do a "wait_for_msg"
-	// to receive the next message and don't wait in kernel, terminating threads/services would be
-	// trivial.
-	delete _stack;
-	delete _utcb;
 }
 
 // slot 0 is reserved

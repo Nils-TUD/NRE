@@ -33,9 +33,7 @@ extern nre::UserSm globalsm;
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
 	explicit Vancouver(const char *args,size_t console,const nre::String &constitle)
-			: _gt_input(keyboard_thread,nre::CPU::current().log_id()),
-			  _sc_input(&_gt_input,nre::Qpd()),  _gt_vmmng(), _sc_vmmng(),
-			  _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon,console,constitle),
+			: _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon,console,constitle),
 			  _stcon(), _vmmngcon(), _vmmng(), _vcpus(), _stdevs() {
 		// storage is optional
 		try {
@@ -47,17 +45,19 @@ public:
 		create_devices(args);
 		create_vcpus();
 
-		_gt_input.set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-		_sc_input.start(nre::String("vmm-input"));
+		nre::GlobalThread *input = nre::GlobalThread::create(
+				keyboard_thread,nre::CPU::current().log_id(),nre::String("vmm-input"));
+		input->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+		input->start();
 
 		// vmmanager is optional
 		try {
 			_vmmngcon = new nre::Connection("vmmanager");
 			_vmmng = new nre::VMManagerSession(*_vmmngcon);
-			_gt_vmmng = new nre::GlobalThread(vmmng_thread,nre::CPU::current().log_id());
-			_sc_vmmng = new nre::Sc(_gt_vmmng,nre::Qpd());
-			_gt_vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
-			_sc_vmmng->start(nre::String("vmm-vmmng"));
+			nre::GlobalThread *vmmng = nre::GlobalThread::create(
+					vmmng_thread,nre::CPU::current().log_id(),nre::String("vmm-vmmng"));
+			vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+			vmmng->start();
 		}
 		catch(const nre::Exception &e) {
 			nre::Serial::get() << "Unable to connect to vmmanager: " << e.msg() << "\n";
@@ -81,10 +81,6 @@ private:
 	void create_devices(const char *args);
 	void create_vcpus();
 
-	nre::GlobalThread _gt_input;
-	nre::Sc _sc_input;
-	nre::GlobalThread *_gt_vmmng;
-	nre::Sc *_sc_vmmng;
 	Motherboard _mb;
 	Timeouts _timeouts;
 	nre::Connection _conscon;

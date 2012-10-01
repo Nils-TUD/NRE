@@ -44,7 +44,7 @@ public:
 	explicit ViewSwitcher(ConsoleService *srv);
 
 	void start() {
-		_sc.start(nre::String("console-vs"));
+		_ec->start();
 	}
 
 	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);
@@ -56,8 +56,7 @@ private:
 	nre::DataSpace _ds;
 	nre::Producer<SwitchCommand> _prod;
 	nre::Consumer<SwitchCommand> _cons;
-	nre::GlobalThread _ec;
-	nre::Sc _sc;
+	nre::GlobalThread *_ec;
 	ConsoleService *_srv;
 	static char _backup[];
 	static char _buffer[];

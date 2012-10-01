@@ -58,12 +58,12 @@ static void portal_test(capsel_t) {
 
 static void test_nesting() {
 	int a,b,c;
-	LocalThread ec(CPU::current().log_id());
+	LocalThread *ec = LocalThread::create(CPU::current().log_id());
 	{
-		UtcbFrameRef uf(ec.utcb());
+		UtcbFrameRef uf(ec->utcb());
 		uf.accept_delegates(1);
 	}
-	Pt pt(&ec,portal_test);
+	Pt pt(ec,portal_test);
 
 	UtcbFrame uf;
 	uf << 0xDEAD << 1 << 2;

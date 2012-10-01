@@ -77,7 +77,7 @@ private:
 		HostTimerDevice::Timer *timer;
 		nre::TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
 
-		nre::LocalThread ec;
+		nre::LocalThread *ec;
 		nre::Pt worker_pt;
 		nre::Sm xcpu_sm;
 		timevalue_t last_to;
@@ -91,10 +91,10 @@ private:
 		size_t slot_count; // with this many entries
 
 		explicit PerCpu(HostTimer *ht,cpu_t cpu)
-			: has_timer(false), timer(0), abstimeouts(), ec(cpu),
-			  worker_pt(&ec,portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
+			: has_timer(false), timer(0), abstimeouts(), ec(nre::LocalThread::create(cpu)),
+			  worker_pt(ec,portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
 			  remote_slot(), slots(), slot_count() {
-			ec.set_tls(nre::Thread::TLS_PARAM,ht);
+			ec->set_tls(nre::Thread::TLS_PARAM,ht);
 		}
 	};
 

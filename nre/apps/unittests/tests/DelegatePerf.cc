@@ -42,8 +42,8 @@ static void portal_test(capsel_t) {
 
 static void test_delegate() {
 	Ports ports(0x100,1 << 2);
-	LocalThread ec(CPU::current().log_id());
-	Pt pt(&ec,portal_test);
+	LocalThread *ec = LocalThread::create(CPU::current().log_id());
+	Pt pt(ec,portal_test);
 	uint64_t tic,tac,min = ~0ull,max = 0,ipc_duration,rdtsc;
 	tic = Util::tsc();
 	tac = Util::tsc();

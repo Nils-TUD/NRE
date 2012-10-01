@@ -251,18 +251,23 @@ public:
 	 * Removes the dataspace with given selector
 	 *
 	 * @param sel the selector
+	 * @return the descriptor
+	 * @throws ChildMemoryException if not found
 	 */
-	void remove(capsel_t sel) {
-		remove(get(sel));
+	DataSpaceDesc remove(capsel_t sel) {
+		return remove(get(sel),0);
 	}
 
 	/**
 	 * Removes the dataspace that contains the given address
 	 *
 	 * @param addr the virtual address
+	 * @param sel will be set to the descriptor, if not 0
+	 * @return the descriptor
+	 * @throws ChildMemoryException if not found
 	 */
-	void remove_by_addr(uintptr_t addr) {
-		remove(find_by_addr(addr));
+	DataSpaceDesc remove_by_addr(uintptr_t addr,capsel_t *sel = 0) {
+		return remove(find_by_addr(addr),sel);
 	}
 
 private:
@@ -273,11 +278,16 @@ private:
 		}
 		return 0;
 	}
-	void remove(DS *ds) {
+	DataSpaceDesc remove(DS *ds,capsel_t *sel) {
+		DataSpaceDesc desc;
 		if(!ds)
 			throw ChildMemoryException(E_NOT_FOUND,"Dataspace not found");
 		_list.remove(ds);
+		if(sel)
+			*sel = ds->cap();
+		desc = ds->desc();
 		delete ds;
+		return desc;
 	}
 
 	static bool isless(const DS &a,const DS &b) {

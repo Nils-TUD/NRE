@@ -33,10 +33,11 @@ class Timeouts {
 
 public:
 	Timeouts(Motherboard &mb) : _mb(mb), _timeouts(), _timercon("timer"), _timer(_timercon),
-		_last_to(NO_TIMEOUT), _ec(timer_thread,nre::CPU::current().log_id()),
-		_sc(&_ec,nre::Qpd()) {
-		_ec.set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
-		_sc.start(nre::String("vmm-timeouts"));
+		_last_to(NO_TIMEOUT) {
+		nre::GlobalThread *gt = nre::GlobalThread::create(
+				timer_thread,nre::CPU::current().log_id(),nre::String("vmm-timeouts"));
+		gt->set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
+		gt->start();
 	}
 
 	size_t alloc() {
@@ -65,6 +66,4 @@ private:
 	nre::Connection _timercon;
 	nre::TimerSession _timer;
 	timevalue_t _last_to;
-	nre::GlobalThread _ec;
-	nre::Sc _sc;
 };

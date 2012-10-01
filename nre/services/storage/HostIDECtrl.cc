@@ -28,8 +28,7 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 		  _ctrl(portbase,9), _ctrlreg(portbase + ATA_REG_CONTROL,1),
 		  _bm(dma && bmportbase ? new Ports(bmportbase,bmportcount) : 0), _clock(1000), _sm(),
 		  _gsi(gsi ? new Gsi(gsi) : 0),
-		  _prdt(Storage::MAX_DMA_DESCS * 8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-		  _gsigt(gsi_thread,CPU::current().log_id()), _gsisc(&_gsigt,Qpd()), _devs() {
+		  _prdt(Storage::MAX_DMA_DESCS * 8,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _devs() {
 	// check if the bus is empty
 	if(!is_bus_responding())
 		throw Exception(E_NOT_FOUND,32,"Bus %u is floating",_id);
@@ -39,8 +38,9 @@ HostIDECtrl::HostIDECtrl(uint id,uint gsi,Ports::port_t portbase,
 		char name[32];
 		nre::OStringStream os(name,sizeof(name));
 		os << "ide-gsi-" << gsi;
-		_gsigt.set_tls<HostIDECtrl*>(Thread::TLS_PARAM,this);
-		_gsisc.start(nre::String(name));
+		GlobalThread *gt = GlobalThread::create(gsi_thread,CPU::current().log_id(),nre::String(name));
+		gt->set_tls<HostIDECtrl*>(Thread::TLS_PARAM,this);
+		gt->start();
 	}
 
 	// init attached drives; begin with slave

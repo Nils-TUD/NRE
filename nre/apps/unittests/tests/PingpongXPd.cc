@@ -138,6 +138,7 @@ static void test_pingpong() {
 		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
 		mng->load(ds.virt(),self->size,"pingpongclient",cfg);
 	}
-	mng->wait_for_all();
+	while(mng->count() > 0)
+		mng->dead_sm().down();
 	delete mng;
 }

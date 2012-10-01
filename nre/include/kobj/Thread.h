@@ -50,6 +50,10 @@ public:
 		// the slot 0 is reserved for putting a ec-parameter in it
 		TLS_PARAM	= 0
 	};
+	enum Flags {
+		HAS_OWN_STACK	= 1,
+		HAS_OWN_UTCB	= 2,
+	};
 
 	/**
 	 * @return the current execution context
@@ -68,14 +72,7 @@ protected:
 	 * @param stack the stack address (0 = create one automatically)
 	 * @param uaddr the utcb address (0 = create one automatically)
 	 */
-	explicit Thread(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t uaddr = 0)
-			: Ec(cpu,evb,cap), SListItem(), _rcu_counter(0),
-			  _utcb(uaddr == 0 ? new DataSpace(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0) : 0),
-			  _utcb_addr(uaddr == 0 ? _utcb->virt() : uaddr),
-			  _stack(stack == 0 ? new DataSpace(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW) : 0),
-			  _stack_addr(stack == 0 ? _stack->virt() : stack),
-			  _tls() {
-	}
+	explicit Thread(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t uaddr = 0);
 	/**
 	 * The actual creation of the Thread.
 	 *
@@ -91,6 +88,12 @@ public:
 	 */
 	virtual ~Thread();
 
+	/**
+	 * @return the flags
+	 */
+	uint flags() const {
+		return _flags;
+	}
 	/**
 	 * @return the stack-address
 	 */
@@ -138,10 +141,9 @@ private:
 	Thread& operator=(const Thread&);
 
 	uint32_t _rcu_counter;
-	DataSpace *_utcb;
 	uintptr_t _utcb_addr;
-	DataSpace *_stack;
 	uintptr_t _stack_addr;
+	uint _flags;
 	void *_tls[TLS_SIZE];
 	static size_t _tls_idx;
 };

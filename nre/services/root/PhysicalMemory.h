@@ -59,6 +59,13 @@ public:
 		static RootDataSpace *_free;
 	};
 
+	static uintptr_t alloc(size_t size) {
+		return _mem.alloc(size);
+	}
+	static void free(uintptr_t phys,size_t size) {
+		_mem.free(phys,size);
+	}
+
 	static void add(uintptr_t addr,size_t size);
 	static void remove(uintptr_t addr,size_t size);
 	static void map_all();

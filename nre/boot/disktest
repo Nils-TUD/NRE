@@ -1,6 +1,6 @@
 #!tools/novaboot
 # -*-sh-*-
-QEMU_FLAGS=-m 1024 -smp 4 -hda dist/hd3.img
+QEMU_FLAGS=-m 128 -smp 4 -hda dist/imgs/hd2.img -cdrom dist/imgs/test.iso -drive id=disk,file=dist/imgs/hd1.img,format=raw,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0
 KERNEL=bin/apps/chainloader
 bin/apps/hypervisor spinner serial
 bin/apps/root
@@ -10,9 +10,6 @@ bin/apps/reboot provides=reboot
 bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
+bin/apps/storage provides=storage
 bin/apps/sysinfo
-bin/apps/storage provides=storage noidedma
-bin/apps/vancouver m:128 ncpu:1 PC_PS2 ahci:0xe0800000,14,0x30 drive:32,1,2
-bin/apps/guest_munich
-dist/imgs/bzImage-3.1.0-32 clocksource=tsc console=ttyS0 noapic quiet
-dist/imgs/initrd-js.lzma
+bin/apps/disktest
