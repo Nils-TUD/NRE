@@ -226,8 +226,10 @@ public:
 		// leave one page space (earlier error detection)
 		e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
 		// check if the size fits below the kernel
-		if(e + size < e || e + size > ExecEnv::KERNEL_START)
-			throw ChildMemoryException(E_CAPACITY,64,"Unable to allocate %zu bytes",size);
+		if(e + size < e || e + size > ExecEnv::KERNEL_START) {
+			throw ChildMemoryException(E_CAPACITY,64,
+					"Unable to allocate %zu bytes in childs address space",size);
+		}
 		return e;
 	}
 
