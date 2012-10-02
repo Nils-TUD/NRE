@@ -28,17 +28,17 @@ public:
 
 	class RootDataSpace {
 	public:
-		RootDataSpace() : _desc(), _sel(), _unmapsel(), _next() {
+		RootDataSpace() : _desc(), _map(0,true), _unmap(0,true), _next() {
 		}
 		RootDataSpace(const nre::DataSpaceDesc &desc);
 		RootDataSpace(capsel_t);
 		~RootDataSpace();
 
 		capsel_t sel() const {
-			return _sel;
+			return _map.sel();
 		}
 		capsel_t unmapsel() const {
-			return _unmapsel;
+			return _unmap.sel();
 		}
 		const nre::DataSpaceDesc &desc() const {
 			return _desc;
@@ -53,8 +53,8 @@ public:
 		static void revoke_mem(uintptr_t addr,size_t size,bool self = false);
 
 		nre::DataSpaceDesc _desc;
-		capsel_t _sel;
-		capsel_t _unmapsel;
+		nre::Sm _map;
+		nre::Sm _unmap;
 		RootDataSpace *_next;
 		static RootDataSpace *_free;
 	};

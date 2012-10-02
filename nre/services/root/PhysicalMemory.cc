@@ -28,8 +28,7 @@ RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
 
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
-		: _desc(desc), _sel(), _unmapsel(), _next() {
-	// TODO we leak resources here if something throws
+		: _desc(desc), _map(0), _unmap(0), _next() {
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
 
 	uint flags = _desc.flags();
@@ -54,20 +53,10 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
 	}
 	_desc.flags(flags);
-
-	// create a map and unmap-cap
-	// TODO why not use the Sm object here?
-	ScopedCapSels cap(2,2);
-	Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
-	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
-
-	_sel = cap.get() + 0;
-	_unmapsel = cap.get() + 1;
-	cap.release();
 }
 
 PhysicalMemory::RootDataSpace::RootDataSpace(capsel_t pid)
-		: _desc(), _sel(), _unmapsel(), _next() {
+		: _desc(), _map(0,true), _unmap(0,true), _next() {
 	// if we want to join a dataspace that does not exist in the root-task, its always an error
 	throw DataSpaceException(E_NOT_FOUND,32,"Dataspace %u not found in root",pid);
 }
@@ -84,12 +73,6 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 		revoke_mem(_desc.virt(),_desc.size(),true);
 		VirtualMemory::free(_desc.virt(),_desc.size());
 	}
-
-	// revoke caps and free selectors
-	Syscalls::revoke(Crd(_sel,0,Crd::OBJ_ALL),true);
-	CapSelSpace::get().free(_sel);
-	Syscalls::revoke(Crd(_unmapsel,0,Crd::OBJ_ALL),true);
-	CapSelSpace::get().free(_unmapsel);
 }
 
 void *PhysicalMemory::RootDataSpace::operator new (size_t) throw() {
