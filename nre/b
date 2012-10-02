@@ -173,6 +173,9 @@ case "$1" in
 		rm -f $tmp
 		kill `pgrep qemu` 2>/dev/null
 		;;
+	dbgr)
+		./$2 --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
+		;;
 	list)
 		ls -1 $build/bin/apps | while read l; do	
 			$crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
