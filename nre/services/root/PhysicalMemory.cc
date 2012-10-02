@@ -157,7 +157,8 @@ bool PhysicalMemory::can_map(uintptr_t phys,size_t size,uint &flags) {
 	}
 	// check if the child wants to request none-device-memory
 	for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-		if(!it->reserved() && Math::overlapped(phys,size,it->addr,it->size))
+		// if addr is 0 its the BIOS area, which is ok
+		if(it->addr != 0 && !it->reserved() && Math::overlapped(phys,size,it->addr,it->size))
 			return false;
 	}
 	return true;

@@ -111,11 +111,11 @@ HostACPI::RSDP *HostACPI::get_rsdp() {
 	}
 	delete ds;
 
-	// search in ebda
-	DataSpace bios(BIOS_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,BIOS_ADDR);
+	// search in ebda (+1 is necessary because 0 is considered as "give me arbitrary RAM")
+	DataSpace bios(BIOS_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,BIOS_ADDR + 1);
 	uint16_t ebda = *reinterpret_cast<uint16_t*>(bios.virt() + BIOS_EBDA_OFF);
-	ds = new DataSpace(BIOS_EBDA_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,ebda * 16);
-	area = reinterpret_cast<char*>(ds->virt());
+	ds = new DataSpace(BIOS_EBDA_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,ebda << 4);
+	area = reinterpret_cast<char*>(ds->virt() + ((ebda << 4) & (ExecEnv::PAGE_SIZE - 1)));
 	for(uintptr_t off = 0; off < BIOS_EBDA_SIZE; off += 16) {
 		if(memcmp(area + off,"RSD PTR ",8) == 0 && checksum(area + off,20) == 0) {
 			LOG(Logging::ACPI,Serial::get().writef(
