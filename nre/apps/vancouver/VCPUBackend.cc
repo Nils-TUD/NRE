@@ -137,8 +137,8 @@ Crd VCPUBackend::lookup(uintptr_t base,size_t size,uintptr_t hotspot) {
 	// XXX avoid the loop
 	for(int i = res.order(); i >= 0; i--) {
 		Crd x(((base + hotspot) & ~((1 << (i + ExecEnv::PAGE_SHIFT)) - 1)) >> ExecEnv::PAGE_SHIFT,i,res.attr());
-		if((x.offset() << ExecEnv::PAGE_SHIFT >= base) &&
-				(x.offset() << ExecEnv::PAGE_SHIFT + 1 << x.order()) <= (base + size))
+		uintptr_t start = x.offset() << ExecEnv::PAGE_SHIFT;
+		if((start >= base) && (start + (1 << (ExecEnv::PAGE_SHIFT + x.order()))) <= (base + size))
 			return x;
 	}
 	return res;
