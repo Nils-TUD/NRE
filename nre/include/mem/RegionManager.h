@@ -63,17 +63,30 @@ public:
 		return s;
 	}
 
-	uintptr_t alloc(size_t size) {
-		Region *r = get(size);
-		if(!r)
-			throw RegionManagerException(E_CAPACITY,64,"Unable to allocate %zu bytes",size);
+	uintptr_t alloc(size_t size,uint align = 1) {
+		Region *r = get(size,align);
+		if(!r) {
+			throw RegionManagerException(E_CAPACITY,64,
+					"Unable to allocate %zu bytes aligned to %u",size,align);
+		}
+		uintptr_t org = r->addr;
+		uintptr_t start = (r->addr + align - 1) & ~(align - 1);
+		size += start - r->addr;
 		r->addr += size;
 		r->size -= size;
-		return r->addr - size;
+		// if there is space left before the start due to aligning, free it
+		if(start > org) {
+			// do we need a new region?
+			if(r->size > 0)
+				r = get_free();
+			r->addr = org;
+			r->size = start - org;
+		}
+		return start;
 	}
 
-	void alloc(uintptr_t addr,size_t size) {
-		Region *r = get(addr,size);
+	void alloc_region(uintptr_t addr,size_t size) {
+		Region *r = get(addr,size,true);
 		if(!r)
 			throw RegionManagerException(E_EXISTS,64,"Region %p..%p not found",addr,addr + size);
 		remove_from(r,addr,size);
@@ -120,14 +133,17 @@ private:
 	RegionManager(const RegionManager&);
 	RegionManager& operator=(const RegionManager&);
 
-	Region *get(size_t size) {
+	Region *get(size_t size,uint align) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size >= size)
-				return _regs + i;
+			if(_regs[i].size >= size) {
+				uintptr_t start = (_regs[i].addr + align - 1) & ~(align - 1);
+				if(_regs[i].size - (start - _regs[i].addr) >= size)
+					return _regs + i;
+			}
 		}
 		return 0;
 	}
-	Region *get(uintptr_t addr,size_t size) {
+	Region *get(uintptr_t addr,size_t size,bool) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(addr >= _regs[i].addr && _regs[i].addr + _regs[i].size >= addr + size)
 				return _regs + i;

@@ -45,10 +45,10 @@ public:
 	static size_t used() {
 		return _used;
 	}
-	static uintptr_t alloc(size_t size) {
+	static uintptr_t alloc(size_t size,uint align = 1) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
-		uintptr_t addr = _regs.alloc(size);
+		uintptr_t addr = _regs.alloc(size,align);
 		_used += size;
 		return addr;
 	}

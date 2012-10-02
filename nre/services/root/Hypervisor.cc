@@ -95,7 +95,7 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 }
 
 void Hypervisor::unmap_mem(uintptr_t virt,size_t size) {
-	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SHIFT);
+	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SIZE);
 	CapRange(virt >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM_ALL).revoke(true);
 }
 

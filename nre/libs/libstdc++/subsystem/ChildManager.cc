@@ -532,7 +532,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 
 			// alloc() makes sure that nobody can free something from other childs.
 			if(op == Ports::RELEASE)
-				c->io().alloc(base,count);
+				c->io().alloc_region(base,count);
 
 			{
 				UtcbFrame puf;
@@ -578,12 +578,12 @@ void ChildManager::Portals::sc(capsel_t pid) {
 					const DataSpace &ds = cm->_dsm.create(
 							DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
 					stackaddr = c->reglist().find_free(ds.size());
-					c->reglist().add(ds.desc(),stackaddr,ds.perm() | ChildMemory::OWN,ds.unmapsel());
+					c->reglist().add(ds.desc(),stackaddr,ds.flags() | ChildMemory::OWN,ds.unmapsel());
 				}
 				if(utcb) {
 					DataSpaceDesc desc(ExecEnv::PAGE_SIZE,DataSpaceDesc::VIRTUAL,DataSpaceDesc::RW);
 					utcbaddr = c->reglist().find_free(ExecEnv::PAGE_SIZE);
-					c->reglist().add(desc,utcbaddr,desc.perm());
+					c->reglist().add(desc,utcbaddr,desc.flags());
 				}
 
 				uf << E_SUCCESS;
@@ -665,8 +665,8 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	uintptr_t addr = 0;
 	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
-		desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm());
-		c->reglist().add(desc,addr,desc.perm());
+		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags());
+		c->reglist().add(desc,addr,desc.flags());
 		desc.virt(addr);
 		LOG(Logging::DATASPACES,
 				Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
@@ -678,11 +678,14 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 
 		// add it to the regions of the child
 		try {
-			uint flags = ds.perm();
+			uint flags = ds.flags();
 			// only create creations and non-device-memory
 			if(type != DataSpace::JOIN && desc.phys() == 0)
 				flags |= ChildMemory::OWN;
-			addr = c->reglist().find_free(ds.size());
+			uint align = 1;
+			if(flags & DataSpaceDesc::BIGPAGES)
+				align = static_cast<uint>(ExecEnv::BIG_PAGE_SIZE);
+			addr = c->reglist().find_free(ds.size(),align);
 			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}
 		catch(...) {
@@ -703,7 +706,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.perm(),ds.phys(),addr,ds.virt());
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt());
 	}
 }
 
@@ -881,10 +884,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		ChildMemory::DS *ds = c->reglist().find_by_addr(pfaddr);
 		uint perms = 0;
 		uint flags = 0;
-		kill = !ds || !ds->desc().perm();
+		kill = !ds || !ds->desc().flags();
 		if(!kill) {
 			flags = ds->page_perms(pfaddr);
-			perms = ds->desc().perm() & ChildMemory::RWX;
+			perms = ds->desc().flags() & ChildMemory::RWX;
 		}
 		// check if the access rights are violated
 		if(flags) {
@@ -927,11 +930,22 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		}
 
 		if(!kill && (remap || !flags)) {
+			// try to map the next few pages
+			size_t pages = 32;
+			if(ds->desc().flags() & DataSpaceDesc::BIGPAGES) {
+				// try to map the whole pagetable at once
+				pages = ExecEnv::PT_ENTRY_COUNT;
+				// take care that we start at the beginning (note that this assumes that it is
+				// properly aligned, which is made sure by root. otherwise we might leave the ds
+				pfpage &= ~(ExecEnv::BIG_PAGE_SIZE - 1);
+			}
 			uintptr_t src = ds->origin(pfpage);
-			// try to map the next 32 pages
-			size_t pages = ds->page_perms(pfpage,32,perms);
-			uf.delegate(CapRange(src >> ExecEnv::PAGE_SHIFT,pages,
-					Crd::MEM | (perms << 2),pfaddr >> ExecEnv::PAGE_SHIFT));
+			CapRange cr(src >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM | (perms << 2),
+					pfpage >> ExecEnv::PAGE_SHIFT);
+			// ensure that it fits into the utcb
+			cr.limit_to(uf.free_typed());
+			cr.count(ds->page_perms(pfpage,cr.count(),perms));
+			uf.delegate(cr);
 			// ensure that we have the memory (if we're a subsystem this might not be true)
 			// TODO this is not sufficient, in general
 			// TODO perhaps we could find the dataspace, that belongs to this address and use this

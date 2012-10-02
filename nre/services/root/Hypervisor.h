@@ -68,7 +68,7 @@ public:
 
 	static void allocate_ports(nre::Ports::port_t base,uint count) {
 		nre::ScopedLock<nre::UserSm> guard(&_io_sm);
-		_io.alloc(base,count);
+		_io.alloc_region(base,count);
 	}
 	static void release_ports(nre::Ports::port_t base,uint count) {
 		nre::ScopedLock<nre::UserSm> guard(&_io_sm);

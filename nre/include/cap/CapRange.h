@@ -66,6 +66,26 @@ public:
 	}
 
 	/**
+	 * Limits count() to a value that ensures that at most <free_typed> typed items are necessary
+	 * in the UTCB to delegate this range.
+	 *
+	 * @param free_typed the number of free typed items you have
+	 */
+	void limit_to(size_t free_typed) {
+		uintptr_t hs = hotspot() != CapRange::NO_HOTSPOT ? hotspot() : start();
+		size_t c = count();
+		uintptr_t st = start();
+		while(free_typed > 0 && c > 0) {
+			uint minshift = Math::minshift(st | hs,c);
+			st += 1 << minshift;
+			hs += 1 << minshift;
+			c -= 1 << minshift;
+			free_typed--;
+		}
+		_count = count() - c;
+	}
+
+	/**
 	 * The start of this range
 	 */
 	uintptr_t start() const {

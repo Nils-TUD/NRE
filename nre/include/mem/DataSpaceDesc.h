@@ -35,34 +35,35 @@ public:
 		// will never be swapped out
 		LOCKED
 	};
-	enum Perm {
+	enum Flags {
 		// note that this equals the values in a Crd
-		R	= 1 << 0,
-		W	= 1 << 1,
-		X	= 1 << 2,
-		RW	= R | W,
-		RX	= R | X,
-		RWX	= R | W | X,
+		R			= 1 << 0,
+		W			= 1 << 1,
+		X			= 1 << 2,
+		RW			= R | W,
+		RX			= R | X,
+		RWX			= R | W | X,
+		BIGPAGES	= 1 << 3,	// align to 4M in virtual memory to allow 4M pages
 	};
 
 	/**
 	 * Creates an empty descriptor
 	 */
-	explicit DataSpaceDesc() : _virt(), _phys(), _origin(), _size(), _perm(), _type() {
+	explicit DataSpaceDesc() : _virt(), _phys(), _origin(), _size(), _flags(), _type() {
 	}
 	/**
 	 * Creates a descriptor from given parameters
 	 *
 	 * @param size the size in bytes
 	 * @param type the type of memory
-	 * @param perm the permissions
+	 * @param flags the flags
 	 * @param phys the physical address to request (optionally)
 	 * @param virt the virtual address (ignored)
 	 * @param origin the origin of the memory (only used by the dataspace infrastructure)
 	 */
-	explicit DataSpaceDesc(size_t size,Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0,
+	explicit DataSpaceDesc(size_t size,Type type,uint flags,uintptr_t phys = 0,uintptr_t virt = 0,
 			uintptr_t origin = 0)
-		: _virt(virt), _phys(phys), _origin(origin), _size(size), _perm(perm), _type(type) {
+		: _virt(virt), _phys(phys), _origin(origin), _size(size), _flags(flags), _type(type) {
 	}
 
 	/**
@@ -106,13 +107,13 @@ public:
 	}
 
 	/**
-	 * The permissions
+	 * The flags
 	 */
-	uint perm() const {
-		return _perm;
+	uint flags() const {
+		return _flags;
 	}
-	void perm(uint perm) {
-		_perm = perm;
+	void flags(uint flags) {
+		_flags = flags;
 	}
 
 	/**
@@ -130,13 +131,13 @@ private:
 	uintptr_t _phys;
 	uintptr_t _origin;
 	size_t _size;
-	uint _perm;
+	uint _flags;
 	Type _type;
 };
 
 static inline OStream &operator<<(OStream &os,const DataSpaceDesc &desc) {
-	os.writef("virt=%p phys=%p size=%zu org=%p perm=%#x",
-			desc.virt(),desc.phys(),desc.size(),desc.origin(),desc.perm());
+	os.writef("virt=%p phys=%p size=%zu org=%p flags=%#x",
+			desc.virt(),desc.phys(),desc.size(),desc.origin(),desc.flags());
 	return os;
 }
 

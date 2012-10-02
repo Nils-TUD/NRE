@@ -46,7 +46,8 @@ PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created") {
 }
 PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
 	guest_size = argv[0] * 1024 * 1024;
-	guest_mem = new DataSpace(guest_size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX);
+	guest_mem = new DataSpace(guest_size,DataSpaceDesc::ANONYMOUS,
+			DataSpaceDesc::RWX | DataSpaceDesc::BIGPAGES);
 }
 PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
 	for(unsigned count = 0; count < ncpu; count++)

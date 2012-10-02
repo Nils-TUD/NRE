@@ -165,13 +165,13 @@ void StorageService::portal(capsel_t pid) {
 				}
 
 				if(cmd == Storage::READ) {
-					if(!(sess->data().perm() & DataSpaceDesc::R))
+					if(!(sess->data().flags() & DataSpaceDesc::R))
 						throw Exception(E_ARGS_INVALID,"Need to read, but no read permission");
 					mng->get(sess->ctrl())->read(sess->drive(),sess->prod(),tag,
 							sess->data(),sector,dma);
 				}
 				else {
-					if(!(sess->data().perm() & DataSpaceDesc::W))
+					if(!(sess->data().flags() & DataSpaceDesc::W))
 						throw Exception(E_ARGS_INVALID,"Need to write, but no write permission");
 					mng->get(sess->ctrl())->write(sess->drive(),sess->prod(),tag,
 							sess->data(),sector,dma);

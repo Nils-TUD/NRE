@@ -54,7 +54,7 @@ public:
 		RX	= R | X,
 		RWX	= R | W | X,
 		// indicates that the memory has been requested by us, i.e. we haven't just joined the DS
-		OWN = 0x10,
+		OWN = 1 << 4,
 	};
 
 	/**
@@ -172,7 +172,7 @@ public:
 		phys = 0;
 		for(iterator it = begin(); it != end(); ++it) {
 			virt += it->desc().size();
-			if(it->desc().type() != DataSpaceDesc::VIRTUAL && (it->desc().perm() & OWN))
+			if(it->desc().type() != DataSpaceDesc::VIRTUAL && (it->desc().flags() & OWN))
 				phys += it->desc().size();
 		}
 	}
@@ -217,14 +217,17 @@ public:
 	 * Finds a free position in the address space to put in <size> bytes.
 	 *
 	 * @param size the number of bytes to map
+	 * @param align the alignment (has to be a power of 2)
 	 * @return the address where it can be mapped
 	 * @throw ChildMemoryException if there is not enough space
 	 */
-	uintptr_t find_free(size_t size) const {
+	uintptr_t find_free(size_t size,uint align = 1) const {
 		// the list is sorted, so use the last ds
 		uintptr_t e = _list.length() > 0 ? _list.tail()->desc().virt() + _list.tail()->desc().size() : 0;
 		// leave one page space (earlier error detection)
 		e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
+		// align it
+		e = (e + align - 1) & ~(align - 1);
 		// check if the size fits below the kernel
 		if(e + size < e || e + size > ExecEnv::KERNEL_START) {
 			throw ChildMemoryException(E_CAPACITY,64,
@@ -239,7 +242,7 @@ public:
 	 * @param desc the dataspace descriptor (desc.virt() is expected to contain the address where
 	 * 	the memory is located in the parent (=us))
 	 * @param addr the virtual address where to map it to in the child
-	 * @param flags the flags to use (desc.perm() is ignored)
+	 * @param flags the flags to use (desc.flags() is ignored)
 	 * @param sel the selector for the dataspace
 	 */
 	void add(const DataSpaceDesc& desc,uintptr_t addr,uint flags,capsel_t sel = ObjCap::INVALID) {

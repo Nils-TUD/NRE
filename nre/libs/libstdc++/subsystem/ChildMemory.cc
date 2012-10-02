@@ -23,7 +23,7 @@ namespace nre {
 OStream &operator<<(OStream &os,const ChildMemory &cm) {
 	os << "\tDataspaces:\n";
 	for(ChildMemory::iterator it = cm.begin(); it != cm.end(); ++it) {
-		uint flags = it->desc().perm();
+		uint flags = it->desc().flags();
 		os.writef(
 			"\t\t%p .. %p (%#0"FMT_WORD_HEXLEN"x bytes) %c%c%c%c <- %p\n",it->desc().virt(),
 				it->desc().virt() + it->desc().size(),it->desc().size(),

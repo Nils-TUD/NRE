@@ -31,25 +31,32 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		: _desc(desc), _sel(), _unmapsel(), _next() {
 	// TODO we leak resources here if something throws
 	_desc.size(Math::round_up<size_t>(_desc.size(),ExecEnv::PAGE_SIZE));
-	uint flags = _desc.perm();
+
+	uint flags = _desc.flags();
 	if(_desc.phys() != 0) {
 		_desc.phys(Math::round_dn<uintptr_t>(_desc.phys(),ExecEnv::PAGE_SIZE));
 		if(!PhysicalMemory::can_map(_desc.phys(),_desc.size(),flags)) {
 			throw DataSpaceException(E_ARGS_INVALID,64,"Unable to map physical memory %p..%p",
 				_desc.phys(),_desc.phys() + _desc.size());
 		}
-		_desc.perm(flags);
 		_desc.virt(VirtualMemory::alloc(_desc.size()));
 		_desc.origin(_desc.phys());
 		Hypervisor::map_mem(_desc.phys(),_desc.virt(),_desc.size());
 	}
 	else {
-		_desc.phys(alloc(_desc.size()));
+		uint align = 1;
+		if((flags & DataSpaceDesc::BIGPAGES) && _desc.size() >= ExecEnv::BIG_PAGE_SIZE)
+			align = static_cast<uint>(ExecEnv::BIG_PAGE_SIZE);
+		else
+			flags &= ~DataSpaceDesc::BIGPAGES;
+		_desc.phys(alloc(_desc.size(),align));
 		_desc.origin(_desc.phys());
 		_desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
 	}
+	_desc.flags(flags);
 
 	// create a map and unmap-cap
+	// TODO why not use the Sm object here?
 	ScopedCapSels cap(2,2);
 	Syscalls::create_sm(cap.get() + 0,0,Pd::current()->sel());
 	Syscalls::create_sm(cap.get() + 1,0,Pd::current()->sel());
@@ -67,7 +74,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(capsel_t pid)
 
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
 	// release memory
-	uint flags = _desc.perm();
+	uint flags = _desc.flags();
 	bool isdev = PhysicalMemory::can_map(_desc.phys(),_desc.size(),flags);
 	if(!isdev) {
 		revoke_mem(_desc.virt(),_desc.size(),false);
@@ -174,7 +181,7 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 			case DataSpace::JOIN:
 				if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 					uintptr_t addr = VirtualMemory::alloc(desc.size());
-					desc = DataSpaceDesc(desc.size(),desc.type(),desc.perm(),0,addr);
+					desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags(),0,addr);
 					LOG(Logging::DATASPACES,Serial::get() << "Root: Allocated virtual ds " << desc << "\n");
 					uf << E_SUCCESS << desc;
 				}

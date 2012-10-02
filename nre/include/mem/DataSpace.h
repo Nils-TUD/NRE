@@ -65,8 +65,8 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint perm,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _desc(size,type,perm,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
+	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint flags,uintptr_t phys = 0,uintptr_t virt = 0)
+		: _desc(size,type,flags,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
 		create();
 	}
 	/**
@@ -129,8 +129,8 @@ public:
 	/**
 	 * @return the permissions (see DataSpaceDesc::Perm)
 	 */
-	uint perm() const {
-		return _desc.perm();
+	uint flags() const {
+		return _desc.flags();
 	}
 	/**
 	 * @return the type of dataspace
