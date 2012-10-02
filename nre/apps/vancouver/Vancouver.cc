@@ -156,11 +156,11 @@ bool Vancouver::receive(MessageHostOp &msg) {
 
 			msg.size = it->size;
 			msg.cmdline = msg.start + it->size;
-			msg.cmdlen = strlen(it->cmdline());
+			msg.cmdlen = strlen(it->cmdline()) + 1;
 
 			// does it fit in guest mem?
 			if(destaddr >= guest_mem->virt() + guest_mem->size() ||
-					destaddr + it->size + msg.cmdlen + 1 > guest_mem->virt() + guest_mem->size()) {
+					destaddr + it->size + msg.cmdlen > guest_mem->virt() + guest_mem->size()) {
 				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
 						it->addr,it->addr + it->size + msg.cmdlen,destaddr - guest_mem->virt(),guest_size);
 				return false;
@@ -168,7 +168,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
 
 			DataSpace ds(it->size,DataSpaceDesc::LOCKED,DataSpaceDesc::R,it->addr);
 			memcpy(msg.start,reinterpret_cast<void*>(ds.virt()),ds.size());
-			memcpy(msg.cmdline,it->cmdline(),msg.cmdlen + 1);
+			memcpy(msg.cmdline,it->cmdline(),msg.cmdlen);
 			return true;
 		}
 		break;
