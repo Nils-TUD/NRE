@@ -37,7 +37,6 @@ class Utcb : public UtcbBase {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
 
-public:
 	enum {
 		POS_SLOT	= ((SIZE - sizeof(UtcbHead)) / sizeof(word_t)) / 2,
 		SLOTS		= WORDS - sizeof(UtcbHead) / sizeof(word_t)
