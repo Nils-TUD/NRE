@@ -212,7 +212,7 @@ public:
 	 * selectors in your CapSpace.
 	 */
 	void accept_delegates() {
-		accept_delegates(delegation_window().order());
+		accept_delegates(delegation_window().order(),delegation_window().attr());
 	}
 	/**
 	 * Prepares the UTCB frame for capability delegations. That is, it allocates new cap selectors
