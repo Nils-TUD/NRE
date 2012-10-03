@@ -54,8 +54,6 @@ progress. So, there will probably be bugs and a lot of missing features.
 Additionally, don't expect that the API stays stable.
 
 The following lists a few known issues and limitations that you might run into:
-- Although NRE runs on x86_32 and x86_64, the ported application vancouver runs
-  on x86_32 only. It will be a bit of work to port it, I guess.
 - The network models of vancouver have not been ported yet and a network service
   in NRE is missing as well.
 - It is not possible yet to get direct access to a PCI device.
