@@ -22,6 +22,7 @@
 .extern exit
 .extern _post_init
 .extern _init
+.extern _startup_info
 
 # initial state for root:
 #   eax: cpu
@@ -80,14 +81,3 @@ _start:
 	call	exit
 	# just to be sure
 	1:		jmp	1b
-
-# information for startup
-.section .bss.startup_info
-.global _startup_info
-_startup_info:
-	.long	0	# HIP
-	.long	0	# UTCB
-	.long	0	# stack
-	.long	0	# cpu
-	.long	0	# inited
-	.long	0	# child

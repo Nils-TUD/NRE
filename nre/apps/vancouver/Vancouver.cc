@@ -50,7 +50,7 @@ PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
 			DataSpaceDesc::RWX | DataSpaceDesc::BIGPAGES);
 }
 PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
-	for(unsigned count = 0; count < ncpu; count++)
+	for(size_t count = 0; count < ncpu; count++)
 		mb.parse_args("vcpu halifax vbios lapic");
 }
 

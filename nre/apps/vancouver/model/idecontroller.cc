@@ -50,7 +50,7 @@ private:
 	DBus<MessageDisk> &_bus_disk;
 	DBus<MessageIrqLines> &_bus_irqlines;
 	unsigned char _irq;
-	unsigned _bdf;
+	uint32_t _bdf;
 	size_t _disknr;
 	Storage::Parameter _params;
 	union {
@@ -61,20 +61,20 @@ private:
 	};
 	unsigned char _command,_error,_status,_control;
 	char *_buffer;
-	unsigned long _baddr;
-	unsigned _bufferoffset;
+	uintptr_t _baddr;
+	size_t _bufferoffset;
 
-	unsigned long long get_sector(bool lba48) {
-		unsigned long long res = (_lbalow & 0xff) | (_lbamid & 0xff) << 8 | (_lbahigh & 0xff) << 16;
+	uint64_t get_sector(bool lba48) {
+		uint64_t res = (_lbalow & 0xff) | (_lbamid & 0xff) << 8 | (_lbahigh & 0xff) << 16;
 		if(lba48) {
 			res |= (_lbalow & 0xff00) << (24 - 8);
-			res |= static_cast<unsigned long long>(_lbamid & 0xff00) << (32 - 8);
-			res |= static_cast<unsigned long long>(_lbahigh & 0xff00) << (40 - 8);
+			res |= static_cast<uint64_t>(_lbamid & 0xff00) << (32 - 8);
+			res |= static_cast<uint64_t>(_lbahigh & 0xff00) << (40 - 8);
 		}
 		return res;
 	}
 
-	void set_sector(unsigned long long sector) {
+	void set_sector(uint64_t sector) {
 		_lbalow = ((sector >> 0) & 0xff) | ((sector >> (24 - 8)) & 0xff00);
 		_lbamid = ((sector >> 8) & 0xff) | ((sector >> (32 - 8)) & 0xff00);
 		_lbahigh = ((sector >> 16) & 0xff) | ((sector >> (40 - 8)) & 0xff00);
@@ -107,7 +107,7 @@ private:
 
 		identify[10] = 'S'; // SN
 		identify[23] = 'F'; // FW
-		for(unsigned i = 0; i < 20; i++)
+		for(size_t i = 0; i < 20; i++)
 			identify[27 + i] = _params.name[2 * i] << 8 | _params.name[2 * i + 1];
 		identify[48] = 0x0001; // dword IO
 		identify[49] = 0x0200; // lba supported
@@ -131,12 +131,12 @@ private:
 		identify[0xff] = 0xa5;
 
 		unsigned char checksum = 0;
-		for(unsigned i = 0; i < 512; i++)
+		for(size_t i = 0; i < 512; i++)
 			checksum += reinterpret_cast<unsigned char *>(identify)[i];
 		identify[0xff] -= checksum << 8;
 	}
 
-	void do_read(bool initial,unsigned long long sector) {
+	void do_read(bool initial,uint64_t sector) {
 		if(!initial and !_count) {
 			_status &= ~0x88; // no data anymore
 			return;
@@ -325,7 +325,7 @@ public:
 	}
 
 	IdeController(DBus<MessageDisk> &bus_disk,DBus<MessageIrqLines> &bus_irqlines,unsigned char irq,
-	        unsigned bdf,size_t disknr,Storage::Parameter params,char *buffer,unsigned long baddr) :
+	        uint32_t bdf,size_t disknr,Storage::Parameter params,char *buffer,uintptr_t baddr) :
 			_bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr), _params(
 			        params), _buffer(buffer), _baddr(baddr), _bufferoffset(0) {
 		PCI_reset();
@@ -345,12 +345,12 @@ PARAM_HANDLER(ide,
 	mb.bus_disk.send(msg0);
 
 	MessageHostOp msg1(MessageHostOp::OP_ALLOC_FROM_GUEST,
-	        (unsigned long)IdeController::BUFFER_SIZE);
+	        (size_t)IdeController::BUFFER_SIZE);
 	MessageHostOp msg2(MessageHostOp::OP_GUEST_MEM,0UL);
 	if(!mb.bus_hostop.send(msg1) || !mb.bus_hostop.send(msg2))
 		Util::panic("%s failed to alloc %d from guest memory\n",__PRETTY_FUNCTION__,IdeController::BUFFER_SIZE);
 
-	unsigned bdf = PciHelper::find_free_bdf(mb.bus_pcicfg,argv[3] == 0 ? ~0UL : argv[3]);
+	uint32_t bdf = PciHelper::find_free_bdf(mb.bus_pcicfg,argv[3] == 0 ? ~0UL : argv[3]);
 	IdeController *dev = new IdeController(mb.bus_disk,mb.bus_irqlines,argv[2],bdf,hostdisk,
 	        params,msg2.ptr + msg1.phys,msg1.phys);
 	mb.bus_pcicfg.add(dev,IdeController::receive_static<MessagePciConfig>);

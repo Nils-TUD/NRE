@@ -19,7 +19,7 @@
 
 #include <stream/Serial.h>
 
-#define union64(HIGH, LOW)          ({ unsigned long long res; asm ("" : "=A"(res) : "d"(HIGH), "a"(LOW)); res; })
+#define union64(HIGH, LOW)          ({ uint64_t res; asm ("" : "=A"(res) : "d"(HIGH), "a"(LOW)); res; })
 
 enum {
 	INJ_IRQWIN = 0x1000, INJ_NMIWIN = 0x0000, // XXX missing
@@ -29,7 +29,7 @@ enum {
 /**
  * Check whether some address is in a range.
  */
-static inline bool in_range(unsigned long address,unsigned long base,unsigned long size) {
+static inline bool in_range(uintptr_t address,uintptr_t base,size_t size) {
 	return (base <= address) && (address <= base + size - 1);
 }
 
@@ -37,11 +37,11 @@ template<unsigned operand_size>
 static inline void cpu_move(void *tmp_dst,void *tmp_src) {
 	// XXX aliasing!
 	if(operand_size == 0)
-		*reinterpret_cast<unsigned char *>(tmp_dst) = *reinterpret_cast<unsigned char *>(tmp_src);
+		*reinterpret_cast<uint8_t*>(tmp_dst) = *reinterpret_cast<uint8_t*>(tmp_src);
 	if(operand_size == 1)
-		*reinterpret_cast<unsigned short *>(tmp_dst) = *reinterpret_cast<unsigned short *>(tmp_src);
+		*reinterpret_cast<uint16_t*>(tmp_dst) = *reinterpret_cast<uint16_t*>(tmp_src);
 	if(operand_size == 2)
-		*reinterpret_cast<unsigned int *>(tmp_dst) = *reinterpret_cast<unsigned int *>(tmp_src);
+		*reinterpret_cast<uint32_t*>(tmp_dst) = *reinterpret_cast<uint32_t*>(tmp_src);
 	//MEMORY_BARRIER;
 }
 

@@ -4,23 +4,20 @@ import os
 Import('env')
 
 vcenv = env.Clone()
-if vcenv['ARCH'] == 'x86_32':
-	# turn off these warnings. vancouver produces too many of them :(
-	# -fno-strict-aliasing is needed e.g. for cpu_move
-	vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
-	vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
-	# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
-	# an asm constraint is impossible. strange :/
-	btype = os.environ.get('NRE_BUILD')
-	if btype == 'debug':
-		halienv = vcenv.Clone()
-		halienv.Append(CXXFLAGS = ' -O1 -fno-inline')
-		halifax = halienv.Object('executor/halifax.cc')
-	else:
-		halifax = vcenv.Object('executor/halifax.cc')
-	# use custom linker script
-	vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
-	files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]
-	vcenv.NREProgram(vcenv, 'vancouver', [files, Glob('*.cc'), halifax])
+# turn off these warnings. vancouver produces too many of them :(
+# -fno-strict-aliasing is needed e.g. for cpu_move
+vcenv.Append(CXXFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
+vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-aliasing');
+# somehow we have to compile the instructions.inc with at least -O1. otherwise gcc complains that
+# an asm constraint is impossible. strange :/
+btype = os.environ.get('NRE_BUILD')
+if btype == 'debug':
+	halienv = vcenv.Clone()
+	halienv.Append(CXXFLAGS = ' -O1 -fno-inline')
+	halifax = halienv.Object('executor/halifax.cc')
 else:
-	print "Vancouver has not yet been ported to " + vcenv['ARCH']
+	halifax = vcenv.Object('executor/halifax.cc')
+# use custom linker script
+vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
+files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]
+vcenv.NREProgram(vcenv, 'vancouver', [files, Glob('*.cc'), halifax])

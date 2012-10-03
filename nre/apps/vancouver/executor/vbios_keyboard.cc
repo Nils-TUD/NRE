@@ -74,12 +74,12 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 		// handle both shifts the same
 		if(value & Keyboard::RSHIFT)
 			value = (value & ~Keyboard::RSHIFT) | Keyboard::LSHIFT;
-		for(unsigned i = 0; i < ARRAY_SIZE(bios_key_map); i++) {
+		for(size_t i = 0; i < ARRAY_SIZE(bios_key_map); i++) {
 			if(bios_key_map[i].keycode == value)
 				return bios_key_map[i].code;
 		}
 		unsigned *ascii_map = KeyboardUtil::get_ascii_map();
-		for(unsigned i = 0; i < 128; i++) {
+		for(size_t i = 0; i < 128; i++) {
 			if(ascii_map[i] == value)
 				return (value << 8) | i;
 		}

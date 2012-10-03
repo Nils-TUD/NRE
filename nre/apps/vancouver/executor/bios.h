@@ -42,7 +42,7 @@ protected:
 	/**
 	 * Write bios data helper.
 	 */
-	void write_bda(unsigned short offset,unsigned value,unsigned len) {
+	void write_bda(unsigned short offset,unsigned value,size_t len) {
 		assert(len <= sizeof(value));
 		copy_out(0x400 + offset,&value,len);
 	}
@@ -50,7 +50,7 @@ protected:
 	/**
 	 * Read bios data helper.
 	 */
-	unsigned read_bda(unsigned offset) {
+	unsigned read_bda(size_t offset) {
 		unsigned res;
 		copy_in(0x400 + offset,&res,sizeof(res));
 		return res;

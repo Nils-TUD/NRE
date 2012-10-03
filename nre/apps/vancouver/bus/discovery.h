@@ -24,10 +24,12 @@
 template<typename Y>
 class DiscoveryHelper {
 protected:
+	// note: inlining these functions causes a stack-underflow in vbios_reset, for example (with x86_64).
+
 	/*
 	 * Write a string to a resource.
 	 */
-	bool discovery_write_st(const char *resource,unsigned offset,const void *value,unsigned count) {
+	NOINLINE bool discovery_write_st(const char *resource,size_t offset,const void *value,size_t count) {
 		MessageDiscovery msg(resource,offset,value,count);
 		return static_cast<Y*>(this)->_mb.bus_discovery.send(msg);
 	}
@@ -35,14 +37,14 @@ protected:
 	/**
 	 * Write a dword or less than it.
 	 */
-	bool discovery_write_dw(const char *resource,unsigned offset,unsigned value,unsigned count = 4) {
+	NOINLINE bool discovery_write_dw(const char *resource,size_t offset,unsigned value,size_t count = 4) {
 		return discovery_write_st(resource,offset,&value,count);
 	}
 
 	/**
 	 * Read a dword.
 	 */
-	bool discovery_read_dw(const char *resource,unsigned offset,unsigned &value) {
+	NOINLINE bool discovery_read_dw(const char *resource,size_t offset,unsigned &value) {
 		MessageDiscovery msg(resource,offset,&value);
 		return static_cast<Y*>(this)->_mb.bus_discovery.send(msg);
 	}
@@ -50,7 +52,7 @@ protected:
 	/**
 	 * Return the length of an ACPI table or minlen if it is smaller.
 	 */
-	unsigned discovery_length(const char *resource,unsigned minlen) {
+	NOINLINE size_t discovery_length(const char *resource,size_t minlen) {
 		unsigned res;
 		if(!discovery_read_dw(resource,4,res) || res < minlen)
 			return minlen;

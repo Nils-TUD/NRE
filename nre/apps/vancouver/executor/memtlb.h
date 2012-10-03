@@ -31,7 +31,7 @@ protected:
 
 private:
 	// pdpt cache for 32-bit PAE
-	unsigned long long _pdpt[4];
+	uint64_t _pdpt[4];
 	unsigned long _msr_efer;
 	unsigned _paging_mode;
 
@@ -42,7 +42,7 @@ private:
 		FEATURE_SMALL_PDPT	= 1 << 3,
 		FEATURE_LONG		= 1 << 4,
 	};
-	unsigned (*tlb_fill_func)(MemTlb *tlb,unsigned long virt,unsigned type,long unsigned &phys);
+	unsigned (*tlb_fill_func)(MemTlb *tlb,uintptr_t virt,unsigned type,uintptr_t &phys);
 
 #define AD_ASSIST(bits)																\
 	if((pte & (bits)) != (bits)) {													\
@@ -56,12 +56,12 @@ private:
     }
 
 	template<unsigned features,typename PTE_TYPE>
-	static unsigned tlb_fill(MemTlb *tlb,unsigned long virt,unsigned type,long unsigned &phys) {
+	static unsigned tlb_fill(MemTlb *tlb,uintptr_t virt,unsigned type,uintptr_t &phys) {
 		return tlb->tlb_fill2<features,PTE_TYPE>(virt,type,phys);
 	}
 
 	template<unsigned features,typename PTE_TYPE>
-	unsigned tlb_fill2(unsigned long virt,unsigned type,long unsigned &phys) {
+	unsigned tlb_fill2(uintptr_t virt,unsigned type,uintptr_t &phys) {
 		PTE_TYPE pte;
 		if(features & FEATURE_SMALL_PDPT)
 			pte = _pdpt[(virt >> 30) & 3];
@@ -98,8 +98,8 @@ private:
 			else if(features & FEATURE_PAE) {
 				reserved_bit = ((~_paging_mode & (1 << 11)) && (pte & (1ULL << 63)))
 						|| ((~features & FEATURE_LONG) && (features & FEATURE_PAE)
-								&& ((static_cast<unsigned long long>(pte) >> 52) & 0xeff))
-						|| (((static_cast<unsigned long long>(pte) & ~(1ULL << 63))
+								&& ((static_cast<uint64_t>(pte) >> 52) & 0xeff))
+						|| (((static_cast<uint64_t>(pte) & ~(1ULL << 63))
 								>> nre::ExecEnv::PHYS_ADDR_SIZE)
 								|| (is_sp && ((pte >> 12) & ((1 << (l * 9)) - 1))));
 			}
@@ -133,7 +133,7 @@ private:
 		return _fault;
 	}
 
-	int virt_to_phys(unsigned long virt,Type type,long unsigned &phys) {
+	int virt_to_phys(uintptr_t virt,Type type,uintptr_t &phys) {
 		if(tlb_fill_func)
 			return tlb_fill_func(this,virt,type,phys);
 		phys = virt;
@@ -143,8 +143,8 @@ private:
 	/**
 	 * Find a CacheEntry to a virtual memory access.
 	 */
-	CacheEntry *find_virtual(unsigned virt,unsigned len,Type type) {
-		unsigned long phys1,phys2;
+	CacheEntry *find_virtual(uintptr_t virt,size_t len,Type type) {
+		uintptr_t phys1,phys2;
 		if(!virt_to_phys(virt,type,phys1)) {
 			if(!((virt ^ (virt + len - 1)) & ~0xfff))
 				phys2 = ~0ul;
@@ -167,9 +167,9 @@ protected:
 
 		// fetch pdpts in leagacy PAE mode
 		if((_paging_mode & 0x80000420) == 0x80000020) {
-			unsigned long long values[4];
+			uint64_t values[4];
 			for(unsigned i = 0; i < 4; i++) {
-				values[i] = *reinterpret_cast<unsigned long long *>(get((READ(cr3) & ~0x1f) + i * 8,
+				values[i] = *reinterpret_cast<uint64_t *>(get((READ(cr3) & ~0x1f) + i * 8,
 						~0xffful,8,TYPE_R)->_ptr);
 				if((values[i] & 0x1e6) || (values[i] >> nre::ExecEnv::PHYS_ADDR_SIZE))
 					GP0;
@@ -197,7 +197,7 @@ protected:
 	/**
 	 * Read the len instruction-bytes at the given address into a buffer.
 	 */
-	int read_code(unsigned long virt,unsigned len,void *buffer) {
+	int read_code(uintptr_t virt,size_t len,void *buffer) {
 		assert(len < 16);
 		CacheEntry *entry = find_virtual(virt & ~3,(len + (virt & 3) + 3) & ~3ul,
 				user_access(Type(TYPE_X | TYPE_R)));
@@ -212,7 +212,7 @@ protected:
 		return _fault;
 	}
 
-	int prepare_virtual(unsigned virt,unsigned len,Type type,void *&ptr) {
+	int prepare_virtual(uintptr_t virt,size_t len,Type type,void *&ptr) {
 		bool round = (virt | len) & 3;
 		CacheEntry *entry = find_virtual(virt & ~3ul,(len + (virt & 3) + 3) & ~3ul,
 				round ? Type(type | TYPE_R) : type);

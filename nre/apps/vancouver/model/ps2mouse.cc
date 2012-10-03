@@ -37,7 +37,7 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 	DBus<MessagePS2> &_bus_ps2;
 	unsigned _ps2port;
 	unsigned _hostmouse;
-	unsigned long long _packet;
+	uint64_t _packet;
 	enum {
 		STATUS_RIGHT		= 1 << 0,
 		STATUS_MIDDLE		= 1 << 1,
@@ -123,7 +123,7 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 		return value;
 	}
 
-	void set_packet(unsigned long long packet) {
+	void set_packet(uint64_t packet) {
 		_packet = packet;
 		MessagePS2 msg2(_ps2port,MessagePS2::NOTIFY,0);
 		_bus_ps2.send(msg2);
@@ -167,7 +167,7 @@ public:
 		}
 		else if(msg.type == MessagePS2::SEND_COMMAND) {
 			res = true;
-			unsigned long long packet = 0;
+			uint64_t packet = 0;
 			switch(_param) {
 				case PARAM_SET_RESOLUTION:
 					_resolution = msg.value & 0x3;

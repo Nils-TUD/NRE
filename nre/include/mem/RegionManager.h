@@ -61,7 +61,7 @@ public:
 		return s;
 	}
 
-	uintptr_t alloc(size_t size,uint align = 1) {
+	uintptr_t alloc(size_t size,size_t align = 1) {
 		Region *r = get(size,align);
 		if(!r) {
 			throw RegionManagerException(E_CAPACITY,64,
@@ -131,7 +131,7 @@ private:
 	RegionManager(const RegionManager&);
 	RegionManager& operator=(const RegionManager&);
 
-	Region *get(size_t size,uint align) {
+	Region *get(size_t size,size_t align) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size >= size) {
 				uintptr_t start = (_regs[i].addr + align - 1) & ~(align - 1);

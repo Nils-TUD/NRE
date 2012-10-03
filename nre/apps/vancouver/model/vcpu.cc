@@ -32,9 +32,9 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 #define REGBASE "vcpu.cc"
 #include "reg.h"
 
-	unsigned long _hostop_id;
+	uintptr_t _hostop_id;
 	Motherboard &_mb;
-	long long _reset_tsc_off;
+	int64_t _reset_tsc_off;
 
 	volatile unsigned _event;
 	volatile unsigned _sipi;

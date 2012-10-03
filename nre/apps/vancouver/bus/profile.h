@@ -18,12 +18,39 @@
 
 #pragma once
 
-#define PVAR  ".long"
+#ifdef __x86_64__
+#define COUNTER_INC(NAME)													\
+	({																		\
+		word_t dummy = 0;													\
+		asm volatile(														\
+			".section	.data; 1: .string \"" NAME "\";.previous;"			\
+			".section	.profile;"											\
+			ASM_WORD_TYPE " 1b; 2: " ASM_WORD_TYPE " 0,0;.previous;"		\
+			"movabsq	$2b, %0;"											\
+			"incq		(%0)"												\
+			: : "r"(dummy) : "cc"											\
+		);																	\
+	})
+
+#define COUNTER_SET(NAME, VALUE)											\
+	{																		\
+		word_t dummy = 0;													\
+		asm volatile(														\
+			".section	.data; 1: .string \"" NAME "\";.previous;"			\
+			".section	.profile;"											\
+			ASM_WORD_TYPE " 1b; 2: " ASM_WORD_TYPE " 0,0;.previous;"		\
+			"movabsq	$2b, %1;"											\
+			"mov		%0,(%1)"											\
+			: : "r"(static_cast<long>(VALUE)), "r"(dummy)					\
+		);																	\
+	}
+#else
 #define COUNTER_INC(NAME)													\
 	({																		\
 		asm volatile(														\
 			".section .data; 1: .string \"" NAME "\";.previous;"			\
-			".section .profile; " PVAR " 1b; 2: " PVAR " 0,0;.previous;"	\
+			".section	.profile;"											\
+			ASM_WORD_TYPE " 1b; 2: " ASM_WORD_TYPE " 0,0;.previous;"		\
 			"incl 2b"														\
 			: : : "cc"														\
 		);																	\
@@ -33,8 +60,10 @@
 	{																		\
 		asm volatile(														\
 			".section .data; 1: .string \"" NAME "\";.previous;"			\
-			".section .profile; "  PVAR " 1b; 2: " PVAR " 0,0;.previous;"	\
+			".section	.profile;"											\
+			ASM_WORD_TYPE " 1b; 2: " ASM_WORD_TYPE " 0,0;.previous;"		\
 			"mov %0,2b"														\
 			: : "r"(static_cast<long>(VALUE))								\
 		);																	\
 	}
+#endif

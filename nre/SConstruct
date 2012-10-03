@@ -10,7 +10,7 @@ elif target == 'x86_64':
 else:
 	print "Please define NRE_TARGET to x86_32 or x86_64 first!"
 	Exit(1)
-crossver = '4.6.1'
+crossver = '4.6.3'
 crossdir = os.path.abspath('/opt/nre-cross-' + target)
 
 hostenv = Environment(
@@ -36,14 +36,18 @@ env = Environment(
 
 btype = os.environ.get('NRE_BUILD')
 if btype == 'debug':
-	env.Append(CXXFLAGS = ' -O0 -g')
-	env.Append(CFLAGS = ' -O0 -g')
+	env.Append(CXXFLAGS = ' -O0 -ggdb')
+	env.Append(CFLAGS = ' -O0 -ggdb')
 else:
 	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
 	# disable stacktraces later, so that we don't need the framepointer.
-	env.Append(CXXFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
-	env.Append(CFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CXXFLAGS = ' -Os -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CFLAGS = ' -Os -DNDEBUG -fno-omit-frame-pointer')
 	btype = 'release'
+if target == 'x86_64':
+	env.Append(CXXFLAGS = ' -mcmodel=large')
+	env.Append(CFLAGS = ' -mcmodel=large')
+	env.Append(LINKFLAGS = ' -mcmodel=large')
 builddir = 'build/' + target + '-' + btype
 
 guestenv = Environment(
@@ -71,7 +75,7 @@ env.Append(
 	LIBPATH = '#' + builddir + '/bin/lib',
 	SYSLIBPATH = crossdir + '/lib',
 	SYSGCCLIBPATH = crossdir + '/lib/gcc/' + cross + '/' + crossver,
-	LINK_ADDR = 0x100000
+	LINK_ADDR = 0x100000000
 )
 
 def NREProgram(env, target, source):

@@ -74,31 +74,31 @@ public:
 
 	struct MbiMmap {
 		unsigned size;
-		unsigned long long base __attribute__((packed));
-		unsigned long long length __attribute__((packed));
+		uint64_t base __attribute__((packed));
+		uint64_t length __attribute__((packed));
 		unsigned type;
 	};
 
 private:
-	unsigned long _modaddr;
+	uintptr_t _modaddr;
 	unsigned _lowmem;
 
 	/**
 	 * Initialize an MBI from the hip.
 	 */
-	unsigned long init_mbi(unsigned long &rip) {
+	unsigned long init_mbi(uintptr_t &rip) {
 		MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM,0UL);
 		if(!(_mb.bus_hostop.send(msg1)))
 			Util::panic("could not find base address %x\n",0);
 
 		char *physmem = msg1.ptr;
-		unsigned long memsize = msg1.len;
-		unsigned long offset = _modaddr;
+		size_t memsize = msg1.len;
+		size_t offset = _modaddr;
 		unsigned long mbi = 0;
 		Mbi *m = 0;
 
 		// get modules from sigma0
-		for(unsigned modcount = 0;; modcount++) {
+		for(size_t modcount = 0;; modcount++) {
 			offset = (offset + 0xfff) & ~0xffful;
 			MessageHostOp msg2(modcount + 1,physmem + offset,msg1.len - offset);
 			if(!(_mb.bus_hostop.send(msg2)) || !msg2.size)
@@ -171,7 +171,7 @@ public:
 
 		Serial::get().writef(">\t%s rip %x ilen %x cr0 %x efl %x\n",__PRETTY_FUNCTION__,
 				msg.cpu->eip,msg.cpu->inst_len,msg.cpu->cr0,msg.cpu->efl);
-		unsigned long rip = 0xfffffff0;
+		uintptr_t rip = 0xfffffff0;
 		unsigned long mbi;
 		if(!(mbi = init_mbi(rip)))
 			return false;
@@ -197,12 +197,12 @@ public:
 		return true;
 	}
 
-	VirtualBiosMultiboot(Motherboard &mb,unsigned long modaddr,unsigned lowmem)
+	VirtualBiosMultiboot(Motherboard &mb,uintptr_t modaddr,unsigned lowmem)
 			: BiosCommon(mb), _modaddr(modaddr), _lowmem(lowmem) {
 	}
 };
 
-unsigned long _vbios_multiboot_modaddr = 0x1800000;
+uintptr_t _vbios_multiboot_modaddr = 0x1800000;
 PARAM_HANDLER(vbios_multiboot_modaddr,
 		"vbios_multiboot_modaddr:modaddr - override the default modaddr parameter of vbios_multiboot") {
 	_vbios_multiboot_modaddr = argv[0];

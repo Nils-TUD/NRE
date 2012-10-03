@@ -22,3 +22,4 @@
 #define ARCH_PAGE_SIZE		0x1000
 #define FMT_WORD_HEXLEN		"8"
 #define FMT_WORD_BYTES		"4"
+#define ASM_WORD_TYPE		".long"

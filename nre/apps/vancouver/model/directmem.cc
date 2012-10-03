@@ -32,8 +32,8 @@ using namespace nre;
  */
 class DirectMemDevice: public StaticReceiver<DirectMemDevice> {
 	char *_ptr;
-	unsigned long _phys;
-	unsigned long _size;
+	uintptr_t _phys;
+	size_t _size;
 
 public:
 	bool receive(MessageMemRegion &msg) {
@@ -60,7 +60,7 @@ public:
 		return true;
 	}
 
-	DirectMemDevice(char *ptr,unsigned long phys,unsigned long size)
+	DirectMemDevice(char *ptr,uintptr_t phys,size_t size)
 		: _ptr(ptr), _phys(phys), _size(size) {
 		Serial::get().writef("DirectMem: %p base %lx+%lx\n",ptr,phys,size);
 	}
@@ -69,8 +69,8 @@ public:
 PARAM_HANDLER(mio,
 		"mio:base,size,dest=base - map hostmemory directly into the VM.",
 		"Example: 'mio:0xa0000,0x10000'.") {
-	unsigned long size;
-	unsigned long dest = (argv[2] == ~0UL) ? argv[0] : argv[2];
+	size_t size;
+	uintptr_t dest = (argv[2] == ~0UL) ? argv[0] : argv[2];
 	if(argv[1] == ~0UL)
 		size = 1;
 	else

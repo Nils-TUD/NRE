@@ -191,7 +191,7 @@ class InstructionCache: public MemTlb {
 	bool find_entry(unsigned &index) {
 		unsigned cs_ar = READ(cs).ar;
 		unsigned linear = _cpu->eip + READ(cs).base;
-		for(unsigned i = slot(linear); i < slot(linear) + ASSOZ; i++) {
+		for(size_t i = slot(linear); i < slot(linear) + ASSOZ; i++) {
 			if(linear == _tags[i] && _values[i].inst_len) {
 				InstructionCacheEntry tmp;
 				tmp.inst_len = 0;
@@ -365,35 +365,51 @@ public:
 		return _fault;
 	}
 
+#ifdef __x86_64__
+#	define PARAM1		"=D"
+#	define PARAM2		"=S"
+#	define PARAM3		"=d"
+#	define CLOBBER		"memory", "eax", "ecx"
+#else
+#	define PARAM1		"=a"
+#	define PARAM2		"=d"
+#	define PARAM3		"=c"
+#	define CLOBBER		"memory"
+#endif
+
 	void call_asm(void *tmp_src,void *tmp_dst) {
-		unsigned tmp_flag;
+		word_t tmp_flag;
 		unsigned dummy1,dummy2,dummy3;
 		switch(_entry->flags & (IC_LOADFLAGS | IC_SAVEFLAGS)) {
 			case IC_SAVEFLAGS:
 				asm volatile ("call *%4; pushf; pop %3"
-						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3), "=g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
+						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "=g"(tmp_flag)
+						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
+						: CLOBBER);
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
 				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			case IC_LOADFLAGS:
 				tmp_flag = _cpu->efl & 0x8d5;
 				asm volatile ("push %3; popf; call *%4;"
-						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3), "+g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
+						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g"(tmp_flag)
+						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
+						: CLOBBER);
 				break;
 			case IC_LOADFLAGS | IC_SAVEFLAGS:
 				tmp_flag = _cpu->efl & 0x8d5;
 				asm volatile ("push %3; popf; call *%4; pushf; pop %3"
-						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3), "+g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
+						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g"(tmp_flag)
+						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
+						: CLOBBER);
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
 				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			default:
 				asm volatile ("call *%3;"
-						: "=a"(dummy1), "=d"(dummy2), "=c"(dummy3)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst) : "memory");
+						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3)
+						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
+						: CLOBBER);
 				break;
 		}
 	}
@@ -435,6 +451,7 @@ public:
 			tmp_src = tmp_dst;
 			tmp_dst = tmp;
 		}
+
 		if(_entry->flags & IC_ASM)
 			call_asm(tmp_src,tmp_dst);
 		else

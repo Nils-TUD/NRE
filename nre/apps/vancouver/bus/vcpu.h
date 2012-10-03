@@ -104,7 +104,7 @@ public:
 	DBus<LapicEvent> bus_lapic;
 	DBus<MessageMem> mem;
 	DBus<MessageMemRegion> memregion;
-	unsigned long long inj_count;
+	uint64_t inj_count;
 
 	VCVCpu *get_last() {
 		return _last;

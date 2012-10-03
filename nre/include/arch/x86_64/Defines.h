@@ -22,3 +22,4 @@
 #define ARCH_PAGE_SIZE		0x1000
 #define FMT_WORD_HEXLEN		"16"
 #define FMT_WORD_BYTES		"8"
+#define ASM_WORD_TYPE		".quad"

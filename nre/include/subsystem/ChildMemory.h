@@ -221,7 +221,7 @@ public:
 	 * @return the address where it can be mapped
 	 * @throw ChildMemoryException if there is not enough space
 	 */
-	uintptr_t find_free(size_t size,uint align = 1) const {
+	uintptr_t find_free(size_t size,size_t align = 1) const {
 		// the list is sorted, so use the last ds
 		uintptr_t e = _list.length() > 0 ? _list.tail()->desc().virt() + _list.tail()->desc().size() : 0;
 		// leave one page space (earlier error detection)

@@ -106,9 +106,9 @@ struct MessageMem {
 		MSI_RH		= 1 << 3
 	};
 	bool read;
-	unsigned long phys;
+	uintptr_t phys;
 	unsigned *ptr;
-	MessageMem(bool _read,unsigned long _phys,unsigned *_ptr) :
+	MessageMem(bool _read,uintptr_t _phys,unsigned *_ptr) :
 			read(_read), phys(_phys), ptr(_ptr) {
 	}
 };
@@ -121,11 +121,11 @@ struct MessageMem {
  * the ptr.
  */
 struct MessageMemRegion {
-	unsigned long page;
-	unsigned long start_page;
-	unsigned count;
+	uintptr_t page;
+	uintptr_t start_page;
+	size_t count;
 	char * ptr;
-	MessageMemRegion(unsigned long _page) :
+	MessageMemRegion(uintptr_t _page) :
 			page(_page), count(0), ptr(0) {
 	}
 };
@@ -143,32 +143,32 @@ struct MessagePciConfig {
 		TYPE_WRITE,
 		TYPE_PTR, ///< Return pointer to memory mapped PCI configuration space register
 	} type;
-	unsigned bdf;
+	uint32_t bdf;
 	unsigned dword;
 	unsigned value;
 	unsigned *ptr;
 
-	MessagePciConfig(unsigned _bdf,unsigned _dword) :
+	MessagePciConfig(uint32_t _bdf,unsigned _dword) :
 			type(TYPE_READ), bdf(_bdf), dword(_dword), value(0xffffffff) {
 	}
-	MessagePciConfig(unsigned _bdf,unsigned _dword,unsigned _value) :
+	MessagePciConfig(uint32_t _bdf,unsigned _dword,unsigned _value) :
 			type(TYPE_WRITE), bdf(_bdf), dword(_dword), value(_value) {
 	}
 
-	explicit MessagePciConfig(unsigned _bdf) :
+	explicit MessagePciConfig(uint32_t _bdf) :
 			type(TYPE_PTR), bdf(_bdf), dword(0), ptr(0) {
 	}
 };
 
 struct MessageHwPciConfig: public MessagePciConfig {
-	MessageHwPciConfig(unsigned _bdf,unsigned _dword) :
+	MessageHwPciConfig(uint32_t _bdf,unsigned _dword) :
 			MessagePciConfig(_bdf,_dword) {
 	}
-	MessageHwPciConfig(unsigned _bdf,unsigned _dword,unsigned _value) :
+	MessageHwPciConfig(uint32_t _bdf,unsigned _dword,unsigned _value) :
 			MessagePciConfig(_bdf,_dword,_value) {
 	}
 
-	explicit MessageHwPciConfig(unsigned _bdf) :
+	explicit MessageHwPciConfig(uint32_t _bdf) :
 			MessagePciConfig(_bdf) {
 	}
 };
@@ -354,7 +354,7 @@ struct VgaRegs {
 	unsigned short mode;
 	unsigned short cursor_style;
 	unsigned cursor_pos;
-	unsigned long offset;
+	size_t offset;
 };
 
 struct MessageConsoleView {
@@ -493,14 +493,14 @@ struct MessageHostOp {
 	};
 	union {
 		struct {
-			unsigned long phys;
-			unsigned long phys_len;
+			uintptr_t phys;
+			size_t phys_len;
 		};
 		struct {
 			char const *service_name;
-			unsigned long portal_func;
+			uintptr_t portal_func;
 			bool cap;
-			unsigned long portal_pf;
+			uintptr_t portal_pf;
 			unsigned excbase;
 			unsigned excinc;
 			unsigned crd_t;
@@ -508,24 +508,24 @@ struct MessageHostOp {
 		};
 		struct {
 			char *ptr;
-			unsigned long len;
+			size_t len;
 			cpu_t cpu;
 			char const * desc;
 		};
 		struct {
 			unsigned module;
 			char * start;
-			unsigned long size;
+			size_t size;
 			char * cmdline;
-			unsigned long cmdlen;
+			size_t cmdlen;
 		};
 		struct {
 			unsigned msi_gsi;
 			unsigned msi_value;
-			unsigned long long msi_address;
+			uint64_t msi_address;
 		};
 		struct {
-			unsigned long long mac;
+			uint64_t mac;
 		};
 		struct {
 			VCVCpu *vcpu;
@@ -596,17 +596,17 @@ struct MessageHostOp {
 	explicit MessageHostOp(VCVCpu *_vcpu) :
 			type(OP_VCPU_CREATE_BACKEND), value(0), vcpu(_vcpu) {
 	}
-	explicit MessageHostOp(unsigned _module,char * _start,unsigned long _size = 0) :
+	explicit MessageHostOp(unsigned _module,char * _start,size_t _size = 0) :
 			type(OP_GET_MODULE), module(_module), start(_start), size(_size), cmdlen(0) {
 	}
-	explicit MessageHostOp(Type _type,unsigned long _value,unsigned long _len = 0,unsigned _cpu =
+	explicit MessageHostOp(Type _type,unsigned long _value,size_t _len = 0,unsigned _cpu =
 			~0U) :
 			type(_type), value(_value), ptr(0), len(_len), cpu(_cpu) {
 	}
-	explicit MessageHostOp(Type _type,void * _value,unsigned long _len = 0) :
+	explicit MessageHostOp(Type _type,void * _value,size_t _len = 0) :
 			type(_type), obj(_value), ptr(0), len(_len) {
 	}
-	explicit MessageHostOp(void * _obj,char const * _name,unsigned long _pfu,char * _revoke_mem = 0,
+	explicit MessageHostOp(void * _obj,char const * _name,uintptr_t _pfu,char * _revoke_mem = 0,
 			bool _cap = true) :
 			type(OP_REGISTER_SERVICE), obj(_obj), service_name(_name), portal_func(_pfu), cap(_cap),
 			portal_pf(0), excbase(0), excinc(0), crd_t(0), revoke_mem(_revoke_mem) {
@@ -623,11 +623,11 @@ struct MessageAcpi {
 			const char *name;
 			unsigned instance;
 			char *table;
-			unsigned len;
+			size_t len;
 		};
 		struct {
-			unsigned parent_bdf;
-			unsigned bdf;
+			uint32_t parent_bdf;
+			uint32_t bdf;
 			unsigned char pin;
 			unsigned gsi;
 		};
@@ -635,7 +635,7 @@ struct MessageAcpi {
 	MessageAcpi(const char *_name) :
 			type(ACPI_GET_TABLE), name(_name), instance(0), table(0), len(0) {
 	}
-	MessageAcpi(unsigned _parent_bdf,unsigned _bdf,unsigned char _pin) :
+	MessageAcpi(uint32_t _parent_bdf,uint32_t _bdf,unsigned char _pin) :
 			type(ACPI_GET_IRQ), parent_bdf(_parent_bdf), bdf(_bdf), pin(_pin), gsi(~0u) {
 	}
 };
@@ -654,20 +654,20 @@ struct MessageDiscovery {
 	} type;
 	struct {
 		const char * resource;
-		unsigned offset;
+		size_t offset;
 		union {
 			const void * data;
 			unsigned * dw;
 		};
-		unsigned count;
+		size_t count;
 	};
 	MessageDiscovery() :
 			type(DISCOVERY) {
 	}
-	MessageDiscovery(const char * _resource,unsigned _offset,const void * _data,unsigned _count) :
+	MessageDiscovery(const char * _resource,size_t _offset,const void * _data,size_t _count) :
 			type(WRITE), resource(_resource), offset(_offset), data(_data), count(_count) {
 	}
-	MessageDiscovery(const char * _resource,unsigned _offset,unsigned * _dw) :
+	MessageDiscovery(const char * _resource,size_t _offset,unsigned * _dw) :
 			type(READ), resource(_resource), offset(_offset), dw(_dw) {
 	}
 };
@@ -723,9 +723,9 @@ struct MessageDiskCommit {
 	size_t disknr;
 	nre::Storage::tag_type usertag;
 	MessageDisk::Status status;
-	MessageDiskCommit(unsigned _disknr = 0,unsigned long _usertag = 0,MessageDisk::Status _status =
-			MessageDisk::DISK_OK) :
-			disknr(_disknr), usertag(_usertag), status(_status) {
+	MessageDiskCommit(size_t _disknr = 0,nre::Storage::tag_type _usertag = 0,
+			MessageDisk::Status _status = MessageDisk::DISK_OK)
+		: disknr(_disknr), usertag(_usertag), status(_status) {
 	}
 };
 
@@ -816,14 +816,14 @@ struct MessageNetwork {
 	union {
 		struct {
 			const unsigned char *buffer;
-			unsigned len;
+			size_t len;
 		};
-		unsigned long long mac;
+		uint64_t mac;
 	};
 
 	unsigned client;
 
-	MessageNetwork(const unsigned char *buffer,unsigned len,unsigned client) :
+	MessageNetwork(const unsigned char *buffer,size_t len,unsigned client) :
 			type(PACKET), buffer(buffer), len(len), client(client) {
 	}
 	MessageNetwork(unsigned type,unsigned client) :

@@ -204,15 +204,14 @@ class VirtualBiosDisk : public StaticReceiver<VirtualBiosDisk>, public BiosCommo
 						unsigned pcylinders;
 						unsigned pheads;
 						unsigned psectors;
-						unsigned long long sectors;
+						uint64_t sectors;
 						unsigned short sectorsize;
 					} params;
 					params.flags = 2;
 					params.sectors = _disk_params[disk_nr].sectors;
 					params.pheads = 255;
 					params.psectors = 63;
-					unsigned long long sectors = _disk_params[disk_nr].sectors
-							/ (params.psectors * params.pheads);
+					uint64_t sectors = _disk_params[disk_nr].sectors / (params.psectors * params.pheads);
 					params.pcylinders = sectors;
 					params.size = 0x1a;
 					params.sectorsize = 512;

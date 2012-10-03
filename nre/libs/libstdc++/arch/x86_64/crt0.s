@@ -22,6 +22,7 @@
 .extern exit
 .extern _post_init
 .extern _init
+.extern _startup_info
 
 # initial state for root:
 #   rdi: cpu
@@ -38,24 +39,25 @@ _start:
 	mov		%rdi, %rbx
 	and		$0x7FFFFFFF, %rdi			# remove bit
 	mov		$0x80000000, %rax			# the bit says that we are not the root-task
+	movabsq	$_startup_info, %r8			# store address of _startup_info into %r8 because of -mcmodel=large
 	and		%rax, %rbx
 	test	%rbx, %rbx
 	jnz		1f
-	mov		%rsp, _startup_info			# store pointer to HIP
+	mov		%rsp, (%r8)					# store pointer to HIP
 	lea		-0x1000(%rsp), %rdx		# UTCB is below HIP
-	mov		$_stack, %rsp				# switch to our stack
+	movabsq	$_stack, %rsp				# switch to our stack
 	add		$0x1000, %rsp
 	sub		$16, %rsp					# leave space for Thread and Pd
 	jmp		2f
 1:
-	mov		%rcx, _startup_info			# store pointer to HIP
-	movq	$1, _startup_info + 40		# store that we're a child
+	mov		%rcx, (%r8)					# store pointer to HIP
+	movq	$1, 40(%r8)					# store that we're a child
 2:
-	mov		%rdx, _startup_info + 8 	# store pointer to UTCB
+	mov		%rdx, 8(%r8)			 	# store pointer to UTCB
 	mov		%rsp,%rcx
 	sub		$0x1000,%rcx
-	mov		%rcx, _startup_info + 16	# store stack-begin
-	mov		%rdi, _startup_info + 24	# store cpu
+	mov		%rcx, 16(%r8)				# store stack-begin
+	mov		%rdi, 24(%r8)				# store cpu
 	push	%rsi						# save rsi for later usage
 
 	# call function in .init-section
@@ -85,14 +87,3 @@ _start:
 	call	exit
 	# just to be sure
 	1:		jmp	1b
-
-# information for startup
-.section .bss.startup_info
-.global _startup_info
-_startup_info:
-	.quad	0	# HIP
-	.quad	0	# UTCB
-	.quad	0	# thread
-	.quad	0	# cpu
-	.quad	0	# inited
-	.quad	0	# child

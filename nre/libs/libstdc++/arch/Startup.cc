@@ -32,6 +32,7 @@ EXTERN_C void abort();
 // is overwritten by the root-task; all others don't need it
 WEAK void *_stack;
 static void *pool[2];
+StartupInfo _startup_info;
 
 static void verbose_terminate() {
 	try {

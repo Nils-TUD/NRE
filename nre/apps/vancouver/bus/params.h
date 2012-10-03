@@ -33,13 +33,13 @@
 		"__parameter_" #NAME "_strings"																\
 	) = { #NAME, ##__VA_ARGS__, 0};																	\
 	asm volatile (																					\
-		".section .param; .long __parameter_" #NAME "_function, __parameter_" #NAME "_strings; .previous;"	\
+		".section .param; "ASM_WORD_TYPE" __parameter_" #NAME "_function, __parameter_" #NAME "_strings; .previous;"	\
 	);																								\
 	EXTERN_C void __parameter_##NAME##_function(Motherboard &mb,unsigned long *argv,				\
-		const char *args, unsigned args_len)
+		const char *args, size_t args_len)
 
 /* Defined in linker script: */
-extern long __param_table_start, __param_table_end;
+extern uintptr_t __param_table_start, __param_table_end;
 
 /**
  * Define an alias for a set of parameters.

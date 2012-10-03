@@ -40,12 +40,12 @@ public:
 	unsigned v86() {
 		return (cr0 & 0x1) && (efl & (1 << 17));
 	}
-	void edx_eax(unsigned long long value) {
+	void edx_eax(uint64_t value) {
 		eax = value;
 		edx = value >> 32;
 	}
 
-	unsigned long long edx_eax() {
+	uint64_t edx_eax() {
 		return union64(edx, eax);
 	}
 };

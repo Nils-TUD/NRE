@@ -32,7 +32,7 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 	/**
 	 * Return the size of guest physical memory.
 	 */
-	unsigned long memsize() {
+	size_t memsize() {
 		MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM,0UL);
 		if(!_bus_hostop.send(msg1))
 			Util::panic("%s can't get physical memory size",__PRETTY_FUNCTION__);
@@ -68,8 +68,8 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 			{
 				if((cpu->edx == 0x534D4150 && cpu->ecx >= 20)) {
 					struct mmap {
-						unsigned long long base;
-						unsigned long long size;
+						uint64_t base;
+						uint64_t size;
 						unsigned type;
 					} mmap;
 					mmap.type = 1;

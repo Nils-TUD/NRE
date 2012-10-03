@@ -1,23 +1,23 @@
 // -*- Mode: C++ -*-
 // Automagically generated. Do not touch.
 static void __attribute__((regparm(3))) exec_00_add_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock addb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock addb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_01_add_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock addw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock addw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_01_add_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock addl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock addl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_02_add_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; addb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; addb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_03_add_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; addw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; addw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_03_add_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; addl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; addl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_04_add_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; addb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; addb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_05_add_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; addw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; addw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_05_add_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; addl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; addl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_06_push__es_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->es.sel); }
 static void __attribute__((regparm(3))) exec_06_push__es_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -27,23 +27,23 @@ static void __attribute__((regparm(3))) exec_07_pop__es_1(InstructionCache *cach
 static void __attribute__((regparm(3))) exec_07_pop__es_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned sel;cache->helper_POP<2>(&sel) || cache->set_segment(&cache->_cpu->es, sel);; }
 static void __attribute__((regparm(3))) exec_08_or_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock orb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock orb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_09_or_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock orw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock orw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_09_or_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock orl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock orl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0a_or_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; orb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; orb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0b_or_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; orw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; orw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0b_or_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; orl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; orl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0c_or_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; orb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; orb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0d_or_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; orw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; orw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0d_or_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; orl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; orl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0e_push__cs_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->cs.sel); }
 static void __attribute__((regparm(3))) exec_0e_push__cs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -84,8 +84,6 @@ static void __attribute__((regparm(3))) exec_0f08_invd_0(InstructionCache *cache
 		 if (cache->cpl0_test()) return;cache->helper_INVD(); }
 static void __attribute__((regparm(3))) exec_0f09_wbinvd_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 if (cache->cpl0_test()) return;cache->helper_WBINVD(); }
-static void __attribute__((regparm(3))) exec_0f0b_ud2a_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 cache->helper_UD2A(); }
 static void __attribute__((regparm(3))) exec_0f1f_nopl___eax__0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		  ; }
 static void __attribute__((regparm(3))) exec_0f20_mov__cr0__edx_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -113,133 +111,133 @@ static void __attribute__((regparm(3))) exec_0f34_sysenter_0(InstructionCache *c
 static void __attribute__((regparm(3))) exec_0f35_sysexit_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_SYSEXIT(); }
 static void __attribute__((regparm(3))) exec_0f40_cmovo_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jno 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jno 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f41_cmovno_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jo 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jo 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f42_cmovb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jae 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jae 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f43_cmovae_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jb 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jb 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f44_cmove_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jne 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jne 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f45_cmovne_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("je 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("je 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f46_cmovbe_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("ja 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("ja 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f47_cmova_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jbe 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jbe 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f48_cmovs_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jns 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jns 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f49_cmovns_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("js 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("js 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4a_cmovp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jnp 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jnp 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4b_cmovnp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jp 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jp 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4c_cmovl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jge 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jge 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4d_cmovge_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jl 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jl 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4e_cmovle_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jg 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jg 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f4f_cmovg_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("jle 1f;mov (%%edx), %%eax;mov %%eax, (%%ecx);1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("jle 1f;mov (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))");1:" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f80_jo_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jno 1f;call %c0; 1:" : : "g"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jno 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f80_jo_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jno 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jno 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f81_jno_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jo 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jo 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f81_jno_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jo 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jo 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f82_jb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jae 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jae 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f82_jb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jae 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jae 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f83_jae_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jb 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jb 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f83_jae_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jb 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jb 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f84_je_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jne 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jne 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f84_je_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jne 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jne 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f85_jne_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("je 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("je 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f85_jne_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("je 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("je 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f86_jbe_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("ja 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("ja 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f86_jbe_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("ja 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("ja 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f87_ja_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jbe 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jbe 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f87_ja_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jbe 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jbe 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f88_js_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jns 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jns 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f88_js_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jns 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jns 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f89_jns_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("js 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("js 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f89_jns_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("js 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("js 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8a_jp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jnp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jnp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8a_jp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jnp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jnp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8b_jnp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8b_jnp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8c_jl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jge 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jge 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8c_jl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jge 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jge 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8d_jge_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jl 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jl 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8d_jge_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jl 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jl 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8e_jle_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jg 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jg 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8e_jle_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jg 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jg 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8f_jg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jle 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jle 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f8f_jg_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jle 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jle 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_0f9000_seto_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("seto (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("seto (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9100_setno_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setno (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setno (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9200_setb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setb (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setb (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9300_setae_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setae (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setae (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9400_sete_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("sete (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("sete (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9500_setne_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setne (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setne (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9600_setbe_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setbe (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setbe (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9700_seta_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("seta (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("seta (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9800_sets_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("sets (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("sets (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9900_setns_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setns (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setns (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9a00_setp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setp (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setp (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9b00_setnp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setnp (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setnp (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9c00_setl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9d00_setge_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setge (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setge (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9e00_setle_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setle (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setle (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0f9f00_setg_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("setg (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("setg (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fa0_push__fs_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->fs.sel); }
 static void __attribute__((regparm(3))) exec_0fa0_push__fs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -253,17 +251,17 @@ static void __attribute__((regparm(3))) exec_0fa2_cpuid_1(InstructionCache *cach
 static void __attribute__((regparm(3))) exec_0fa2_cpuid_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->send_message(CpuMessage::TYPE_CPUID); }
 static void __attribute__((regparm(3))) exec_0fa3_bt_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax; bt %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax; bt %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fa3_bt_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax; bt %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax; bt %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fa4_shld_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx; data16 shld %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx; data16 shld %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fa4_shld_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx;  shld %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx;  shld %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fa5_shld_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx; data16 shld %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx; data16 shld %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fa5_shld_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx;  shld %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx;  shld %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fa8_push__gs_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->gs.sel); }
 static void __attribute__((regparm(3))) exec_0fa8_push__gs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -273,23 +271,23 @@ static void __attribute__((regparm(3))) exec_0fa9_pop__gs_1(InstructionCache *ca
 static void __attribute__((regparm(3))) exec_0fa9_pop__gs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned sel;cache->helper_POP<2>(&sel) || cache->set_segment(&cache->_cpu->gs, sel);; }
 static void __attribute__((regparm(3))) exec_0fab_bts_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock bts %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock bts %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fab_bts_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock bts %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock bts %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fac_shrd_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx; data16 shrd %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx; data16 shrd %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fac_shrd_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx;  shrd %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (1) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx;  shrd %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fad_shrd_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx; data16 shrd %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx; data16 shrd %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fad_shrd_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%eax, %%ecx; mov (%%edx), %%edx;  shrd %%cl, %%edx, (%%eax); pushf; pop %%eax" : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
+		 unsigned count;if (0) count = cache->_entry->immediate; else count = cache->_cpu->ecx;tmp_src = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile ("xchg %%"EXPAND(REG(ax))", %%"EXPAND(REG(cx))"; mov (%%"EXPAND(REG(dx))"), %%edx;  shrd %%cl, %%"EXPAND(REG(dx))", (%%eax); pushf; pop %%"EXPAND(REG(ax)) : "+a"(count), "+d"(tmp_src), "+c"(tmp_dst));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (count  & 0x8d5); }
 static void __attribute__((regparm(3))) exec_0fae00_fxsave_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_FXSAVE(); }
 static void __attribute__((regparm(3))) exec_0faf_imul_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_0faf_imul_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_0fb0_cmpxchg_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 char res; asm volatile("mov (%2), %2; lock cmpxchg %%dl, (%3); setz %1" : "+a"(cache->_cpu->eax), "=d"(res) : "d"(tmp_src), "c"(tmp_dst));if (res) cache->_cpu->efl |= EFL_ZF; else cache->_cpu->efl &= EFL_ZF; }
 static void __attribute__((regparm(3))) exec_0fb1_cmpxchg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -301,9 +299,9 @@ static void __attribute__((regparm(3))) exec_0fb2_lss_1(InstructionCache *cache,
 static void __attribute__((regparm(3))) exec_0fb2_lss_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_loadsegment<2>(&cache->_cpu->ss); }
 static void __attribute__((regparm(3))) exec_0fb3_btr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock btr %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock btr %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fb3_btr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock btr %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock btr %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fb4_lfs_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_loadsegment<1>(&cache->_cpu->fs); }
 static void __attribute__((regparm(3))) exec_0fb4_lfs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -321,33 +319,33 @@ static void __attribute__((regparm(3))) exec_0fb7_movzxw_1(InstructionCache *cac
 static void __attribute__((regparm(3))) exec_0fb7_movzxw_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned dummy;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile("movl (%2), %0;  movzxw (%1), %0; mov %0, (%2)" : "=a"(dummy), "+d"(tmp_src), "+c"(tmp_dst)); }
 static void __attribute__((regparm(3))) exec_0fbae2_bt_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax; bt %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax; bt %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbae2_bt_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax; bt %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax; bt %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbaea_bts_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock bts %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock bts %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbaea_bts_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock bts %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock bts %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbaf2_btr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock btr %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock btr %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbaf2_btr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock btr %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock btr %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbafa_btc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock btc %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock btc %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbafa_btc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock btc %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock btc %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbb_btc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<1)-1, %%eax;lock btc %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<1)-1, %%eax;lock btc %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbb_btc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;and  $(8<<2)-1, %%eax;lock btc %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;and  $(8<<2)-1, %%eax;lock btc %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbc_bsf_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("bsfw (%%edx), %%ax;mov %%ax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("bsfw (%%"EXPAND(REG(dx))"), %%ax;mov %%ax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbc_bsf_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("bsfl (%%edx), %%eax;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("bsfl (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbd_bsr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("bsrw (%%edx), %%ax;mov %%ax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("bsrw (%%"EXPAND(REG(dx))"), %%ax;mov %%ax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbd_bsr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("bsrl (%%edx), %%eax;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("bsrl (%%"EXPAND(REG(dx))"), %%eax;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fbe_movsxb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned dummy;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile("movl (%2), %0; data16 movsxb (%1), %0; mov %0, (%2)" : "=a"(dummy), "+d"(tmp_src), "+c"(tmp_dst)); }
 static void __attribute__((regparm(3))) exec_0fbe_movsxb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -357,31 +355,31 @@ static void __attribute__((regparm(3))) exec_0fbf_movsxw_1(InstructionCache *cac
 static void __attribute__((regparm(3))) exec_0fbf_movsxw_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned dummy;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);asm volatile("movl (%2), %0;  movsxw (%1), %0; mov %0, (%2)" : "=a"(dummy), "+d"(tmp_src), "+c"(tmp_dst)); }
 static void __attribute__((regparm(3))) exec_0fc0_xadd_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%al;lock xadd %%al, (%%ecx);mov %%al, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%al;lock xadd %%al, (%%"EXPAND(REG(cx))");mov %%al, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fc1_xadd_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%ax;lock xadd %%ax, (%%ecx);mov %%ax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%ax;lock xadd %%ax, (%%"EXPAND(REG(cx))");mov %%ax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fc1_xadd_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;lock xadd %%eax, (%%ecx);mov %%eax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;lock xadd %%eax, (%%"EXPAND(REG(cx))");mov %%eax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_0fc9_bswap_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax;bswap %%eax;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax;bswap %%eax;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_10_adc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock adcb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock adcb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_11_adc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock adcw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock adcw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_11_adc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock adcl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock adcl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_12_adc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; adcb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; adcb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_13_adc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; adcw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; adcw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_13_adc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; adcl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; adcl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_14_adc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; adcb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; adcb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_15_adc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; adcw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; adcw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_15_adc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; adcl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; adcl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_16_push__ss_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->ss.sel); }
 static void __attribute__((regparm(3))) exec_16_push__ss_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -391,23 +389,23 @@ static void __attribute__((regparm(3))) exec_17_pop__ss_1(InstructionCache *cach
 static void __attribute__((regparm(3))) exec_17_pop__ss_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned sel;cache->helper_POP<2>(&sel) || cache->set_segment(&cache->_cpu->ss, sel);cache->_cpu->intr_state |= 2; }
 static void __attribute__((regparm(3))) exec_18_sbb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock sbbb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock sbbb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_19_sbb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock sbbw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock sbbw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_19_sbb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock sbbl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock sbbl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1a_sbb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; sbbb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; sbbb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1b_sbb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; sbbw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; sbbw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1b_sbb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; sbbl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; sbbl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1c_sbb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; sbbb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; sbbb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1d_sbb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; sbbw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; sbbw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1d_sbb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; sbbl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; sbbl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_1e_push__ds_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(&cache->_cpu->ds.sel); }
 static void __attribute__((regparm(3))) exec_1e_push__ds_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -417,93 +415,113 @@ static void __attribute__((regparm(3))) exec_1f_pop__ds_1(InstructionCache *cach
 static void __attribute__((regparm(3))) exec_1f_pop__ds_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 unsigned sel;cache->helper_POP<2>(&sel) || cache->set_segment(&cache->_cpu->ds, sel);; }
 static void __attribute__((regparm(3))) exec_20_and_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock andb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock andb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_21_and_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock andw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock andw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_21_and_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock andl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock andl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_22_and_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; andb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; andb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_23_and_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; andw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; andw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_23_and_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; andl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; andl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_24_and_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; andb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; andb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_25_and_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; andw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; andw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_25_and_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; andl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; andl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_27_daa_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax;daa;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 #ifdef __x86_64__
+	nre::Util::panic("Unable to execute 'daa'\n");
+#else
+	asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax;daa;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax");
+#endif
+; }
 static void __attribute__((regparm(3))) exec_28_sub_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock subb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock subb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_29_sub_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock subw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock subw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_29_sub_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock subl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock subl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2a_sub_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; subb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; subb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2b_sub_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; subw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; subw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2b_sub_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; subl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; subl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2c_sub_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; subb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; subb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2d_sub_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; subw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; subw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2d_sub_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; subl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; subl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_2f_das_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax;das;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 #ifdef __x86_64__
+	nre::Util::panic("Unable to execute 'das'\n");
+#else
+	asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax;das;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax");
+#endif
+; }
 static void __attribute__((regparm(3))) exec_30_xor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock xorb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock xorb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_31_xor_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock xorw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock xorw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_31_xor_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock xorl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock xorl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_32_xor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; xorb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; xorb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_33_xor_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; xorw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; xorw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_33_xor_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; xorl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; xorl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_34_xor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; xorb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; xorb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_35_xor_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; xorw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; xorw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_35_xor_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; xorl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; xorl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_37_aaa_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax;aaa;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 #ifdef __x86_64__
+	nre::Util::panic("Unable to execute 'aaa'\n");
+#else
+	asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax;aaa;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax");
+#endif
+; }
 static void __attribute__((regparm(3))) exec_38_cmp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; cmpb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; cmpb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_39_cmp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; cmpw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; cmpw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_39_cmp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; cmpl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; cmpl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3a_cmp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; cmpb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; cmpb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3b_cmp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; cmpw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; cmpw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3b_cmp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; cmpl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; cmpl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3c_cmp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; cmpb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; cmpb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3d_cmp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; cmpw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; cmpw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3d_cmp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; cmpl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; cmpl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_3f_aas_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax;aas;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 #ifdef __x86_64__
+	nre::Util::panic("Unable to execute 'aas'\n");
+#else
+	asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax;aas;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax");
+#endif
+; }
 static void __attribute__((regparm(3))) exec_41_inc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile(" incw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile(" incw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_41_inc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile(" incl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile(" incl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_49_dec_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile(" decw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile(" decw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_49_dec_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile(" decl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile(" decl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_51_push_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_51_push_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -525,17 +543,17 @@ static void __attribute__((regparm(3))) exec_68_push_1(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_68_push_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<2>(tmp_src); }
 static void __attribute__((regparm(3))) exec_69_imul_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_69_imul_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_6a_push_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_6a_push_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_PUSH<2>(tmp_src); }
 static void __attribute__((regparm(3))) exec_6b_imul_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (0 && 1) move<1>(&cache->_cpu->edx, &result);if (!0) move<1>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_6b_imul_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (1) param = cache->_entry->immediate; else if (0) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (0) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (0 && 2) move<2>(&cache->_cpu->edx, &result);if (!0) move<2>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_6c_ins_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_SAVE_EDI | SH_DOOP_IN, 0>(); }
 static void __attribute__((regparm(3))) exec_6d_ins_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -549,173 +567,173 @@ static void __attribute__((regparm(3))) exec_6f_outs_1(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_6f_outs_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_LOAD_ESI | SH_DOOP_OUT, 2>(); }
 static void __attribute__((regparm(3))) exec_70_jo_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jno 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jno 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_70_jo_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jno 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jno 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_71_jno_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jo 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jo 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_71_jno_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jo 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jo 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_72_jb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jae 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jae 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_72_jb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jae 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jae 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_73_jae_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jb 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jb 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_73_jae_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jb 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jb 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_74_je_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jne 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jne 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_74_je_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jne 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jne 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_75_jne_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("je 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("je 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_75_jne_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("je 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("je 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_76_jbe_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("ja 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("ja 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_76_jbe_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("ja 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("ja 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_77_ja_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jbe 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jbe 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_77_ja_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jbe 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jbe 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_78_js_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jns 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jns 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_78_js_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jns 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jns 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_79_jns_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("js 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("js 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_79_jns_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("js 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("js 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7a_jp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jnp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jnp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7a_jp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jnp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jnp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7b_jnp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7b_jnp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jp 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jp 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7c_jl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jge 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jge 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7c_jl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jge 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jge 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7d_jge_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jl 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jl 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7d_jge_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jl 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jl 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7e_jle_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jg 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jg 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7e_jle_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jg 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jg 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7f_jg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jle 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<1>;asm volatile ("jle 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_7f_jg_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jle 1f;call %c0; 1:" : : "i"(foo)); }
+		 REGPARMS(3) int (*foo)(InstructionCache *, void *) = helper_JMP_static<2>;asm volatile ("jle 1f;call %P0; 1:" : : "i"(foo)); }
 static void __attribute__((regparm(3))) exec_80c2_add_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock addb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock addb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80ca_or_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock orb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock orb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80d2_adc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock adcb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock adcb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80da_sbb_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock sbbb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock sbbb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80e2_and_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock andb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock andb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80ea_sub_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock subb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock subb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80f2_xor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al;lock xorb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al;lock xorb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_80fa_cmp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; cmpb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; cmpb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81c2_add_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock addw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock addw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81c2_add_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock addl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock addl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81ca_or_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock orw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock orw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81ca_or_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock orl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock orl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81d2_adc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock adcw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock adcw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81d2_adc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock adcl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock adcl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81da_sbb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock sbbw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock sbbw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81da_sbb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock sbbl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock sbbl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81e2_and_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock andw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock andw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81e2_and_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock andl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock andl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81ea_sub_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock subw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock subw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81ea_sub_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock subl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock subl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81f2_xor_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock xorw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock xorw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81f2_xor_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock xorl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock xorl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81fa_cmp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; cmpw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; cmpw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_81fa_cmp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; cmpl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; cmpl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83c2_add_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock addw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock addw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83c2_add_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock addl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock addl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83ca_or_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock orw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock orw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83ca_or_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock orl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock orl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83d2_adc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock adcw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock adcw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83d2_adc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock adcl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock adcl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83da_sbb_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock sbbw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock sbbw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83da_sbb_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock sbbl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock sbbl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83e2_and_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock andw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock andw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83e2_and_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock andl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock andl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83ea_sub_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock subw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock subw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83ea_sub_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock subl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock subl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83f2_xor_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax;lock xorw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax;lock xorw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83f2_xor_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax;lock xorl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax;lock xorl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83fa_cmp_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; cmpw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; cmpw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_83fa_cmp_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; cmpl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; cmpl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_84_test_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; testb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; testb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_85_test_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; testw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; testw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_85_test_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; testl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; testl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_86_xchg_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%al;lock xchgb %%al, (%%ecx);mov %%al, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%al;lock xchgb %%al, (%%"EXPAND(REG(cx))");mov %%al, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_87_xchg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%ax;lock xchgw %%ax, (%%ecx);mov %%ax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%ax;lock xchgw %%ax, (%%"EXPAND(REG(cx))");mov %%ax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_87_xchg_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;lock xchgl %%eax, (%%ecx);mov %%eax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;lock xchgl %%eax, (%%"EXPAND(REG(cx))");mov %%eax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_88_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_89_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_89_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_8a_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_8b_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_8b_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_8c_mov__es__edx_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 CpuState::Descriptor *dsc = &cache->_cpu->es + ((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);move<1>(tmp_dst, &(dsc->sel)); }
 static void __attribute__((regparm(3))) exec_8c_mov__es__edx_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -733,17 +751,17 @@ static void __attribute__((regparm(3))) exec_8f00_pop_1(InstructionCache *cache,
 static void __attribute__((regparm(3))) exec_8f00_pop_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_POP<2>(tmp_dst); }
 static void __attribute__((regparm(3))) exec_92_xchg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%ax; xchgw %%ax, (%%ecx);mov %%ax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%ax; xchgw %%ax, (%%"EXPAND(REG(cx))");mov %%ax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_92_xchg_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax; xchgl %%eax, (%%ecx);mov %%eax, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax; xchgl %%eax, (%%"EXPAND(REG(cx))");mov %%eax, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_98_cwtl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%ax;data16 cwde;mov %%ax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(cx))"), %%ax;data16 cwde;mov %%ax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_98_cwtl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%ecx), %%eax; cwde;mov %%eax, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(cx))"), %%eax; cwde;mov %%eax, (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_99_cltd_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax;data16 cltd;mov %%edx, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax;data16 cltd;mov %%"EXPAND(REG(dx))", (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_99_cltd_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("mov (%%edx), %%eax; cltd;mov %%edx, (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("mov (%%"EXPAND(REG(dx))"), %%eax; cltd;mov %%"EXPAND(REG(dx))", (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_9a_lcall_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_LCALL<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_9a_lcall_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -763,17 +781,17 @@ static void __attribute__((regparm(3))) exec_9e_sahf_0(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_9f_lahf_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->_cpu->ah = (cache->_cpu->efl & 0xd5) | 2; }
 static void __attribute__((regparm(3))) exec_a0_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a1_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a1_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a2_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a3_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a3_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a4_movs_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_LOAD_ESI | SH_SAVE_EDI, 0>(); }
 static void __attribute__((regparm(3))) exec_a5_movs_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -787,11 +805,11 @@ static void __attribute__((regparm(3))) exec_a7_cmps_1(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_a7_cmps_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_LOAD_ESI | SH_LOAD_EDI | SH_DOOP_CMP, 2>(); }
 static void __attribute__((regparm(3))) exec_a8_test_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; testb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; testb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a9_test_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; testw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; testw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_a9_test_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; testl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; testl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_aa_stos_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_SAVE_EDI, 0>(); }
 static void __attribute__((regparm(3))) exec_ab_stos_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -811,53 +829,53 @@ static void __attribute__((regparm(3))) exec_af_scas_1(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_af_scas_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->string_helper<SH_LOAD_EDI | SH_DOOP_CMP, 2>(); }
 static void __attribute__((regparm(3))) exec_b2_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ba_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ba_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0c2_rol_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0ca_ror_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0d2_rcl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0da_rcr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0e2_shl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0ea_shr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c0fa_sar_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1c2_rol_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1c2_rol_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;roll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;roll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1ca_ror_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1ca_ror_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1d2_rcl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1d2_rcl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1da_rcr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1da_rcr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1e2_shl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1e2_shl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1ea_shr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1ea_shr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1fa_sar_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c1fa_sar_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c2_ret_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_RET<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_c2_ret_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -875,11 +893,11 @@ static void __attribute__((regparm(3))) exec_c5_lds_1(InstructionCache *cache, v
 static void __attribute__((regparm(3))) exec_c5_lds_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_loadsegment<2>(&cache->_cpu->ds); }
 static void __attribute__((regparm(3))) exec_c602_mov_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; movb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; movb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c702_mov_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; movw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; movw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c702_mov_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; movl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; movl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_c8_enter_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_ENTER<1>(reinterpret_cast<unsigned *>(tmp_src)); }
 static void __attribute__((regparm(3))) exec_c8_enter_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -907,89 +925,89 @@ static void __attribute__((regparm(3))) exec_cf_iret_1(InstructionCache *cache, 
 static void __attribute__((regparm(3))) exec_cf_iret_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_IRET<2>(); }
 static void __attribute__((regparm(3))) exec_d000_rol_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d008_ror_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d010_rcl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d018_rcr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d020_shl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d028_shr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d038_sar_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d100_rol_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d100_rol_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;roll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;roll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d108_ror_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d108_ror_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d110_rcl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d110_rcl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d118_rcr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d118_rcr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d120_shl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d120_shl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d128_shr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d128_shr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d138_sar_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d138_sar_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d200_rol_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d208_ror_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d210_rcl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d218_rcr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d220_shl_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d228_shr_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d238_sar_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarb %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarb %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d300_rol_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rolw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rolw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d300_rol_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;roll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;roll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d308_ror_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d308_ror_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rorl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rorl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d310_rcl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rclw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rclw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d310_rcl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d318_rcr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d318_rcr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;rcrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;rcrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d320_shl_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shlw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shlw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d320_shl_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shll %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shll %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d328_shr_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d328_shr_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;shrl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;shrl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d338_sar_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarw %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarw %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d338_sar_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("xchg %%edx, %%ecx;movb (%%ecx),%%cl;sarl %%cl, (%%edx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("xchg %%"EXPAND(REG(dx))", %%"EXPAND(REG(cx))";movb (%%"EXPAND(REG(cx))"),%%cl;sarl %%cl, (%%"EXPAND(REG(dx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_d4_aam_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_AAM(*reinterpret_cast<unsigned char *>(tmp_src)); }
 static void __attribute__((regparm(3))) exec_d5_aad_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -997,11 +1015,11 @@ static void __attribute__((regparm(3))) exec_d5_aad_0(InstructionCache *cache, v
 static void __attribute__((regparm(3))) exec_d7_xlat_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_XLAT(); }
 static void __attribute__((regparm(3))) exec_d938_fnstcw_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstcw (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstcw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_da10_ficom_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_da18_ficomp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dbe3_fninit_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fninit; fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dbe4__byte_0xdb__0xe4__0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -1009,13 +1027,13 @@ static void __attribute__((regparm(3))) exec_dbe4__byte_0xdb__0xe4__0(Instructio
 static void __attribute__((regparm(3))) exec_dd20_frstor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_FRSTOR(); }
 static void __attribute__((regparm(3))) exec_dd38_fnstsw_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_de10_ficom_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_de18_ficomp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dfe0_fnstsw__ax_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%ecx); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_e0_loopne_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_LOOPNE<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_e0_loopne_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -1077,47 +1095,47 @@ static void __attribute__((regparm(3))) exec_f4_hlt_0(InstructionCache *cache, v
 static void __attribute__((regparm(3))) exec_f5_cmc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->_cpu->efl ^=  1; }
 static void __attribute__((regparm(3))) exec_f610_not_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock notb (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock notb (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f618_neg_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock negb (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock negb (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f620_mul_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mulb (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mulb (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f628_imul_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<0>(&param, tmp_dst);;asm volatile ("imulb (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (1) move<0 ? 0 : 1>(&cache->_cpu->eax, &param);if (1 && 0) move<0>(&cache->_cpu->edx, &result);if (!1) move<0>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<0>(&param, tmp_dst);;asm volatile ("imulb (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (1) move<0 ? 0 : 1>(&cache->_cpu->eax, &param);if (1 && 0) move<0>(&cache->_cpu->edx, &result);if (!1) move<0>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_f630_div_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divb (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divb (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f638_idiv_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivb (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivb (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f6c2_test_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movb (%%edx), %%al; testb %%al,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movb (%%"EXPAND(REG(dx))"), %%al; testb %%al,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f710_not_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock notw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock notw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f710_not_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock notl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock notl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f718_neg_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock negw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock negw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f718_neg_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock negl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock negl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f720_mul_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mulw (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mulw (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f720_mul_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mull (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;mull (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f728_imul_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (1) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (1 && 1) move<1>(&cache->_cpu->edx, &result);if (!1) move<1>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<1>(&param, tmp_dst);;asm volatile ("imulw (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (1) move<1 ? 1 : 1>(&cache->_cpu->eax, &param);if (1 && 1) move<1>(&cache->_cpu->edx, &result);if (!1) move<1>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_f728_imul_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%ecx); pushf; pop %%ecx" : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned>(tmp_src)  & 0x8d5);if (1) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (1 && 2) move<2>(&cache->_cpu->edx, &result);if (!1) move<2>(tmp_dst, &param); }
+		 unsigned param, result;tmp_dst = cache->get_reg32((cache->_entry->data[cache->_entry->offset_opcode] >> 3) & 0x7);if (0) param = cache->_entry->immediate; else if (1) param = cache->_cpu->eax; else move<2>(&param, tmp_dst);;asm volatile ("imull (%%"EXPAND(REG(cx))"); pushf; pop %%"EXPAND(REG(cx)) : "+a"(param), "=d"(result), "+c"(tmp_src));cache->_cpu->efl = (cache->_cpu->efl & ~0x8d5) | (reinterpret_cast<unsigned long>(tmp_src)  & 0x8d5);if (1) move<2 ? 2 : 1>(&cache->_cpu->eax, &param);if (1 && 2) move<2>(&cache->_cpu->edx, &result);if (!1) move<2>(tmp_dst, &param); }
 static void __attribute__((regparm(3))) exec_f730_div_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divw (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divw (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f730_div_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divl (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;divl (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f738_idiv_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivw (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivw (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f738_idiv_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivl (%2);xorl %2, %2;2: ; .section .data.fixup2; .long 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
+		 unsigned edx = cache->_cpu->edx, eax = cache->_cpu->eax;;asm volatile ("1: ;idivl (%2);xor %2, %2;2: ; .section .data.fixup2; "ASM_WORD_TYPE" 1b, 2b, 2b-1b; .previous;" : "+a"(eax), "+d"(edx), "+c"(tmp_src));if (tmp_src) DE0(cache);cache->_cpu->eax = eax;cache->_cpu->edx = edx; }
 static void __attribute__((regparm(3))) exec_f7c2_test_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movw (%%edx), %%ax; testw %%ax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movw (%%"EXPAND(REG(dx))"), %%ax; testw %%ax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f7c2_test_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("movl (%%edx), %%eax; testl %%eax,(%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("movl (%%"EXPAND(REG(dx))"), %%eax; testl %%eax,(%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_f8_clc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->_cpu->efl &= ~1; }
 static void __attribute__((regparm(3))) exec_f9_stc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -1131,17 +1149,17 @@ static void __attribute__((regparm(3))) exec_fc_cld_0(InstructionCache *cache, v
 static void __attribute__((regparm(3))) exec_fd_std_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->_cpu->efl |=  0x400; }
 static void __attribute__((regparm(3))) exec_fe00_inc_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock incb (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock incb (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_fe08_dec_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock decb (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock decb (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ff00_inc_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock incw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock incw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ff00_inc_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock incl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock incl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ff08_dec_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock decw (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock decw (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ff08_dec_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 asm volatile("lock decl (%%ecx)" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
+		 asm volatile("lock decl (%%"EXPAND(REG(cx))")" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax"); }
 static void __attribute__((regparm(3))) exec_ff15_call_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_CALL<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_ff15_call_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
@@ -3327,11 +3345,6 @@ case 0x09:
 {
 /* instruction2 'wbinvd' ['0f', '09'] ['NO_OS', 'CPL0'] */ ;
 {entry->execute = exec_0f09_wbinvd_0; } ;
-break; }
-case 0x0b:
-{
-/* instruction2 'ud2a' ['0f', '0b'] ['NO_OS'] */ ;
-{entry->execute = exec_0f0b_ud2a_0; } ;
 break; }
 case 0x1f:
 {

@@ -102,7 +102,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	 */
 	void build_identify_buffer(unsigned short *identify) {
 		memset(identify,0,512);
-		for(unsigned i = 0; i < 20; i++)
+		for(size_t i = 0; i < 20; i++)
 			identify[27 + i] = _params.name[2 * i] << 8 | _params.name[2 * i + 1];
 		identify[47] = 0x80ff;
 		identify[49] = 0x0300;
@@ -122,7 +122,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 		memcpy(identify + 100,&_params.sectors,8);
 		identify[0xff] = 0xa5;
 		unsigned char checksum = 0;
-		for(unsigned i = 0; i < 512; i++)
+		for(size_t i = 0; i < 512; i++)
 			checksum += reinterpret_cast<unsigned char *>(identify)[i];
 		identify[0xff] -= checksum << 8;
 	}
@@ -132,19 +132,19 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	 *
 	 * Return the number of byte written.
 	 */
-	unsigned push_data(unsigned length,void *data,bool &irq) {
+	unsigned push_data(size_t length,void *data,bool &irq) {
 		if(!_dsf[3])
 			return 0;
-		unsigned long prdbase = union64(_dsf[2],_dsf[1]);
+		uintptr_t prdbase = union64(_dsf[2],_dsf[1]);
 		LOG("push data %x prdbase %lx _dsf %x %x %x\n",length,prdbase,_dsf[1],_dsf[2],_dsf[3]);
-		unsigned prd = 0;
-		unsigned offset = 0;
+		size_t prd = 0;
+		size_t offset = 0;
 		while(offset < length && prd < _dsf[3]) {
 			unsigned prdvalue[4];
 			copy_in(prdbase + prd * 16,prdvalue,16);
 
 			irq = irq || prdvalue[3] & 0x80000000;
-			unsigned sublen = (prdvalue[3] & 0x3fffff) + 1;
+			size_t sublen = (prdvalue[3] & 0x3fffff) + 1;
 			if(sublen > length - offset)
 				sublen = length - offset;
 			copy_out(union64(prdvalue[1],prdvalue[0]),reinterpret_cast<char *>(data) + offset,sublen);
@@ -159,15 +159,15 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	/**
 	 * Read or write sectors from/to disk.
 	 */
-	unsigned readwrite_sectors(bool read,bool lba48_ext) {
-		unsigned long long sector;
-		unsigned len;
+	size_t readwrite_sectors(bool read,bool lba48_ext) {
+		uint64_t sector;
+		size_t len;
 
 		if(lba48_ext) {
 			len = (_regs[3] & 0xffff) << 9;
 			if(!len)
 				len = 0x10000 << 9;
-			sector = (static_cast<unsigned long long>(_regs[2] & 0xffffff) << 24) | (_regs[1] & 0xffffff);
+			sector = (static_cast<uint64_t>(_regs[2] & 0xffffff) << 24) | (_regs[1] & 0xffffff);
 		}
 		else {
 			len = (_regs[3] & 0xff) << 9;
@@ -178,15 +178,15 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 
 		if(!_dsf[3])
 			return 0;
-		unsigned long prdbase = union64(_dsf[2],_dsf[1]);
+		uintptr_t prdbase = union64(_dsf[2],_dsf[1]);
 
 		assert(_dsf[6] < 32);
 		assert(_splits[_dsf[6]] == 0);
 
-		unsigned prd = 0;
-		unsigned lastoffset = 0;
+		size_t prd = 0;
+		size_t lastoffset = 0;
 		while(len) {
-			unsigned transfer = 0;
+			size_t transfer = 0;
 			if(lastoffset)
 				prd--;
 
@@ -196,7 +196,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				unsigned prdvalue[4];
 				copy_in(prdbase + prd * 16,prdvalue,16);
 
-				unsigned sublen = ((prdvalue[3] & 0x3fffff) + 1) - lastoffset;
+				size_t sublen = ((prdvalue[3] & 0x3fffff) + 1) - lastoffset;
 				if(sublen > len - transfer)
 					sublen = len - transfer;
 
@@ -346,7 +346,7 @@ public:
 	/**
 	 * Receive a FIS from the controller.
 	 */
-	void receive_fis(unsigned fislen,unsigned *fis) {
+	void receive_fis(size_t fislen,unsigned *fis) {
 		LOG("receive_fis: %u %p %u\n",fislen,fis,fis[0]);
 		if(fislen >= 2) {
 			switch(fis[0] & 0xff) {

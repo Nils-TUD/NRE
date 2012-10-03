@@ -59,7 +59,7 @@ public:
 		static RootDataSpace *_free;
 	};
 
-	static uintptr_t alloc(size_t size,uint align = 1) {
+	static uintptr_t alloc(size_t size,size_t align = 1) {
 		return _mem.alloc(size,align);
 	}
 	static void free(uintptr_t phys,size_t size) {

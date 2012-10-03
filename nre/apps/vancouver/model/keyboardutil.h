@@ -137,7 +137,7 @@ public:
 		if((scancode & nre::Keyboard::EXTEND1) && key == 0x77)
 			return 0x62;
 		if(scancode & nre::Keyboard::EXTEND0) {
-			for(unsigned i = 0; i < sizeof(emap); i += 2){
+			for(size_t i = 0; i < sizeof(emap); i += 2){
 				if(emap[i * 2] == key)
 					return emap[i * 2 + 1];
 			}

@@ -134,11 +134,11 @@ public:
 		while((current = next_arg(args,arglen))) {
 			assert(arglen > 0);
 
-			long *p = &__param_table_start;
+			uintptr_t *p = &__param_table_start;
 			bool handled = false;
 			while(!handled && p < &__param_table_end) {
 				typedef void (*CreateFunction)(Motherboard *,unsigned long *argv,const char *args,
-				        unsigned args_len);
+				        size_t args_len);
 				CreateFunction func = reinterpret_cast<CreateFunction>(*p++);
 				char **strings = reinterpret_cast<char **>(*p++);
 
@@ -152,9 +152,8 @@ public:
 						s++;
 					const char *start = s;
 					unsigned long argv[16];
-					for(unsigned j = 0; j < 16; j++) {
-						unsigned alen = nre::Math::min(strcspn(s,param_separator()),
-						        strcspn(s,word_separator()));
+					for(size_t j = 0; j < 16; j++) {
+						size_t alen = nre::Math::min(strcspn(s,param_separator()),strcspn(s,word_separator()));
 						if(alen)
 							argv[j] = nre::IStringStream::read_from<ulong>(s);
 						else

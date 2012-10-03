@@ -52,7 +52,7 @@ class AhciPort : public FisReceiver {
 	FisReceiver *_drive;
 	ParentIrqProvider *_parent;
 	unsigned _ccs;
-	unsigned _inprogress;
+	uint32_t _inprogress;
 	bool _need_initial_fis;
 
 #define REGBASE "ahcicontroller.cc"
@@ -69,8 +69,8 @@ public:
 	/**
 	 * Receive a FIS from the Device.
 	 */
-	void receive_fis(unsigned fislen,unsigned *fis) {
-		unsigned copy_offset;
+	void receive_fis(size_t fislen,unsigned *fis) {
+		size_t copy_offset;
 
 		// fis receiving enabled?
 		// XXX bug in 2.6.27?
@@ -94,7 +94,7 @@ public:
 
 				// we finished the current command
 				if((~fis[0] & 0x80000) && fis[4]) { // !DRQ && dsf[6]
-					unsigned mask = 1 << (fis[4] - 1);
+					uint32_t mask = 1 << (fis[4] - 1);
 					if(mask & ~_inprogress)
 						Util::panic("XXX broken %x,%x inprogress %x\n",fis[0],fis[4],_inprogress);
 					_inprogress &= ~mask;
@@ -267,7 +267,7 @@ REGSET(AhciController,
 		REG_WR(REG_GHC, 0x4, 0x80000000, 0x3, 0x1, 0,
 				// reset HBA?
 				if (REG_GHC & 1) {
-					for (unsigned i=0; i < MAX_PORTS; i++) _ports[i].comreset();
+					for (size_t i = 0; i < MAX_PORTS; i++) _ports[i].comreset();
 					// set all registers to default values
 					REG_IS = REG_IS_reset;
 					REG_GHC = REG_GHC_reset;
@@ -296,13 +296,13 @@ class AhciController : public ParentIrqProvider, public StaticReceiver<AhciContr
 	DBus<MessageMem> &_bus_mem;
 	unsigned char _irq;
 	AhciPort _ports[MAX_PORTS];
-	unsigned _bdf;
+	uint32_t _bdf;
 
 #define AHCI_CONTROLLER
 #define  REGBASE "ahcicontroller.cc"
 #include "reg.h"
 
-	bool match_bar(unsigned long &address) {
+	bool match_bar(uintptr_t &address) {
 		bool res = !((address ^ PCI_ABAR) & PCI_ABAR_mask);
 		address &= ~PCI_ABAR_mask;
 		return res;
@@ -310,7 +310,7 @@ class AhciController : public ParentIrqProvider, public StaticReceiver<AhciContr
 
 public:
 	void trigger_irq(void * child) {
-		unsigned index = reinterpret_cast<AhciPort *>(child) - _ports;
+		size_t index = reinterpret_cast<AhciPort *>(child) - _ports;
 		if(~REG_IS & (1 << index)) {
 			REG_IS |= 1 << index;
 			if(REG_GHC & 0x2) {
@@ -329,7 +329,7 @@ public:
 	}
 
 	bool receive(MessageMem &msg) {
-		unsigned long addr = msg.phys;
+		uintptr_t addr = msg.phys;
 		if(!match_bar(addr) || !(PCI_CMD_STS & 0x2))
 			return false;
 
@@ -377,9 +377,9 @@ public:
 		return PciHelper::receive(msg,this,_bdf);
 	}
 
-	AhciController(Motherboard &mb,unsigned char irq,unsigned bdf)
+	AhciController(Motherboard &mb,unsigned char irq,uint32_t bdf)
 			: _bus_irqlines(mb.bus_irqlines), _bus_mem(mb.bus_mem), _irq(irq), _bdf(bdf) {
-		for(unsigned i = 0; i < MAX_PORTS; i++)
+		for(size_t i = 0; i < MAX_PORTS; i++)
 			_ports[i].set_parent(this,&mb.bus_memregion,&mb.bus_mem);
 		PCI_reset();
 		AhciController_reset();

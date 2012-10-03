@@ -64,7 +64,7 @@ private:
 	// dynamic state
 	unsigned _timer_dcr_shift;
 	timevalue _timer_start;
-	unsigned long long _msr;
+	uint64_t _msr;
 	unsigned _vector[8 * 3];
 	unsigned _esr_shadow;
 	unsigned _isrv;
@@ -124,8 +124,8 @@ private:
 	/**
 	 * Update the APIC base MSR.
 	 */
-	bool set_base_msr(unsigned long long value) {
-		const unsigned long long mask = ((1ull << (ExecEnv::PHYS_ADDR_SIZE)) - 1) & ~0x2ffull;
+	bool set_base_msr(uint64_t value) {
+		const uint64_t mask = ((1ull << (ExecEnv::PHYS_ADDR_SIZE)) - 1) & ~0x2ffull;
 		bool was_x2apic_mode = x2apic_mode();
 
 		// check reserved bits and invalid state transitions
@@ -136,13 +136,12 @@ private:
 		if((_msr ^ value) & 0x800) {
 			bool apic_enabled = value & 0x800;
 			CpuMessage msg[] = {
-			// update CPUID leaf 1 EDX
+					// update CPUID leaf 1 EDX
 					CpuMessage(1,3,~(1 << 9),apic_enabled << 9),
 					// support for X2Apic
 					CpuMessage(1,2,~(1 << 21),apic_enabled << 21),
-
 			};
-			for(unsigned i = 0; i < ARRAY_SIZE(msg); i++)
+			for(size_t i = 0; i < ARRAY_SIZE(msg); i++)
 				_vcpu->executor.send(msg[i]);
 		}
 
@@ -266,7 +265,7 @@ private:
 	 * Scan for the highest bit in the ISR or IRR.
 	 */
 	unsigned get_highest_bit(unsigned bit_offset) {
-		for(int i = 7; i >= 0; i--) {
+		for(ssize_t i = 7; i >= 0; i--) {
 			unsigned value = _vector[(bit_offset >> 5) + i];
 			if(value)
 				return (i << 5) | Math::bit_scan_reverse(value);
@@ -290,7 +289,7 @@ private:
 	 */
 	unsigned prioritize_irq() {
 		// EXTINT pending?
-		for(unsigned i = 0; i < NUM_LVT; i++) {
+		for(size_t i = 0; i < NUM_LVT; i++) {
 			unsigned lvt;
 			Lapic_read(i + LVT_BASE,lvt);
 			if(_lvtds[i] && ((1 << ((lvt >> 8) & 7)) == VCVCpu::EVENT_EXTINT))
@@ -454,7 +453,7 @@ private:
 
 		// mask all entries on SVR writes
 		if(offset == _SVR_offset && sw_disabled())
-			for(unsigned i = 0; i < NUM_LVT; i++) {
+			for(size_t i = 0; i < NUM_LVT; i++) {
 				register_read(i + LVT_BASE,value);
 				register_write(i + LVT_BASE,value,false);
 			}
@@ -761,9 +760,8 @@ public:
 	void discovery() {
 		unsigned value = 0;
 		discovery_read_dw("APIC",36,value);
-		unsigned length = discovery_length("APIC",44);
+		size_t length = discovery_length("APIC",44);
 		if(value == 0) {
-
 			// NMI is connected to LINT1 on all LAPICs
 			discovery_write_dw("APIC",length + 0,0x00ff0604 | (_initial_apic_id << 24),4);
 			discovery_write_dw("APIC",length + 4,0x0100,2);
@@ -784,7 +782,6 @@ public:
 
 		// add the LAPIC structure to the MADT
 		if(_initial_apic_id < 255) {
-
 			discovery_write_dw("APIC",length,(_initial_apic_id << 24) | 0x0800,4);
 			discovery_write_dw("APIC",length + 4,1,4);
 		}
@@ -805,11 +802,12 @@ public:
 
 		Serial::get().writef("LAPIC freq %Ld\n",_mb.clock().source_freq() >> _timer_clock_shift);
 		CpuMessage msg[] = {
-		// propagate initial APIC id
+				// propagate initial APIC id
 				CpuMessage(1,1,0xffffff,_initial_apic_id << 24),CpuMessage(11,3,0,_initial_apic_id),
 				// support for APIC timer that does not sleep in C-states
-				CpuMessage(6,0,~(1 << 2),1 << 2),};
-		for(unsigned i = 0; i < ARRAY_SIZE(msg); i++)
+				CpuMessage(6,0,~(1 << 2),1 << 2),
+		};
+		for(size_t i = 0; i < ARRAY_SIZE(msg); i++)
 			_vcpu->executor.send(msg[i]);
 
 		reset();

@@ -16,6 +16,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Defines.h>
 #include "../bus/motherboard.h"
 #include "../bus/vcpu.h"
 #include "cpustate.h"

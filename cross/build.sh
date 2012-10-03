@@ -40,12 +40,12 @@ fi
 
 echo "Downloading binutils, gcc and newlib..."
 wget -c http://ftp.gnu.org/gnu/binutils/binutils-2.21.1a.tar.bz2
-wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-core-4.6.1.tar.bz2
-wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.1/gcc-g++-4.6.1.tar.bz2
+wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.3/gcc-core-4.6.3.tar.bz2
+wget -c http://ftp.gnu.org/gnu/gcc/gcc-4.6.3/gcc-g++-4.6.3.tar.bz2
 wget -c ftp://sources.redhat.com/pub/newlib/newlib-1.20.0.tar.gz
 
 BINVER=2.21.1
-GCCVER=4.6.1
+GCCVER=4.6.3
 NEWLVER=1.20.0
 
 GCCCORE_ARCH=gcc-core-$GCCVER.tar.bz2
@@ -58,8 +58,12 @@ NEWLIB_ARCH=newlib-$NEWLVER.tar.gz
 export PREFIX=$DIST
 if [ "$ARCH" = "x86_32" ]; then
 	export TARGET=i686-pc-nulnova
+	ADDFLAGS=""
 else
 	export TARGET=x86_64-pc-nulnova
+	# we have to use the large model to be able to put code and data above 2G; i.e. we have to build
+	# the crtstuff with that and libsupc++
+	ADDFLAGS=" -mcmodel=large"
 fi
 mkdir -p $BUILD/gcc $BUILD/binutils $BUILD/newlib
 
@@ -142,10 +146,11 @@ if $BUILD_GCC; then
 	fi
 	cd $BUILD/gcc
 	if [ $REBUILD -eq 1 ] || [ ! -f $BUILD/gcc/Makefile ]; then
-		CFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP" $SRC/gcc/configure \
-			  --target=$TARGET --prefix=$PREFIX --disable-nls \
-			  --enable-languages=c,c++ --with-headers=$HEADER \
-			  --disable-linker-build-id --with-gxx-include-dir=$HEADER/cpp --enable-threads=posix
+		# TODO this means that we build gcc with -mcmodel=large as well. is that a problem?
+		CFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP $ADDFLAGS" \
+			$SRC/gcc/configure --target=$TARGET --prefix=$PREFIX --disable-nls \
+			--enable-languages=c,c++ --with-headers=$HEADER \
+			--disable-linker-build-id --with-gxx-include-dir=$HEADER/cpp --enable-threads=posix
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
@@ -215,7 +220,7 @@ if $BUILD_CPP; then
 	cd $BUILD/gcc/libstdc++-v3
 	if [ $REBUILD -eq 1 ] || [ ! -f Makefile ]; then
 		# pretend that we're using newlib
-		CPP=$TARGET-cpp CXXFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP" \
+		CPP=$TARGET-cpp CXXFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP $ADDFLAGS" \
 			$SRC/gcc/libstdc++-v3/configure --host=$TARGET --prefix=$PREFIX \
 			--disable-hosted-libstdcxx --disable-nls --with-newlib
 		if [ $? -ne 0 ]; then

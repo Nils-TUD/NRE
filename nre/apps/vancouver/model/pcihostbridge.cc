@@ -39,9 +39,9 @@ public:
 	Motherboard &_mb;
 private:
 	unsigned _busnum;
-	unsigned _buscount;
+	size_t _buscount;
 	unsigned short _iobase;
-	unsigned long _membase;
+	uintptr_t _membase;
 	unsigned _confaddress;
 	unsigned char _cf9;
 
@@ -97,7 +97,7 @@ public:
 			// PCI spec: the lower two bits are hardwired and must return 0 when read
 			_confaddress = msg.value & ~0x3;
 		else if(in_range(msg.port,_iobase + 4,4) && (_confaddress & 0x80000000)) {
-			unsigned long long value = 0;
+			uint64_t value = 0;
 			bool res = true;
 			if(msg.type != MessageIOOut::TYPE_OUTL)
 				value = read_pcicfg(res);
@@ -121,7 +121,7 @@ public:
 		if(!in_range(msg.phys,_membase,_buscount << 20))
 			return false;
 
-		unsigned bdf = (msg.phys - _membase) >> 12;
+		uint32_t bdf = (msg.phys - _membase) >> 12;
 		unsigned dword = (msg.phys & 0xfff) >> 2;
 
 		// write
@@ -224,9 +224,9 @@ public:
 	}
 
 	void discovery() {
-		unsigned length = discovery_length("MCFG",44);
+		size_t length = discovery_length("MCFG",44);
 		discovery_write_dw("MCFG",length + 0,_membase,4);
-		discovery_write_dw("MCFG",length + 4,static_cast<unsigned long long>(_membase) >> 32,4);
+		discovery_write_dw("MCFG",length + 4,static_cast<uint64_t>(_membase) >> 32,4);
 		discovery_write_dw("MCFG",length + 8,
 				((_busnum & 0xff) << 16) | (((_buscount - 1) & 0xff) << 24) | ((_busnum >> 8) & 0xffff),4);
 		discovery_write_dw("MCFG",length + 12,0);
@@ -238,8 +238,8 @@ public:
 		discovery_write_dw("FACP",128,6,1);
 	}
 
-	PciHostBridge(Motherboard &mb,unsigned busnum,unsigned buscount,unsigned short iobase,
-			unsigned long membase)
+	PciHostBridge(Motherboard &mb,unsigned busnum,size_t buscount,unsigned short iobase,
+			uintptr_t membase)
 			: _mb(mb), _busnum(busnum), _buscount(buscount), _iobase(iobase), _membase(membase) {
 	}
 };

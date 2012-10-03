@@ -27,11 +27,11 @@ using namespace nre;
  * State: stable
  */
 class NullMemDevice : public StaticReceiver<NullMemDevice> {
-	unsigned long _base;
-	unsigned long _size;
+	uintptr_t _base;
+	uintptr_t _size;
 
 public:
-	NullMemDevice(unsigned long base,unsigned long size)
+	NullMemDevice(uintptr_t base,uintptr_t size)
 		: _base(base), _size(size) {
 	}
 
