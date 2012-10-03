@@ -28,32 +28,28 @@ class Thread;
 class Pd;
 
 class ExecEnv {
-	enum {
-		// the x86-call instruction is 5 bytes long
-		CALL_INSTR_SIZE		= 5,
-	};
+	// the x86-call instruction is 5 bytes long
+	static const size_t CALL_INSTR_SIZE	= 5;
 
 public:
 	typedef PORTAL void (*portal_func)(capsel_t);
 	typedef void (*startup_func)(void *);
 
-	enum {
-		PAGE_SHIFT			= 12,
-		PAGE_SIZE			= 1 << PAGE_SHIFT,
-		STACK_SIZE			= PAGE_SIZE,
-		PT_ENTRY_COUNT		= PAGE_SIZE / sizeof(word_t),
-		BIG_PAGE_SIZE		= PAGE_SIZE * PT_ENTRY_COUNT,
-		KERNEL_START		= ARCH_KERNEL_START,
-		PHYS_ADDR_SIZE		= 40,
-		EXIT_CODE_NUM		= 0x20,
-		// use something in the middle of the first page. this way, we reduce the propability of
-		// pagefaults interpreted as voluntary exits
-		EXIT_START			= 0x800,
-		EXIT_END			= EXIT_START + EXIT_CODE_NUM - 1,
-		THREAD_EXIT			= EXIT_END + 1,
-		EXIT_SUCCESS		= 0,
-		EXIT_FAILURE		= 1,
-	};
+	static const uint PAGE_SHIFT			= 12;
+	static const size_t PAGE_SIZE			= 1 << PAGE_SHIFT;
+	static const size_t STACK_SIZE			= PAGE_SIZE;
+	static const size_t PT_ENTRY_COUNT		= PAGE_SIZE / sizeof(word_t);
+	static const size_t BIG_PAGE_SIZE		= PAGE_SIZE * PT_ENTRY_COUNT;
+	static const uintptr_t KERNEL_START	= ARCH_KERNEL_START;
+	static const size_t PHYS_ADDR_SIZE		= 40;
+	static const size_t EXIT_CODE_NUM		= 0x20;
+	// use something in the middle of the first page. this way, we reduce the propability of
+	// pagefaults interpreted as voluntary exits
+	static const uintptr_t EXIT_START		= 0x800;
+	static const uintptr_t EXIT_END		= EXIT_START + EXIT_CODE_NUM - 1;
+	static const uintptr_t THREAD_EXIT		= EXIT_END + 1;
+	static const uint EXIT_SUCCESS			= 0;
+	static const uint EXIT_FAILURE			= 1;
 
 	NORETURN static void exit(int code);
 	NORETURN static void thread_exit();

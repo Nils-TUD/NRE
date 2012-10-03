@@ -25,9 +25,7 @@ class VMConfig;
 nre::OStream &operator<<(nre::OStream &os,const VMConfig &cfg);
 
 class VMConfig : public nre::SListItem {
-	enum {
-		MAX_ARGS_LEN	= 256
-	};
+	static const size_t MAX_ARGS_LEN	= 256;
 
 	friend nre::OStream &operator<<(nre::OStream &os,const VMConfig &cfg);
 

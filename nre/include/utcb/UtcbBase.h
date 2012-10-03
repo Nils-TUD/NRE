@@ -37,14 +37,10 @@ class UtcbBase : public UtcbHead {
 	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 
 public:
-	enum {
-		SIZE		= ExecEnv::PAGE_SIZE
-	};
+	static const size_t SIZE		= ExecEnv::PAGE_SIZE;
 
 protected:
-	enum {
-		WORDS		= SIZE / sizeof(word_t),
-	};
+	static const size_t WORDS		= SIZE / sizeof(word_t);
 
 	word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 

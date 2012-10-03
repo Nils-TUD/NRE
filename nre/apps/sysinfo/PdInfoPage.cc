@@ -29,7 +29,7 @@ void PdInfoPage::refresh_console(bool) {
 	size_t memtotal,memfree;
 	_sysinfo.get_mem(memtotal,memfree);
 	cs.writef("%*s: %24s%24s%8s\n",MAX_NAME_LEN,"Pd","VirtMem","PhysMem","Threads");
-	for(int i = 0; i < Console::COLS; i++)
+	for(uint i = 0; i < Console::COLS; i++)
 		cs << '-';
 
 	size_t totalthreads = 0;
@@ -50,7 +50,7 @@ void PdInfoPage::refresh_console(bool) {
 	}
 
 	// display footer
-	for(int i = 0; i < Console::COLS; i++)
+	for(uint i = 0; i < Console::COLS; i++)
 		cs << '-';
 	cs.writef("%*s: %20zu KiB%8zu of %8zu KiB%8zu\n",MAX_NAME_LEN,"Total",
 			totalvirt / 1024,totalphys / 1024,memtotal / 1024,totalthreads);

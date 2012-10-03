@@ -34,25 +34,25 @@ public:
  * A helper for PCI config space access.
  */
 class PCI {
-	enum {
-		BAR0 = 4,
-		MAX_BAR = 6,
-		BAR_TYPE_MASK = 0x6,
-		BAR_TYPE_32B = 0x0,
-		BAR_TYPE_64B = 0x4,
-		BAR_IO = 0x1,
-		BAR_IO_MASK = 0xFFFFFFFCU,
-		BAR_MEM_MASK = 0xFFFFFFF0U,
-		CAP_MSI = 0x05U,
-		CAP_MSIX = 0x11U,
-		CAP_PCIE = 0x10U,
-	};
-
 public:
 	typedef PCIConfig::bdf_type bdf_type;
 	typedef PCIConfig::value_type value_type;
 	typedef uint cap_type;
 
+private:
+	static const value_type BAR0			= 4;
+	static const value_type MAX_BAR		= 6;
+	static const value_type BAR_TYPE_MASK	= 0x6;
+	static const value_type BAR_TYPE_32B	= 0x0;
+	static const value_type BAR_TYPE_64B	= 0x4;
+	static const value_type BAR_IO			= 0x1;
+	static const value_type BAR_IO_MASK	= 0xFFFFFFFC;
+	static const value_type BAR_MEM_MASK	= 0xFFFFFFF0;
+	static const cap_type CAP_MSI			= 0x05U;
+	static const cap_type CAP_MSIX			= 0x11U;
+	static const cap_type CAP_PCIE			= 0x10U;
+
+public:
 	explicit PCI(PCIConfigSession &pcicfg,ACPISession *acpi = 0) : _pcicfg(pcicfg), _acpi(acpi) {
 	}
 

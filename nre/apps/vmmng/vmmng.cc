@@ -30,9 +30,7 @@
 
 using namespace nre;
 
-enum {
-	CUR_ROW_COLOR	= 0x70
-};
+static const uint CUR_ROW_COLOR	= 0x70;
 
 static size_t vmidx = 0;
 static Connection conscon("console");

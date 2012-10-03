@@ -33,11 +33,9 @@
  * Documentation: PS2 hitrc chapter 7+11, scancodes-13.html
  */
 class HostKeyboard {
-	enum {
-		FREQ						= 1000,
-		TIMEOUT						= 50,
-		PORT_BASE					= 0x60,
-	};
+	static const uint FREQ			= 1000;
+	static const uint TIMEOUT		= 50;
+	static const uint PORT_BASE	= 0x60;
 
 	enum {
 		STATUS_DATA_AVAIL			= 1 << 0,

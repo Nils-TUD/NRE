@@ -38,10 +38,8 @@ class Utcb : public UtcbBase {
 	friend class UtcbFrame;
 	friend 	OStream &operator<<(OStream &os,const UtcbBase &utcb);
 
-	enum {
-		MAX_TOP		= (SIZE / (4 * sizeof(word_t))) - 1,
-		MAX_BOTTOM	= (SIZE / (2 * sizeof(word_t))) - 1,
-	};
+	static const size_t MAX_TOP		= (SIZE / (4 * sizeof(word_t))) - 1;
+	static const size_t MAX_BOTTOM		= (SIZE / (2 * sizeof(word_t))) - 1;
 
 	/**
 	 * @param frame the current frame

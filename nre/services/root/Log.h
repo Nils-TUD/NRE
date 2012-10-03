@@ -40,10 +40,9 @@ class Log : public nre::BaseSerial {
 		LCR		= 3,	// line control register
 		MCR		= 4,	// modem control register
 	};
-	enum {
-		PORT_BASE		= COM1,
-		ROOT_SESS		= 0
-	};
+
+	static const uint PORT_BASE		= COM1;
+	static const uint ROOT_SESS		= 0;
 
 public:
 	static Log &get() {

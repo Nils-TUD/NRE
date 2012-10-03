@@ -30,9 +30,7 @@ namespace nre {
  */
 class Timer {
 public:
-	enum {
-		WALLCLOCK_FREQ	= 1000000
-	};
+	static const uint WALLCLOCK_FREQ	= 1000000;
 
 	/**
 	 * The available commands

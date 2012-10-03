@@ -37,10 +37,8 @@ class Utcb : public UtcbBase {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
 
-	enum {
-		POS_SLOT	= ((SIZE - sizeof(UtcbHead)) / sizeof(word_t)) / 2,
-		SLOTS		= WORDS - sizeof(UtcbHead) / sizeof(word_t)
-	};
+	static const size_t POS_SLOT	= ((SIZE - sizeof(UtcbHead)) / sizeof(word_t)) / 2;
+	static const size_t SLOTS		= WORDS - sizeof(UtcbHead) / sizeof(word_t);
 
 	/**
 	 * @param frame the current frame

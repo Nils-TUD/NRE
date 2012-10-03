@@ -25,9 +25,7 @@ namespace nre {
  */
 class ObjCap {
 public:
-	enum {
-		INVALID 		= (capsel_t)0x3FFFFFFF
-	};
+	static const capsel_t INVALID	= 0x3FFFFFFF;
 
 protected:
 	enum {

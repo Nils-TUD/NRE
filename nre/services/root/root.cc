@@ -40,9 +40,7 @@
 
 using namespace nre;
 
-enum {
-	MAX_CMDLINES_LEN	= ExecEnv::PAGE_SIZE
-};
+static const size_t MAX_CMDLINES_LEN	= ExecEnv::PAGE_SIZE;
 
 class CPU0Init {
 	CPU0Init();

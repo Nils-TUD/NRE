@@ -33,17 +33,15 @@ public:
 	/**
 	 * Basic attributes
 	 */
-	enum {
-		COLS		= 80,
-		ROWS		= 25,
-		TAB_WIDTH	= 4,
-		BUF_SIZE	= COLS * 2 + 1,
-		PAGES		= 32,
-		TEXT_OFF	= 0x18000,
-		TEXT_PAGES	= 8,
-		PAGE_SIZE	= 0x1000,
-		SUBCONS		= 32,
-	};
+	static const uint COLS				= 80;
+	static const uint ROWS 			= 25;
+	static const uint TAB_WIDTH		= 4;
+	static const size_t BUF_SIZE		= COLS * 2 + 1;
+	static const size_t PAGES			= 32;
+	static const size_t TEXT_OFF		= 0x18000;
+	static const size_t TEXT_PAGES		= 8;
+	static const size_t PAGE_SIZE		= 0x1000;
+	static const size_t SUBCONS		= 32;
 
 	/**
 	 * The available commands
@@ -78,10 +76,8 @@ public:
  * Represents a session at the console service
  */
 class ConsoleSession : public ClientSession {
-	enum {
-		IN_DS_SIZE	= ExecEnv::PAGE_SIZE,
-		OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * Console::PAGES
-	};
+	static const size_t IN_DS_SIZE		= ExecEnv::PAGE_SIZE;
+	static const size_t OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * Console::PAGES;
 
 public:
 	/**

@@ -35,11 +35,9 @@ public:
 	typedef ulong tag_type;
 	typedef uint64_t sector_type;
 
-	enum {
-		MAX_CONTROLLER	= 8,
-		MAX_DRIVES		= 32,	// per controller
-		MAX_DMA_DESCS	= 64,
-	};
+	static const size_t MAX_CONTROLLER		= 8;
+	static const size_t MAX_DRIVES			= 32;	// per controller
+	static const size_t MAX_DMA_DESCS		= 64;
 
 	typedef DMADescList<MAX_DMA_DESCS> dma_type;
 
@@ -57,7 +55,7 @@ public:
 	 * Describes a drive
 	 */
 	struct Parameter {
-		enum {
+		enum Type {
 			FLAG_HARDDISK	= 1,
 			FLAG_ATAPI		= 2
 		};

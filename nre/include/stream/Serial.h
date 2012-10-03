@@ -38,9 +38,7 @@ class BaseSerial : public OStream {
 	friend class ::Log;
 
 protected:
-	enum {
-		MAX_LINE_LEN	= 120
-	};
+	static const size_t MAX_LINE_LEN	= 120;
 
 	explicit BaseSerial() : OStream() {
 	}

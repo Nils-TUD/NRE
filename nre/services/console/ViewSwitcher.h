@@ -28,12 +28,10 @@ class ConsoleService;
 class ConsoleSessionData;
 
 class ViewSwitcher {
-	enum {
-		DS_SIZE			= nre::ExecEnv::PAGE_SIZE * Screen::PAGES,
-		COLOR			= 0x1F,
-		SWITCH_TIME		= 1000,	// ms
-		REFRESH_DELAY	= 25	// ms
-	};
+	static const size_t DS_SIZE		= nre::ExecEnv::PAGE_SIZE * Screen::PAGES;
+	static const uint COLOR			= 0x1F;
+	static const uint SWITCH_TIME		= 1000;	// ms
+	static const uint REFRESH_DELAY	= 25;	// ms
 
 	struct SwitchCommand {
 		size_t oldsessid;

@@ -32,10 +32,8 @@ public:
 	typedef const HipMem* mem_iterator;
 	typedef const HipCPU* cpu_iterator;
 
-	enum {
-		MAX_CPUS	= 64,	// has to be a power of 2
-		MAX_GSIS	= 128
-	};
+	static const size_t MAX_CPUS	= 64;	// has to be a power of 2
+	static const size_t MAX_GSIS	= 128;
 
 	/**
 	 * @return the Hip
@@ -188,7 +186,7 @@ public:
  */
 class HipMem {
 public:
-	enum {
+	enum Type {
 		AVAILABLE	= 1,
 		HYPERVISOR	= -1,
 		MB_MODULE	= -2

@@ -101,9 +101,7 @@ class Exception {
 	friend UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
 	friend 	UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
 
-	enum {
-		MAX_TRACE_DEPTH = 16
-	};
+	static const size_t MAX_TRACE_DEPTH = 16;
 
 public:
 	typedef const uintptr_t *backtrace_iterator;

@@ -168,10 +168,8 @@ static inline OStream &operator<<(OStream &os,const Mtd &mtd) {
  * A quantum+period descriptor.
  */
 class Qpd: public Desc {
-	enum {
-		DEFAULT_QUANTUM = 10000,
-		DEFAULT_PRIORITY = 1
-	};
+	static const uint DEFAULT_QUANTUM	= 10000;
+	static const uint DEFAULT_PRIORITY	= 1;
 
 public:
 	explicit Qpd(uint prio = DEFAULT_PRIORITY,uint quantum = DEFAULT_QUANTUM) :

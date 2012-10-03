@@ -26,10 +26,8 @@
 #include "HostTimerDevice.h"
 
 class HostHPET : public HostTimerDevice {
-	enum {
-		MAX_TIMERS				= 24,
-		MIN_TICKS_BETWEEN_WRAP	= 4
-	};
+	static const size_t MAX_TIMERS				= 24;
+	static const uint MIN_TICKS_BETWEEN_WRAP	= 4;
 
 	enum {
 		// General Configuration Register

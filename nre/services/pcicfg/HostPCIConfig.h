@@ -24,10 +24,8 @@
 #include "Config.h"
 
 class HostPCIConfig : public Config {
-	enum {
-		PORT_ADDR	= 0xCF8,
-		PORT_DATA	= 0xCFC
-	};
+	static const uint PORT_ADDR	= 0xCF8;
+	static const uint PORT_DATA	= 0xCFC;
 
 public:
 	explicit HostPCIConfig() : _sm(), _addr(PORT_ADDR,4), _data(PORT_DATA,4) {

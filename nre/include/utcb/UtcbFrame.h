@@ -82,7 +82,7 @@ private:
 	class TypedItem {
 		friend class UtcbFrameRef;
 	public:
-		enum {
+		enum Type {
 			TYPE_XLT		= 0,
 			TYPE_DEL		= 1,
 		};

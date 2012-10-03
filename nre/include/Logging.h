@@ -42,7 +42,7 @@ namespace nre {
  */
 class Logging {
 public:
-	enum {
+	enum Level {
 		CHILD_CREATE	= 1 << 0,
 		CHILD_KILL		= 1 << 1,
 		PFS				= 1 << 2,

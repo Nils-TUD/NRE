@@ -60,7 +60,7 @@ private:
  * stuff around it.
  */
 class OStream {
-	enum {
+	enum Flags {
 		PADRIGHT	= 1 << 0,
 		FORCESIGN	= 1 << 1,
 		SPACESIGN	= 1 << 2,

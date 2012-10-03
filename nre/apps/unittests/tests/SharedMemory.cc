@@ -31,11 +31,8 @@
 using namespace nre;
 using namespace nre::test;
 
-enum {
-	DS_SIZE		= ExecEnv::PAGE_SIZE * 4,
-	ITEM_COUNT	= 1000,
-	WORD_COUNT	= 1,
-};
+static const size_t ITEM_COUNT	= 1000;
+static const size_t WORD_COUNT	= 1;
 
 struct Item {
 	word_t words[WORD_COUNT];

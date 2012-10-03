@@ -187,9 +187,7 @@ private:
  * Represents a session at the keyboard service
  */
 class KeyboardSession : public PtClientSession {
-	enum {
-		DS_SIZE = ExecEnv::PAGE_SIZE
-	};
+	static const size_t DS_SIZE	= ExecEnv::PAGE_SIZE;
 
 public:
 	/**

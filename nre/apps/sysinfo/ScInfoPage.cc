@@ -31,7 +31,7 @@ void ScInfoPage::refresh_console(bool update) {
 		cs.writef(" CPU%u ",cpu->log_id());
 	cs.writef("%*s",MAX_SUMTIME_LEN + 1,"Total");
 	cs.writef("\n");
-	for(int i = 0; i < Console::COLS; i++)
+	for(uint i = 0; i < Console::COLS; i++)
 		cs << '-';
 
 	// determine the total time elapsed on each CPU. this way we don't assume that exactly 1sec

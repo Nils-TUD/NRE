@@ -31,12 +31,10 @@ class HostTimer {
 	struct PerCpu;
 
 public:
-	enum {
-		MAX_CLIENTS		= 64,
-		// Resolution of our TSC clocks per HPET clock measurement. Lower
-		// resolution mean larger error in HPET counter estimation.
-		CPT_RES			= /* 1 divided by */ (1U<<13) /* clocks per hpet tick */
-	};
+	static const size_t MAX_CLIENTS	= 64;
+	// Resolution of our TSC clocks per HPET clock measurement. Lower
+	// resolution mean larger error in HPET counter estimation.
+	static const uint CPT_RES			= /* 1 divided by */ (1U<<13); /* clocks per hpet tick */
 
 	struct ClientData {
 		// This field has different semantics: When this ClientData

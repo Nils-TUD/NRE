@@ -59,9 +59,7 @@ class ChildManager {
 	 */
 	class Portals {
 	public:
-		enum {
-			COUNT	= 9
-		};
+		static const size_t COUNT	= 9;
 
 		PORTAL static void startup(capsel_t pid);
 		PORTAL static void init_caps(capsel_t pid);
@@ -87,11 +85,9 @@ public:
 	/**
 	 * Some settings
 	 */
-	enum {
-		MAX_CHILDS		= 32,
-		MAX_CMDLINE_LEN	= 256,
-		MAX_MODAUX_LEN	= ExecEnv::PAGE_SIZE
-	};
+	static const size_t MAX_CHILDS			= 32;
+	static const size_t MAX_CMDLINE_LEN	= 256;
+	static const size_t MAX_MODAUX_LEN		= ExecEnv::PAGE_SIZE;
 
 	/**
 	 * Creates a new child manager. It will already create all Ecs that are required

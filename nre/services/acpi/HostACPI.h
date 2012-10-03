@@ -22,14 +22,12 @@
 #include <Compiler.h>
 
 class HostACPI {
-	enum {
-		BIOS_MEM_ADDR	= 0xe0000,
-		BIOS_MEM_SIZE	= 0x20000,
-		BIOS_ADDR		= 0x0,
-		BIOS_SIZE		= 0x1000,
-		BIOS_EBDA_OFF	= 0x40E,
-		BIOS_EBDA_SIZE	= 1024
-	};
+	static const uintptr_t BIOS_MEM_ADDR	= 0xe0000;
+	static const size_t BIOS_MEM_SIZE		= 0x20000;
+	static const uintptr_t BIOS_ADDR		= 0x0;
+	static const size_t BIOS_SIZE			= 0x1000;
+	static const size_t BIOS_EBDA_OFF		= 0x40E;
+	static const size_t BIOS_EBDA_SIZE		= 1024;
 
 	/* root system descriptor pointer */
 	struct RSDP {

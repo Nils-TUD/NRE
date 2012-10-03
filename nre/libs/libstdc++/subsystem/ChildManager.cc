@@ -991,7 +991,13 @@ void ChildManager::term_child(capsel_t pid,UtcbExcFrameRef &uf) {
 		{
 			ScopedLock<RCULock> guard(&RCU::lock());
 			Child *c = get_child(pid);
-			int exitcode = uf->eip - (pd ? ExecEnv::EXIT_START : ExecEnv::THREAD_EXIT);
+			// lol: using the condition operator instead of if-else leads to
+			// "undefined reference to `nre::ExecEnv::THREAD_EXIT'"
+			int exitcode = uf->eip;
+			if(pd)
+				exitcode -= ExecEnv::EXIT_START;
+			else
+				exitcode -= ExecEnv::THREAD_EXIT;
 			LOG(Logging::CHILD_KILL,Serial::get().writef(
 					"Child '%s': %s terminated with exit code %d on cpu %u\n",
 					c->cmdline().str(),pd ? "Pd" : "Thread",exitcode,get_cpu(pid)));

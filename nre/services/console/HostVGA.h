@@ -34,10 +34,8 @@ class HostVGA : public Screen {
 		CURSOR_LOC_HI	= 0xe,
 		CURSOR_LOC_LO	= 0xf
 	};
-	enum {
-		VGA_MEM			= 0xa0000,
-		VGA_PAGE_SIZE	= nre::ExecEnv::PAGE_SIZE,
-	};
+	static const uintptr_t VGA_MEM		= 0xa0000;
+	static const size_t VGA_PAGE_SIZE	= nre::ExecEnv::PAGE_SIZE;
 
 public:
 	explicit HostVGA() : Screen(), _ports(0x3d4,2),

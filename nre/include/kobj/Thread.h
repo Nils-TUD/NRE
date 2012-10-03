@@ -41,15 +41,11 @@ class Thread : public Ec, public SListItem {
 	friend class RCU;
 	friend class RCULock;
 
-	enum {
-		TLS_SIZE	= 4
-	};
+	static const size_t TLS_SIZE	= 4;
 
 public:
-	enum {
-		// the slot 0 is reserved for putting a ec-parameter in it
-		TLS_PARAM	= 0
-	};
+	// the slot 0 is reserved for putting a ec-parameter in it
+	static const size_t TLS_PARAM	= 0;
 	enum Flags {
 		HAS_OWN_STACK	= 1,
 		HAS_OWN_UTCB	= 2,

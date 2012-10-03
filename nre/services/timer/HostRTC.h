@@ -24,10 +24,8 @@
 #include <Assert.h>
 
 class HostRTC {
-	enum {
-		PORT_BASE	= 0x70,
-	    MS_TIMEOUT	= 2000, // milliseconds
-	};
+	static const uint PORT_BASE	= 0x70;
+	static const uint MS_TIMEOUT	= 2000; // milliseconds
 
 public:
 	explicit HostRTC() : _ports(PORT_BASE,2), _clock(1000) {

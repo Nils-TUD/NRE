@@ -39,9 +39,7 @@ class DataSpaceManager {
 	template<class DS2>
 	friend OStream &operator<<(OStream &os,const DataSpaceManager<DS2> &mng);
 
-	enum {
-		MAX_SLOTS	= 512
-	};
+	static const size_t MAX_SLOTS	= 512;
 
 	/**
 	 * We use a treap here and use the unmap selector as key. this way, we can quickly find a ds

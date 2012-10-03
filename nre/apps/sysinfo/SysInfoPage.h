@@ -21,10 +21,8 @@
 
 class SysInfoPage {
 public:
-	enum {
-		MAX_NAME_LEN	= 16,
-		ROWS			= nre::Console::ROWS - 3,
-	};
+	static const size_t MAX_NAME_LEN	= 16;
+	static const size_t ROWS			= nre::Console::ROWS - 3;
 
 	explicit SysInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
 		: _top(0), _cons(cons), _sysinfo(sysinfo), _sm() {
@@ -72,10 +70,8 @@ protected:
 };
 
 class ScInfoPage : public SysInfoPage {
-	enum {
-		MAX_TIME_LEN	= 6,
-		MAX_SUMTIME_LEN	= 12,
-	};
+	static const size_t MAX_TIME_LEN		= 6;
+	static const size_t MAX_SUMTIME_LEN	= 12;
 public:
 	explicit ScInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
 		: SysInfoPage(cons,sysinfo) {

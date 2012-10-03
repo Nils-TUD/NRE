@@ -56,7 +56,7 @@ class HostAHCIDevice : public Device {
 	};
 
 public:
-	enum {
+	enum Signature {
 		SATA_SIG_ATA	= 0x00000101,	// SATA drive
 		SATA_SIG_ATAPI	= 0xEB140101,	// SATAPI drive
 		SATA_SIG_SEMB	= 0xC33C0101,	// Enclosure management bridge

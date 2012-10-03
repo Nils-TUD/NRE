@@ -21,10 +21,8 @@
 #include <util/ScopedLock.h>
 
 class VirtualMemory {
-	enum {
-		RAM_BEGIN		= ARCH_REGIONS_END,
-		RAM_END			= ARCH_KERNEL_START
-	};
+	static const uintptr_t RAM_BEGIN	= ARCH_REGIONS_END;
+	static const uintptr_t RAM_END		= ARCH_KERNEL_START;
 
 public:
 	static uintptr_t alloc_ram(uintptr_t phys,size_t &size) {

@@ -59,10 +59,8 @@ class Service {
 	friend class SessionIterator;
 
 public:
-	enum {
-		MAX_SESSIONS_ORDER	= 6,
-		MAX_SESSIONS		= 1 << MAX_SESSIONS_ORDER
-	};
+	static const uint MAX_SESSIONS_ORDER		=	6;
+	static const size_t MAX_SESSIONS			=	1 << MAX_SESSIONS_ORDER;
 
 	/**
 	 * The commands the parent provides for working with services
@@ -302,7 +300,7 @@ public:
 		return &operator *();
 	}
 	SessionIterator& operator ++() {
-		if(_pos < Service::MAX_SESSIONS - 1) {
+		if(_pos < static_cast<ssize_t>(Service::MAX_SESSIONS) - 1) {
 			_pos++;
 			_last = next();
 		}
@@ -334,7 +332,7 @@ public:
 
 private:
 	T *next() {
-		while(_pos < Service::MAX_SESSIONS) {
+		while(_pos < static_cast<ssize_t>(Service::MAX_SESSIONS)) {
 			T *t = static_cast<T*>(rcu_dereference(_s->_sessions[_pos]));
 			if(t)
 				return t;
