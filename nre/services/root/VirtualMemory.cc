@@ -29,4 +29,3 @@ VirtualMemory::VirtualMemory() {
 	uintptr_t begin = Math::round_up<uintptr_t>(reinterpret_cast<uintptr_t>(&edata),ExecEnv::PAGE_SIZE);
 	_regs.free(begin,RAM_BEGIN - begin);
 }
-

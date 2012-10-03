@@ -21,11 +21,21 @@
 #include <mem/RegionManager.h>
 #include <mem/DataSpaceManager.h>
 
+/**
+ * Manages all physical memory. At the beginning, it is told what memory is available according
+ * to the memory map in the Hip. Afterwards, you can allocate something from that and also free
+ * it again. Note that all physical memory is directly mapped to VirtualMemory::RAM_BEGIN. Thus,
+ * you can get the virtual address for a physical one by using VirtualMemory::phys_to_virt().
+ */
 class PhysicalMemory {
 public:
 	class RootDataSpace;
 	friend class RootDataSpace;
 
+	/**
+	 * The DataSpace equivalent for the root-task which works slightly different because it is
+	 * the end of the recursion :)
+	 */
 	class RootDataSpace {
 	public:
 		RootDataSpace() : _desc(), _map(0,true), _unmap(0,true), _next() {
@@ -59,24 +69,55 @@ public:
 		static RootDataSpace *_free;
 	};
 
+	/**
+	 * Allocates <size> bytes from the physical memory.
+	 *
+	 * @param size the number of bytes to allocate
+	 * @param align the alignment (in bytes; has to be a power of 2)
+	 */
 	static uintptr_t alloc(size_t size,size_t align = 1) {
 		return _mem.alloc(size,align);
 	}
+	/**
+	 * Free's the given physical memory
+	 *
+	 * @param phys the address
+	 * @param size the number of bytes
+	 */
 	static void free(uintptr_t phys,size_t size) {
 		_mem.free(phys,size);
 	}
 
+	/**
+	 * Only for the startup: Add the given memory to the available list
+	 */
 	static void add(uintptr_t addr,size_t size);
+	/**
+	 * Only for the startup: Remove the given memory from the available list
+	 */
 	static void remove(uintptr_t addr,size_t size);
+	/**
+	 * Only for the startup: Map all available memory. That is, use Hypervisor to delegate the
+	 * memory from the hypervisor Pd to our Pd.
+	 */
 	static void map_all();
 
+	/**
+	 * @return the total amount of available physical memory (this is constant after startup)
+	 */
 	static size_t total_size() {
 		return _totalsize;
 	}
+	/**
+	 * @return the amount of still free physical memory
+	 */
 	static size_t free_size() {
 		return _mem.total_size();
 	}
 
+	/**
+	 * @return the list of available physical memory regions
+	 */
 	static const nre::RegionManager &regions() {
 		return _mem;
 	}

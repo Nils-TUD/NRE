@@ -17,6 +17,11 @@
 #include <ipc/Service.h>
 #include <subsystem/ChildManager.h>
 
+/**
+ * The sysinfo-service is intended to allow applications to display information about the running
+ * system to the user. At the moment, you can get information about the existing Scs, and the
+ * child tasks of root with the memory usage and some other things.
+ */
 class SysInfoService : public nre::Service {
 public:
 	SysInfoService(nre::ChildManager *cm)

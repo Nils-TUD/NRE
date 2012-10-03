@@ -22,7 +22,16 @@
 #include <Exception.h>
 #include <String.h>
 
+/**
+ * This class keeps track of all schedulable entities in the system. Note that there is no policy
+ * here. This is done by ChildManager. This class does only react on portal-calls by adding
+ * SchedEntitites to a list and removing them again. Additionally, since root is the only task that
+ * is allowed to create Scs, it does so as well.
+ */
 class Admission {
+	/**
+	 * Represents a scheduling entity. So, basically a global thread.
+	 */
 	class SchedEntity : public nre::SListItem {
 	public:
 		explicit SchedEntity(const nre::String &name,cpu_t cpu,capsel_t cap)
@@ -68,8 +77,19 @@ class Admission {
 public:
 	PORTAL static void portal_sc(capsel_t pid);
 
+	/**
+	 * Inits this module
+	 */
 	static void init();
 
+	/**
+	 * Calculates the total time that has elapsed in the last second on cpu <cpu>
+	 *
+	 * @param cpu the logical cpu id
+	 * @param update if true, the time will be requested from NOVA again and thus, a new
+	 * 	second is started
+	 * @return the total time (in microseconds)
+	 */
 	static timevalue_t total_time(cpu_t cpu,bool update) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		timevalue_t total = 0;
@@ -80,6 +100,15 @@ public:
 		return total;
 	}
 
+	/**
+	 * Retrieves the properties of SchedEntity with index <idx>
+	 *
+	 * @param idx the index
+	 * @param name will be set to the name
+	 * @param cpu will be set to the CPU the Sc runs on
+	 * @param time will be set to the time it has run in the last second (in microseconds)
+	 * @param totaltime will be set to the total time it has run so far (in microseconds)
+	 */
 	static bool get_sched_entity(size_t idx,nre::String &name,cpu_t &cpu,timevalue_t &time,
 			timevalue_t &totaltime) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);

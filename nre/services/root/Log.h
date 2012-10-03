@@ -23,6 +23,10 @@
 
 class BufferedLog;
 
+/**
+ * The log implementation that provides a service for child tasks that allows them to print lines
+ * to the serial line.
+ */
 class Log : public nre::BaseSerial {
 	friend class BufferedLog;
 
@@ -45,9 +49,15 @@ class Log : public nre::BaseSerial {
 	static const uint ROOT_SESS		= 0;
 
 public:
+	/**
+	 * @return the instance
+	 */
 	static Log &get() {
 		return _inst;
 	}
+	/**
+	 * Starts the log service
+	 */
 	void start();
 
 private:
@@ -82,6 +92,12 @@ private:
 	static const char *_colors[];
 };
 
+/**
+ * This class is used by root itself which buffers the serial output line-wise and uses the same
+ * backend as the log-service to finally write lines to the serial line.
+ * Note that this class is not intended to be used directly. Please use Serial::get() in root, like
+ * you do in all other child tasks as well.
+ */
 class BufferedLog : public nre::BaseSerial {
 	explicit BufferedLog();
 

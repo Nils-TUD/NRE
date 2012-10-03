@@ -20,11 +20,23 @@
 #include <kobj/UserSm.h>
 #include <util/ScopedLock.h>
 
+/**
+ * The virtual memory is split in two areas: everything from <end-of-data-area> to RAM_BEGIN is
+ * used to map arbitrary stuff (e.g. multiboot-modules or device memory). The area from RAM_BEGIN
+ * to RAM_END is used for RAM. This is mapped at the beginning and never unmapped.
+ */
 class VirtualMemory {
 	static const uintptr_t RAM_BEGIN	= ARCH_REGIONS_END;
 	static const uintptr_t RAM_END		= ARCH_KERNEL_START;
 
 public:
+	/**
+	 * Only for the startup: Allocate virtual memory for RAM
+	 *
+	 * @param phys the physical address
+	 * @param size the size (might be adjusted)
+	 * @return the virtual address
+	 */
 	static uintptr_t alloc_ram(uintptr_t phys,size_t &size) {
 		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
 		if(RAM_BEGIN + phys >= RAM_END)
@@ -33,16 +45,28 @@ public:
 			size = RAM_END - (RAM_BEGIN + phys);
 		return RAM_BEGIN + phys;
 	}
-	static uintptr_t phys_to_virt(uintptr_t virt) {
-		return virt + RAM_BEGIN;
+	/**
+	 * @return the virtual address for <phys>
+	 */
+	static uintptr_t phys_to_virt(uintptr_t phys) {
+		return phys + RAM_BEGIN;
 	}
+	/**
+	 * @return the physical address for <virt>
+	 */
 	static uintptr_t virt_to_phys(uintptr_t virt) {
 		return virt - RAM_BEGIN;
 	}
 
+	/**
+	 * @return the amount of used virtual memory
+	 */
 	static size_t used() {
 		return _used;
 	}
+	/**
+	 * Allocates <size> bytes from the free virtual memory
+	 */
 	static uintptr_t alloc(size_t size,size_t align = 1) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
@@ -50,6 +74,9 @@ public:
 		_used += size;
 		return addr;
 	}
+	/**
+	 * Free the <size> bytes @ <addr>
+	 */
 	static void free(uintptr_t addr,size_t size) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
@@ -57,6 +84,9 @@ public:
 		_used -= size;
 	}
 
+	/**
+	 * @return the virtual memory regions
+	 */
 	static const nre::RegionManager &regions() {
 		return _regs;
 	}
