@@ -43,9 +43,9 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 		Hypervisor::map_mem(_desc.phys(),_desc.virt(),_desc.size());
 	}
 	else {
-		uint align = 1;
+		size_t align = 1;
 		if((flags & DataSpaceDesc::BIGPAGES) && _desc.size() >= ExecEnv::BIG_PAGE_SIZE)
-			align = static_cast<uint>(ExecEnv::BIG_PAGE_SIZE);
+			align = ExecEnv::BIG_PAGE_SIZE;
 		else
 			flags &= ~DataSpaceDesc::BIGPAGES;
 		_desc.phys(alloc(_desc.size(),align));

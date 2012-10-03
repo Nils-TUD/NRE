@@ -682,9 +682,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			// only create creations and non-device-memory
 			if(type != DataSpace::JOIN && desc.phys() == 0)
 				flags |= ChildMemory::OWN;
-			uint align = 1;
-			if(flags & DataSpaceDesc::BIGPAGES)
-				align = static_cast<uint>(ExecEnv::BIG_PAGE_SIZE);
+			size_t align = (flags & DataSpaceDesc::BIGPAGES) ? ExecEnv::BIG_PAGE_SIZE : 1;
 			addr = c->reglist().find_free(ds.size(),align);
 			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}
