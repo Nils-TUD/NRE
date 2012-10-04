@@ -58,6 +58,10 @@ void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uin
 	size_t stack_top = STACK_SIZE / sizeof(void*);
 	sp[--stack_top] = t;
 	sp[--stack_top] = pd;
+	// add another word here to align the stack to 16-bytes + 8. this is necessary to get SSE
+	// working. as it seems, the compiler expects that at a function-entry it is not aligned to
+	// 16-byte.
+	sp[--stack_top] = 0;
 	sp[--stack_top] = reinterpret_cast<void*>(start);
 	sp[--stack_top] = reinterpret_cast<void*>(ret);
 	return sp + stack_top;

@@ -106,6 +106,8 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 		argc++;
 
 	word_t *ptrs = reinterpret_cast<word_t*>(bottom - sizeof(word_t) * (argc + 1));
+	// ensure that its aligned to 16-byte + 8-byte for SSE
+	ptrs = reinterpret_cast<word_t*>((reinterpret_cast<uintptr_t>(ptrs) & ~0xFUL) - 0x8);
 	// store argv and argc
 	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::PAGE_SIZE - 1));
 	*(ptrs - 2) = argc;

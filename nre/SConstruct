@@ -18,9 +18,8 @@ hostenv = Environment(
 	CXXFLAGS = '-Wall -Wextra -ansi -g'
 )
 env = Environment(
-	# we need to disable SSE for x86_64
-	CXXFLAGS = '-Wall -Wextra -ansi -mno-sse',
-	CFLAGS = '-Wall -Wextra -mno-sse',
+	CXXFLAGS = '-Wall -Wextra -ansi',
+	CFLAGS = '-Wall -Wextra',
 	# without "-z max-page-size=0x1000" ld produces really large binaries for x86_64, because it
 	# aligns to 2MiB (not only in virtual memory, but also in the binary)
 	LINKFLAGS = '-Wl,--no-undefined -static -Wl,-static -static-libgcc -Wl,-z,max-page-size=0x1000',
@@ -41,8 +40,8 @@ if btype == 'debug':
 else:
 	# we enable the framepointer to get stacktraces in release-mode. of course, we could also
 	# disable stacktraces later, so that we don't need the framepointer.
-	env.Append(CXXFLAGS = ' -Os -DNDEBUG -fno-omit-frame-pointer')
-	env.Append(CFLAGS = ' -Os -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CXXFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
+	env.Append(CFLAGS = ' -O3 -DNDEBUG -fno-omit-frame-pointer')
 	btype = 'release'
 if target == 'x86_64':
 	env.Append(CXXFLAGS = ' -mcmodel=large')
@@ -74,9 +73,12 @@ env.Append(
 	BINARYDIR = '#' + builddir + '/bin/apps',
 	LIBPATH = '#' + builddir + '/bin/lib',
 	SYSLIBPATH = crossdir + '/lib',
-	SYSGCCLIBPATH = crossdir + '/lib/gcc/' + cross + '/' + crossver,
-	LINK_ADDR = 0x100000000
+	SYSGCCLIBPATH = crossdir + '/lib/gcc/' + cross + '/' + crossver
 )
+if target == 'x86_64':
+	env.Append(LINK_ADDR = 0x100000000)
+else:
+	env.Append(LINK_ADDR = 0x100000)
 
 def NREProgram(env, target, source):
 	# for better debugging: put every executable at a different address
