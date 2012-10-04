@@ -35,10 +35,6 @@ public:
 	 */
 	static void init();
 
-	PORTAL static void portal_map(capsel_t pid);
-	PORTAL static void portal_gsi(capsel_t pid);
-	PORTAL static void portal_io(capsel_t pid);
-
 	/**
 	 * Maps <size> bytes at <phys> to <virt>. It assumes that both the virtual and the physical
 	 * pages are available.
@@ -87,7 +83,7 @@ public:
 	}
 
 	/**
-	 * Allocates the I/O ports <base>+<count>-1. This will mark them as unavailable.
+	 * Allocates the I/O ports <base>..<base>+<count>-1. This will mark them as unavailable.
 	 *
 	 * @param base the start of the port range
 	 * @param count the number of ports
@@ -97,7 +93,7 @@ public:
 		_io.alloc_region(base,count);
 	}
 	/**
-	 * Releases the I/O ports <base>+<count>-1.
+	 * Releases the I/O ports <base>..<base>+<count>-1.
 	 *
 	 * @param base the start of the port range
 	 * @param count the number of ports
@@ -121,8 +117,16 @@ public:
 		return uf.get_delegated(0).offset();
 	}
 
+	/**
+	 * End-of-recursion service-portals
+	 */
+	PORTAL static void portal_gsi(capsel_t pid);
+	PORTAL static void portal_io(capsel_t pid);
+
 private:
 	Hypervisor();
+	
+	PORTAL static void portal_map(capsel_t pid);
 
 	static uchar _stack[];
 	static nre::Pt *_map_pts[];

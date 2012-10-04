@@ -75,8 +75,6 @@ class Admission {
 	};
 
 public:
-	PORTAL static void portal_sc(capsel_t pid);
-
 	/**
 	 * Inits this module
 	 */
@@ -124,6 +122,11 @@ public:
 		}
 		return false;
 	}
+	
+	/**
+	 * End-of-recursion service portal
+	 */
+	PORTAL static void portal_sc(capsel_t pid);
 
 private:
 	Admission();

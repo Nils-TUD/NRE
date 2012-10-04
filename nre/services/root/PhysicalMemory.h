@@ -122,6 +122,9 @@ public:
 		return _mem;
 	}
 
+	/**
+	 * End-of-recursion service portal
+	 */
 	PORTAL static void portal_dataspace(capsel_t);
 
 private:
