@@ -57,7 +57,7 @@ static void test_ds() {
 	tac = Util::tsc();
 	heap_delete = (tac - tic) / 3 - rdtsc;
 
-	for(int i = 0; i < MAP_COUNT; ++i) {
+	for(size_t i = 0; i < MAP_COUNT; ++i) {
 		tic = Util::tsc();
 		DataSpace *ds = new DataSpace(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
 		tac = Util::tsc();
