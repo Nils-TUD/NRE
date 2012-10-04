@@ -146,8 +146,7 @@ if $BUILD_GCC; then
 	fi
 	cd $BUILD/gcc
 	if [ $REBUILD -eq 1 ] || [ ! -f $BUILD/gcc/Makefile ]; then
-		# TODO this means that we build gcc with -mcmodel=large as well. is that a problem?
-		CFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP $ADDFLAGS" \
+		CFLAGS="-g -O2 -D_POSIX_THREADS -D_UNIX98_THREAD_MUTEX_ATTRIBUTES -DPTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP" \
 			$SRC/gcc/configure --target=$TARGET --prefix=$PREFIX --disable-nls \
 			--enable-languages=c,c++ --with-headers=$HEADER \
 			--disable-linker-build-id --with-gxx-include-dir=$HEADER/cpp --enable-threads=posix

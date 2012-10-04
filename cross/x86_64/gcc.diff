@@ -61,7 +61,7 @@ diff -rcN src/gcc-4.6.1//gcc/config/t-nulnova src/gcc/gcc/config/t-nulnova
 --- src/gcc/gcc/config/t-nulnova	2012-03-25 11:04:04.000000000 +0200
 ***************
 *** 0 ****
---- 1,36 ----
+--- 1,39 ----
 + EXTRA_PARTS=crtbegin.o crtbeginS.o crtend.o crtendS.o
 + 
 + # Build a shared libgcc library for ELF without symbol versioning
@@ -79,6 +79,9 @@ diff -rcN src/gcc-4.6.1//gcc/config/t-nulnova src/gcc/gcc/config/t-nulnova
 + SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
 + 	$$(DESTDIR)$$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SOLINK)
 + 
++ CRTSTUFF_T_CFLAGS += -mcmodel=large
++ LIBGCC2_CFLAGS += -mcmodel=large
++
 + SHLIB_LINK = $(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) -shared -Wl,-shared -nodefaultlibs \
 + 	-Wl,--soname=$(SHLIB_SONAME) \
 + 	-o $(SHLIB_DIR)/$(SHLIB_SONAME).tmp @multilib_flags@ \
