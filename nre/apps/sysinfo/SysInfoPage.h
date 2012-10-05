@@ -54,7 +54,7 @@ protected:
 		for(size_t i = 0; i < name.length(); ++i) {
 			if(name.str()[i] == '/')
 				lastslash = i + 1;
-			if(name.str()[i] == ' ') {
+			else if(name.str()[i] == ' ') {
 				end = i;
 				break;
 			}
