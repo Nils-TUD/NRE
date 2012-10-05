@@ -11,7 +11,7 @@ bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
-bin/apps/vmmng
+bin/apps/vmmng mods=all lastmod
 bin/apps/vancouver
 dist/imgs/escape.bin
 dist/imgs/escape_romdisk.bin

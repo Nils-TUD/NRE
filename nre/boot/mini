@@ -11,5 +11,5 @@ bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
-bin/apps/vancouver m:32 PC_PS2
+bin/apps/vancouver mods=following lastmod m:32 PC_PS2
 bin/apps/guest_mini

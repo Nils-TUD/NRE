@@ -11,7 +11,7 @@ bin/apps/pcicfg provides=pcicfg
 bin/apps/timer provides=timer
 bin/apps/console provides=console
 bin/apps/sysinfo
-bin/apps/vancouver m:64 ncpu:1 PC_PS2
+bin/apps/vancouver mods=following lastmod m:64 ncpu:1 PC_PS2
 dist/imgs/escape.bin videomode=vga
 dist/imgs/escape_romdisk.bin /dev/romdisk rom://dist/imgs/escape.iso
 dist/imgs/escape_cmos.bin /dev/cmos

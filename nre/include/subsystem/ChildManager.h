@@ -106,16 +106,13 @@ public:
 	 *
 	 * @param addr the address of the ELF file
 	 * @param size the size of the ELF file
-	 * @param cmdline the command line of the child
 	 * @param config the config to use. this allows you to specify the access to the modules, the
 	 * 	presented CPUs and other things
-	 * @param cpu the CPU to put the childs main thread on (default = current)
 	 * @return the id of the created child
 	 * @throws ELFException if the ELF is invalid
 	 * @throws Exception if something else failed
 	 */
-	Child::id_type load(uintptr_t addr,size_t size,const char *cmdline,const ChildConfig &config,
-			cpu_t cpu = CPU::current().log_id());
+	Child::id_type load(uintptr_t addr,size_t size,const ChildConfig &config);
 
 	/**
 	 * @return the number of childs

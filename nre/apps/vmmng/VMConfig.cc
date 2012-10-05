@@ -38,15 +38,15 @@ void VMConfig::find_mods(size_t len) {
 }
 
 Child::id_type VMConfig::start(ChildManager &cm,size_t console,cpu_t cpu) {
-	char args[MAX_ARGS_LEN];
-	VMChildConfig cfg(_mods);
+	static char args[MAX_ARGS_LEN];
 	SList<Module>::iterator first = _mods.begin();
 	OStringStream os(args,sizeof(args));
 	os << first->args() << " console:" << console << " constitle:" << _name;
 
+	VMChildConfig cfg(_mods,String(args),cpu);
 	Hip::mem_iterator mod = get_module(first->name());
 	DataSpace ds(mod->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mod->addr);
-	return cm.load(ds.virt(),mod->size,args,cfg,cpu);
+	return cm.load(ds.virt(),mod->size,cfg);
 }
 
 Hip::mem_iterator VMConfig::get_module(const String &name) {

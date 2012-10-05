@@ -71,25 +71,11 @@ fi
 
 echo "Building for $NRE_TARGET in $NRE_BUILD mode using $cpus jobs..."
 
-# prevent build-error because of not-existing test.dump
-if [ ! -f $build/test.dump ]; then
-	mkdir -p $build
-	echo "" > $build/test.dump
-fi
-
 # build userland
 scons $opts
 if [ $? -ne 0 ]; then
 	exit 1
 fi
-
-# update dump of test-app and rebuild to include the updated version in sub again, if necessary
-mv $build/test.dump $build/test_old.dump
-$build/tools/dump/dump $build/bin/apps/test > $build/test.dump
-if [ "`diff $build/test.dump $build/test_old.dump`" != "" ]; then
-	scons $opts
-fi
-rm -f $build/test_old.dump
 
 # checkout nova, if not already done
 if [ ! -d "$novadir" ]; then
@@ -205,4 +191,3 @@ case "$1" in
 		done
 		;;
 esac
-

@@ -178,16 +178,16 @@ static void test_shm() {
 		// map the memory of the module
 		DataSpace *ds = new DataSpace(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
 		{
-			ChildConfig cfg(0);
+			ChildConfig cfg(0,String("shm_service provides=shm"));
 			cfg.entry(reinterpret_cast<uintptr_t>(shm_service));
-			mng->load(ds->virt(),self->size,"shm_service provides=shm",cfg);
+			mng->load(ds->virt(),self->size,cfg);
 		}
 		{
-			ChildConfig cfg(0);
-			cfg.entry(reinterpret_cast<uintptr_t>(shm_client));
 			OStringStream os(cmdline,sizeof(cmdline));
 			os << "shm_client " << ds_sizes[i];
-			mng->load(ds->virt(),self->size,cmdline,cfg);
+			ChildConfig cfg(0,String(cmdline));
+			cfg.entry(reinterpret_cast<uintptr_t>(shm_client));
+			mng->load(ds->virt(),self->size,cfg);
 		}
 		while(mng->count() > 0)
 			mng->dead_sm().down();

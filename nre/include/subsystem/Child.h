@@ -181,7 +181,7 @@ public:
 	}
 
 private:
-	explicit Child(ChildManager *cm,id_type id,const char *cmdline)
+	explicit Child(ChildManager *cm,id_type id,const String &cmdline)
 			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
 			  _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
 			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),

@@ -17,17 +17,21 @@
 #include <kobj/Pt.h>
 #include <kobj/Sm.h>
 #include <subsystem/ChildManager.h>
+#include <mem/DataSpace.h>
 
 using namespace nre;
-
-static uint8_t prog[] = {
-#include "../../test.dump"
-};
 
 int main() {
 	// don't put it on the stack since its too large :)
 	ChildManager *cm = new ChildManager();
-	cm->load(reinterpret_cast<uintptr_t>(prog),sizeof(prog),"sub-test",ChildConfig(0));
+	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
+		if(strstr(mem->cmdline(),"bin/apps/test") != 0) {
+			ChildConfig cfg(0,String(mem->cmdline()));
+			DataSpace ds(mem->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mem->addr);
+			cm->load(ds.virt(),mem->size,cfg);
+			break;
+		}
+	}
 	while(cm->count() > 0)
 		cm->dead_sm().down();
 	return 0;

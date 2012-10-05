@@ -129,14 +129,14 @@ static void test_pingpong() {
 	// map the memory of the module
 	DataSpace ds(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
 	{
-		ChildConfig cfg(0);
+		ChildConfig cfg(0,String("pingpongservice provides=pingpong"));
 		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_server));
-		mng->load(ds.virt(),self->size,"pingpongservice provides=pingpong",cfg);
+		mng->load(ds.virt(),self->size,cfg);
 	}
 	{
-		ChildConfig cfg(0);
+		ChildConfig cfg(0,String("pingpongclient"));
 		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
-		mng->load(ds.virt(),self->size,"pingpongclient",cfg);
+		mng->load(ds.virt(),self->size,cfg);
 	}
 	while(mng->count() > 0)
 		mng->dead_sm().down();

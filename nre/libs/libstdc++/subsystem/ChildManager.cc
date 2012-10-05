@@ -154,23 +154,19 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 
 	// setup Hip
 	new (hip) ChildHip(config.cpus());
-	size_t memidx = 0;
-	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
-		if(config.has_module_access(memidx)) {
-			const char *aux = config.module_cmdline(memidx);
-			uintptr_t auxaddr = 0;
-			if(aux) {
-				size_t len = strlen(aux) + 1;
-				if(cmdlines + len <= cmdlinesend) {
-					memcpy(cmdlines,aux,len);
-					auxaddr = cmdlinesaddr;
-				}
-				cmdlines += len;
-				cmdlinesaddr += len;
+	HipMem mem;
+	for(size_t memidx = 0; config.get_module(memidx,mem); ++memidx) {
+		uintptr_t auxaddr = 0;
+		if(mem.aux) {
+			size_t len = strlen(mem.cmdline()) + 1;
+			if(cmdlines + len <= cmdlinesend) {
+				memcpy(cmdlines,mem.cmdline(),len);
+				auxaddr = cmdlinesaddr;
 			}
-			hip->add_mem(mem->addr,mem->size,auxaddr,mem->type);
+			cmdlines += len;
+			cmdlinesaddr += len;
 		}
-		memidx++;
+		hip->add_mem(mem.addr,mem.size,auxaddr,mem.type);
 	}
 	hip->finalize();
 
@@ -178,8 +174,7 @@ void ChildManager::build_hip(Child *c,const ChildConfig &config) {
 	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R | ChildMemory::OWN,ds.unmapsel());
 }
 
-Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline,
-		const ChildConfig &config,cpu_t eccpu) {
+Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &config) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
@@ -201,7 +196,7 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 	// create child
 	size_t idx = free_slot();
 	capsel_t pts = _portal_caps + idx * per_child_caps();
-	Child *c = new Child(this,pts,cmdline);
+	Child *c = new Child(this,pts,config.cmdline());
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
 		c->_ptcount = CPU::count() * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
@@ -265,7 +260,7 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 		// just reserve the virtual memory with no permissions; it will not be requested
 		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0),c->_utcb,0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
-				eccpu,c->cmdline(),c->_pd,c->_utcb);
+				config.cpu(),c->cmdline(),c->_pd,c->_utcb);
 
 		// he needs a stack
 		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
@@ -290,21 +285,18 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const char *cmdline
 
 	_child_count++;
 
-	// TODO well, we should make this more general
-	const char *provides = strstr(cmdline,"provides=");
-	if(provides != 0) {
-		provides += sizeof("provides=") - 1;
-		size_t i;
-		const char *cur = provides;
-		for(i = 0; *cur >= 'a' && *cur <= 'z'; ++i)
-			cur++;
-
-		// wait until the service has been registered
-		String name(provides,i);
-		LOG(Logging::CHILD_CREATE,Serial::get() << "Waiting for '" << name << "'...\n");
-		while(_registry.find(name) == 0)
+	// wait until all services are registered
+	if(config.waits() > 0) {
+		size_t services_present;
+		do {
 			_regsm.down();
-		LOG(Logging::CHILD_CREATE,Serial::get() << "Found '" << name << "'!\n");
+			services_present = 0;
+			for(size_t i = 0; i < config.waits(); ++i) {
+				if(_registry.find(config.wait(i)))
+					services_present++;
+			}
+		}
+		while(services_present < config.waits());
 	}
 	return c->id();
 }

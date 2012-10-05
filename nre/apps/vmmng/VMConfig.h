@@ -49,28 +49,22 @@ class VMConfig : public nre::SListItem {
 
 	class VMChildConfig : public nre::ChildConfig {
 	public:
-		explicit VMChildConfig(const nre::SList<Module> &mods)
-			: nre::ChildConfig(0), _mods(mods) {
+		explicit VMChildConfig(const nre::SList<Module> &mods,const nre::String &cmdline,cpu_t cpu)
+			: nre::ChildConfig(0,cmdline,cpu), _mods(mods) {
 		}
 
-		virtual bool has_module_access(size_t i) const {
-			return get_module(i) != _mods.end();
-		}
-		virtual const char *module_cmdline(size_t i) const {
-			nre::SList<Module>::iterator mod = get_module(i);
-			return mod->args().str();
+		virtual bool get_module(size_t i,nre::HipMem &mem) const {
+			nre::SList<Module>::iterator it;
+			for(it = _mods.begin(); it != _mods.end() && i-- > 0; ++it)
+				;
+			if(it == _mods.end())
+				return false;
+			mem = *VMConfig::get_module(it->name());
+			mem.aux = reinterpret_cast<word_t>(it->args().str());
+			return true;
 		}
 
 	private:
-		nre::SList<Module>::iterator get_module(size_t i) const {
-			nre::Hip::mem_iterator mem = nre::Hip::get().mem_begin() + i;
-			for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it) {
-				if(strcmp(mem->cmdline(),it->name().str()) == 0)
-					return it;
-			}
-			return _mods.end();
-		}
-
 		const nre::SList<Module> &_mods;
 	};
 

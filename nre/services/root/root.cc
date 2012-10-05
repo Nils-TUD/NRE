@@ -246,14 +246,9 @@ static void start_childs() {
 			uintptr_t virt = VirtualMemory::alloc(it->size);
 			Hypervisor::map_mem(it->addr,virt,it->size);
 
-			// TODO temporary. skip everything behind vancouver
-			bool isvmmng = strstr(it->cmdline(),"vmmng") != 0 ||
-					strstr(it->cmdline(),"vancouver") != 0;
-			ChildConfig cfg(mod);
-			if(isvmmng)
-				cfg.module_access(ChildConfig::FOLLOWING);
-			mng->load(virt,it->size,it->cmdline(),cfg,cpus.next()->log_id());
-			if(isvmmng)
+			ChildConfig cfg(mod,String(it->cmdline()),cpus.next()->log_id());
+			mng->load(virt,it->size,cfg);
+			if(cfg.last())
 				break;
 		}
 	}
