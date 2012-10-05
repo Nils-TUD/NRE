@@ -25,6 +25,11 @@ using namespace nre;
 #define CD_TEXT		\
 	"That is a test!!\nMore testing\n"
 
+static const Storage::sector_type cdsec	= 80;
+static const size_t offset					= 0x200;
+static Storage::tag_type tag				= 0;
+static Storage::dma_type dma;
+
 static void wait_for(StorageSession &sess,Storage::tag_type tag) {
 	Storage::Packet *pk;
 	Storage::tag_type rtag;
@@ -57,6 +62,73 @@ static void prepare_buffer(const DataSpace &buffer,size_t offset,size_t size) {
 		bytes[i] = i & 0xFF;
 }
 
+static void read_atapi(StorageSession &disk,Storage::Parameter &params,DataSpace &buffer) {
+	clear_buffer(buffer);
+	WVPRINTF("Reading sector %Lu",cdsec);
+	dma.clear();
+	dma.push(DMADesc(offset,params.sector_size));
+	disk.read(tag,cdsec,dma);
+	wait_for(disk,tag++);
+	WVPASSEQ(reinterpret_cast<char*>(buffer.virt() + offset),CD_TEXT);
+}
+
+static void read_write_ata(StorageSession &disk,Storage::Parameter &params,DataSpace &buffer) {
+	for(Storage::sector_type s = 0; s < params.sectors; ++s) {
+		WVPRINTF("Writing to sector %Lu",s);
+		prepare_buffer(buffer,offset,params.sector_size);
+		dma.clear();
+		dma.push(DMADesc(offset,params.sector_size));
+		disk.write(tag,s,dma);
+		wait_for(disk,tag);
+		clear_buffer(buffer);
+		WVPRINTF("Reading back from sector %Lu",s);
+		dma.clear();
+		dma.push(DMADesc(offset,params.sector_size));
+		disk.read(tag,s,dma);
+		wait_for(disk,tag++);
+		check_buffer(buffer,offset,params.sector_size);
+	}
+}
+
+static void read_invalid_sector(StorageSession &disk,Storage::Parameter &params,DataSpace &buffer) {
+	clear_buffer(buffer);
+	WVPRINTF("Reading invalid sector");
+	try {
+		dma.clear();
+		dma.push(DMADesc(offset,params.sector_size));
+		disk.read(tag,params.sectors + 1,dma);
+		WVPASS(false);
+	}
+	catch(const Exception &e) {
+		WVPRINTF("Got exception: %s",e.msg());
+		WVPASS(true);
+	}
+}
+
+static void runtest(Connection &storagecon,DataSpace &buffer,size_t d) {
+	try {
+		StorageSession disk(storagecon,buffer,d);
+		Storage::Parameter params = disk.get_params();
+		Serial::get() << "Connected to disk '" << params.name << "' (";
+		Serial::get() << (params.sectors * params.sector_size) / (1024 * 1024) << " MiB in ";
+		Serial::get() << params.sectors << " sectors of " << params.sector_size << " bytes)\n";
+
+		read_invalid_sector(disk,params,buffer);
+
+		if(params.flags & Storage::Parameter::FLAG_ATAPI)
+			read_atapi(disk,params,buffer);
+		else
+			read_write_ata(disk,params,buffer);
+
+		WVPRINTF("Testing flush cache");
+		disk.flush(tag);
+		wait_for(disk,tag++);
+	}
+	catch(const Exception &e) {
+		Serial::get() << "Operation with " << d << " failed: " << e.msg() << "\n";
+	}
+}
+
 int main() {
 	Connection conscon("console");
 	ConsoleSession cons(conscon,1,String("DiskTest"));
@@ -71,58 +143,9 @@ int main() {
 		return 0;
 	}
 
-	const Storage::sector_type cdsec = 80;
-	const size_t offset = 0x200;
-	Storage::tag_type tag = 0;
 	Connection storagecon("storage");
 	DataSpace buffer(0x1000,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
-	for(size_t d = 0; d < Storage::MAX_CONTROLLER * Storage::MAX_DRIVES; ++d) {
-		try {
-			StorageSession disk(storagecon,buffer,d);
-			Storage::Parameter params = disk.get_params();
-			Serial::get() << "Connected to disk '" << params.name << "' (";
-			Serial::get() << (params.sectors * params.sector_size) / (1024 * 1024) << " MiB in ";
-			Serial::get() << params.sectors << " sectors of " << params.sector_size << " bytes)\n";
-
-			clear_buffer(buffer);
-			WVPRINTF("Reading invalid sector");
-			try {
-				disk.read(tag,params.sectors + 1,1,offset);
-				WVPASS(false);
-			}
-			catch(const Exception &e) {
-				WVPRINTF("Got exception: %s",e.msg());
-				WVPASS(true);
-			}
-
-			if(params.flags & Storage::Parameter::FLAG_ATAPI) {
-				clear_buffer(buffer);
-				WVPRINTF("Reading sector %Lu",cdsec);
-				disk.read(tag,cdsec,1,offset);
-				wait_for(disk,tag++);
-				WVPASSEQ(reinterpret_cast<char*>(buffer.virt() + offset),CD_TEXT);
-			}
-			else {
-				for(Storage::sector_type s = 0; s < params.sectors; ++s) {
-					WVPRINTF("Writing to sector %Lu",s);
-					prepare_buffer(buffer,offset,params.sector_size);
-					disk.write(tag,s,1,offset);
-					wait_for(disk,tag);
-					clear_buffer(buffer);
-					WVPRINTF("Reading back from sector %Lu",s);
-					disk.read(tag,s,1,offset);
-					wait_for(disk,tag++);
-					check_buffer(buffer,offset,params.sector_size);
-				}
-			}
-
-			WVPRINTF("Testing flush cache");
-			disk.flush(tag);
-			wait_for(disk,tag++);
-		}
-		catch(const Exception &e) {
-			Serial::get() << "Operation with " << d << " failed: " << e.msg() << "\n";
-		}
-	}
+	for(size_t d = 0; d < Storage::MAX_CONTROLLER * Storage::MAX_DRIVES; ++d)
+		runtest(storagecon,buffer,d);
 	return 0;
 }

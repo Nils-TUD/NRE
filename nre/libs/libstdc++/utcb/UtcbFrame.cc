@@ -42,7 +42,7 @@ OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm) {
 	struct {
 		const char *name;
 		word_t val;
-	} words[] = {
+	} static words[] = {
 		{"inst_len",frm->inst_len}, {"rip",frm->rip}, {"rfl",frm->rfl},
 		{"cr0",frm->cr0}, {"cr2",frm->cr2}, {"cr3",frm->cr3},
 		{"cr4",frm->cr4}, {"dr7",frm->dr7}, {"sysenter_cs",frm->sysenter_cs},
@@ -62,7 +62,7 @@ OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm) {
 	struct {
 		const char *name;
 		const UtcbExc::Descriptor *desc;
-	} descs[] = {
+	} static descs[] = {
 		{"es",&frm->es},{"cs",&frm->cs},{"ss",&frm->ss},{"ds",&frm->ds},{"fs",&frm->fs},{"gs",&frm->gs},
 		{"ld",&frm->ld},{"tr",&frm->tr},{"gd",&frm->gd},{"id",&frm->id},
 	};

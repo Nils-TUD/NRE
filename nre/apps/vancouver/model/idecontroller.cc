@@ -53,6 +53,7 @@ private:
 	uint32_t _bdf;
 	size_t _disknr;
 	Storage::Parameter _params;
+	Storage::dma_type _dma;
 	union {
 		struct {
 			unsigned short _features,_count,_lbalow,_lbamid,_lbahigh,_drive;
@@ -145,9 +146,9 @@ private:
 		_status = (_status & ~0x81) | 0x80;
 		_bufferoffset = 0;
 		memset(_buffer,0xff,512);
-		Storage::dma_type dma;
-		dma.push(DMADesc(_baddr,512));
-		MessageDisk msg(MessageDisk::DISK_READ,_disknr,0,sector,&dma);
+		_dma.clear();
+		_dma.push(DMADesc(_baddr,512));
+		MessageDisk msg(MessageDisk::DISK_READ,_disknr,0,sector,&_dma);
 		if(!_bus_disk.send(msg)) {
 			_status = (_status & ~0x80) | 0x1;
 			_error |= 1 << 5; // device fault
