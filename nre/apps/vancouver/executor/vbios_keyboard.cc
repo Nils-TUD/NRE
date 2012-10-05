@@ -284,9 +284,7 @@ public:
 		return true;
 	}
 
-	VirtualBiosKeyboard(Motherboard &mb) : BiosCommon(mb) {
-		// create hostmb and hostkeyb
-		_hostmb = new Motherboard();
+	VirtualBiosKeyboard(Motherboard &mb) : BiosCommon(mb), _hostmb(new Motherboard()), _lastkey() {
 		_hostmb->bus_input.add(this,receive_static<MessageInput>);
 		_hostmb->bus_hostop.add(this,receive_static<MessageHostOp>);
 		_hostmb->bus_hwioin.add(this,receive_static<MessageHwIOIn>);

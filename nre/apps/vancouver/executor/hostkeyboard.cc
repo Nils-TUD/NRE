@@ -363,7 +363,7 @@ public:
 	        unsigned irq,unsigned irqaux,unsigned char scset,bool verbose)
 		: _bus_hwioin(bus_hwioin), _bus_hwioout(bus_hwioout), _bus_input(bus_input),
 		  _clock(FREQ), _hostdev(hostdev), _base(base), _irq(irq), _irqaux(irqaux),
-		  _scset1(scset == 1), _verbose(verbose) {
+		  _flags(), _mousestate(), _scset1(scset == 1), _verbose(verbose) {
 	}
 };
 

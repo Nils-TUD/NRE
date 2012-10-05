@@ -265,7 +265,8 @@ public:
 	}
 
 	PS2Mouse(DBus<MessagePS2> &bus_ps2,unsigned ps2port,unsigned hostmouse)
-			: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostmouse(hostmouse) {
+			: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostmouse(hostmouse), _packet(),
+			  _status(), _resolution(), _samplerate(), _posx(), _posy(), _param() {
 		set_defaults();
 	}
 };

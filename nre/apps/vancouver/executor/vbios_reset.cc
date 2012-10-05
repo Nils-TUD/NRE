@@ -300,7 +300,7 @@ public:
 	}
 
 	VirtualBiosReset(Motherboard &mb) :
-			BiosCommon(mb) {
+			BiosCommon(mb), _mem_ptr(), _mem_size(), _resources() {
 	}
 };
 

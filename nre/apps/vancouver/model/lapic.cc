@@ -794,7 +794,9 @@ public:
 	}
 
 	Lapic(Motherboard &mb,VCVCpu *vcpu,unsigned initial_apic_id,unsigned timer) :
-			_mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer) {
+			_mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer),
+			_timer_clock_shift(), _timer_dcr_shift(), _timer_start(), _msr(), _vector(),
+			_esr_shadow(), _isrv(), _lvtds(), _rirr(), _lowest_rr() {
 		// find a FREQ that is not too high
 		for(_timer_clock_shift = 0; _timer_clock_shift < 32; _timer_clock_shift++)
 			if((_mb.clock().source_freq() >> _timer_clock_shift) <= MAX_FREQ)

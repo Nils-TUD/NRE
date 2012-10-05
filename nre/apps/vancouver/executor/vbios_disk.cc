@@ -295,11 +295,10 @@ public:
 		}
 	}
 
-	VirtualBiosDisk(Motherboard &mb) : BiosCommon(mb) {
+	VirtualBiosDisk(Motherboard &mb) : BiosCommon(mb), _timer(), _disk_params(), _disk_count(~0u),
+			_diskop_inprogress() {
 		mb.bus_diskcommit.add(this,VirtualBiosDisk::receive_static<MessageDiskCommit>);
 		mb.bus_timeout.add(this,VirtualBiosDisk::receive_static<MessageTimeout>);
-
-		_disk_count = ~0u;
 
 		// get timer
 		MessageTimer msg0;

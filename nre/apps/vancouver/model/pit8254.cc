@@ -318,7 +318,8 @@ public:
 	}
 
 	PitCounter(DBus<MessageTimer> *bus_timer,DBus<MessageIrqLines> *bus_irq,unsigned irq,Clock &clock)
-			: _start(0), _bus_timer(bus_timer), _bus_irq(bus_irq), _irq(irq), _clock(clock), _timer(0) {
+			: _modus(), _latch(), _new_counter(), _initial(), _latched_status(), _start(0),
+			  _bus_timer(bus_timer), _bus_irq(bus_irq), _irq(irq), _clock(clock), _timer(0) {
 		assert(_clock.source_freq() != 0);
 		if(_irq != ~0U) {
 			MessageTimer msg0;
@@ -389,7 +390,7 @@ public:
 	}
 
 	PitDevice(Motherboard &mb,unsigned short base,unsigned irq,unsigned pit)
-			: _base(base), _addr(pit * COUNTER) {
+			: _base(base), _addr(pit * COUNTER), _c() {
 		for(size_t i = 0; i < COUNTER; i++) {
 			_c[i] = PitCounter(&mb.bus_timer,&mb.bus_irqlines,i ? ~0U : irq,mb.clock());
 			if(!i)

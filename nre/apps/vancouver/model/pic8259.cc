@@ -331,7 +331,9 @@ public:
 			DBus<MessageLegacy> &bus_legacy,DBus<MessageIrqNotify> &bus_notify,unsigned short base,
 			unsigned char irq,unsigned short elcr_base,unsigned char virq)
 			: _bus_irq(bus_irq), _bus_pic(bus_pic), _bus_legacy(bus_legacy), _bus_notify(bus_notify),
-			  _base(base), _upstream_irq(irq), _elcr_base(elcr_base), _virq(virq), _icw_mode(OCW1) {
+			  _base(base), _upstream_irq(irq), _elcr_base(elcr_base), _virq(virq), _icw(),
+			  _icw_mode(OCW1), _rotate_on_aeoi(), _smm(), _read_isr_reg(), _poll_mode(), _prio_lowest(),
+			  _imr(), _isr(), _irr(), _elcr(), _notify() {
 		_icw[ICW1] = 0;
 		reset_values();
 	}
