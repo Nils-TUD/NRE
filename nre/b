@@ -7,22 +7,33 @@ else
 	cpus=1
 fi
 opts="-j$cpus"
-bochscfg="bochs.cfg"
-tftpdir=/var/lib/tftpboot
 
+# fall back to some reasonable defaults for the NRE environment variables
 if [ -z "$NRE_TARGET" ]; then
-	echo "Defaulting to NRE_TARGET=x86_64"
 	export NRE_TARGET=x86_64
 fi
+if [ "$NRE_BUILD" != "debug" ]; then
+	export NRE_BUILD="release"
+fi
+if [ -z "$NRE_TFTPDIR" ]; then
+	export NRE_TFTPDIR=/var/lib/tftpboot
+fi
+if [ -z "$NRE_GDB_X86_32" ]; then
+	export NRE_GDB_X86_32=gdbtui
+fi
+if [ -z "$NRE_GDB_X86_64" ]; then
+	export NRE_GDB_X86_64=x86_64-linux-gnu-gdbtui
+fi
 
+# target dependend values
 if [ "$NRE_TARGET" = "x86_32" ]; then
 	cross="i686-pc-nulnova"
-	gdb=gdbtui
+	gdb=$NRE_GDB_X86_32
 	export QEMU="qemu-system-i386"
 	export QEMU_FLAGS="-cpu phenom "
 elif [ "$NRE_TARGET" = "x86_64" ]; then
 	cross="x86_64-pc-nulnova"
-	gdb=x86_64-linux-gnu-gdbtui
+	gdb=$NRE_GDB_X86_64
 	export QEMU="qemu-system-x86_64"
 	export QEMU_FLAGS=""
 else
@@ -31,10 +42,6 @@ else
 fi
 
 # don't change anything below!
-if [ "$NRE_BUILD" != "debug" ]; then
-	NRE_BUILD="release"
-fi
-
 crossdir="/opt/nre-cross-$NRE_TARGET"
 build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
@@ -42,30 +49,52 @@ kerndir="../kernel"
 novadir="../kernel/nova"
 loaderdir="../loader"
 morbodir="../loader/morbo"
+bochscfg="bochs.cfg"
 
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
 	echo "Usage: $0 [<cmd> <arg>]"
 	echo ""
 	echo -n "This is a convenience script that is responsible for building everything (NOVA, loader"
-	echo -n " and NRE) and running the specified command afterwards. It uses the environment variables"
-	echo -n " NRE_BUILD and NRE_TARGET. It does also support switching between debug and release builds"
-	echo -n " by changing the Makefile of NOVA accordingly."
+	echo -n " and NRE) and running the specified command afterwards. It does also support switching"
+	echo -n " between debug and release builds by changing the Makefile of NOVA accordingly. The most"
+	echo -n " important environment variables that influence its behaviour are NRE_BUILD=(debug|release)"
+	echo -n " and NRE_TARGET=(x86_32|x86_64)."
 	echo ""
 	echo ""
 	echo "The following commands are available:"
 	echo "    clean:                   do a clean in NOVA, loader and NRE"
-	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it in bochs"
+	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
+	echo "                             in bochs"
 	echo "    qemu <bootscript>:       run <bootscript> in qemu"
 	echo "    qemunet:                 run qemu and boot from network"
-	echo "    srv <bootscript>:        copy <bootscript> to the server with a grub config"
-	echo "    srvp <bootscript>:       copy <bootscript> to the server with a pulsar config"
-	echo "    dis=<prog>:              run objdump -SC <prog>"
-	echo "    elf=<prog>:              run readelf -a <prog>"
-	echo "    straddr=<prog> <str>:    search for the string <str> in <prog> and display the addresses"
+	echo "    srv <bootscript>:        copy <bootscript> to the server specified in"
+	echo "                             ~/.novaboot with a grub config"
+	echo "    srvp <bootscript>:       copy <bootscript> to the server specified in"
+	echo "                             ~/.novaboot with a pulsar config"
+	echo "    dis=<prog>:              run objdump -SC <prog> (the cross-compiler version)"
+	echo "    elf=<prog>:              run readelf -a <prog> (the cross-compiler version)"
+	echo "    straddr=<prog> <str>:    search for the string <str> in <prog> and display"
+	echo "                             the addresses"
 	echo "    trace=<prog>:            start the backtrace script for <prog>"
-	echo "    dbg=<prog> <bootscript>: run <bootscript> in qemu and remote-debug <prog> in gdb"
+	echo "    dbg=<prog> <bootscript>: run <bootscript> in qemu and remote-debug <prog>"
+	echo "                             in gdb"
 	echo "    dbgr <bootscript>:       run <bootscript> in qemu and wait"
 	echo "    list:                    list the link-address of all programs"
+	echo ""
+	echo "Environment variables:"
+	echo "    NRE_TARGET:              the target architecture. Either x86_32 or x86_64."
+	echo "                             The default is x86_64."
+	echo "    NRE_BUILD:               the build-type. Either debug or release. In debug"
+	echo "                             mode optimizations are disabled, debug infos are"
+	echo "                             available and assertions are active. In release"
+	echo "                             mode all that is disabled. The default is release."
+	echo "    NRE_TFTPDIR:             the directory of your tftp-server which is used for"
+	echo "                             qemu network booting. The default is"
+	echo "                             /var/lib/tftpboot."
+	echo "    NRE_GDB_X86_32:          the executable of gdb to use for NRE_TARGET=x86_32."
+	echo "                             The default is gdbtui."
+	echo "    NRE_GDB_X86_64:          the executable of gdb to use for NRE_TARGET=x86_64."
+	echo "                             The default is x86_64-linux-gnu-gdbtui."
 	exit 0
 fi
 
@@ -142,7 +171,7 @@ case "$1" in
 		./$2 --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;
 	qemunet)
-		$QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $tftpdir
+		$QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $NRE_TFTPDIR
 		;;
 	srv)
 		./$2 --server --build-dir="$PWD/$build"
