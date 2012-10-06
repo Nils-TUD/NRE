@@ -20,9 +20,9 @@
 
 using namespace nre;
 
-ConsoleService::ConsoleService(const char *name)
+ConsoleService::ConsoleService(const char *name,uint modifier)
 	: Service(name,CPUSet(CPUSet::ALL),ConsoleSessionData::portal), _rbcon("reboot"), _reboot(_rbcon),
-	  _screen(new HostVGA()), _cons(), _concyc(), _switcher(this) {
+	  _screen(new HostVGA()), _cons(), _concyc(), _switcher(this), _modifier(modifier) {
 	// we want to accept two dataspaces
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		LocalThread *t = get_thread(it->log_id());
@@ -143,7 +143,7 @@ void ConsoleService::session_ready(ConsoleSessionData *sess) {
 }
 
 bool ConsoleService::handle_keyevent(const Keyboard::Packet &pk) {
-	if(~pk.flags & Keyboard::LCTRL)
+	if(~pk.flags & _modifier)
 		return false;
 	switch(pk.keycode) {
 		case Keyboard::VK_1...Keyboard::VK_9:

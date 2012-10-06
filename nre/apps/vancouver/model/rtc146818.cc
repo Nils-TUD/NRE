@@ -404,8 +404,8 @@ public:
 
 	Rtc146818(DBus<MessageTimer> &bus_timer,DBus<MessageIrqLines> &bus_irqlines,Clock &clock,
 			unsigned timer,unsigned short iobase,unsigned irq) :
-			_bus_timer(bus_timer), _bus_irqlines(bus_irqlines), _clock(clock), _timer(timer), _iobase(
-					iobase), _irq(irq) {
+			_bus_timer(bus_timer), _bus_irqlines(bus_irqlines), _clock(clock), _timer(timer),
+			_iobase(iobase), _irq(irq), _index(), _ram(), _offset(), _last() {
 	}
 };
 

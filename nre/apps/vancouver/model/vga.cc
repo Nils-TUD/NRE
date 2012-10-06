@@ -542,9 +542,9 @@ public:
 
 	Vga(Motherboard &mb,ConsoleSession *sess,unsigned short iobase,char *framebuffer_ptr,
 			uintptr_t framebuffer_phys,size_t framebuffer_size)
-			: BiosCommon(mb), _iobase(iobase), _framebuffer_ptr(framebuffer_ptr),
-			  _framebuffer_phys(framebuffer_phys), _framebuffer_size(framebuffer_size),
-			  _crt_index(0), _csess(sess), _cons(*sess) {
+			: BiosCommon(mb), _view(), _iobase(iobase), _framebuffer_ptr(framebuffer_ptr),
+			  _framebuffer_phys(framebuffer_phys), _framebuffer_size(framebuffer_size), _regs(),
+			  _crt_index(0), _ebda_segment(), _vbe_mode(), _csess(sess), _cons(*sess) {
 		assert(!(framebuffer_phys & 0xfff));
 		assert(!(framebuffer_size & 0xfff));
 

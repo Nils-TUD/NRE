@@ -477,7 +477,8 @@ public:
 		return true;
 	}
 
-	VirtualCpu(VCVCpu *_last,Motherboard &mb) : VCVCpu(_last), _mb(mb), _event(0), _sipi(~0u) {
+	VirtualCpu(VCVCpu *_last,Motherboard &mb) : VCVCpu(_last), _hostop_id(), _mb(mb), _reset_tsc_off(),
+			_event(0), _sipi(~0u), debugioin(), debugioout() {
 		MessageHostOp msg(this);
 		if(!mb.bus_hostop.send(msg))
 			Util::panic("could not create VCpu backend.");

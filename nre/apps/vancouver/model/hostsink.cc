@@ -59,7 +59,8 @@ public:
 	}
 
 	HostSink(unsigned hdev,size_t size,ulong head_char,ulong cont_char)
-			: _hdev(hdev), _size(size), _count(0), _overflow(false) {
+			: _hdev(hdev), _size(size), _count(0), _overflow(false), _head_char(), _cont_char(),
+			  _buffer() {
 		if((size == ~0UL) || (size < 1))
 			size = 1;
 		_head_char = (head_char == ~0UL) ? '#' : head_char;

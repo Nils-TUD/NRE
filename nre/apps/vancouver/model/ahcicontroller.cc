@@ -378,7 +378,7 @@ public:
 	}
 
 	AhciController(Motherboard &mb,unsigned char irq,uint32_t bdf)
-			: _bus_irqlines(mb.bus_irqlines), _bus_mem(mb.bus_mem), _irq(irq), _bdf(bdf) {
+			: _bus_irqlines(mb.bus_irqlines), _bus_mem(mb.bus_mem), _irq(irq), _ports(), _bdf(bdf) {
 		for(size_t i = 0; i < MAX_PORTS; i++)
 			_ports[i].set_parent(this,&mb.bus_memregion,&mb.bus_mem);
 		PCI_reset();

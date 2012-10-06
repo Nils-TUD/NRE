@@ -107,7 +107,7 @@ public:
 		return true;
 	}
 
-	VBios(Motherboard &mb,VCVCpu *vcpu) : _mb(mb), _vcpu(vcpu) {
+	VBios(Motherboard &mb,VCVCpu *vcpu) : _mb(mb), _vcpu(vcpu), _resetvector() {
 		// initialize the reset vector with noops
 		memset(_resetvector,0x90,sizeof(_resetvector));
 		// realmode longjump to reset code

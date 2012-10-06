@@ -277,7 +277,8 @@ public:
 	}
 
 	IOApic(Motherboard &mb,uintptr_t base,unsigned gsibase)
-			: _mb(mb), _base(base), _gsibase(gsibase) {
+			: _mb(mb), _base(base), _gsibase(gsibase), _index(), _id(), _redir(), _rirr(), _ds(),
+			  _notify() {
 		reset();
 		_mb.bus_mem.add(this,receive_static<MessageMem>);
 		_mb.bus_irqlines.add(this,receive_static<MessageIrqLines>);

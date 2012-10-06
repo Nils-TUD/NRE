@@ -32,7 +32,7 @@ class ConsoleService : public nre::Service {
 public:
 	typedef nre::DList<ConsoleSessionData>::iterator iterator;
 
-	ConsoleService(const char *name);
+	ConsoleService(const char *name,uint modifier);
 
 	ConsoleSessionData *active() {
 		if(_concyc[_console] == 0)
@@ -71,4 +71,5 @@ private:
 	nre::Cycler<iterator> *_concyc[nre::Console::SUBCONS];
 	nre::UserSm _sm;
 	ViewSwitcher _switcher;
+	uint _modifier;
 };

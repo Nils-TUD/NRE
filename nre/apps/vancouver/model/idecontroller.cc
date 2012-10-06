@@ -327,8 +327,9 @@ public:
 
 	IdeController(DBus<MessageDisk> &bus_disk,DBus<MessageIrqLines> &bus_irqlines,unsigned char irq,
 	        uint32_t bdf,size_t disknr,Storage::Parameter params,char *buffer,uintptr_t baddr) :
-			_bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr), _params(
-			        params), _buffer(buffer), _baddr(baddr), _bufferoffset(0) {
+			_bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr),
+			_params(params), _dma(), _command(), _error(), _status(), _control(), _buffer(buffer),
+			_baddr(baddr), _bufferoffset(0) {
 		PCI_reset();
 		reset_device();
 		Serial::get().writef("IDE controller (bdf %#x)\n",bdf);

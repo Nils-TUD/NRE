@@ -56,21 +56,21 @@ struct MyNode : public TreapNode<int> {
 };
 
 static void test_in_order() {
-	int vals[TEST_NODE_COUNT];
+	static int vals[TEST_NODE_COUNT];
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++)
 		vals[i] = i;
 	test_add_and_rem(vals);
 }
 
 static void test_rev_order() {
-	int vals[TEST_NODE_COUNT];
+	static int vals[TEST_NODE_COUNT];
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++)
 		vals[i] = TEST_NODE_COUNT - i;
 	test_add_and_rem(vals);
 }
 
 static void test_rand_order() {
-	int vals[TEST_NODE_COUNT];
+	static int vals[TEST_NODE_COUNT];
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++)
 		vals[i] = i;
 	Random::init(0x12345);
@@ -137,8 +137,9 @@ static void test_perf() {
 }
 
 static void test_add_and_rem(int *vals) {
+	static MyNode *nodes[TEST_NODE_COUNT];
 	Treap<MyNode> tree;
-	MyNode *node,*nodes[TEST_NODE_COUNT];
+	MyNode *node;
 
 	/* create */
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {

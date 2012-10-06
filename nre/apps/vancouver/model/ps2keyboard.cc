@@ -357,7 +357,9 @@ public:
 	}
 
 	PS2Keyboard(DBus<MessagePS2> &bus_ps2,unsigned ps2port,unsigned hostkeyboard)
-		: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostkeyboard(hostkeyboard) {
+		: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostkeyboard(hostkeyboard), _scset(),
+		  _buffer(), _pread(), _pwrite(), _response(), _no_breakcode(), _indicators(), _last_command(),
+		  _last_reply(), _mode() {
 	}
 };
 
