@@ -484,6 +484,9 @@ void HostKeyboard::reset() {
 	LOG("kb: %s() failed at %d with %x\n",__func__, __LINE__, inb(_base+4));
 #endif
 
+	// wait for input buffer empty
+	wait_input_empty();
+
 	// clear keyboard buffer
 	while(_port_ctrl.in<uint8_t>() & STATUS_DATA_AVAIL)
 		_port_data.in<uint8_t>();
@@ -532,8 +535,12 @@ void HostKeyboard::reset() {
 		}
 
 		// wait until we got response from the mice
-		if(!wait_output_full())
+		if(_mouse_enabled && !wait_output_full())
 			LOG(Logging::KEYBOARD,Serial::get().writef("kb: %s() failed at %d\n",__func__,__LINE__));
+
+		// if mouse enabling failed, we have to enable the keyboard again (at least on some machines)
+		if(!_mouse_enabled)
+			write_keyboard_ack(KB_CMD_ENABLE_SCAN);
 	}
 
 	// enable receiving
