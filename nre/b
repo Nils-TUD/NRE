@@ -131,10 +131,11 @@ case "$1" in
 		mkdir -p $build/bin/boot/grub
 		cp $root/dist/iso/boot/grub/stage2_eltorito $build/bin/boot/grub
 		./tools/novaboot --build-dir="$PWD/$build" --iso -- $2
+		filename=`basename $2`
 		sed --in-place -e \
 			's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='`echo $build/ | sed -e 's/\//\\\\\//g'`'\2,/g' $bochscfg
 		sed --in-place -e \
-			's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='`echo $build/$2.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
+			's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='`echo $build/$filename.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
 		bochs -f $bochscfg -q
 		;;
 	qemu)
