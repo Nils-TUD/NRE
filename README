@@ -60,4 +60,9 @@ The following lists a few known issues and limitations that you might run into:
 - When using the storage service on real hardware, DMA with ATA/ATAPI drives
   might be an issue. You can turn it off by adding the parameter "noidedma" to
   storage
+- Linux doesn't boot yet on x86_64. I haven't found out why yet.
+- In general, we have to use noapic in Linux's cmdline to make it work. Again,
+  a deeper analysis has to be done to find out why this is necessary.
+- Atm, DataSpaceDesc::BIGPAGES is not really usable yet because NOVA causes
+  trouble at some points when using 4M pages.
 
