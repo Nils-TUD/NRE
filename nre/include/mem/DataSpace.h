@@ -36,8 +36,9 @@ class DataSpaceManager;
 /**
  * A dataspace object represents a piece of memory, that is automatically created at construction
  * and destroyed at destruction. That is, the parent adds this piece of memory to the address
- * space of your Pd and backs it with memory. By calling share() you can share this memory with
- * a session that you have at a service.
+ * space of your Pd and backs it with memory. By delegating sel() to somebody else you can share
+ * this memory that guy. That is, he can use the DataSpace(capsel_t) constructor to join your
+ * dataspace.
  */
 class DataSpace {
 	template<class DS>
