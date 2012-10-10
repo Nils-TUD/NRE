@@ -76,14 +76,14 @@ env.Append(
 	SYSGCCLIBPATH = crossdir + '/lib/gcc/' + cross + '/' + crossver
 )
 if target == 'x86_64':
-	env.Append(LINK_ADDR = 0x100000000)
+	env.Append(LINK_ADDR = 0x300000000)
 else:
 	env.Append(LINK_ADDR = 0x100000)
 
 def NREProgram(env, target, source):
 	# for better debugging: put every executable at a different address
 	myenv = env.Clone()
-	if target != 'vancouver':
+	if target != 'vancouver' and target != 'root':
 		myenv.Append(LINKFLAGS = ' -Wl,--section-start=.init=' + ("0x%x" % env['LINK_ADDR']))
 		env['LINK_ADDR'] += 0x100000
 	prog = myenv.Program(
