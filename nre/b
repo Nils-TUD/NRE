@@ -51,18 +51,22 @@ loaderdir="../loader"
 morbodir="../loader/morbo"
 bochscfg="bochs.cfg"
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
-	echo "Usage: $0 [<cmd> <arg>]"
+help() {
+	echo "Usage: $1 [<cmd> <arg>] [--no-build|-n]"
 	echo ""
 	echo -n "This is a convenience script that is responsible for building everything (NOVA, morbo"
 	echo -n " and NRE) and running the specified command afterwards. It does also support switching"
 	echo -n " between debug and release builds by changing the Makefile of NOVA accordingly (adjust"
 	echo -n " optimization level, ...). The most important environment variables that influence its"
-	echo -n " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
+	echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
+	echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
+	echo -n " In this case, only the specified command is executed."
 	echo ""
 	echo ""
 	echo "The following commands are available:"
 	echo "    clean:                   do a clean in NOVA, morbo and NRE"
+	echo "    distclean:               remove NRE build-dirs, remove NOVA and morbo so"
+	echo "                             that everything is checked out again and rebuild"
 	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
 	echo "                             in bochs"
 	echo "    qemu <bootscript>:       run <bootscript> in qemu"
@@ -96,71 +100,110 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "-?" ] ; then
 	echo "    NRE_GDB_X86_64:          the executable of gdb to use for NRE_TARGET=x86_64."
 	echo "                             The default is x86_64-linux-gnu-gdbtui."
 	exit 0
+}
+
+dobuild=true
+cmd=""
+script=""
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-h|-\?|--help)
+			help $0
+			;;
+
+		-n|--no-build)
+			dobuild=false
+			;;
+
+		*)
+			if [ "$cmd" = "" ]; then
+				cmd="$1"
+			elif [ "$script" = "" ]; then
+				script="$1"
+			else
+				echo "Too many arguments" >&2
+				exit 1
+			fi
+			;;
+	esac
+	shift
+done
+
+if [ "$cmd" = "clean" ] || [ "$cmd" = "distclean" ]; then
+	dobuild=false
 fi
 
-echo "Building for $NRE_TARGET in $NRE_BUILD mode using $cpus jobs..."
+echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 
-# build userland
-scons $opts
-if [ $? -ne 0 ]; then
-	exit 1
-fi
+if $dobuild; then
+	echo "Building NRE, NOVA and morbo with $cpus jobs..."
 
-# checkout nova, if not already done
-if [ ! -d "$novadir" ]; then
-	$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
-		$root/$kerndir/patches/*
-fi
-
-cd $novadir/build
-# adjust build-flags depending on build-type
-if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
-	if [ "$NRE_BUILD" != "debug" ]; then
-		# it should be release, but isn't
-		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
+	# build userland
+	scons $opts
+	if [ $? -ne 0 ]; then
+		exit 1
 	fi
-else
-	if [ "$NRE_BUILD" != "release" ]; then
-		# it should be debug, but isn't
-		sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
+
+	# checkout nova, if not already done
+	if [ ! -d "$novadir" ]; then
+		$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
+			$root/$kerndir/patches/*
 	fi
-fi
-# build NOVA
-ARCH=$NRE_TARGET make $jobs
-if [ $? -ne 0 ]; then
-	exit 1
-fi
-cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
-cd $root
 
-# checkout morbo, if not already done
-if [ ! -d "$morbodir" ]; then
-	$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
-		$root/$loaderdir/patches/*
-fi
+	cd $novadir/build
+	# adjust build-flags depending on build-type
+	if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
+		if [ "$NRE_BUILD" != "debug" ]; then
+			# it should be release, but isn't
+			sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
+		fi
+	else
+		if [ "$NRE_BUILD" != "release" ]; then
+			# it should be debug, but isn't
+			sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
+		fi
+	fi
+	# build NOVA
+	ARCH=$NRE_TARGET make $jobs
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+	cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+	cd $root
 
-# build morbo
-cd $morbodir && scons $jobs
-if [ $? -ne 0 ]; then
-	exit 1
+	# checkout morbo, if not already done
+	if [ ! -d "$morbodir" ]; then
+		$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
+			$root/$loaderdir/patches/*
+	fi
+
+	# build morbo
+	cd $morbodir && scons $jobs
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+	cd $root
+	cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
 fi
-cd $root
-cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
 
 # run the specified command, if any
-case "$1" in
+case "$cmd" in
 	clean)
 		scons -c
-		rm -Rf $novadir $morbodir
+		( cd $novadir/build && make clean )
+		( cd $morbodir && scons -c )
+		;;
+	distclean)
+		rm -Rf build/* $novadir $morbodir
 		;;
 	prof=*)
-		$build/tools/conv/conv i586 log.txt $build/bin/apps/${1#prof=} > result.xml
+		$build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
 		;;
 	bochs)
 		mkdir -p $build/bin/boot/grub
 		cp $root/dist/iso/boot/grub/stage2_eltorito $build/bin/boot/grub
-		./tools/novaboot --build-dir="$PWD/$build" --iso -- $2
-		filename=`basename $2`
+		./tools/novaboot --build-dir="$PWD/$build" --iso -- $script
+		filename=`basename $script`
 		sed --in-place -e \
 			's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='`echo $build/ | sed -e 's/\//\\\\\//g'`'\2,/g' $bochscfg
 		sed --in-place -e \
@@ -168,34 +211,34 @@ case "$1" in
 		bochs -f $bochscfg -q
 		;;
 	qemu)
-		./$2 --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+		./$script --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
 		;;
 	qemunet)
 		$QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $NRE_TFTPDIR
 		;;
 	srv)
-		./$2 --server --build-dir="$PWD/$build"
+		./$script --server --build-dir="$PWD/$build"
 		;;
 	srvp)
-		./$2 --server -p --build-dir="$PWD/$build"
+		./$script --server -p --build-dir="$PWD/$build"
 		;;
 	dis=*)
-		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${1#dis=} | less
+		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${cmd#dis=} | less
 		;;
 	elf=*)
-		$crossdir/bin/$cross-readelf -a $build/bin/apps/${1#elf=} | less
+		$crossdir/bin/$cross-readelf -a $build/bin/apps/${cmd#elf=} | less
 		;;
 	straddr=*)
 		# find base address of .rodata
-		base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${1#straddr=} | grep .rodata | \
+		base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${cmd#straddr=} | grep .rodata | \
 			xargs | cut -d ' ' -f 5`
 		# grep for matching lines, prepare for better use of awk and finally add offset to base
-		$crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${1#straddr=} | grep $2 | \
+		$crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${cmd#straddr=} | grep $script | \
 			sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
 			awk '{ printf("0x%x: %s %s %s %s %s %s\n",0x'$base' + strtonum($1),$2,$3,$4,$5,$6,$7) }'
 		;;
 	trace=*)
-		tools/backtrace $build/bin/apps/${1#trace=}
+		tools/backtrace $build/bin/apps/${cmd#trace=}
 		;;
 	dbg=*)
 		tmp=$(tempfile)
@@ -205,14 +248,14 @@ case "$1" in
 		# interrupt the execution and examine the state in gdb by pressing ^C, qemu
 		# terminates. to prevent that we use a small program (ignoreint) no block SIGINT,
 		# which replaces itself with the given program afterwards
-		$build/tools/ignoreint/ignoreint ./$2 --qemu="$QEMU" \
+		$build/tools/ignoreint/ignoreint ./$script --qemu="$QEMU" \
 			--build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s" > log.txt &
-		$gdb $build/bin/apps/${1#dbg=} --command=$tmp
+		$gdb $build/bin/apps/${cmd#dbg=} --command=$tmp
 		rm -f $tmp
 		kill `pgrep qemu` 2>/dev/null
 		;;
 	dbgr)
-		./$2 --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
+		./$script --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
 		;;
 	list)
 		ls -1 $build/bin/apps | while read l; do	
