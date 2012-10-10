@@ -4,9 +4,8 @@ Import('env')
 import os
 
 # make a link to imgs to prevent a copy
-myenv = Environment()
-symlink = Builder(
-	action = 'ln -s `readlink -f $SOURCE` $TARGET'
+env.Command(
+	Dir(env['BUILDDIR'] + '/dist/imgs'),
+	Dir('#dist/imgs'),
+	'ln -sf `readlink -f $SOURCE` $TARGET'
 )
-myenv.Append(BUILDERS = {'SymLink' : symlink})
-myenv.SymLink(Dir(env['BUILDDIR'] + '/dist/imgs'), Dir('#dist/imgs'))
