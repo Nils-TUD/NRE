@@ -38,7 +38,7 @@ public:
 	static const uint PAGE_SHIFT			= 12;
 	static const size_t PAGE_SIZE			= 1 << PAGE_SHIFT;
 	static const size_t STACK_SIZE			= PAGE_SIZE;
-	static const size_t PT_ENTRY_COUNT		= PAGE_SIZE / sizeof(word_t);
+	static const size_t PT_ENTRY_COUNT		= PAGE_SIZE / sizeof(uint32_t);
 	static const size_t BIG_PAGE_SIZE		= PAGE_SIZE * PT_ENTRY_COUNT;
 	static const uintptr_t KERNEL_START	= ARCH_KERNEL_START;
 	static const size_t PHYS_ADDR_SIZE		= 40;
