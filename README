@@ -45,6 +45,22 @@ harddisks and iso images first to be able to use a few boot scripts that
 reference them.
 
 
+Keybindings:
+============
+
+NRE provides a console service that allows multiple applications to write to
+the screen (not at the same time, of course). To do this, they request a sub-
+console in a specified console. A console groups multiple subconsoles together,
+so that e.g. all management stuff (Bootloader, Hypervisor, sysinfo, ...) can
+be put in one console and each VM can be put in a different one. The console
+service uses the following keybindings, where the modifier (ctrl by default)
+can also be changed via modifier=x in the cmdline of console:
+- ctrl + left/right: switch between consoles
+- ctrl + up/down: switch between subconsoles
+- ctrl + 0..9: switch to console 0..9. You can also use Esc to get to console 0
+- ctrl + End: reboot the host-machine
+
+
 Limitations:
 ============
 
