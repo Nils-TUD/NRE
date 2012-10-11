@@ -1015,25 +1015,25 @@ static void __attribute__((regparm(3))) exec_d5_aad_0(InstructionCache *cache, v
 static void __attribute__((regparm(3))) exec_d7_xlat_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_XLAT(); }
 static void __attribute__((regparm(3))) exec_d938_fnstcw_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstcw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");fnstcw (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_da10_ficom_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");ficom (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_da18_ficomp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");ficomp (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dbe3_fninit_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fninit; fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fninit; fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dbe4__byte_0xdb__0xe4__0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 /* fnsetpm, on 287 only, noop afterwards */; }
 static void __attribute__((regparm(3))) exec_dd20_frstor_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_FRSTOR(); }
 static void __attribute__((regparm(3))) exec_dd38_fnstsw_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_de10_ficom_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficom (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");ficom (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_de18_ficomp_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);ficomp (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");ficomp (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_dfe0_fnstsw__ax_0(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
-		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%eax);fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
+		 if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0);asm volatile("fxrstor (%%"EXPAND(REG(ax))");fnstsw (%%"EXPAND(REG(cx))"); fxsave (%%"EXPAND(REG(ax))");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate)); }
 static void __attribute__((regparm(3))) exec_e0_loopne_1(InstructionCache *cache, void *tmp_src, void *tmp_dst) {
 		 cache->helper_LOOPNE<1>(tmp_src); }
 static void __attribute__((regparm(3))) exec_e0_loopne_2(InstructionCache *cache, void *tmp_src, void *tmp_dst) {

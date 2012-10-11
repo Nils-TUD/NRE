@@ -32,6 +32,6 @@ EOF
 linux.vmconfig <<EOF
 rom://bin/apps/vancouver m:128 ncpu:1 PC_PS2
 rom://bin/apps/guest_munich
-rom://dist/imgs/bzImage-3.1.0-32 clocksource=tsc console=ttyS0 noapic quiet
+rom://dist/imgs/bzImage-3.1.0-32 clocksource=tsc console=ttyS0
 rom://dist/imgs/initrd-js.lzma
 EOF

@@ -515,6 +515,8 @@ private:
 			CpuEvent msg(event);
 			_vcpu->bus_event.send(msg);
 		}
+		else
+			Serial::get().writef("event=%#x\n",event);
 
 		/**
 		 * It is not defined how invalid Delivery Modes are handled. We
