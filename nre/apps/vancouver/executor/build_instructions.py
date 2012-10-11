@@ -133,9 +133,9 @@ def generate_functions(name, flags, snippet, enc, functions, l2):
         # Be sure to duplicate %s
         snippet = ['asm volatile("'+ ";".join([re.sub(r'([^%])%([^%0-9])', r'\1%%\2', s) for s in snippet])+'" : "+d"(tmp_src), "+c"(tmp_dst) : : "eax")']
     if "FPU" in flags:
-        if "FPUNORESTORE" not in flags:  snippet = ['fxrstor (%%eax)'] + snippet
+        if "FPUNORESTORE" not in flags:  snippet = ['fxrstor (%%\"EXPAND(REG(ax))\")'] + snippet
         snippet = ['if (cache->_cpu->cr0 & 0xc) EXCEPTION(cache, 0x7, 0)',
-                   'asm volatile("' + ';'.join(snippet)+'; fxsave (%%eax);" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate))']
+                   'asm volatile("' + ';'.join(snippet)+'; fxsave (%%\"EXPAND(REG(ax))\");" : "+d"(tmp_src), "+c"(tmp_dst) : "a"(cache->_fpustate))']
     if "CPL0" in flags:
         snippet = ["if (cache->cpl0_test()) return"] + snippet
     # parameter handling
