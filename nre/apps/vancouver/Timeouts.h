@@ -43,16 +43,12 @@ public:
 	}
 
 	size_t alloc() {
-		// TODO we need a semaphore here, otherwise the compiler seems to generate wrong code in
-		// release mode on x86_64. at least, I have no other explanation so far.
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		return _timeouts.alloc();
 	}
 
 	void request(size_t nr,timevalue_t to) {
-		// TODO it can't be correct to not grab a lock here, because we access e.g. program() from
-		// different threads here. but we have to grab globalsm in timer_thread and if we grab it
-		// here, we deadlock ourself. But in NUL it works the same way, so we keep it for now.
+		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		_timeouts.request(nr,to);
 		program();
 	}
