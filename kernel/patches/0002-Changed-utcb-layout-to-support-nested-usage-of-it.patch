@@ -94,7 +94,7 @@ index 8ffc339..60ef80a 100644
          ALWAYS_INLINE
          static inline void *operator new (size_t) { return Buddy::allocator.alloc (0, Buddy::FILL_0); }
 diff --git a/src/syscall.cpp b/src/syscall.cpp
-index 564e249..86608a1 100644
+index ee6dc42..df11606 100644
 --- a/src/syscall.cpp
 +++ b/src/syscall.cpp
 @@ -64,8 +64,8 @@ void Ec::delegate()
@@ -102,9 +102,9 @@ index 564e249..86608a1 100644
  
      dst->pd->xfer_items (src->pd,
 -                         user ? dst->utcb->xlt : Crd (0),
--                         user ? dst->utcb->del : Crd (Crd::MEM, dst->regs.cr2 >> PAGE_BITS),
+-                         user ? dst->utcb->del : Crd (Crd::MEM, (dst->cont == ret_user_iret ? dst->regs.cr2 : dst->regs.nst_fault) >> PAGE_BITS),
 +                         user ? dst->utcb->translate() : Crd (0),
-+                         user ? dst->utcb->delegate() : Crd (Crd::MEM, dst->regs.cr2 >> PAGE_BITS),
++                         user ? dst->utcb->delegate() : Crd (Crd::MEM, (dst->cont == ret_user_iret ? dst->regs.cr2 : dst->regs.nst_fault) >> PAGE_BITS),
                           src->utcb->xfer(),
                           user ? dst->utcb->xfer() : nullptr,
                           src->utcb->ti());

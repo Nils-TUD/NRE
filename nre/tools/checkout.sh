@@ -13,7 +13,7 @@ git clone "$URL" $TARGET || exit 1
 shift 4
 
 while [ $# -ne 0 ]; do
-    ( cd $TARGET && git apply "$1" && git commit -am "$1" ) || exit
+    ( cd $TARGET && git apply "$1" && git commit -am "$1" ) || exit 1
     shift
 done
 
