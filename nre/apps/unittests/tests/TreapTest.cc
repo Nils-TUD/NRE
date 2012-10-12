@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/Util.h>
+#include <util/Profiler.h>
 #include <util/Treap.h>
 #include <util/Random.h>
 
@@ -31,8 +31,7 @@ static void test_rev_order();
 static void test_rand_order();
 static void test_perf();
 static void test_add_and_rem(int *vals);
-static void store_perf(size_t i,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t time);
-static void print_perf(const char *name,uint64_t min,uint64_t max);
+static void print_perf(const char *name,AvgProfiler &prof);
 
 const TestCase treaptest_inorder = {
 	"Treap - add and remove nodes with increasing values",test_in_order,
@@ -46,8 +45,6 @@ const TestCase treaptest_randorder = {
 const TestCase treaptest_perf = {
 	"Treap - performance",test_perf
 };
-
-static uint64_t results[PERF_NODE_COUNT];
 
 struct MyNode : public TreapNode<int> {
 	MyNode(int key,int _data) : TreapNode<int>(key), data(_data) {
@@ -88,48 +85,40 @@ static void test_perf() {
 	Treap<MyNode> tree;
 	MyNode **nodes = new MyNode*[PERF_NODE_COUNT];
 
-	uint64_t tic,tac,min,max,rdtsc;
-	tic = Util::tsc();
-	tac = Util::tsc();
-	rdtsc = tac - tic;
-
 	/* create */
-	min = ~0ull;
-	max = 0;
-	for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
-		nodes[i] = new MyNode(i,i);
+	{
+		AvgProfiler prof(PERF_NODE_COUNT);
+		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
+			nodes[i] = new MyNode(i,i);
 
-		tic = Util::tsc();
-		tree.insert(nodes[i]);
-		tac = Util::tsc();
-		store_perf(i,rdtsc,min,max,tac - tic);
+			prof.start();
+			tree.insert(nodes[i]);
+			prof.stop();
+		}
+		print_perf("Node insertion:",prof);
 	}
-
-	print_perf("Node insertion:",min,max);
 
 	/* find all */
-	min = ~0ull;
-	max = 0;
-	for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
-		tic = Util::tsc();
-		tree.find(i);
-		tac = Util::tsc();
-		store_perf(i,rdtsc,min,max,tac - tic);
+	{
+		AvgProfiler prof(PERF_NODE_COUNT);
+		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
+			prof.start();
+			tree.find(i);
+			prof.stop();
+		}
+		print_perf("Node searching:",prof);
 	}
-
-	print_perf("Node searching:",min,max);
 
 	/* remove */
-	min = ~0ull;
-	max = 0;
-	for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
-		tic = Util::tsc();
-		tree.remove(nodes[i]);
-		tac = Util::tsc();
-		store_perf(i,rdtsc,min,max,tac - tic);
+	{
+		AvgProfiler prof(PERF_NODE_COUNT);
+		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
+			prof.start();
+			tree.remove(nodes[i]);
+			prof.stop();
+		}
+		print_perf("Node removal:",prof);
 	}
-
-	print_perf("Node removal:",min,max);
 
 	for(size_t i = 0; i < PERF_NODE_COUNT; i++)
 		delete nodes[i];
@@ -167,20 +156,9 @@ static void test_add_and_rem(int *vals) {
 	}
 }
 
-static void store_perf(size_t i,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t time) {
-	uint64_t duration = time > rdtsc ? time - rdtsc : 0;
-	min = Math::min(min,duration);
-	max = Math::max(max,duration);
-	results[i] = duration;
-}
-
-static void print_perf(const char *name,uint64_t min,uint64_t max) {
-	uint64_t avg = 0;
-	for(uint i = 0; i < PERF_NODE_COUNT; i++)
-		avg += results[i];
-	avg = avg / PERF_NODE_COUNT;
+static void print_perf(const char *name,AvgProfiler &prof) {
 	WVPRINTF("%s",name);
-	WVPERF(avg,"cycles");
-	WVPRINTF("min: %Lu",min);
-	WVPRINTF("max: %Lu",max);
+	WVPERF(prof.avg(),"cycles");
+	WVPRINTF("min: %Lu",prof.min());
+	WVPRINTF("max: %Lu",prof.max());
 }
