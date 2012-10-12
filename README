@@ -57,8 +57,8 @@ service uses the following keybindings, where the modifier (ctrl by default)
 can also be changed via modifier=x in the cmdline of console:
 - ctrl + left/right: switch between consoles
 - ctrl + up/down: switch between subconsoles
-- ctrl + 0..9: switch to console 0..9. You can also use Esc to get to console 0
-- ctrl + End: reboot the host-machine
+- ctrl + 0..9: switch to console 0..9. You can also use esc to get to console 0
+- ctrl + end: reboot the host-machine
 
 
 Limitations:
@@ -76,9 +76,6 @@ The following lists a few known issues and limitations that you might run into:
 - When using the storage service on real hardware, DMA with ATA/ATAPI drives
   might be an issue. You can turn it off by adding the parameter "noidedma" to
   storage
-- Linux doesn't boot yet on x86_64. I haven't found out why yet.
-- In general, we have to use noapic in Linux's cmdline to make it work. Again,
-  a deeper analysis has to be done to find out why this is necessary.
-- Atm, DataSpaceDesc::BIGPAGES is not really usable yet because NOVA causes
+- Atm, DataSpaceDesc::BIGPAGES is not usable on x86_64 because NOVA causes
   trouble at some points when using 4M pages.
 
