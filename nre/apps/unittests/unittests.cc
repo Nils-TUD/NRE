@@ -30,11 +30,13 @@
 #include "tests/TreapTest.h"
 #include "tests/SortedSListTest.h"
 #include "tests/PingpongXPd.h"
+#include "tests/MemOps.h"
 
 using namespace nre;
 using namespace nre::test;
 
 const TestCase testcases[] = {
+	memops,
 	pingpong,
 	pingpongxpd,
 	catchex,
