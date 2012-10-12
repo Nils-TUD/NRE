@@ -5,7 +5,7 @@ import os
 
 # make a link to imgs to prevent a copy
 env.Command(
-	Dir(env['BUILDDIR'] + '/dist/imgs'),
-	Dir('#dist/imgs'),
+	env['BUILDDIR'] + '/dist/imgs',
+	'#dist/imgs',
 	'ln -sf `readlink -f $SOURCE` $TARGET'
 )
