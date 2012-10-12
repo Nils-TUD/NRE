@@ -138,6 +138,15 @@ echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 if $dobuild; then
 	echo "Building NRE, NOVA and morbo with $cpus jobs..."
 
+	# checkout morbo, if not already done
+	if [ ! -d "$morbodir" ]; then
+		$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
+			$root/$loaderdir/patches/*
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+	fi
+
 	# build userland
 	scons $opts
 	if [ $? -ne 0 ]; then
@@ -173,23 +182,6 @@ if $dobuild; then
 	fi
 	cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
 	cd $root
-
-	# checkout morbo, if not already done
-	if [ ! -d "$morbodir" ]; then
-		$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
-			$root/$loaderdir/patches/*
-		if [ $? -ne 0 ]; then
-			exit 1
-		fi
-	fi
-
-	# build morbo
-	cd $morbodir && scons $jobs
-	if [ $? -ne 0 ]; then
-		exit 1
-	fi
-	cd $root
-	cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
 fi
 
 # run the specified command, if any

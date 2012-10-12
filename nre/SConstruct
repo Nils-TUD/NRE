@@ -107,3 +107,6 @@ env.SConscript('services/SConscript', 'env', variant_dir = builddir + '/services
 env.SConscript('apps/SConscript', 'env', variant_dir = builddir + '/apps')
 env.SConscript('guests/SConscript', 'guestenv', variant_dir = builddir + '/guests')
 env.SConscript('dist/SConscript', 'env', variant_dir = builddir + '/dist')
+
+env.SConscript('../loader/morbo/standalone/SConscript')
+InstallAs(env['BINARYDIR'] + '/chainloader', '../loader/morbo/tftp/farnsworth')
