@@ -84,8 +84,8 @@ void *mmap(void *,size_t size,int prot,int,int,off_t) {
 	return reinterpret_cast<void*>(desc.virt());
 }
 
-int munmap(void *start,size_t size) {
-	Serial::get().writef("Leaking memory at %p+%zx\n",start,size);
+int munmap(void *,size_t) {
+	// TODO implement me
 	return 0;
 }
 
