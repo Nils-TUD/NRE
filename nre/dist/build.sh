@@ -2,7 +2,7 @@
 
 dest=dist/imgs
 
-if [ ! -f tools/disk.sh ]; then
+if [ ! -f tools/disk.py ]; then
 	echo "Please call this script from the nre subdirectory!" >&2
 	exit 1
 fi
@@ -27,5 +27,5 @@ create_disk $dest/hd2.img dist/hd2.hddcontent
 create_iso $dest/test.iso dist/iso
 
 # build a 20MB disk with 2 ext3 partitions
-tools/disk.sh $dest/hd3.img 20 dist/iso
+tools/disk.py create $dest/hd3.img --part ext3 10 dist/iso --part ext2 12 -
 
