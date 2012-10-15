@@ -194,7 +194,6 @@ case "$cmd" in
 	clean)
 		scons -c
 		( cd $novadir/build && make clean )
-		( cd $morbodir && scons -c )
 		;;
 	distclean)
 		rm -Rf build/* $novadir $morbodir
