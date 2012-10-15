@@ -56,7 +56,7 @@ void Admission::portal_sc(capsel_t) {
 				// TODO we might leak resources here if something fails
 				if(stack) {
 					uintptr_t phys = PhysicalMemory::alloc(ExecEnv::STACK_SIZE);
-					stackaddr = VirtualMemory::alloc(ExecEnv::STACK_SIZE);
+					stackaddr = VirtualMemory::alloc(ExecEnv::STACK_SIZE,ExecEnv::STACK_SIZE);
 					Hypervisor::map_mem(phys,stackaddr,ExecEnv::STACK_SIZE);
 				}
 				if(utcb)

@@ -106,13 +106,13 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 		argc++;
 
 	word_t *ptrs = reinterpret_cast<word_t*>(bottom - sizeof(word_t) * (argc + 1));
-	// ensure that its aligned to 16-byte + 8-byte for SSE
-	ptrs = reinterpret_cast<word_t*>((reinterpret_cast<uintptr_t>(ptrs) & ~0xFUL) - 0x8);
+	// ensure that its aligned to 16-byte for SSE; this time not +8 because we'll call main
+	ptrs = reinterpret_cast<word_t*>(reinterpret_cast<uintptr_t>(ptrs) & ~0xFUL);
 	// store argv and argc
-	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::PAGE_SIZE - 1));
+	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::STACK_SIZE - 1));
 	*(ptrs - 2) = argc;
 	// store stackpointer for user
-	sp = csp + (reinterpret_cast<uintptr_t>(ptrs - 2) & (ExecEnv::PAGE_SIZE - 1));
+	sp = csp + (reinterpret_cast<uintptr_t>(ptrs - 2) & (ExecEnv::STACK_SIZE - 1));
 
 	// now, walk through it, replace ' ' by '\0' and store pointers to the individual arguments
 	str = bottom;
@@ -120,7 +120,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	char *begin = bottom;
 	while(*str) {
 		if(*str == ' ' && i > 0) {
-			*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+			*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::STACK_SIZE - 1));
 			*str = '\0';
 			i = 0;
 		}
@@ -132,7 +132,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 		str++;
 	}
 	if(i > 0)
-		*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+		*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::STACK_SIZE - 1));
 	// terminate
 	*ptrs++ = 0;
 }
@@ -263,8 +263,10 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &
 				config.cpu(),c->cmdline(),c->_pd,c->_utcb);
 
 		// he needs a stack
-		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
+		uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
+		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE,ExecEnv::STACK_SIZE);
+		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,
+				c->_ec->stack(),align - ExecEnv::PAGE_SHIFT),
 				c->stack(),ChildMemory::RW | ChildMemory::OWN);
 
 		// and a Hip
@@ -569,9 +571,10 @@ void ChildManager::Portals::sc(capsel_t pid) {
 
 				// TODO we might leak resources here if something fails
 				if(stack) {
-					const DataSpace &ds = cm->_dsm.create(
-							DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
-					stackaddr = c->reglist().find_free(ds.size());
+					uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
+					const DataSpace &ds = cm->_dsm.create(DataSpaceDesc(ExecEnv::STACK_SIZE,
+							DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW,0,0,align - ExecEnv::PAGE_SHIFT));
+					stackaddr = c->reglist().find_free(ds.size(),ExecEnv::STACK_SIZE);
 					c->reglist().add(ds.desc(),stackaddr,ds.flags() | ChildMemory::OWN,ds.unmapsel());
 				}
 				if(utcb) {
@@ -659,7 +662,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	uintptr_t addr = 0;
 	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
-		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags());
+		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags(),0,0,desc.align());
 		c->reglist().add(desc,addr,desc.flags());
 		desc.virt(addr);
 		LOG(Logging::DATASPACES,
@@ -676,7 +679,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			// only create creations and non-device-memory
 			if(type != DataSpace::JOIN && desc.phys() == 0)
 				flags |= ChildMemory::OWN;
-			size_t align = (flags & DataSpaceDesc::BIGPAGES) ? ExecEnv::BIG_PAGE_SIZE : 1;
+			size_t align = 1 << (desc.align() + ExecEnv::PAGE_SHIFT);
 			addr = c->reglist().find_free(ds.size(),align);
 			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}
@@ -698,7 +701,8 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt());
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt(),
+				ds.desc().align());
 	}
 }
 

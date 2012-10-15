@@ -35,9 +35,9 @@ public:
 	typedef PORTAL void (*portal_func)(capsel_t);
 	typedef void (*startup_func)(void *);
 
-	static const uint PAGE_SHIFT			= 12;
-	static const size_t PAGE_SIZE			= 1 << PAGE_SHIFT;
-	static const size_t STACK_SIZE			= PAGE_SIZE;
+	static const uint PAGE_SHIFT			= ARCH_PAGE_SHIFT;
+	static const size_t PAGE_SIZE			= ARCH_PAGE_SIZE;
+	static const size_t STACK_SIZE			= ARCH_STACK_SIZE;
 	static const size_t PT_ENTRY_COUNT		= PAGE_SIZE / sizeof(uint32_t);
 	static const size_t BIG_PAGE_SIZE		= PAGE_SIZE * PT_ENTRY_COUNT;
 	static const uintptr_t KERNEL_START	= ARCH_KERNEL_START;

@@ -19,7 +19,9 @@
 #define REG(X)				e##X
 #define ARCH_REGIONS_END	0x10000000
 #define ARCH_KERNEL_START	0xC0000000
-#define ARCH_PAGE_SIZE		0x1000
+#define ARCH_PAGE_SHIFT		12
+#define ARCH_PAGE_SIZE		(1 << ARCH_PAGE_SHIFT)
+#define ARCH_STACK_SIZE		(ARCH_PAGE_SIZE * 2)		// has to be a power of 2
 #define FMT_WORD_HEXLEN		"8"
 #define FMT_WORD_BYTES		"4"
 #define ASM_WORD_TYPE		".long"

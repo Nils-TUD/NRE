@@ -5,7 +5,7 @@ Import('env')
 myenv = env.Clone()
 #myenv.Append(CXXFLAGS = ' -finstrument-functions -DPROFILE')
 
-crt0 = myenv.Object('crt0.o', 'arch/' + myenv['ARCH'] + '/crt0.s')
+crt0 = myenv.Object('crt0.o', 'arch/' + myenv['ARCH'] + '/crt0.S')
 crt1 = myenv.Object('crt1.o', 'arch/' + myenv['ARCH'] + '/crt1.s')
 crtn = myenv.Object('crtn.o', 'arch/' + myenv['ARCH'] + '/crtn.s')
 myenv.Install(myenv['SYSGCCLIBPATH'], [crt0, crt1, crtn])

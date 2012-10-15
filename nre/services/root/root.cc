@@ -58,11 +58,11 @@ static void start_childs();
 CPU0Init CPU0Init::init INIT_PRIO_CPU0;
 
 // stack for initial Thread (overwrites the weak-symbol defined in Startup.cc)
-uchar _stack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
+uchar _stack[ExecEnv::STACK_SIZE] ALIGNED(ARCH_STACK_SIZE);
 // stacks for LocalThreads of first CPU
-static uchar dsstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
-static uchar ptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
-static uchar regptstack[ExecEnv::PAGE_SIZE] ALIGNED(ARCH_PAGE_SIZE);
+static uchar dsstack[ExecEnv::STACK_SIZE] ALIGNED(ARCH_STACK_SIZE);
+static uchar ptstack[ExecEnv::STACK_SIZE] ALIGNED(ARCH_STACK_SIZE);
+static uchar regptstack[ExecEnv::STACK_SIZE] ALIGNED(ARCH_STACK_SIZE);
 static ChildManager *mng;
 
 CPU0Init::CPU0Init() {

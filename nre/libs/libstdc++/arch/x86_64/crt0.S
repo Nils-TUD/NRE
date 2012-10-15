@@ -14,6 +14,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Defines.h>
+
 .section .text
 
 .global _stack
@@ -44,9 +46,9 @@ _start:
 	test	%rbx, %rbx
 	jnz		1f
 	mov		%rsp, (%r8)					# store pointer to HIP
-	lea		-0x1000(%rsp), %rdx		# UTCB is below HIP
+	lea		-ARCH_PAGE_SIZE(%rsp), %rdx	# UTCB is below HIP
 	movabsq	$_stack, %rsp				# switch to our stack
-	add		$0x1000, %rsp
+	add		$ARCH_STACK_SIZE, %rsp
 	sub		$16, %rsp					# leave space for Thread and Pd
 	jmp		2f
 1:
@@ -55,7 +57,7 @@ _start:
 2:
 	mov		%rdx, 8(%r8)			 	# store pointer to UTCB
 	mov		%rsp,%rcx
-	sub		$0x1000,%rcx
+	sub		$ARCH_STACK_SIZE,%rcx
 	mov		%rcx, 16(%r8)				# store stack-begin
 	mov		%rdi, 24(%r8)				# store cpu
 	push	%rsi						# save rsi for later usage

@@ -66,8 +66,9 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint flags,uintptr_t phys = 0,uintptr_t virt = 0)
-		: _desc(size,type,flags,phys,virt), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
+	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint flags,uintptr_t phys = 0,
+			uintptr_t virt = 0,uint align = 0)
+		: _desc(size,type,flags,phys,virt,0,align), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
 		create();
 	}
 	/**

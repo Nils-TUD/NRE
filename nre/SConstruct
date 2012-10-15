@@ -60,6 +60,7 @@ guestenv = Environment(
 verbose = ARGUMENTS.get('VERBOSE',0);
 if int(verbose) == 0:
 	hostenv['ASCOMSTR'] = guestenv['ASCOMSTR'] = env['ASCOMSTR'] = "AS $TARGET"
+	hostenv['ASPPCOMSTR'] = guestenv['ASPPCOMSTR'] = env['ASPPCOMSTR'] = "ASPP $TARGET"
 	hostenv['CCCOMSTR'] = guestenv['CCCOMSTR'] = env['CCCOMSTR'] = "CC $TARGET"
 	hostenv['CXXCOMSTR'] = guestenv['CXXCOMSTR'] = env['CXXCOMSTR'] = "CXX $TARGET"
 	hostenv['LINKCOMSTR'] = guestenv['LINKCOMSTR'] = env['LINKCOMSTR'] = "LD $TARGET"

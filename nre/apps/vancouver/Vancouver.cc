@@ -47,7 +47,8 @@ PARAM_HANDLER(ncpu, "ncpu - change the number of vcpus that are created") {
 PARAM_HANDLER(m, "m - specify the amount of memory for the guest in MiB") {
 	guest_size = argv[0] * 1024 * 1024;
 	guest_mem = new DataSpace(guest_size,DataSpaceDesc::ANONYMOUS,
-			DataSpaceDesc::RWX/* | DataSpaceDesc::BIGPAGES*/);
+			DataSpaceDesc::RWX/* | DataSpaceDesc::BIGPAGES,0,0,
+			Math::next_pow2_shift(ExecEnv::BIG_PAGE_SIZE) - ExecEnv::PAGE_SHIFT*/);
 }
 PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
 	for(size_t count = 0; count < ncpu; count++)
@@ -309,6 +310,7 @@ bool Vancouver::receive(MessageDisk &msg) {
 				if(!_stdevs[msg.disknr])
 					_stdevs[msg.disknr] = new StorageDevice(_mb.bus_diskcommit,*guest_mem,*_stcon,msg.disknr);
 				_stdevs[msg.disknr]->get_params(msg.params);
+				msg.error = MessageDisk::DISK_OK;
 			}
 			catch(const Exception &e) {
 				Serial::get() << "Disk connect failed: " << e.msg() << "\n";
