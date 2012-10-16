@@ -25,25 +25,46 @@
 using namespace nre;
 using namespace nre::test;
 
-static void test_memops();
+typedef void (*memop_func)(void *a,void *b,size_t len);
 
-const TestCase memops = {
-	"Memory operations",test_memops
+static void test_memcpy();
+static void test_memset();
+static void do_test(const char *name,memop_func func);
+
+const TestCase memcpytest = {
+	"Memory operations",test_memcpy
+};
+const TestCase memsettest = {
+	"Memory operations",test_memset
 };
 
 static const size_t AREA_SIZE	= 4096;
 static const uint TEST_COUNT	= 1000;
 
-static void test_memops() {
+static void memcpy_func(void *a,void *b,size_t len) {
+	memcpy(a,const_cast<const void*>(b),len);
+}
+static void memset_func(void *a,void *,size_t len) {
+	memset(a,0,len);
+}
+
+static void test_memcpy() {
+	do_test("memcpy",memcpy_func);
+}
+static void test_memset() {
+	do_test("memset",memset_func);
+}
+
+static void do_test(const char *name,memop_func func) {
 	void *mem = malloc(AREA_SIZE);
 	void *buf = malloc(AREA_SIZE);
 
 	{
-		WVPRINTF("Testing aligned memcpy with %zu bytes",AREA_SIZE);
+		WVPRINTF("Testing aligned %s with %zu bytes",name,AREA_SIZE);
 		AvgProfiler prof(TEST_COUNT);
 		for(uint i = 0; i < TEST_COUNT; ++i) {
 			prof.start();
-			memcpy(buf,mem,AREA_SIZE);
+			func(buf,mem,AREA_SIZE);
 			prof.stop();
 		}
 		WVPERF(prof.avg()," cycles");
@@ -52,11 +73,11 @@ static void test_memops() {
 	}
 
 	{
-		WVPRINTF("Testing unaligned memcpy with %zu bytes",AREA_SIZE);
+		WVPRINTF("Testing unaligned %s with %zu bytes",name,AREA_SIZE);
 		AvgProfiler prof(TEST_COUNT);
 		for(uint i = 0; i < TEST_COUNT; ++i) {
 			prof.start();
-			memcpy(reinterpret_cast<char*>(buf) + 1,reinterpret_cast<char*>(mem) + 2,AREA_SIZE - 2);
+			func(reinterpret_cast<char*>(buf) + 1,reinterpret_cast<char*>(mem) + 1,AREA_SIZE - 2);
 			prof.stop();
 		}
 		WVPERF(prof.avg()," cycles");

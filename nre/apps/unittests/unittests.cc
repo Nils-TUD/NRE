@@ -31,12 +31,15 @@
 #include "tests/SortedSListTest.h"
 #include "tests/PingpongXPd.h"
 #include "tests/MemOps.h"
+#include "tests/ThreadsTest.h"
 
 using namespace nre;
 using namespace nre::test;
 
 const TestCase testcases[] = {
-	memops,
+	memcpytest,
+	memsettest,
+	threads,
 	pingpong,
 	pingpongxpd,
 	catchex,

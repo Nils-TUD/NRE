@@ -18,5 +18,4 @@
 
 #include <Test.h>
 
-extern const nre::test::TestCase memcpytest;
-extern const nre::test::TestCase memsettest;
+extern const nre::test::TestCase threads;

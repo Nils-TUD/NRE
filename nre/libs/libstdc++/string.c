@@ -17,10 +17,19 @@
 #include <cstring>
 
 void* memcpy(void *dest,const void *src,size_t len) {
-	uchar *bdest,*bsrc;
-	/* copy words first with loop-unrolling */
-	word_t *ddest = (word_t*)dest;
-	word_t *dsrc = (word_t*)src;
+	uchar *bdest = (uchar*)dest;
+	uchar *bsrc = (uchar*)src;
+	/* copy bytes for alignment */
+	if(((uintptr_t)bdest % sizeof(word_t)) == ((uintptr_t)bsrc % sizeof(word_t))) {
+		while(len > 0 && (uintptr_t)bdest % sizeof(word_t)) {
+			*bdest++ = *bsrc++;
+			len--;
+		}
+	}
+
+	word_t *ddest = (word_t*)bdest;
+	word_t *dsrc = (word_t*)bsrc;
+	/* copy words with loop-unrolling */
 	while(len >= sizeof(word_t) * 8) {
 		*ddest = *dsrc;
 		*(ddest + 1) = *(dsrc + 1);
@@ -34,6 +43,7 @@ void* memcpy(void *dest,const void *src,size_t len) {
 		dsrc += 8;
 		len -= sizeof(word_t) * 8;
 	}
+
 	/* copy remaining words */
 	while(len >= sizeof(word_t)) {
 		*ddest++ = *dsrc++;
@@ -75,14 +85,22 @@ void *memmove(void *dest,const void *src,size_t count) {
 }
 
 void *memset(void *addr,int value,size_t count) {
-	uchar *baddr;
+	uchar *baddr = (uchar*)addr;
+	/* align it */
+	while(count > 0 && (uintptr_t)baddr % sizeof(word_t)) {
+		*baddr++ = value;
+		count--;
+	}
+
+	/* set with dwords */
 	uint dwval = (value << 24) | (value << 16) | (value << 8) | value;
-	uint *dwaddr = (uint*)addr;
+	uint *dwaddr = (uint*)baddr;
 	while(count >= sizeof(uint)) {
 		*dwaddr++ = dwval;
 		count -= sizeof(uint);
 	}
 
+	/* set remaining bytes */
 	baddr = (uchar*)dwaddr;
 	while(count-- > 0)
 		*baddr++ = value;
