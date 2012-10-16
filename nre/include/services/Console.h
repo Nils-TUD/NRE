@@ -48,6 +48,7 @@ public:
 	 */
 	enum Command {
 		CREATE,
+		GET_REGS,
 		SET_REGS
 	};
 
@@ -110,6 +111,22 @@ public:
 		assert(page < Console::TEXT_PAGES);
 		uintptr_t addr = screen().virt() + Console::TEXT_OFF + page * Console::PAGE_SIZE;
 		memset(reinterpret_cast<void*>(addr),	0,Console::PAGE_SIZE);
+	}
+
+	/**
+	 * Requests the current registers
+	 *
+	 * @return the registers
+	 */
+	Console::Register get_regs() {
+		UtcbFrame uf;
+		uf << Console::GET_REGS;
+		Pt pt(caps() + CPU::current().log_id());
+		pt.call(uf);
+		uf.check_reply();
+		Console::Register regs;
+		uf >> regs;
+		return regs;
 	}
 
 	/**

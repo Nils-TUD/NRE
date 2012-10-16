@@ -59,6 +59,13 @@ void ConsoleSessionData::portal(capsel_t pid) {
 			}
 			break;
 
+			case Console::GET_REGS: {
+				uf.finish_input();
+
+				uf << E_SUCCESS << sess->regs();
+			}
+			break;
+
 			case Console::SET_REGS: {
 				Console::Register regs;
 				uf >> regs;
