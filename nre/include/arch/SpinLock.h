@@ -28,15 +28,15 @@ static inline void lock(spinlock_t *val) {
 		"	xor		%%" EXPAND(REG(ax)) ",%%" EXPAND(REG(ax)) ";"
 		"	lock	cmpxchg %%" EXPAND(REG(cx)) ",(%0);"
 		"	jz		2f;"
-		/* improves the performance and lowers the power-consumption of spinlocks */
+		// improves the performance and lowers the power-consumption of spinlocks
 		"	pause;"
 		"	jmp		1b;"
 		"2:;"
-		/* outputs */
+		// outputs
 		:
-		/* inputs */
+		// inputs
 		: "D" (val)
-		/* eax, ecx and cc will be clobbered; we need memory as well because *l is changed */
+		// eax, ecx and cc will be clobbered; we need memory as well because *l is changed
 		: EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
 	);
 }

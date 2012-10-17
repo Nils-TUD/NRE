@@ -91,7 +91,7 @@ void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
 			_ctrl.handle_status(_id,res,"PIO transfer");
 		}
 
-		/* now read / write the data */
+		// now read / write the data
 		_ctrl.start_transfer(0,0,false);
 		if(op == READ)
 			_ctrl.inwords(ATA_REG_DATA,reinterpret_cast<uint16_t*>(buffer()),secsize / sizeof(uint16_t));
@@ -108,11 +108,11 @@ void HostATADevice::transferPIO(Operation op,const DataSpace &ds,size_t secsize,
 
 void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type &dma,
 		producer_type *prod,tag_type tag) {
-	/* wait until previous transfers are done */
+	// wait until previous transfers are done
 	ATA_LOGDETAIL("Waiting for previous transfers");
 	_ctrl.wait_ready();
 
-	/* setup PRDTs */
+	// setup PRDTs
 	ATA_LOGDETAIL("Setting PRDs");
 	HostIDECtrl::PRD *prd = _ctrl.prdt();
 	for(dma_type::iterator it = dma.begin(); it != dma.end(); ) {
@@ -129,22 +129,22 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type 
 		prd++;
 	}
 
-	/* stop running transfers */
+	// stop running transfers
 	//ATA_LOGDETAIL("Stopping running transfers");
 	//_ctrl.outbmrb(BMR_REG_COMMAND,0);
 	uint8_t status = _ctrl.inbmrb(BMR_REG_STATUS) | BMR_STATUS_ERROR | BMR_STATUS_IRQ;
 	_ctrl.outbmrb(BMR_REG_STATUS,status);
 
-	/* set PRDT */
+	// set PRDT
 	ATA_LOGDETAIL("Setting PRDT");
 	_ctrl.outbmrl(BMR_REG_PRDT,static_cast<uint32_t>(_ctrl.prdt_addr()));
 
-	/* it seems to be necessary to read those ports here */
+	// it seems to be necessary to read those ports here
 	ATA_LOGDETAIL("Starting DMA-transfer");
 	_ctrl.inbmrb(BMR_REG_COMMAND);
 	_ctrl.inbmrb(BMR_REG_STATUS);
 	_ctrl.start_transfer(prod,tag,true);
-	/* start bus-mastering */
+	// start bus-mastering
 	if(op == READ)
 		_ctrl.outbmrb(BMR_REG_COMMAND,BMR_CMD_START | BMR_CMD_READ);
 	else
@@ -152,7 +152,7 @@ void HostATADevice::transferDMA(Operation op,const DataSpace &ds,const dma_type 
 	_ctrl.inbmrb(BMR_REG_COMMAND);
 	_ctrl.inbmrb(BMR_REG_STATUS);
 
-	/* now wait for an interrupt */
+	// now wait for an interrupt
 	//ATA_LOGDETAIL("Waiting for an interrupt");
 	//_ctrl.wait_irq();
 
@@ -172,7 +172,7 @@ void HostATADevice::setup_command(sector_type sector,sector_type count,uint cmd)
 		if(count & 0xFF00)
 			throw Exception(E_ARGS_INVALID,64,"Trying to read %Lu sectors with LBA28",count);
 
-		/* For LBA28, the lowest 4 bits are bits 27-24 of LBA */
+		// For LBA28, the lowest 4 bits are bits 27-24 of LBA
 		devValue = DEVICE_LBA | ((_id & SLAVE_BIT) << 4) | ((sector >> 24) & 0x0F);
 		_ctrl.outb(ATA_REG_DRIVE_SELECT,devValue);
 	}
@@ -185,41 +185,41 @@ void HostATADevice::setup_command(sector_type sector,sector_type count,uint cmd)
 	_ctrl.wait();
 
 	ATA_LOGDETAIL("Resetting control-register");
-	/* reset control-register */
+	// reset control-register
 	_ctrl.ctrloutb(_ctrl.irqs_enabled() ? 0 : CTRL_NIEN);
 
-	/* needed for ATAPI */
+	// needed for ATAPI
 	if(is_atapi())
 		_ctrl.outb(ATA_REG_FEATURES,_ctrl.dma_enabled() && has_dma());
 
 	if(has_lba48()) {
 		ATA_LOGDETAIL("LBA48: setting sector-count %Lu and LBA %Lu",count,sector);
-		/* LBA: | LBA6 | LBA5 | LBA4 | LBA3 | LBA2 | LBA1 | */
-		/*     48             32            16            0 */
-		/* sector-count high-byte */
+		// LBA: | LBA6 | LBA5 | LBA4 | LBA3 | LBA2 | LBA1 |
+		//     48             32            16            0
+		// sector-count high-byte
 		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(count >> 8));
-		/* LBA4, LBA5 and LBA6 */
+		// LBA4, LBA5 and LBA6
 		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(sector >> 24));
 		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 32));
 		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 40));
-		/* sector-count low-byte */
+		// sector-count low-byte
 		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)(count & 0xFF));
-		/* LBA1, LBA2 and LBA3 */
+		// LBA1, LBA2 and LBA3
 		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)(sector & 0xFF));
 		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 8));
 		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 16));
 	}
 	else {
 		ATA_LOGDETAIL("LBA28: setting sector-count %Lu and LBA %Lu",count,sector);
-		/* send sector-count */
+		// send sector-count
 		_ctrl.outb(ATA_REG_SECTOR_COUNT,(uint8_t)count);
-		/* LBA1, LBA2 and LBA3 */
+		// LBA1, LBA2 and LBA3
 		_ctrl.outb(ATA_REG_ADDRESS1,(uint8_t)sector);
 		_ctrl.outb(ATA_REG_ADDRESS2,(uint8_t)(sector >> 8));
 		_ctrl.outb(ATA_REG_ADDRESS3,(uint8_t)(sector >> 16));
 	}
 
-	/* send command */
+	// send command
 	ATA_LOGDETAIL("Sending command %d",cmd);
 	_ctrl.outb(ATA_REG_COMMAND,cmd);
 }

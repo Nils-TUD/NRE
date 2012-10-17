@@ -36,7 +36,7 @@ class HostIDECtrl : public Controller {
 	};
 
 public:
-	/* physical region descriptor */
+	// physical region descriptor
 	struct PRD {
 		uint32_t buffer;
 		uint16_t byteCount;

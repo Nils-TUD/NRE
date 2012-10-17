@@ -30,5 +30,3 @@ static inline float fsqrt(float f) {
 	asm ("fsqrt\n" : "+t" (f));
 	return f;
 }
-
-/* EOF */

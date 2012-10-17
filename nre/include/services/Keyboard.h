@@ -91,7 +91,7 @@ public:
 		VK_L			= 39,
 		VK_SEM			= 40,
 		VK_APOS			= 41,
-		/* non-US-1 ?? */
+		// non-US-1 ??
 		VK_ENTER		= 43,
 		VK_LSHIFT		= 44,
 		VK_Z			= 46,
@@ -110,7 +110,7 @@ public:
 		VK_LALT			= 60,
 		VK_SPACE		= 61,
 		VK_RALT			= 62,
-		VK_APPS			= 63,	/* ?? */
+		VK_APPS			= 63,	// ??
 		VK_RCTRL		= 64,
 		VK_RSUPER		= 65,
 		VK_INSERT		= 75,

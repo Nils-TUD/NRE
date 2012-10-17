@@ -28,7 +28,7 @@ void HostATAPIDevice::readwrite(Operation op,const DataSpace &ds,sector_type sec
 	cmd[0] = SCSI_CMD_READ_SECTORS_EXT;
 	if(!has_lba48())
 		cmd[0] = SCSI_CMD_READ_SECTORS;
-	/* no writing here ;) */
+	// no writing here ;)
 	if(op != READ)
 		throw Exception(E_ARGS_INVALID,64,"Device %u: Writing is not supported for ATAPI",_id);
 	if(cmd[0] == SCSI_CMD_READ_SECTORS_EXT) {
@@ -63,26 +63,26 @@ void HostATAPIDevice::determine_capacity() {
 
 void HostATAPIDevice::request(const DataSpace &cmd,const DataSpace &data,const dma_type &dma,
 		producer_type *prod,tag_type tag) {
-	/* send PACKET command to drive */
+	// send PACKET command to drive
 	dma_type cdma;
 	cdma.push(DMADesc(0,12));
 	HostATADevice::readwrite(PACKET,cmd,0xFFFF00,cdma,0,0,12);
 	// we don't get an interrupt in this case
 	_ctrl.stop_transfer();
 
-	/* now transfer the data */
+	// now transfer the data
 	if(_ctrl.dma_enabled() && has_dma()) {
 		transferDMA(READ,data,dma,prod,tag);
 		return;
 	}
 
-	/* ok, no DMA, so wait first until the drive is ready */
+	// ok, no DMA, so wait first until the drive is ready
 	int res = _ctrl.wait_until(ATAPI_TRANSFER_TIMEOUT,CMD_ST_DRQ,CMD_ST_BUSY);
 	_ctrl.handle_status(_id,res,"ATAPI PIO transfer");
 
-	/* read the actual size per transfer */
+	// read the actual size per transfer
 	ATA_LOGDETAIL("Reading response-size");
 	size_t size = ((size_t)_ctrl.inb(ATA_REG_ADDRESS3) << 8) | (size_t)_ctrl.inb(ATA_REG_ADDRESS2);
-	/* do the PIO-transfer (no check at the beginning; seems to cause trouble on some machines) */
+	// do the PIO-transfer (no check at the beginning; seems to cause trouble on some machines)
 	transferPIO(READ,data,size,dma,prod,tag,false);
 }

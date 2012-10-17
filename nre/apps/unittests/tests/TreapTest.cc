@@ -85,7 +85,7 @@ static void test_perf() {
 	Treap<MyNode> tree;
 	MyNode **nodes = new MyNode*[PERF_NODE_COUNT];
 
-	/* create */
+	// create
 	{
 		AvgProfiler prof(PERF_NODE_COUNT);
 		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
@@ -98,7 +98,7 @@ static void test_perf() {
 		print_perf("Node insertion:",prof);
 	}
 
-	/* find all */
+	// find all
 	{
 		AvgProfiler prof(PERF_NODE_COUNT);
 		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
@@ -109,7 +109,7 @@ static void test_perf() {
 		print_perf("Node searching:",prof);
 	}
 
-	/* remove */
+	// remove
 	{
 		AvgProfiler prof(PERF_NODE_COUNT);
 		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
@@ -130,19 +130,19 @@ static void test_add_and_rem(int *vals) {
 	Treap<MyNode> tree;
 	MyNode *node;
 
-	/* create */
+	// create
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
 		nodes[i] = new MyNode(vals[i],i);
 		tree.insert(nodes[i]);
 	}
 
-	/* find all */
+	// find all
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
 		node = tree.find(vals[i]);
 		WVPASSEQPTR(node,nodes[i]);
 	}
 
-	/* remove */
+	// remove
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
 		tree.remove(nodes[i]);
 		node = tree.find(vals[i]);

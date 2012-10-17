@@ -47,7 +47,7 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
 	for(size_t i = 0; i < count; i++) {
 		DataSpace tmp(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,tables[i]);
 		ACPI::RSDT *tbl = reinterpret_cast<ACPI::RSDT*>(tmp.virt() + (tables[i] & (ExecEnv::PAGE_SIZE - 1)));
-		/* determine the address range for the RSDT's */
+		// determine the address range for the RSDT's
 		if(tables[i] < min)
 			min = tables[i];
 		if(tables[i] + tbl->length > max)
