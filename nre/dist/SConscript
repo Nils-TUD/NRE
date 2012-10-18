@@ -1,11 +1,12 @@
 # -*- Mode: Python -*-
 
 Import('env')
-import os
+import os.path
 
 # make a link to imgs to prevent a copy
-env.Command(
-	Dir(env['BUILDDIR'] + '/dist/imgs'),
-	'#dist/imgs',
-	'ln -sf `readlink -f $SOURCE` $TARGET'
-)
+if os.path.isdir(Dir('#dist/imgs').abspath):
+	env.Command(
+		Dir(env['BUILDDIR'] + '/dist/imgs'),
+		'#dist/imgs',
+		'ln -sf `readlink -f $SOURCE` $TARGET'
+	)
