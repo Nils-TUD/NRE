@@ -351,6 +351,14 @@ void Vancouver::keyboard_thread(void*) {
 				    continue;
 				}
 				break;
+
+				case Keyboard::VK_S: {
+				    CpuEvent msg(VCVCpu::EVENT_DEBUG);
+				    for (VCVCpu *vcpu = vc->_mb.last_vcpu; vcpu; vcpu=vcpu->get_last())
+				      vcpu->bus_event.send(msg);
+				    continue;
+				}
+				break;
 			}
 		}
 
