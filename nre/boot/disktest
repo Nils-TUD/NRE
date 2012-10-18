@@ -1,8 +1,7 @@
 #!tools/novaboot
 # -*-sh-*-
 QEMU_FLAGS=-m 128 -smp 4 -hda dist/imgs/hd2.img -cdrom dist/imgs/test.iso -drive id=disk,file=dist/imgs/hd1.img,format=raw,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0
-KERNEL=bin/apps/chainloader
-bin/apps/hypervisor spinner serial
+HYPERVISOR_PARAMS=spinner serial
 bin/apps/root
 bin/apps/acpi provides=acpi
 bin/apps/keyboard provides=keyboard

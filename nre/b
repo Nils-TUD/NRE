@@ -47,16 +47,14 @@ build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
 novadir="../kernel/nova"
-loaderdir="../loader"
-morbodir="../loader/morbo"
 bochscfg="bochs.cfg"
 
 help() {
 	echo "Usage: $1 [<cmd> <arg>] [--no-build|-n]"
 	echo ""
-	echo -n "This is a convenience script that is responsible for building everything (NOVA, morbo"
-	echo -n " and NRE) and running the specified command afterwards. It does also support switching"
-	echo -n " between debug and release builds by changing the Makefile of NOVA accordingly (adjust"
+	echo -n "This is a convenience script that is responsible for building everything (NOVA and NRE)"
+	echo -n " and running the specified command afterwards. It does also support switching between"
+	echo -n " debug and release builds by changing the Makefile of NOVA accordingly (adjust"
 	echo -n " optimization level, ...). The most important environment variables that influence its"
 	echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
 	echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
@@ -64,9 +62,10 @@ help() {
 	echo ""
 	echo ""
 	echo "The following commands are available:"
-	echo "    clean:                   do a clean in NOVA, morbo and NRE"
-	echo "    distclean:               remove NRE build-dirs, remove NOVA and morbo so"
-	echo "                             that everything is checked out again and rebuild"
+	echo "    clean:                   do a clean in NOVA and NRE"
+	echo "    distclean:               remove NRE build-dirs and remove NOVA so that"
+	echo "                             NOVA is checked out again and everything is"
+	echo "                             rebuild"
 	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
 	echo "                             in bochs"
 	echo "    qemu <bootscript>:       run <bootscript> in qemu"
@@ -139,16 +138,7 @@ fi
 echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 
 if $dobuild; then
-	echo "Building NRE, NOVA and morbo with $cpus jobs..."
-
-	# checkout morbo, if not already done
-	if [ ! -d "$morbodir" ]; then
-		$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
-			`find $root/$loaderdir/patches -type f`
-		if [ $? -ne 0 ]; then
-			exit 1
-		fi
-	fi
+	echo "Building NRE and NOVA with $cpus jobs..."
 
 	# build userland
 	scons $opts
@@ -185,7 +175,13 @@ if $dobuild; then
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
-	cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+
+	# copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
+	if [ "$NRE_TARGET" = "x86_64" ]; then
+		$crossdir/bin/$cross-objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+	else
+		cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+	fi
 	cd $root
 fi
 
@@ -196,7 +192,7 @@ case "$cmd" in
 		( cd $novadir/build && make clean )
 		;;
 	distclean)
-		rm -Rf build/* $novadir $morbodir
+		rm -Rf build/* $novadir
 		;;
 	prof=*)
 		$build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
