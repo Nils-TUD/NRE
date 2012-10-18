@@ -35,9 +35,9 @@ private:
 	nre::KeyboardSession _sess;
 };
 
-class HostRebootA20 : public HostRebootMethod {
+class HostRebootSysCtrlPortA : public HostRebootMethod {
 public:
-	explicit HostRebootA20();
+	explicit HostRebootSysCtrlPortA();
 	virtual void reboot();
 
 private:
