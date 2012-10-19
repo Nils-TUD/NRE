@@ -18,6 +18,8 @@
 #include <ipc/Connection.h>
 #include <ipc/ClientSession.h>
 #include <subsystem/ChildManager.h>
+#include <stream/IStringStream.h>
+#include <stream/OStringStream.h>
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
 #include <util/Profiler.h>
@@ -35,6 +37,8 @@ const TestCase pingpongxpd = {
 	"Cross-Pd PingPong",test_pingpong
 };
 
+typedef void (*client_func)(AvgProfiler &prof,Pt &pt,UtcbFrame &uf,uint &sum);
+
 static const uint tries = 10000;
 static PingpongService *srv;
 
@@ -49,22 +53,23 @@ public:
 
 class PingpongService : public Service {
 public:
-	explicit PingpongService() : Service("pingpong",CPUSet(CPUSet::ALL),portal) {
+	explicit PingpongService(Pt::portal_func func) : Service("pingpong",CPUSet(CPUSet::ALL),func) {
 	}
 
 private:
 	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
 		return new PingpongSession(this,id,cap,caps,func);
 	}
-
-	PORTAL static void portal(capsel_t pid);
 };
 
 void PingpongSession::invalidate() {
 	srv->stop();
 }
 
-void PingpongService::portal(capsel_t) {
+PORTAL static void portal_empty(capsel_t) {
+}
+
+PORTAL static void portal_data(capsel_t) {
 	UtcbFrameRef uf;
 	try {
 		uint a,b,c;
@@ -77,30 +82,43 @@ void PingpongService::portal(capsel_t) {
 	}
 }
 
-static int pingpong_server() {
-	srv = new PingpongService();
+static int pingpong_server(int,char *argv[]) {
+	uintptr_t addr = IStringStream::read_from<uintptr_t>(argv[1]);
+	srv = new PingpongService(reinterpret_cast<Pt::portal_func>(addr));
 	srv->start();
 	delete srv;
 	return 0;
 }
 
-static int pingpong_client() {
+static void client_empty(AvgProfiler &prof,Pt &pt,UtcbFrame &uf,uint &sum) {
+	prof.start();
+	pt.call(uf);
+	prof.stop();
+	sum += 1 + 2 + 1 + 2 + 3;
+}
+
+static void client_data(AvgProfiler &prof,Pt &pt,UtcbFrame &uf,uint &sum) {
+	uint x = 0,y = 0;
+	prof.start();
+	uf << 1 << 2 << 3;
+	pt.call(uf);
+	uf >> x >> y;
+	uf.clear();
+	prof.stop();
+	sum += x + y;
+}
+
+static int pingpong_client(int,char *argv[]) {
 	Connection con("pingpong");
 	ClientSession sess(con);
 	Pt pt(sess.caps() + CPU::current().log_id());
+	uintptr_t addr = IStringStream::read_from<uintptr_t>(argv[1]);
+	client_func func = reinterpret_cast<client_func>(addr);
 	uint sum = 0;
 	AvgProfiler prof(tries);
 	UtcbFrame uf;
-	for(uint i = 0; i < tries; i++) {
-		prof.start();
-		uf << 1 << 2 << 3;
-		pt.call(uf);
-		uint x = 0,y = 0;
-		uf >> x >> y;
-		uf.clear();
-		sum += x + y;
-		prof.stop();
-	}
+	for(uint i = 0; i < tries; i++)
+		func(prof,pt,uf,sum);
 
 	WVPERF(prof.avg(),"cycles");
 	WVPASSEQ(sum,(1 + 2) * tries + (1 + 2 + 3) * tries);
@@ -113,19 +131,31 @@ static int pingpong_client() {
 static void test_pingpong() {
 	ChildManager *mng = new ChildManager();
 	Hip::mem_iterator self = Hip::get().mem_begin();
-	// map the memory of the module
-	DataSpace ds(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
-	{
-		ChildConfig cfg(0,String("pingpongservice provides=pingpong"));
-		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_server));
-		mng->load(ds.virt(),self->size,cfg);
+	Pt::portal_func funcs[] = {portal_empty,portal_data};
+	client_func clientfuncs[] = {client_empty,client_data};
+	const char *names[] = {"empty","data"};
+	for(size_t i = 0; i < ARRAY_SIZE(funcs); ++i) {
+		WVPRINTF("Using the %s portal:",names[i]);
+		// map the memory of the module
+		DataSpace ds(self->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,self->addr);
+		{
+			char cmdline[64];
+			OStringStream os(cmdline,sizeof(cmdline));
+			os << "pingpongservice provides=pingpong " << reinterpret_cast<uintptr_t>(funcs[i]);
+			ChildConfig cfg(0,String(cmdline));
+			cfg.entry(reinterpret_cast<uintptr_t>(pingpong_server));
+			mng->load(ds.virt(),self->size,cfg);
+		}
+		{
+			char cmdline[64];
+			OStringStream os(cmdline,sizeof(cmdline));
+			os << "pingpongclient " << reinterpret_cast<uintptr_t>(clientfuncs[i]);
+			ChildConfig cfg(0,String(cmdline));
+			cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
+			mng->load(ds.virt(),self->size,cfg);
+		}
+		while(mng->count() > 0)
+			mng->dead_sm().down();
 	}
-	{
-		ChildConfig cfg(0,String("pingpongclient"));
-		cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
-		mng->load(ds.virt(),self->size,cfg);
-	}
-	while(mng->count() > 0)
-		mng->dead_sm().down();
 	delete mng;
 }
