@@ -363,8 +363,8 @@ public:
 		params->sectors = capacity();
 	}
 	void print() const {
-		nre::Serial::get().writef("%s drive #%zu present (%s)\n"
-			"  %Lu sectors with %zu bytes (%Lu MiB), max %u requests\n",
+		nre::Serial::get().writef("%s drive #%u present (%s)\n"
+			"  %Lu sectors with %zu bytes (%Lu MiB), max %zu requests\n",
 			type(),_id,_name,_capacity,_sector_size,
 			(_capacity * _sector_size) / (1024 * 1024),max_requests());
 	}

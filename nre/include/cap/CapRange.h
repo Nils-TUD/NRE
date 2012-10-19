@@ -130,7 +130,7 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os,const CapRange &cr) {
-	os.writef("CapRange[start=%#x, count=%#x, hotspot=%#x, attr=%#x]",
+	os.writef("CapRange[start=%#lx, count=%#zx, hotspot=%#lx, attr=%#x]",
 			cr.start(),cr.count(),cr.hotspot(),cr.attr());
 	return os;
 }

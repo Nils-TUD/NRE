@@ -128,7 +128,7 @@ void StorageService::portal(capsel_t pid) {
 				Storage::tag_type tag;
 				uf >> tag;
 				uf.finish_input();
-				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%u,%#x] FLUSH\n",sess->id(),tag));
+				LOG(Logging::STORAGE_DETAIL,Serial::get().writef("[%zu,%#lx] FLUSH\n",sess->id(),tag));
 				mng->get(sess->ctrl())->flush(sess->drive(),sess->prod(),tag);
 				uf << E_SUCCESS;
 			}
@@ -146,7 +146,7 @@ void StorageService::portal(capsel_t pid) {
 					throw Exception(E_ARGS_INVALID,"Not initialized");
 
 				LOG(Logging::STORAGE_DETAIL,
-						Serial::get().writef("[%u,%#x] %s @ %Lu with ",sess->id(),
+						Serial::get().writef("[%zu,%#lx] %s @ %Lu with ",sess->id(),
 								tag,cmd == Storage::READ ? "READ" : "WRITE",sector);
 						Serial::get() << dma << "\n");
 

@@ -146,7 +146,7 @@ static void test_perf() {
 	for(size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
 		AvgProfiler prof(tries);
 		perform_test(sizes[i],prof);
-		WVPRINTF("Using %u words:",sizes[i]);
+		WVPRINTF("Using %zu words:",sizes[i]);
 		WVPERF(prof.avg(),"cycles");
 		WVPRINTF("min: %Lu",prof.min());
 		WVPRINTF("max: %Lu",prof.max());

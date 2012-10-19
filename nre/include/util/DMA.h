@@ -181,7 +181,7 @@ template<size_t MAX>
 static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
 	os << "DMADescList[" << l.count() << ", " << l.bytecount() << "] (";
 	for(typename DMADescList<MAX>::iterator it = l.begin(); it != l.end(); ) {
-		os.writef("o=%p s=%#zu",it->offset,it->count);
+		os.writef("o=%p s=%#zu",reinterpret_cast<void*>(it->offset),it->count);
 		if(++it != l.end())
 			os << ",";
 	}

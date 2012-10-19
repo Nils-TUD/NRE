@@ -163,7 +163,9 @@ bool Vancouver::receive(MessageHostOp &msg) {
 			if(destaddr >= guest_mem->virt() + guest_mem->size() ||
 					destaddr + it->size + msg.cmdlen > guest_mem->virt() + guest_mem->size()) {
 				Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
-						it->addr,it->addr + it->size + msg.cmdlen,destaddr - guest_mem->virt(),guest_size);
+						it->addr,it->addr + it->size + msg.cmdlen,
+						reinterpret_cast<void*>(destaddr - guest_mem->virt()),
+						reinterpret_cast<void*>(guest_size));
 				return false;
 			}
 
@@ -446,6 +448,12 @@ int main(int argc,char *argv[]) {
 		else if(strncmp(argv[i],"constitle:",10) == 0)
 			constitle = String(argv[i] + 10);
 	}
+
+	unsigned a = 0x12345678;
+	unsigned b = 0x9ABCDEF0;
+	uint64_t r1 = union64(a,b);
+	uint64_t r2 = union64_new(a,b);
+	Serial::get().writef("r1=%#Lx, r2=%#Lx\n",r1,r2);
 
 	Vancouver *v = new Vancouver(argv_to_str(argc,argv),console,constitle);
 	v->reset();

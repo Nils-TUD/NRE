@@ -20,6 +20,7 @@
 #include <stream/Serial.h>
 
 #define union64(HIGH, LOW)          ({ uint64_t res; asm ("" : "=A"(res) : "d"(HIGH), "a"(LOW)); res; })
+#define union64_new(HIGH, LOW)			(static_cast<uint64_t>(HIGH) << 32 | (LOW))
 
 enum {
 	INJ_IRQWIN = 0x1000, INJ_NMIWIN = 0x0000, // XXX missing

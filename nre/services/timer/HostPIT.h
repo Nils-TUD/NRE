@@ -23,10 +23,10 @@
 #include "HostTimerDevice.h"
 
 class HostPIT : public HostTimerDevice {
-	static const uint FREQ				= 1193180ULL;
-	static const uint DEFAULT_PERIOD	= 1000ULL; // ms
-	static const uint IRQ				= 0;
-	static const uint PORT_BASE		= 0x40;
+	static const timevalue_t FREQ				= 1193180ULL;
+	static const timevalue_t DEFAULT_PERIOD	= 1000ULL; // ms
+	static const uint IRQ						= 0;
+	static const uint PORT_BASE				= 0x40;
 
 	class PitTimer : public Timer {
 	public:

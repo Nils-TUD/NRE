@@ -24,15 +24,15 @@ OStream &operator<<(OStream &os,const UtcbFrameRef &frm) {
 	os << "\tTranslate: " << Crd(frm._utcb->crd_translate) << "\n";
 	os << "\tUntyped: " << frm.untyped() << "\n";
 	for(size_t i = 0; i < frm.untyped(); ++i)
-		os.writef("\t\t%zu: %#x\n",i,frm._utcb->msg[i]);
+		os.writef("\t\t%zu: %#lx\n",i,frm._utcb->msg[i]);
 	os << "\tTyped: " << frm.typed() << "\n";
 	for(size_t i = 0; i < frm.typed() * 2; i += 2)
-		os.writef("\t\t%zu: %#x %#x @ %p\n",i,frm._top[-(i + 1)],frm._top[-(i + 2)],&frm._top[-(i + 1)]);
+		os.writef("\t\t%zu: %#lx %#lx @ %p\n",i,frm._top[-(i + 1)],frm._top[-(i + 2)],&frm._top[-(i + 1)]);
 	return os;
 }
 
 OStream &operator<<(OStream &os,const UtcbExc::Descriptor &desc) {
-	os.writef("Desc[base=%lx limit=%lx sel=%x ar=%x]",desc.base,desc.limit,desc.sel,desc.ar);
+	os.writef("Desc[base=%lx limit=%x sel=%x ar=%x]",desc.base,desc.limit,desc.sel,desc.ar);
 	return os;
 }
 
@@ -58,7 +58,7 @@ OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm) {
 	os.writef("\tinj_error: %#08x\n",frm->inj_error);
 	os.writef("\tqual[0]: %#016Lx, qual[1]: %#016Lx\n",frm->qual[0],frm->qual[1]);
 	os.writef("\tctrl[0]: %#08x, ctrl[1]: %#08x\n",frm->ctrl[0],frm->ctrl[1]);
-	os.writef("\ttsc_off: %#Ld\n",frm->tsc_off);
+	os.writef("\ttsc_off: %Ld\n",frm->tsc_off);
 	struct {
 		const char *name;
 		const UtcbExc::Descriptor *desc;

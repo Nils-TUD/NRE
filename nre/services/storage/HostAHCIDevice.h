@@ -133,7 +133,7 @@ public:
 	void irq();
 
 	void debug() {
-		nre::Serial::get().writef("AHCI is %x ci %x ie %x cmd %x tfd %x tag %x\n",
+		nre::Serial::get().writef("AHCI is %x ci %x ie %x cmd %x tfd %x tag %zx\n",
 				_regs->is,_regs->ci,_regs->ie,_regs->cmd,_regs->tfd,_tag);
 	}
 

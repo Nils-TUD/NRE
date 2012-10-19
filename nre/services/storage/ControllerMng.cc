@@ -42,7 +42,7 @@ void ControllerMng::find_ahci_controller() {
 		Gsi *gsi = _pci.get_gsi(bdf,0);
 
 		LOG(Logging::STORAGE,
-				Serial::get().writef("Disk controller #%x AHCI (%02x,%02x,%02x) id %#x mmio %p\n",
+				Serial::get().writef("Disk controller #%x AHCI (%02x,%02x,%02x) id %#x mmio %#x\n",
 				_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,_pci.conf_read(bdf,0),
 				_pci.conf_read(bdf,9)));
 
@@ -98,7 +98,7 @@ void ControllerMng::find_ide_controller() {
 				gsi = _acpi.irq_to_gsi(14 + i);
 
 			LOG(Logging::STORAGE,Serial::get().writef(
-					"Disk controller #%x IDE (%02x,%02x,%02x) iobase %#x gsi %u bmr %#x\n",
+					"Disk controller #%zx IDE (%02x,%02x,%02x) iobase %#x gsi %u bmr %#x\n",
 					_count,(bdf >> 8) & 0xFF,(bdf >> 3) & 0x1F,bdf & 0x7,bar0 & ~0x3,gsi,bmr));
 
 			// create controller

@@ -872,7 +872,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		ScopedLock<UserSm> guard_regs(&c->_sm);
 
 		LOG(Logging::PFS,Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-				c->cmdline().str(),pfaddr,eip,cpu,error));
+				c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+				reinterpret_cast<void*>(eip),cpu,error));
 
 		// TODO different handlers (cow, ...)
 		uintptr_t pfpage = pfaddr & ~(ExecEnv::PAGE_SIZE - 1);
@@ -912,13 +913,14 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			else if(pfpage == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
 						"Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
-						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id()));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),CPU::get(cpu).phys_id()));
 				kill = true;
 			}
 			else {
 				LOG(Logging::PFS,Serial::get().writef(
 						"Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
-						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+						reinterpret_cast<void*>(eip),CPU::get(cpu).phys_id(),error));
 				LOG(Logging::PFS_DETAIL,Serial::get() << "See regionlist:\n" << c->reglist());
 				c->_last_fault_addr = pfpage;
 				c->_last_fault_cpu = cpu;
@@ -963,7 +965,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				Child *c = cm->get_child(pid);
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
 						"Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
-						c->cmdline().str(),pfaddr,uf->rip,CPU::get(cpu).phys_id(),error));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+						reinterpret_cast<void*>(uf->rip),CPU::get(cpu).phys_id(),error));
 			}
 			cm->kill_child(pid,uf,FAULT);
 		}
@@ -1017,7 +1020,8 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 		if(type == FAULT) {
 			LOG(Logging::CHILD_KILL,Serial::get().writef(
 					"Child '%s': caused exception %u @ %p on cpu %u\n",
-					c->cmdline().str(),get_vector(pid),uf->rip,CPU::get(get_cpu(pid)).phys_id()));
+					c->cmdline().str(),get_vector(pid),reinterpret_cast<void*>(uf->rip),
+					CPU::get(get_cpu(pid)).phys_id()));
 			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
 			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing child\n"));
 		}
@@ -1039,7 +1043,7 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 		LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
 		addr = addrs;
 		while(*addr != 0) {
-			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
+			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",reinterpret_cast<void*>(*addr)));
 			addr++;
 		}
 	}

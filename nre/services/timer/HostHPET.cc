@@ -42,7 +42,7 @@ void HostHPET::HPETTimer::init(cpu_t cpu) {
 		DataSpace hpetds(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,phys_addr);
 		_gsi = new Gsi(reinterpret_cast<void*>(hpetds.virt()),cpu);
 
-		LOG(Logging::TIMER,Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#x)\n",
+		LOG(Logging::TIMER,Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#lx)\n",
 				_no,_gsi->gsi(),cpu,_gsi->msi_addr(),_gsi->msi_value()));
 
 		_ack = 0;
@@ -76,7 +76,8 @@ HostHPET::HostHPET(bool force_legacy)
 		  _mem(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::RW,_addr),
 		  _reg(reinterpret_cast<HostHpetRegister*>(_mem.virt())), _usable_timers(0) {
 	bool legacy_only = force_legacy;
-	LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: HPET at %p -> %p\n",_addr,_mem.virt()));
+	LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: HPET at %p -> %p\n",
+			reinterpret_cast<void*>(_addr),reinterpret_cast<void*>(_mem.virt())));
 
 	// Check for old AMD HPETs and go home. :)
 	uint8_t rev = _reg->cap & 0xFF;
