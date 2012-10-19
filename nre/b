@@ -189,7 +189,7 @@ fi
 case "$cmd" in
 	clean)
 		scons -c
-		( cd $novadir/build && make clean )
+		( cd $novadir/build && ARCH=$NRE_TARGET make clean )
 		;;
 	distclean)
 		rm -Rf build/* $novadir
