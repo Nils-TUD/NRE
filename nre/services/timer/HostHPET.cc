@@ -30,17 +30,17 @@ using namespace nre;
 
 uint HostHPET::HPETTimer::_assigned_irqs = 0;
 
-void HostHPET::HPETTimer::init(cpu_t cpu) {
+void HostHPET::HPETTimer::init(HostTimerDevice &dev,cpu_t cpu) {
 	// Prefer MSIs. No sharing, no routing problems, always edge triggered.
 	if(!(_reg->config & LEG_RT_CNF) && (_reg->config & FSB_INT_DEL_CAP)) {
 		uint16_t rid = get_rid(0,_no);
 		LOG(Logging::TIMER,Serial::get().writef("TIMER: HPET comparator %u RID %x\n",_no,rid));
 
-		Connection con("pcicfg");
-		PCIConfigSession pcicfg(con);
-		uintptr_t phys_addr = pcicfg.addr(rid,0);
-		DataSpace hpetds(ExecEnv::PAGE_SIZE,DataSpaceDesc::LOCKED,DataSpaceDesc::R,phys_addr);
-		_gsi = new Gsi(reinterpret_cast<void*>(hpetds.virt()),cpu);
+		// in this case we have to pass the MMIO space cap to NOVA instead of the MMConfig space cap
+		// because the HPET is no PCI device, but does only use a PCI requester ID outside of
+		// the regular PCI bus range.
+		HostHPET &hpet = static_cast<HostHPET&>(dev);
+		_gsi = new Gsi(reinterpret_cast<void*>(hpet._mem.virt()),cpu);
 
 		LOG(Logging::TIMER,Serial::get().writef("TIMER: Timer %u -> GSI %u CPU %u (%#Lx:%#lx)\n",
 				_no,_gsi->gsi(),cpu,_gsi->msi_addr(),_gsi->msi_value()));

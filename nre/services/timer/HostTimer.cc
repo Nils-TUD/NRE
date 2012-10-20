@@ -86,7 +86,7 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 
 		_per_cpu[cpu]->has_timer = true;
 		_per_cpu[cpu]->timer = _timer->timer(i);
-		_per_cpu[cpu]->timer->init(cpu);
+		_per_cpu[cpu]->timer->init(*_timer,cpu);
 
 		// We allocate a couple of unused slots if there is an odd
 		// combination of CPU count and usable timers. Who cares.

@@ -36,7 +36,7 @@ class HostPIT : public HostTimerDevice {
 		virtual nre::Gsi &gsi() {
 			return _gsi;
 		}
-		virtual void init(cpu_t) {
+		virtual void init(HostTimerDevice &,cpu_t) {
 		}
 		virtual void program_timeout(timevalue_t) {
 		}
