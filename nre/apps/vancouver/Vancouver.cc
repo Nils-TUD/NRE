@@ -449,12 +449,6 @@ int main(int argc,char *argv[]) {
 			constitle = String(argv[i] + 10);
 	}
 
-	unsigned a = 0x12345678;
-	unsigned b = 0x9ABCDEF0;
-	uint64_t r1 = union64(a,b);
-	uint64_t r2 = union64_new(a,b);
-	Serial::get().writef("r1=%#Lx, r2=%#Lx\n",r1,r2);
-
 	Vancouver *v = new Vancouver(argv_to_str(argc,argv),console,constitle);
 	v->reset();
 
