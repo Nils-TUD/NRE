@@ -149,7 +149,7 @@ if $dobuild; then
 	# checkout nova, if not already done
 	if [ ! -d "$novadir" ]; then
 		$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
-			`find $root/$kerndir/patches -type f`
+			`find $root/$kerndir/patches -type f | sort`
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
