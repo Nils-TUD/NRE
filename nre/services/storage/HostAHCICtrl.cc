@@ -78,11 +78,18 @@ void HostAHCICtrl::create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bo
 	// check what kind of drive we have, if any
 	uint32_t sig = HostAHCIDevice::get_signature(portreg);
 	if(sig != HostAHCIDevice::SATA_SIG_NONE) {
-		_ports[nr] = new HostAHCIDevice(portreg,_id * Storage::MAX_DRIVES + _portcount,
-				((_regs->cap >> 8) & 0x1f) + 1,dmar);
-		_ports[nr]->determine_capacity();
-		LOG(Logging::STORAGE,_ports[nr]->print());
-		_portcount++;
+		try {
+			_ports[nr] = new HostAHCIDevice(portreg,_id * Storage::MAX_DRIVES + _portcount,
+					((_regs->cap >> 8) & 0x1f) + 1,dmar);
+			_ports[nr]->determine_capacity();
+			LOG(Logging::STORAGE,_ports[nr]->print());
+			_portcount++;
+		}
+		catch(const Exception &e) {
+			LOG(Logging::STORAGE,Serial::get().writef(
+					"Unable to create AHCI device for port %u: %s\n",nr,e.msg()));
+			_ports[nr] = 0;
+		}
 	}
 }
 
