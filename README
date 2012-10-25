@@ -29,9 +29,9 @@ Please take the following steps:
 4.  Go into the directory nre. You'll find the convenience-script b, which is
     responsible for building everything that needs to be build and executing
     the specified command. So, simply do a "./b" to build everything. It will
-    checkout and build NOVA, checkout and build the chainloader and, of course,
-    build NRE as well. Please run "./b -h" to see the help of the script. For
-    a quick start use "./b qemu boot/test" to run the test application in qemu.
+    checkout and build NOVA and, of course, build NRE as well. Please run
+    "./b -h" to see the help of the script. For a quick start use
+    "./b qemu boot/test" to run the test application in qemu.
 5.  To use "./b srv <script>", you have to generate the novaboot-config by:
     ./tools/novaboot --dump-config > ~/.novaboot
     You might want to adjust it afterwards
@@ -76,6 +76,4 @@ The following lists a few known issues and limitations that you might run into:
 - When using the storage service on real hardware, DMA with ATA/ATAPI drives
   might be an issue. You can turn it off by adding the parameter "noidedma" to
   storage
-- Atm, DataSpaceDesc::BIGPAGES is not usable on x86_64 because NOVA causes
-  trouble at some points when using 4M pages.
 
