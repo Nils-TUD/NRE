@@ -153,6 +153,13 @@ if $dobuild; then
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
+	else
+		# check whether NOVA should be updated
+		( cd $novadir && git branch --contains `cat ../NOVA_REVISION` >/dev/null 2>/dev/null )
+		if [ $? -ne 0 ]; then
+			/bin/echo -n -e "\e[1mWarning: Your NOVA version is not up to date (revision in kernel/NOVA_REVISION does not"
+			/bin/echo -e " appear in your NOVA repo)\e[0m"
+		fi
 	fi
 
 	cd $novadir/build
