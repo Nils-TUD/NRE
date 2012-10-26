@@ -1,0 +1,5 @@
+# -*- Mode: Python -*-
+
+Import('hostenv')
+
+hostenv.Program('parts', Glob('*.cc'))

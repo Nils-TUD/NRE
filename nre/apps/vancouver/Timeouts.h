@@ -26,6 +26,8 @@
 
 #include "bus/motherboard.h"
 
+extern nre::UserSm globalsm;
+
 class Timeouts {
 	enum {
 		NO_TIMEOUT	= ~0ULL

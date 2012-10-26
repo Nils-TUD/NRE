@@ -56,8 +56,11 @@ private:
 		while(1) {
 			nre::Storage::Packet *pk = sd->_sess.consumer().get();
 			// the status isn't used anyway
-			MessageDiskCommit msg(sd->_no,pk->tag,MessageDisk::DISK_OK);
-			sd->_bus.send(msg);
+			{
+				nre::ScopedLock<nre::UserSm> guard(&globalsm);
+				MessageDiskCommit msg(sd->_no,pk->tag,MessageDisk::DISK_OK);
+				sd->_bus.send(msg);
+			}
 			sd->_sess.consumer().next();
 		}
 	}

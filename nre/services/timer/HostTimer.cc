@@ -82,11 +82,11 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	// Bootstrap IRQ handlers. IRQs are disabled. Each worker enables its IRQ when it comes up.
 	for(size_t i = 0; i < parts; i++) {
 		cpu_t cpu = part_cpu[i];
-		LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u owns Timer%u.\n",cpu,i));
+		LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u owns Timer%zu.\n",cpu,i));
 
 		_per_cpu[cpu]->has_timer = true;
 		_per_cpu[cpu]->timer = _timer->timer(i);
-		_per_cpu[cpu]->timer->init(cpu);
+		_per_cpu[cpu]->timer->init(*_timer,cpu);
 
 		// We allocate a couple of unused slots if there is an odd
 		// combination of CPU count and usable timers. Who cares.
@@ -107,7 +107,7 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 			rslot->data.abstimeout = 0;
 			rslot->data.nr = remote.abstimeouts.alloc(&rslot->data);
 
-			LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %u.\n",
+			LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %zu.\n",
 					cpu,cpu_cpu[cpu],remote.slot_count));
 			remote.slot_count++;
 		}

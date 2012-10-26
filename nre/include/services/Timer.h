@@ -113,8 +113,8 @@ public:
 	/**
 	 * Determines the current time
 	 *
-	 * @param uptime the number of cycles since systemstart
-	 * @param unixts the current unix timestamp in microseconds
+	 * @param uptime the time since systemstart in microseconds (Timer::WALLCLOCK_FREQ)
+	 * @param unixts the current unix timestamp in microseconds (Timer::WALLCLOCK_FREQ)
 	 */
 	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
 		UtcbFrame uf;

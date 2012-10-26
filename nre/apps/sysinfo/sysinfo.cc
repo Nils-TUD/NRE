@@ -93,6 +93,11 @@ static void refresh_thread() {
 }
 
 int main() {
+	// disable cursor
+	Console::Register regs = cons.get_regs();
+	regs.cursor_style = 0x2000;
+	cons.set_regs(regs);
+
 	GlobalThread::create(input_thread,CPU::current().log_id(),String("sysinfo-input"))->start();
 	refresh_thread();
 	return 0;

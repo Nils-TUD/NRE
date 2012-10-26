@@ -47,16 +47,14 @@ build="build/$NRE_TARGET-$NRE_BUILD"
 root=$(dirname $(readlink -f $0))
 kerndir="../kernel"
 novadir="../kernel/nova"
-loaderdir="../loader"
-morbodir="../loader/morbo"
 bochscfg="bochs.cfg"
 
 help() {
 	echo "Usage: $1 [<cmd> <arg>] [--no-build|-n]"
 	echo ""
-	echo -n "This is a convenience script that is responsible for building everything (NOVA, morbo"
-	echo -n " and NRE) and running the specified command afterwards. It does also support switching"
-	echo -n " between debug and release builds by changing the Makefile of NOVA accordingly (adjust"
+	echo -n "This is a convenience script that is responsible for building everything (NOVA and NRE)"
+	echo -n " and running the specified command afterwards. It does also support switching between"
+	echo -n " debug and release builds by changing the Makefile of NOVA accordingly (adjust"
 	echo -n " optimization level, ...). The most important environment variables that influence its"
 	echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
 	echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
@@ -64,9 +62,10 @@ help() {
 	echo ""
 	echo ""
 	echo "The following commands are available:"
-	echo "    clean:                   do a clean in NOVA, morbo and NRE"
-	echo "    distclean:               remove NRE build-dirs, remove NOVA and morbo so"
-	echo "                             that everything is checked out again and rebuild"
+	echo "    clean:                   do a clean in NOVA and NRE"
+	echo "    distclean:               remove NRE build-dirs and remove NOVA so that"
+	echo "                             NOVA is checked out again and everything is"
+	echo "                             rebuild"
 	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
 	echo "                             in bochs"
 	echo "    qemu <bootscript>:       run <bootscript> in qemu"
@@ -102,6 +101,7 @@ help() {
 	exit 0
 }
 
+# parse arguments
 dobuild=true
 cmd=""
 script=""
@@ -129,6 +129,8 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+# for clean and distclean, it makes no sense to build it (this might even fail because e.g. scons has
+# a non existing dependency which might be the reason the user wants to do a clean)
 if [ "$cmd" = "clean" ] || [ "$cmd" = "distclean" ]; then
 	dobuild=false
 fi
@@ -136,7 +138,7 @@ fi
 echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 
 if $dobuild; then
-	echo "Building NRE, NOVA and morbo with $cpus jobs..."
+	echo "Building NRE and NOVA with $cpus jobs..."
 
 	# build userland
 	scons $opts
@@ -147,7 +149,17 @@ if $dobuild; then
 	# checkout nova, if not already done
 	if [ ! -d "$novadir" ]; then
 		$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
-			$root/$kerndir/patches/*
+			`find $root/$kerndir/patches -type f | sort`
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+	else
+		# check whether NOVA should be updated
+		( cd $novadir && git branch --contains `cat ../NOVA_REVISION` >/dev/null 2>/dev/null )
+		if [ $? -ne 0 ]; then
+			/bin/echo -n -e "\e[1mWarning: Your NOVA version is not up to date (revision in kernel/NOVA_REVISION does not"
+			/bin/echo -e " appear in your NOVA repo)\e[0m"
+		fi
 	fi
 
 	cd $novadir/build
@@ -155,12 +167,14 @@ if $dobuild; then
 	if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
 		if [ "$NRE_BUILD" != "debug" ]; then
 			# it should be release, but isn't
-			sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
+			sed --in-place -e \
+				's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
 		fi
 	else
 		if [ "$NRE_BUILD" != "release" ]; then
 			# it should be debug, but isn't
-			sed --in-place -e 's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
+			sed --in-place -e \
+				's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
 		fi
 	fi
 	# build NOVA
@@ -168,33 +182,24 @@ if $dobuild; then
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
-	cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
-	cd $root
 
-	# checkout morbo, if not already done
-	if [ ! -d "$morbodir" ]; then
-		$root/tools/checkout.sh $morbodir `cat $loaderdir/MORBO_URL` `cat $loaderdir/MORBO_REVISION` nre-local \
-			$root/$loaderdir/patches/*
-	fi
-
-	# build morbo
-	cd $morbodir && scons $jobs
-	if [ $? -ne 0 ]; then
-		exit 1
+	# copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
+	if [ "$NRE_TARGET" = "x86_64" ]; then
+		$crossdir/bin/$cross-objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+	else
+		cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
 	fi
 	cd $root
-	cp $morbodir/tftp/farnsworth $build/bin/apps/chainloader
 fi
 
 # run the specified command, if any
 case "$cmd" in
 	clean)
 		scons -c
-		( cd $novadir/build && make clean )
-		( cd $morbodir && scons -c )
+		( cd $novadir/build && ARCH=$NRE_TARGET make clean )
 		;;
 	distclean)
-		rm -Rf build/* $novadir $morbodir
+		rm -Rf build/* $novadir
 		;;
 	prof=*)
 		$build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
@@ -203,11 +208,13 @@ case "$cmd" in
 		mkdir -p $build/bin/boot/grub
 		cp $root/dist/iso/boot/grub/stage2_eltorito $build/bin/boot/grub
 		./tools/novaboot --build-dir="$PWD/$build" --iso -- $script
+		# replace the build path for all ata drives
+		path=`echo $build/ | sed -e 's/\//\\\\\//g'`
+		sed --in-place -e 's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='$path'\2,/g' $bochscfg
+		# put the generated iso into ata0-master
 		filename=`basename $script`
-		sed --in-place -e \
-			's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='`echo $build/ | sed -e 's/\//\\\\\//g'`'\2,/g' $bochscfg
-		sed --in-place -e \
-			's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='`echo $build/$filename.iso | sed -e 's/\//\\\\\//g'`',/' $bochscfg
+		path=`echo $build/$filename.iso | sed -e 's/\//\\\\\//g'`
+		sed --in-place -e 's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='$path',/' $bochscfg
 		bochs -f $bochscfg -q
 		;;
 	qemu)
@@ -229,6 +236,7 @@ case "$cmd" in
 		$crossdir/bin/$cross-readelf -a $build/bin/apps/${cmd#elf=} | less
 		;;
 	straddr=*)
+		echo "Strings containing '$script' in ${cmd#straddr=}:"
 		# find base address of .rodata
 		base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${cmd#straddr=} | grep .rodata | \
 			xargs | cut -d ' ' -f 5`
@@ -258,9 +266,10 @@ case "$cmd" in
 		./$script --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
 		;;
 	list)
+		echo "Start of section .text:"
 		ls -1 $build/bin/apps | while read l; do	
 			$crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
-				grep "\.init" | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
+				grep "\.text " | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
 		done
 		;;
 esac

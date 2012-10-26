@@ -29,20 +29,20 @@ class HostACPI {
 	static const size_t BIOS_EBDA_OFF		= 0x40E;
 	static const size_t BIOS_EBDA_SIZE		= 1024;
 
-	/* root system descriptor pointer */
+	// root system descriptor pointer
 	struct RSDP {
 		uint32_t signature[2];
 		uint8_t checksum;
 		char oemId[6];
 		uint8_t revision;
 		uint32_t rsdtAddr;
-		/* since 2.0 */
+		// since 2.0
 		uint32_t length;
 		uint64_t xsdtAddr;
 		uint8_t xchecksum;
 	} PACKED;
 
-	/* APIC Structure (5.2.11.4) */
+	// APIC Structure (5.2.11.4)
 	struct APIC {
 		enum Type {
 			LAPIC = 0, IOAPIC = 1, INTR = 2,
@@ -51,7 +51,7 @@ class HostACPI {
 		uint8_t length;
 	} PACKED;
 
-	/* Interrupt Source Override (5.2.11.8) */
+	// Interrupt Source Override (5.2.11.8)
 	struct APICIntr : public APIC {
 		uint8_t bus;
 		uint8_t irq;
@@ -59,7 +59,7 @@ class HostACPI {
 		uint16_t flags;
 	} PACKED;
 
-	/* Multiple APIC Description Table */
+	// Multiple APIC Description Table
 	struct MADT : public nre::ACPI::RSDT {
 		uint32_t apic_addr;
 		uint32_t flags;

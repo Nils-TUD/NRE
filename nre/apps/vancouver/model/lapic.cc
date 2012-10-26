@@ -515,6 +515,32 @@ private:
 			CpuEvent msg(event);
 			_vcpu->bus_event.send(msg);
 		}
+		// TODO the following two lines seem to magically fix the issue with booting linux on x86_64
+		// actually, it looks like a timing problem for me, because when you remove these lines and
+		// add enough debugging output, at some point it starts to work. similarly, sometimes it
+		// works when you just have luck. adding these two lines can't of course be the solution,
+		// but it works incredibly well. I mean, I tested it on x86_32 and x86_64, in debug mode
+		// and release mode, in qemu (on 2 systems) and real hardware. I tested it with a different
+		// number of CPUs, I tested to boot several linux instances in parallel. Everything works
+		// when I just add these 2 lines :D I'm not sure if its some kind of compiler bug (wouldn't
+		// be the first time) or if its really a timing issue that simply doesn't occur that often
+		// when these 2 lines are present.
+		// Even more interesting, the print is not even executed. It just forces the compiler to
+		// generate different code. I also tried other statements like overwriting a variable or
+		// doing a system call. Nothing else worked.
+		// So, if anybody who isn't that frustrated yet as I am, wants to do further investigations
+		// on that, please go ahead ;)
+		// A few things that I already figured out:
+		// - the problem is that linux typically does a HLT after
+		//   [9] #   APIC calibration not consistent with PM-Timer: 244ms instead of 100ms
+		//   [9] #   APIC delta adjusted to PM-Timer: 1033466 (2529591)
+		// - after that linux never wakes up again because we seem to stop to inject timer
+		//   IRQs, if I saw that correctly (but we still get wakeups from the timer service)
+		// But its pretty difficult to debug the issue because it does only occur in release mode
+		// and adding debugging info does only work to a certain degree (otherwise the issue
+		// disappears)
+		else
+			Serial::get().writef("event=%#x\n",event);
 
 		/**
 		 * It is not defined how invalid Delivery Modes are handled. We

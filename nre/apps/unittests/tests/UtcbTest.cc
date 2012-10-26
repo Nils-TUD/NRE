@@ -16,6 +16,7 @@
 
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
+#include <util/Profiler.h>
 #include <CPU.h>
 
 #include "UtcbTest.h"
@@ -34,7 +35,6 @@ const TestCase utcbperf = {
 	"Utcb performance",test_perf
 };
 static const uint tries = 100000;
-static uint64_t results[tries];
 
 static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
@@ -104,79 +104,51 @@ static void test_nesting() {
 	WVPASSEQ(c,0xDEAD);
 }
 
-static void perform_test_unnested(uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
-	uint64_t tic,tac,duration;
-	min = ~0ull;
-	max = 0;
+static void perform_test_unnested(AvgProfiler &prof) {
 	for(uint i = 0; i < tries; i++) {
-		tic = Util::tsc();
+		prof.start();
 		{
 			UtcbFrame uf;
 			uf << 1;
 		}
-		tac = Util::tsc();
-
-		duration = tac - tic;
-		duration = duration > rdtsc ? duration - rdtsc : 0;
-		min = Math::min(min,duration);
-		max = Math::max(max,duration);
-		results[i] = duration;
+		prof.stop();
 	}
-	avg = 0;
-	for(uint i = 0; i < tries; i++)
-		avg += results[i];
-	avg = avg / tries;
 }
 
-static void perform_test(size_t n,uint64_t rdtsc,uint64_t &min,uint64_t &max,uint64_t &avg) {
-	uint64_t tic,tac,duration;
-	min = ~0ull;
-	max = 0;
+static void perform_test(size_t n,AvgProfiler &prof) {
 	for(uint i = 0; i < tries; i++) {
 		{
 			UtcbFrame uf;
 			for(size_t x = 0; x < n; ++x)
 				uf << x;
 
-			tic = Util::tsc();
+			prof.start();
 			{
 				UtcbFrame nested;
 				nested << 1;
 			}
-			tac = Util::tsc();
+			prof.stop();
 		}
-		duration = tac - tic;
-		duration = duration > rdtsc ? duration - rdtsc : 0;
-		min = Math::min(min,duration);
-		max = Math::max(max,duration);
-		results[i] = duration;
 	}
-	avg = 0;
-	for(uint i = 0; i < tries; i++)
-		avg += results[i];
-	avg = avg / tries;
 }
 
 static void test_perf() {
-	uint64_t tic,tac,min,max,avg,rdtsc;
-	tic = Util::tsc();
-	tac = Util::tsc();
-	rdtsc = tac - tic;
-
-	perform_test_unnested(rdtsc,min,max,avg);
-	WVPRINTF("Without nesting:");
-	WVPERF(avg,"cycles");
-	WVPRINTF("avg: %Lu",avg);
-	WVPRINTF("min: %Lu",min);
-	WVPRINTF("max: %Lu",max);
+	{
+		AvgProfiler prof(tries);
+		perform_test_unnested(prof);
+		WVPRINTF("Without nesting:");
+		WVPERF(prof.avg(),"cycles");
+		WVPRINTF("min: %Lu",prof.min());
+		WVPRINTF("max: %Lu",prof.max());
+	}
 
 	size_t sizes[] = {1,2,4,8,16,32,64,128};
 	for(size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
-		perform_test(sizes[i],rdtsc,min,max,avg);
-		WVPRINTF("Using %u words:",sizes[i]);
-		WVPERF(avg,"cycles");
-		WVPRINTF("avg: %Lu",avg);
-		WVPRINTF("min: %Lu",min);
-		WVPRINTF("max: %Lu",max);
+		AvgProfiler prof(tries);
+		perform_test(sizes[i],prof);
+		WVPRINTF("Using %zu words:",sizes[i]);
+		WVPERF(prof.avg(),"cycles");
+		WVPRINTF("min: %Lu",prof.min());
+		WVPRINTF("max: %Lu",prof.max());
 	}
 }

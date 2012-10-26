@@ -34,7 +34,7 @@ OStream &operator<<(OStream &os,const RegionManager &rm);
 class RegionManager {
 	friend OStream &operator<<(OStream &os,const RegionManager &rm);
 
-	static const size_t MAX_REGIONS	= 64;
+	static const size_t MAX_REGIONS	= 128;
 
 	struct Region {
 		uintptr_t addr;

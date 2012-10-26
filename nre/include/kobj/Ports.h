@@ -94,7 +94,7 @@ public:
 
 private:
 	void alloc() {
-    	UtcbFrame uf;
+		UtcbFrame uf;
 		ScopedCapSels cap;
 		uf.delegation_window(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
 		uf << ALLOC << _base << _count;

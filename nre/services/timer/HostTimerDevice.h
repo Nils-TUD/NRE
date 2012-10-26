@@ -29,7 +29,7 @@ public:
 		}
 
 		virtual nre::Gsi &gsi() = 0;
-		virtual void init(cpu_t cpu) = 0;
+		virtual void init(HostTimerDevice &dev,cpu_t cpu) = 0;
 		virtual void program_timeout(timevalue_t next) = 0;
 	};
 

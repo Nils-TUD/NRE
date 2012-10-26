@@ -29,11 +29,11 @@ void HostRebootKeyboard::reboot() {
 	_sess.reboot();
 }
 
-HostRebootA20::HostRebootA20() : HostRebootMethod(), _port(0x92,1) {
+HostRebootSysCtrlPortA::HostRebootSysCtrlPortA() : HostRebootMethod(), _port(0x92,1) {
 }
 
-void HostRebootA20::reboot() {
-	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via gate A20...\n");
+void HostRebootSysCtrlPortA::reboot() {
+	LOG(Logging::REBOOT,Serial::get() << "Trying reboot via System Control Port A...\n");
 	_port.out<uint8_t>(0x01);
 }
 

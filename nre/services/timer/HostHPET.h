@@ -86,7 +86,7 @@ class HostHPET : public HostTimerDevice {
 		virtual nre::Gsi &gsi() {
 			return *_gsi;
 		}
-		virtual void init(cpu_t cpu);
+		virtual void init(HostTimerDevice &dev,cpu_t cpu);
 		virtual void program_timeout(timevalue_t next) {
 			// Program a new timeout. Top 32-bits are discarded.
 			_reg->comp[0] = next;

@@ -16,7 +16,7 @@
 
 #include <kobj/Pt.h>
 #include <utcb/UtcbFrame.h>
-#include <util/Util.h>
+#include <util/Profiler.h>
 #include <CPU.h>
 
 #include "CatchEx.h"
@@ -31,38 +31,25 @@ const TestCase catchex = {
 };
 
 static const unsigned tries = 1000;
-static uint64_t results[tries];
 
 static void test_catchex() {
-	uint64_t tic,tac,min = ~0ull,max = 0,duration,rdtsc;
 	unsigned sum = 0;
-	tic = Util::tsc();
-	tac = Util::tsc();
-	rdtsc = tac - tic;
+	AvgProfiler prof(tries);
 	UtcbFrame uf;
 	for(unsigned i = 0; i < tries; i++) {
-		tic = Util::tsc();
+		prof.start();
 		try {
 			throw Exception(E_CAPACITY);
 		}
 		catch(const Exception& e) {
 			sum++;
 		}
-		tac = Util::tsc();
-		duration = tac - tic - rdtsc;
-		min = Math::min(min,duration);
-		max = Math::max(max,duration);
-		results[i] = duration;
+		prof.stop();
 	}
-	uint64_t avg = 0;
-	for(unsigned i = 0; i < tries; i++)
-		avg += results[i];
 
-	avg = avg / tries;
-	WVPERF(avg,"cycles");
+	WVPERF(prof.avg(),"cycles");
 	WVPASSEQ(sum,tries);
 	WVPRINTF("sum: %u",sum);
-	WVPRINTF("avg: %Lu",avg);
-	WVPRINTF("min: %Lu",min);
-	WVPRINTF("max: %Lu",max);
+	WVPRINTF("min: %Lu",prof.min());
+	WVPRINTF("max: %Lu",prof.max());
 }

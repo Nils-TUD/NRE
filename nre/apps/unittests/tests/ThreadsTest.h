@@ -14,19 +14,8 @@
  * General Public License version 2 for more details.
  */
 
-#include <mem/RegionManager.h>
-#include <stream/OStream.h>
+#pragma once
 
-namespace nre {
+#include <Test.h>
 
-OStream &operator<<(OStream &os,const RegionManager &rm) {
-	for(size_t i = 0; i < RegionManager::MAX_REGIONS; ++i) {
-		const RegionManager::Region *r = rm._regs + i;
-		if(r->size > 0)
-			os.writef("\t%zu: %p .. %p (%zu)\n",i,reinterpret_cast<void*>(r->addr),
-					reinterpret_cast<void*>(r->addr + r->size),r->size);
-	}
-	return os;
-}
-
-}
+extern const nre::test::TestCase threads;

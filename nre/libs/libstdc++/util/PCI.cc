@@ -132,7 +132,7 @@ size_t PCI::find_extended_cap(bdf_type bdf,cap_type id) {
 uint64_t PCI::bar_base(bdf_type bdf,size_t bar,value_type *type) {
 	value_type val = conf_read(bdf,bar);
 	if((val & BAR_IO) == BAR_IO) {
-		/* XXX */
+		// XXX
 		if(type)
 			*type = BAR_IO;
 		return val & ~0x3;

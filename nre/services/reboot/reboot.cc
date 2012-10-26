@@ -22,32 +22,34 @@
 
 using namespace nre;
 
-PORTAL static void portal_reboot(capsel_t) {
-	UtcbFrameRef uf;
+template<class T>
+static void try_reboot(const char *name) {
 	try {
-		// first try keyboard
-		HostRebootKeyboard kb;
-		kb.reboot();
-
-		// if we're still here, try gate a20
-		HostRebootA20 fg;
-		fg.reboot();
-
-		// try pci reset
-		HostRebootPCIReset pci;
-		pci.reboot();
-
-		// finally, try acpi
-		HostRebootACPI acpi;
-		acpi.reboot();
-
-		// hopefully not reached
-		uf << E_FAILURE;
+		T method;
+		method.reboot();
 	}
 	catch(const Exception &e) {
-		uf.clear();
-		uf << e;
+		Serial::get() << "Reboot via " << name << " failed: " << e.msg() << "\n";
 	}
+}
+
+PORTAL static void portal_reboot(capsel_t) {
+	UtcbFrameRef uf;
+
+	// first try acpi, which should work on most systems
+	try_reboot<HostRebootACPI>("ACPI");
+
+	// if we're still here, try pci reset
+	try_reboot<HostRebootPCIReset>("PCIReset");
+
+	// try System Control Port A
+	try_reboot<HostRebootSysCtrlPortA>("SysCtrlPortA");
+
+	// finally try keyboard
+	try_reboot<HostRebootKeyboard>("Keyboard");
+
+	// hopefully not reached
+	uf << E_FAILURE;
 }
 
 int main() {

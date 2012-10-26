@@ -14,46 +14,38 @@
  * General Public License version 2 for more details.
  */
 
-#include <kobj/Pt.h>
-#include <kobj/Ports.h>
-#include <utcb/UtcbFrame.h>
+#include <kobj/GlobalThread.h>
 #include <util/Profiler.h>
 #include <CPU.h>
 
-#include "DelegatePerf.h"
+#include "ThreadsTest.h"
 
 using namespace nre;
 using namespace nre::test;
 
-PORTAL static void portal_test(capsel_t);
-static void test_delegate();
+static void test_threads();
 
-const TestCase delegateperf = {
-	"Delegate-performance",test_delegate
+const TestCase threads = {
+	"Threads",test_threads,
 };
+static const size_t TEST_COUNT = 50;
 
-static const size_t tries = 1000;
-
-static void portal_test(capsel_t) {
-	UtcbFrameRef uf;
-	uf.delegate(CapRange(0x100,4,Crd::IO_ALL));
+static void dummy(void*) {
 }
 
-static void test_delegate() {
-	Ports ports(0x100,1 << 2);
-	LocalThread *ec = LocalThread::create(CPU::current().log_id());
-	Pt pt(ec,portal_test);
-	AvgProfiler prof(tries);
-	UtcbFrame uf;
-	uf.delegation_window(Crd(0,31,Crd::IO_ALL));
-	for(size_t i = 0; i < tries; i++) {
+static void test_threads() {
+	static GlobalThread *threads[TEST_COUNT];
+	AvgProfiler prof(TEST_COUNT);
+	for(size_t i = 0; i < TEST_COUNT; ++i) {
 		prof.start();
-		pt.call(uf);
-		uf.clear();
+		threads[i] = GlobalThread::create(dummy,CPU::current().log_id(),String(""));
 		prof.stop();
 	}
 
-	WVPERF(prof.avg(),"cycles");
+	WVPERF(prof.avg(),"cycles for thread creation");
 	WVPRINTF("min: %Lu",prof.min());
 	WVPRINTF("max: %Lu",prof.max());
+
+	for(size_t i = 0; i < TEST_COUNT; ++i)
+		delete threads[i];
 }

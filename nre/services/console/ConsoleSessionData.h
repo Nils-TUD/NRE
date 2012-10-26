@@ -87,6 +87,9 @@ public:
 	void set_page(uint page) {
 		_regs.offset = (nre::Console::TEXT_OFF >> 1) + (page << 11);
 	}
+	const nre::Console::Register &regs() const {
+		return _regs;
+	}
 	void set_regs(const nre::Console::Register &regs) {
 		_regs = regs;
 		if(_srv->active() == this)

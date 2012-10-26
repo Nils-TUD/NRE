@@ -3,7 +3,6 @@
 nre/build
 nre/dist/imgs/*
 kernel/nova
-loader/morbo
 cross/x86_32/build
 cross/x86_32/dist
 cross/x86_32/src

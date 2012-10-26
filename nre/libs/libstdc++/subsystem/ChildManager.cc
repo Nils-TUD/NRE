@@ -106,13 +106,13 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 		argc++;
 
 	word_t *ptrs = reinterpret_cast<word_t*>(bottom - sizeof(word_t) * (argc + 1));
-	// ensure that its aligned to 16-byte + 8-byte for SSE
-	ptrs = reinterpret_cast<word_t*>((reinterpret_cast<uintptr_t>(ptrs) & ~0xFUL) - 0x8);
+	// ensure that its aligned to 16-byte for SSE; this time not +8 because we'll call main
+	ptrs = reinterpret_cast<word_t*>(reinterpret_cast<uintptr_t>(ptrs) & ~0xFUL);
 	// store argv and argc
-	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::PAGE_SIZE - 1));
+	*(ptrs - 1) = csp + (reinterpret_cast<word_t>(ptrs) & (ExecEnv::STACK_SIZE - 1));
 	*(ptrs - 2) = argc;
 	// store stackpointer for user
-	sp = csp + (reinterpret_cast<uintptr_t>(ptrs - 2) & (ExecEnv::PAGE_SIZE - 1));
+	sp = csp + (reinterpret_cast<uintptr_t>(ptrs - 2) & (ExecEnv::STACK_SIZE - 1));
 
 	// now, walk through it, replace ' ' by '\0' and store pointers to the individual arguments
 	str = bottom;
@@ -120,7 +120,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	char *begin = bottom;
 	while(*str) {
 		if(*str == ' ' && i > 0) {
-			*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+			*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::STACK_SIZE - 1));
 			*str = '\0';
 			i = 0;
 		}
@@ -132,7 +132,7 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 		str++;
 	}
 	if(i > 0)
-		*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::PAGE_SIZE - 1));
+		*ptrs++ = csp + (reinterpret_cast<word_t>(begin) & (ExecEnv::STACK_SIZE - 1));
 	// terminate
 	*ptrs++ = 0;
 }
@@ -263,8 +263,10 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &
 				config.cpu(),c->cmdline(),c->_pd,c->_utcb);
 
 		// he needs a stack
-		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE);
-		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,c->_ec->stack()),
+		uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
+		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE,ExecEnv::STACK_SIZE);
+		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,
+				c->_ec->stack(),align - ExecEnv::PAGE_SHIFT),
 				c->stack(),ChildMemory::RW | ChildMemory::OWN);
 
 		// and a Hip
@@ -569,9 +571,10 @@ void ChildManager::Portals::sc(capsel_t pid) {
 
 				// TODO we might leak resources here if something fails
 				if(stack) {
-					const DataSpace &ds = cm->_dsm.create(
-							DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
-					stackaddr = c->reglist().find_free(ds.size());
+					uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
+					const DataSpace &ds = cm->_dsm.create(DataSpaceDesc(ExecEnv::STACK_SIZE,
+							DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW,0,0,align - ExecEnv::PAGE_SHIFT));
+					stackaddr = c->reglist().find_free(ds.size(),ExecEnv::STACK_SIZE);
 					c->reglist().add(ds.desc(),stackaddr,ds.flags() | ChildMemory::OWN,ds.unmapsel());
 				}
 				if(utcb) {
@@ -659,7 +662,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	uintptr_t addr = 0;
 	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
-		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags());
+		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags(),0,0,desc.align());
 		c->reglist().add(desc,addr,desc.flags());
 		desc.virt(addr);
 		LOG(Logging::DATASPACES,
@@ -676,7 +679,7 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			// only create creations and non-device-memory
 			if(type != DataSpace::JOIN && desc.phys() == 0)
 				flags |= ChildMemory::OWN;
-			size_t align = (flags & DataSpaceDesc::BIGPAGES) ? ExecEnv::BIG_PAGE_SIZE : 1;
+			size_t align = 1 << (desc.align() + ExecEnv::PAGE_SHIFT);
 			addr = c->reglist().find_free(ds.size(),align);
 			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
 		}
@@ -698,7 +701,8 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt());
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt(),
+				ds.desc().align());
 	}
 }
 
@@ -868,7 +872,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		ScopedLock<UserSm> guard_regs(&c->_sm);
 
 		LOG(Logging::PFS,Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-				c->cmdline().str(),pfaddr,eip,cpu,error));
+				c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+				reinterpret_cast<void*>(eip),cpu,error));
 
 		// TODO different handlers (cow, ...)
 		uintptr_t pfpage = pfaddr & ~(ExecEnv::PAGE_SIZE - 1);
@@ -908,13 +913,14 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			else if(pfpage == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
 						"Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
-						c->cmdline().str(),pfaddr,CPU::get(cpu).phys_id()));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),CPU::get(cpu).phys_id()));
 				kill = true;
 			}
 			else {
 				LOG(Logging::PFS,Serial::get().writef(
 						"Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
-						c->cmdline().str(),pfaddr,eip,CPU::get(cpu).phys_id(),error));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+						reinterpret_cast<void*>(eip),CPU::get(cpu).phys_id(),error));
 				LOG(Logging::PFS_DETAIL,Serial::get() << "See regionlist:\n" << c->reglist());
 				c->_last_fault_addr = pfpage;
 				c->_last_fault_cpu = cpu;
@@ -959,7 +965,8 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				Child *c = cm->get_child(pid);
 				LOG(Logging::CHILD_KILL,Serial::get().writef(
 						"Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
-						c->cmdline().str(),pfaddr,uf->rip,CPU::get(cpu).phys_id(),error));
+						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
+						reinterpret_cast<void*>(uf->rip),CPU::get(cpu).phys_id(),error));
 			}
 			cm->kill_child(pid,uf,FAULT);
 		}
@@ -1013,7 +1020,8 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 		if(type == FAULT) {
 			LOG(Logging::CHILD_KILL,Serial::get().writef(
 					"Child '%s': caused exception %u @ %p on cpu %u\n",
-					c->cmdline().str(),get_vector(pid),uf->rip,CPU::get(get_cpu(pid)).phys_id()));
+					c->cmdline().str(),get_vector(pid),reinterpret_cast<void*>(uf->rip),
+					CPU::get(get_cpu(pid)).phys_id()));
 			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
 			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing child\n"));
 		}
@@ -1035,7 +1043,7 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 		LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
 		addr = addrs;
 		while(*addr != 0) {
-			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",*addr));
+			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",reinterpret_cast<void*>(*addr)));
 			addr++;
 		}
 	}
