@@ -31,6 +31,7 @@
       (c-set-style "stroustrup")
       (setq indent-tabs-mode t
             tab-width nre-default-tab-width)
+      (c-set-offset 'case-label '+)
       (smart-tabs-mode-enable))))
 
 (defun nre-setup ()
