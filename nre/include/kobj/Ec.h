@@ -37,8 +37,8 @@ protected:
 	 * @param evb the offset for the event-portals
 	 * @param cap the capability (INVALID if a new one should be used)
 	 */
-	explicit Ec(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID)
-			: ObjCap(cap), _event_base(evb), _cpu(cpu) {
+	explicit Ec(cpu_t cpu, capsel_t evb, capsel_t cap = INVALID)
+		: ObjCap(cap), _event_base(evb), _cpu(cpu) {
 	}
 
 public:
@@ -49,8 +49,8 @@ public:
 	 * @param cap the capability-selector for the Ec
 	 * @param cpu the logical CPU it runs on
 	 */
-	explicit Ec(capsel_t cap,cpu_t cpu)
-		: ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT), _event_base(Hip::get().service_caps() * cpu),
+	explicit Ec(capsel_t cap, cpu_t cpu)
+		: ObjCap(cap, KEEP_CAP_BIT | KEEP_SEL_BIT), _event_base(Hip::get().service_caps() * cpu),
 		  _cpu(cpu) {
 	}
 
@@ -58,7 +58,7 @@ public:
 	 * Let's this Ec perform a recall
 	 */
 	void recall() {
-		Syscalls::ec_ctrl(sel(),Syscalls::RECALL);
+		Syscalls::ec_ctrl(sel(), Syscalls::RECALL);
 	}
 
 	/**

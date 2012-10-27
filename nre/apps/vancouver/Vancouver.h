@@ -32,9 +32,9 @@ extern nre::UserSm globalsm;
 
 class Vancouver : public StaticReceiver<Vancouver> {
 public:
-	explicit Vancouver(const char *args,size_t console,const nre::String &constitle)
-			: _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon,console,constitle),
-			  _stcon(), _vmmngcon(), _vmmng(), _vcpus(), _stdevs() {
+	explicit Vancouver(const char *args, size_t console, const nre::String &constitle)
+		: _mb(), _timeouts(_mb), _conscon("console"), _conssess(_conscon, console, constitle),
+		  _stcon(), _vmmngcon(), _vmmng(), _vcpus(), _stdevs() {
 		// storage is optional
 		try {
 			_stcon = new nre::Connection("storage");
@@ -46,8 +46,8 @@ public:
 		create_vcpus();
 
 		nre::GlobalThread *input = nre::GlobalThread::create(
-				keyboard_thread,nre::CPU::current().log_id(),nre::String("vmm-input"));
-		input->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+		    keyboard_thread, nre::CPU::current().log_id(), nre::String("vmm-input"));
+		input->set_tls<Vancouver*>(nre::Thread::TLS_PARAM, this);
 		input->start();
 
 		// vmmanager is optional
@@ -55,8 +55,8 @@ public:
 			_vmmngcon = new nre::Connection("vmmanager");
 			_vmmng = new nre::VMManagerSession(*_vmmngcon);
 			nre::GlobalThread *vmmng = nre::GlobalThread::create(
-					vmmng_thread,nre::CPU::current().log_id(),nre::String("vmm-vmmng"));
-			vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM,this);
+			    vmmng_thread, nre::CPU::current().log_id(), nre::String("vmm-vmmng"));
+			vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM, this);
 			vmmng->start();
 		}
 		catch(const nre::Exception &e) {

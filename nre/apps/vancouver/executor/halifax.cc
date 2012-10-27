@@ -37,7 +37,7 @@ public:
 	}
 
 	Halifax(VCVCpu *vcpu) : InstructionCache(vcpu) {
-		vcpu->executor.add(this,receive_static);
+		vcpu->executor.add(this, receive_static);
 	}
 	void *operator new(size_t size) {
 		return new /* TODO(__alignof__(Halifax))  */ char[size];
@@ -45,8 +45,8 @@ public:
 };
 
 PARAM_HANDLER(halifax,
-		"halifax - create a halifax that emulatates instructions.") {
+              "halifax - create a halifax that emulatates instructions.") {
 	if(!mb.last_vcpu)
-		throw Exception(E_NOT_FOUND,"no VCPU for this Halifax");
+		throw Exception(E_NOT_FOUND, "no VCPU for this Halifax");
 	new Halifax(mb.last_vcpu);
 }

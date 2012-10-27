@@ -30,7 +30,7 @@ namespace nre {
  */
 class CapRange {
 public:
-	static const uintptr_t NO_HOTSPOT	= -1;
+	static const uintptr_t NO_HOTSPOT   = -1;
 
 	/**
 	 * Constructor. Creates an empty range
@@ -45,7 +45,7 @@ public:
 	 * @param attr the attributes
 	 * @param hotspot the hotspot (default: no hotspot)
 	 */
-	explicit CapRange(uintptr_t start,size_t count,uint attr,uintptr_t hotspot = NO_HOTSPOT)
+	explicit CapRange(uintptr_t start, size_t count, uint attr, uintptr_t hotspot = NO_HOTSPOT)
 		: _start(start), _count(count), _attr(attr), _hotspot(hotspot) {
 	}
 
@@ -58,8 +58,8 @@ public:
 		uintptr_t start = _start;
 		size_t count = _count;
 		while(count > 0) {
-			uint minshift = Math::minshift(start,count);
-			Syscalls::revoke(Crd(start,minshift,_attr),self);
+			uint minshift = Math::minshift(start, count);
+			Syscalls::revoke(Crd(start, minshift, _attr), self);
 			start += 1 << minshift;
 			count -= 1 << minshift;
 		}
@@ -76,7 +76,7 @@ public:
 		size_t c = count();
 		uintptr_t st = start();
 		while(free_typed > 0 && c > 0) {
-			uint minshift = Math::minshift(st | hs,c);
+			uint minshift = Math::minshift(st | hs, c);
 			st += 1 << minshift;
 			hs += 1 << minshift;
 			c -= 1 << minshift;
@@ -129,9 +129,9 @@ private:
 	uintptr_t _hotspot;
 };
 
-static inline OStream &operator<<(OStream &os,const CapRange &cr) {
+static inline OStream &operator<<(OStream &os, const CapRange &cr) {
 	os.writef("CapRange[start=%#lx, count=%#zx, hotspot=%#lx, attr=%#x]",
-			cr.start(),cr.count(),cr.hotspot(),cr.attr());
+	          cr.start(), cr.count(), cr.hotspot(), cr.attr());
 	return os;
 }
 

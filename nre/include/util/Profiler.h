@@ -47,8 +47,8 @@ public:
 	virtual time_t stop() {
 		time_t time = Util::tsc() - _start;
 		time = time > _rdtsc ? time - _rdtsc : 0;
-		_min = Math::min(_min,time);
-		_max = Math::max(_max,time);
+		_min = Math::min(_min, time);
+		_max = Math::max(_max, time);
 		return time;
 	}
 

@@ -39,10 +39,11 @@ public:
 	 * @param cap the capability (INVALID if a new one should be used)
 	 * @param name the name of the vcpu (only used for display-purposes)
 	 */
-	explicit VCpu(cpu_t cpu,capsel_t evb,const String &name) : Ec(cpu,evb,INVALID), _sc(), _name(name) {
+	explicit VCpu(cpu_t cpu, capsel_t evb, const String &name)
+		: Ec(cpu, evb, INVALID), _sc(), _name(name) {
 		ScopedCapSels cap;
-		Syscalls::create_ec(cap.get(),0,0,CPU::get(cpu).phys_id(),evb,
-				Syscalls::EC_GLOBAL,Pd::current()->sel());
+		Syscalls::create_ec(cap.get(), 0, 0, CPU::get(cpu).phys_id(), evb,
+		                    Syscalls::EC_GLOBAL, Pd::current()->sel());
 		sel(cap.release());
 	}
 	virtual ~VCpu();

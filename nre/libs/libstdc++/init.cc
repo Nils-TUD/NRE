@@ -17,7 +17,7 @@
 #include <arch/Types.h>
 #include <Compiler.h>
 
-#define MAX_EXIT_FUNCS		32
+#define MAX_EXIT_FUNCS      32
 
 typedef void (*fRegFrameInfo)(void *callback);
 typedef void (*fConstr)(void);
@@ -32,7 +32,7 @@ struct GlobalObj {
  * Will be called by gcc at the beginning for every global object to register the
  * destructor of the object
  */
-EXTERN_C int __cxa_atexit(void (*f)(void *),void *p,void *d);
+EXTERN_C int __cxa_atexit(void (*f)(void *), void *p, void *d);
 /**
  * We'll call this function in exit() to call all destructors registered by *atexit()
  */
@@ -41,7 +41,7 @@ EXTERN_C void __cxa_finalize(void *d);
 static size_t exitFuncCount = 0;
 static GlobalObj exitFuncs[MAX_EXIT_FUNCS];
 
-int __cxa_atexit(void (*f)(void *),void *p,void *d) {
+int __cxa_atexit(void (*f)(void *), void *p, void *d) {
 	if(exitFuncCount >= MAX_EXIT_FUNCS)
 		return -1;
 

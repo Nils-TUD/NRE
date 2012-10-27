@@ -55,39 +55,39 @@
  * use is to mediate communication between process-level code and irq/NMI
  * handlers, all running on the same CPU.
  */
-#define ACCESS_ONCE(x)				(*(volatile __typeof__(x) *)&(x))
+#define ACCESS_ONCE(x)              (*(volatile __typeof__(x) *) & (x))
 
 /*
  * Identify a shared load. A smp_rmc() or smp_mc() should come before the load.
  */
-#define _LOAD_SHARED(p)				ACCESS_ONCE(p)
+#define _LOAD_SHARED(p)             ACCESS_ONCE(p)
 
 /*
  * Load a data from shared memory, doing a cache flush if required.
  */
-#define LOAD_SHARED(p) \
-	({ \
-		Sync::memory_barrier(); \
-		_LOAD_SHARED(p); \
+#define LOAD_SHARED(p)                    \
+	({                                    \
+		Sync::memory_barrier();           \
+		_LOAD_SHARED(p);                  \
 	})
 
 /*
  * Identify a shared store. A smp_wmc() or smp_mc() should follow the store.
  */
-#define _STORE_SHARED(x, v) \
-	do { \
-		(x) = (v); \
-	} while (0)
+#define _STORE_SHARED(x, v)               \
+	do {                                  \
+		(x) = (v);                        \
+	} while(0)
 
 /*
  * Store v into x, where x is located in shared memory. Performs the required
  * cache flush after writing.
  */
-#define STORE_SHARED(x, v) \
-	do { \
-		_STORE_SHARED(x, v); \
-		Sync::memory_barrier(); \
-	} while (0)
+#define STORE_SHARED(x, v)                \
+	do {                                  \
+		_STORE_SHARED(x, v);              \
+		Sync::memory_barrier();           \
+	} while(0)
 
 /**
  * rcu_dereference - fetch an RCU-protected pointer in an
@@ -96,7 +96,7 @@
  *
  * Documents exactly which pointers are protected by RCU.
  */
-#define rcu_dereference(p)			LOAD_SHARED(p)
+#define rcu_dereference(p)          LOAD_SHARED(p)
 
 /**
  * rcu_assign_pointer - assign (publicize) a pointer to a newly
@@ -108,7 +108,7 @@
  * call documents which pointers will be dereferenced by RCU read-side
  * code.
  */
-#define rcu_assign_pointer(p, v)	STORE_SHARED(p, v)
+#define rcu_assign_pointer(p, v)    STORE_SHARED(p, v)
 
 namespace nre {
 
@@ -251,7 +251,7 @@ public:
 private:
 	static void delete_objects() {
 		bool deletable = false;
-		RCUObject *p = 0,*o = _objs;
+		RCUObject *p = 0, *o = _objs;
 		while(o != 0) {
 			// all objects behind the first deletable one are deletable
 			if(!deletable && o->_state != RCUObject::DELETABLE) {

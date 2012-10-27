@@ -23,10 +23,10 @@
 #include "HostTimerDevice.h"
 
 class HostPIT : public HostTimerDevice {
-	static const timevalue_t FREQ				= 1193180ULL;
-	static const timevalue_t DEFAULT_PERIOD	= 1000ULL; // ms
-	static const uint IRQ						= 0;
-	static const uint PORT_BASE				= 0x40;
+	static const timevalue_t FREQ               = 1193180ULL;
+	static const timevalue_t DEFAULT_PERIOD     = 1000ULL; // ms
+	static const uint IRQ                       = 0;
+	static const uint PORT_BASE                 = 0x40;
 
 	class PitTimer : public Timer {
 	public:
@@ -36,7 +36,7 @@ class HostPIT : public HostTimerDevice {
 		virtual nre::Gsi &gsi() {
 			return _gsi;
 		}
-		virtual void init(HostTimerDevice &,cpu_t) {
+		virtual void init(HostTimerDevice &, cpu_t) {
 		}
 		virtual void program_timeout(timevalue_t) {
 		}
@@ -80,13 +80,13 @@ public:
 	virtual bool is_in_past(timevalue_t ticks) const {
 		return ticks < _ticks;
 	}
-	virtual timevalue_t next_timeout(timevalue_t,timevalue_t next) {
+	virtual timevalue_t next_timeout(timevalue_t, timevalue_t next) {
 		return next;
 	}
 	virtual void start(timevalue_t ticks) {
 		_ticks = ticks;
 	}
-	virtual void enable(Timer *,bool) {
+	virtual void enable(Timer *, bool) {
 		// nothing to do
 	}
 

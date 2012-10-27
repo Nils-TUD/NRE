@@ -40,12 +40,12 @@ static Connection *con;
 static void read(void *) {
 	while(1) {
 		Session conssess(*con);
-		DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
+		DataSpace ds(100, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW);
 		ds.share(conssess);
 		Consumer<int> c(&ds);
 		for(int x = 0; x < 100; ++x) {
 			int *i = c.get();
-			Serial::get().writef("[%p] Got %d\n",ds.virt(),*i);
+			Serial::get().writef("[%p] Got %d\n", ds.virt(), *i);
 			c.next();
 		}
 	}
@@ -54,7 +54,7 @@ static void read(void *) {
 static void write(void *) {
 	Session conssess(*con);
 	Pt &pt = conssess.pt(CPU::current().id);
-	DataSpace ds(100,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
+	DataSpace ds(100, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW);
 	ds.share(conssess);
 	int *data = reinterpret_cast<int*>(ds.virt());
 	for(uint i = 0; i < 100; ++i) {
@@ -74,7 +74,8 @@ static void reader(void*) {
 	Info *info = Thread::current()->get_tls<Info*>(Thread::TLS_PARAM);
 	while(1) {
 		Console::ReceivePacket *pk = info->conssess->consumer().get();
-		Serial::get().writef("%u: Got c=%#x kc=%#x, flags=%#x\n",info->no,pk->character,pk->keycode,pk->flags);
+		Serial::get().writef("%u: Got c=%#x kc=%#x, flags=%#x\n", info->no, pk->character, pk->keycode,
+		                     pk->flags);
 		info->conssess->consumer().next();
 	}
 }
@@ -105,9 +106,9 @@ static Sm done(0);
 static void view0(void*) {
 	char title[64];
 	size_t subcon = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
-	OStringStream::format(title,sizeof(title),"Test-%zu",subcon);
-	ConsoleSession conssess(*conscon,subcon,String(title));
-	ConsoleStream view(conssess,0);
+	OStringStream::format(title, sizeof(title), "Test-%zu", subcon);
+	ConsoleSession conssess(*conscon, subcon, String(title));
+	ConsoleStream view(conssess, 0);
 	int i = 0;
 	while(i < 10000) {
 		//char c = view.read();
@@ -118,26 +119,26 @@ static void view0(void*) {
 }
 
 static void tick_thread(void*) {
-	timevalue_t uptime,unixts;
+	timevalue_t uptime, unixts;
 	int i = 0;
 	while(1) {
 		timer->wait_for(Hip::get().freq_tsc * 1000);
-		timer->get_time(uptime,unixts);
+		timer->get_time(uptime, unixts);
 		ScopedLock<UserSm> guard(&sm);
 		Serial::get() << "CPU" << CPU::current().log_id() << ": ";
 		Serial::get() << ++i << " ticks, uptime=" << uptime << ", unixtime=" << unixts << ", ";
 		DateInfo date;
-		Date::gmtime(unixts / Timer::WALLCLOCK_FREQ,&date);
+		Date::gmtime(unixts / Timer::WALLCLOCK_FREQ, &date);
 		Serial::get().writef("date: %02d.%02d.%04d %d:%02d:%02d\n",
-				date.mday,date.mon,date.year,date.hour,date.min,date.sec);
+		                     date.mday, date.mon, date.year, date.hour, date.min, date.sec);
 	}
 }
 
 int main() {
 	conscon = new Connection("console");
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		GlobalThread *gt = GlobalThread::create(view0,it->log_id(),String("test-thread"));
-		gt->set_tls<size_t>(Thread::TLS_PARAM,1 + it->log_id());
+		GlobalThread *gt = GlobalThread::create(view0, it->log_id(), String("test-thread"));
+		gt->set_tls<size_t>(Thread::TLS_PARAM, 1 + it->log_id());
 		gt->start();
 	}
 

@@ -34,8 +34,8 @@ public:
 	 * @return the read value
 	 */
 	template<typename T>
-	static T read_from(const char *str,size_t len = (size_t)-1) {
-		IStringStream is(str,len);
+	static T read_from(const char *str, size_t len = (size_t)-1) {
+		IStringStream is(str, len);
 		T t;
 		is >> t;
 		return t;
@@ -47,8 +47,8 @@ public:
 	 * @param str the string
 	 * @param len the length or -1 for "use strlen()"
 	 */
-	explicit IStringStream(const char *str,size_t len = (size_t)-1) : IStream(),
-			_str(str), _len(len == (size_t)-1 ? strlen(str) : len), _pos() {
+	explicit IStringStream(const char *str, size_t len = (size_t)-1)
+		: IStream(), _str(str), _len(len == (size_t) - 1 ? strlen(str) : len), _pos() {
 	}
 
 private:

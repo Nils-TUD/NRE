@@ -16,8 +16,8 @@
 
 #include "util.h"
 
-void Util::move(void *dest,const void *src,size_t count) {
-	uchar *s,*d;
+void Util::move(void *dest, const void *src, size_t count) {
+	uchar *s, *d;
 	/* nothing to do? */
 	if((uchar*)dest == (uchar*)src || count == 0)
 		return;
@@ -37,10 +37,10 @@ void Util::move(void *dest,const void *src,size_t count) {
 	}
 	/* moving backwards */
 	else
-		copy(dest,src,count);
+		copy(dest, src, count);
 }
 
-void Util::set(void *addr,int value,size_t count) {
+void Util::set(void *addr, int value, size_t count) {
 	uchar *baddr;
 	uint dwval = (value << 24) | (value << 16) | (value << 8) | value;
 	uint *dwaddr = (uint*)addr;
@@ -54,8 +54,8 @@ void Util::set(void *addr,int value,size_t count) {
 		*baddr++ = value;
 }
 
-void Util::copy(void *dest,const void *src,size_t len) {
-	uchar *bdest,*bsrc;
+void Util::copy(void *dest, const void *src, size_t len) {
+	uchar *bdest, *bsrc;
 	/* copy dwords first with loop-unrolling */
 	uint *ddest = (uint*)dest;
 	uint *dsrc = (uint*)src;

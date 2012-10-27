@@ -35,7 +35,7 @@ public:
 	 * @param cap the selector for the Sm
 	 */
 	// TODO get rid of the bool
-	explicit Sm(capsel_t cap,bool) : ObjCap(cap,KEEP_CAP_BIT | KEEP_SEL_BIT) {
+	explicit Sm(capsel_t cap, bool) : ObjCap(cap, KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
 
 	/**
@@ -46,8 +46,8 @@ public:
 	 * @param initial the initial value of the semaphore
 	 * @param pd the Pd to create it in (default: current)
 	 */
-	explicit Sm(capsel_t cap,uint initial,Pd *pd = Pd::current()) : ObjCap(cap,KEEP_SEL_BIT) {
-		Syscalls::create_sm(cap,initial,pd->sel());
+	explicit Sm(capsel_t cap, uint initial, Pd *pd = Pd::current()) : ObjCap(cap, KEEP_SEL_BIT) {
+		Syscalls::create_sm(cap, initial, pd->sel());
 	}
 
 	/**
@@ -56,9 +56,9 @@ public:
 	 * @param initial the initial value of the semaphore
 	 * @param pd the Pd to create it in (default: current)
 	 */
-	explicit Sm(uint initial,Pd *pd = Pd::current()) {
+	explicit Sm(uint initial, Pd *pd = Pd::current()) {
 		ScopedCapSels scs;
-		Syscalls::create_sm(scs.get(),initial,pd->sel());
+		Syscalls::create_sm(scs.get(), initial, pd->sel());
 		sel(scs.release());
 	}
 
@@ -67,7 +67,7 @@ public:
 	 * someone does an up(). Otherwise it will decrease the value.
 	 */
 	void down() {
-		Syscalls::sm_ctrl(sel(),Syscalls::SM_DOWN);
+		Syscalls::sm_ctrl(sel(), Syscalls::SM_DOWN);
 	}
 
 	/**
@@ -75,7 +75,7 @@ public:
 	 * someone does an up(). Otherwise it will set the value to zero.
 	 */
 	void zero() {
-		Syscalls::sm_ctrl(sel(),Syscalls::SM_ZERO);
+		Syscalls::sm_ctrl(sel(), Syscalls::SM_ZERO);
 	}
 
 	/**
@@ -83,7 +83,7 @@ public:
 	 * it. Otherwise it increases the value of the semaphore.
 	 */
 	void up() {
-		Syscalls::sm_ctrl(sel(),Syscalls::SM_UP);
+		Syscalls::sm_ctrl(sel(), Syscalls::SM_UP);
 	}
 };
 

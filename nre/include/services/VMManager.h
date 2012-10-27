@@ -44,7 +44,7 @@ public:
  * for requests.
  */
 class VMManagerSession : public ClientSession {
-	static const size_t DS_SIZE	= ExecEnv::PAGE_SIZE;
+	static const size_t DS_SIZE = ExecEnv::PAGE_SIZE;
 
 public:
 	/**
@@ -53,8 +53,8 @@ public:
 	 * @param con the connection
 	 */
 	explicit VMManagerSession(Connection &con)
-			: ClientSession(con), _ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			  _consumer(&_ds,true) {
+		: ClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
+		  _consumer(&_ds, true) {
 		create();
 	}
 

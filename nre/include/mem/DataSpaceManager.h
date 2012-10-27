@@ -27,7 +27,7 @@ template<class DS>
 class DataSpaceManager;
 
 template<class DS>
-static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng);
+static inline OStream &operator<<(OStream &os, const DataSpaceManager<DS> &mng);
 
 /**
  * The DataSpaceManager is responsible for keeping track of the number of references to a dataspace.
@@ -37,9 +37,9 @@ static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng);
 template<class DS>
 class DataSpaceManager {
 	template<class DS2>
-	friend OStream &operator<<(OStream &os,const DataSpaceManager<DS2> &mng);
+	friend OStream & operator<<(OStream &os, const DataSpaceManager<DS2> &mng);
 
-	static const size_t MAX_SLOTS	= 512;
+	static const size_t MAX_SLOTS   = 512;
 
 	/**
 	 * We use a treap here and use the unmap selector as key. this way, we can quickly find a ds
@@ -113,12 +113,12 @@ public:
 	 * @param ds1 the unmap-selector for the first dataspace
 	 * @param ds2 the unmap-selector for the second dataspace
 	 */
-	void swap(capsel_t ds1,capsel_t ds2) {
+	void swap(capsel_t ds1, capsel_t ds2) {
 		ScopedLock<UserSm> guard(&_sm);
 		Slot *s1 = find_unmap(ds1);
 		Slot *s2 = find_unmap(ds2);
 		if(!s1 || !s2)
-			throw DataSpaceException(E_NOT_FOUND,32,"DataSpace %u does not exist",s1 ? ds2 : ds1);
+			throw DataSpaceException(E_NOT_FOUND, 32, "DataSpace %u does not exist", s1 ? ds2 : ds1);
 
 		uintptr_t tmp = s1->ds->_desc.virt();
 		s1->ds->_desc.virt(s2->ds->_desc.virt());
@@ -133,11 +133,11 @@ public:
 	 * @param sel the selector
 	 * @throws DataSpaceException if the dataspace was not found
 	 */
-	void release(DataSpaceDesc &desc,capsel_t sel) {
+	void release(DataSpaceDesc &desc, capsel_t sel) {
 		ScopedLock<UserSm> guard(&_sm);
 		Slot *s = find_unmap(sel);
 		if(!s)
-			throw DataSpaceException(E_NOT_FOUND,32,"DataSpace %u does not exist",sel);
+			throw DataSpaceException(E_NOT_FOUND, 32, "DataSpace %u does not exist", sel);
 		if(--s->refs == 0) {
 			desc = s->ds->desc();
 			delete s->ds;
@@ -161,7 +161,7 @@ private:
 	}
 	Slot *find_free() {
 		if(!_free)
-			throw DataSpaceException(E_CAPACITY,"No free dataspace slots");
+			throw DataSpaceException(E_CAPACITY, "No free dataspace slots");
 		Slot *s = _free;
 		_free = _free->next;
 		return s;
@@ -174,11 +174,12 @@ private:
 };
 
 template<class DS>
-static inline OStream &operator<<(OStream &os,const DataSpaceManager<DS> &mng) {
+static inline OStream &operator<<(OStream &os, const DataSpaceManager<DS> &mng) {
 	os << "DataSpaces:\n";
 	for(size_t i = 0; i < DataSpaceManager<DS>::MAX_SLOTS; ++i) {
 		if(mng._slots[i].refs)
-			os << "\tSlot " << i << ":" << *(mng._slots[i].ds) << " (" << mng._slots[i].refs << " refs)\n";
+			os << "\tSlot " << i << ":" << *(mng._slots[i].ds) << " (" << mng._slots[i].refs <<
+			" refs)\n";
 	}
 	return os;
 }

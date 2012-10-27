@@ -26,9 +26,9 @@
 
 class VMMngServiceSession : public nre::ServiceSession {
 public:
-	explicit VMMngServiceSession(nre::Service *s,size_t id,capsel_t cap,capsel_t caps,
-			nre::Pt::portal_func func)
-		: ServiceSession(s,id,cap,caps,func), _vm(), _ds(), _prod() {
+	explicit VMMngServiceSession(nre::Service *s, size_t id, capsel_t cap, capsel_t caps,
+	                             nre::Pt::portal_func func)
+		: ServiceSession(s, id, cap, caps, func), _vm(), _ds(), _prod() {
 	}
 	virtual ~VMMngServiceSession() {
 		delete _ds;
@@ -39,15 +39,15 @@ public:
 		RunningVMList::get().remove(_vm);
 	}
 
-	void init(nre::DataSpace *ds,capsel_t pd) {
+	void init(nre::DataSpace *ds, capsel_t pd) {
 		RunningVM *vm = RunningVMList::get().get_by_pd(pd);
 		if(!vm)
-			throw nre::Exception(nre::E_NOT_FOUND,"Corresponding VM not found");
+			throw nre::Exception(nre::E_NOT_FOUND, "Corresponding VM not found");
 		if(_ds || vm->initialized())
-			throw nre::Exception(nre::E_EXISTS,"Already initialized");
+			throw nre::Exception(nre::E_EXISTS, "Already initialized");
 		_vm = vm;
 		_ds = ds;
-		_prod = new nre::Producer<nre::VMManager::Packet>(_ds,false);
+		_prod = new nre::Producer<nre::VMManager::Packet>(_ds, false);
 		vm->set_producer(_prod);
 	}
 
@@ -59,7 +59,7 @@ private:
 
 class VMMngService : public nre::Service {
 	explicit VMMngService(const char *name)
-			: Service(name,nre::CPUSet(nre::CPUSet::ALL),portal) {
+		: Service(name, nre::CPUSet(nre::CPUSet::ALL), portal) {
 		// we want to accept one dataspaces and pd-translations
 		for(nre::CPU::iterator it = nre::CPU::begin(); it != nre::CPU::end(); ++it) {
 			nre::LocalThread *ec = get_thread(it->log_id());
@@ -75,9 +75,9 @@ public:
 	}
 
 private:
-	virtual VMMngServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,
-			nre::Pt::portal_func func) {
-		return new VMMngServiceSession(this,id,cap,caps,func);
+	virtual VMMngServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
+	                                            nre::Pt::portal_func func) {
+		return new VMMngServiceSession(this, id, cap, caps, func);
 	}
 
 	PORTAL static void portal(capsel_t pid);

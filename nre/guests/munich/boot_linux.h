@@ -16,6 +16,6 @@
 #ifndef _BOOT_LINUX_H_
 #define _BOOT_LINUX_H_
 
-void jmp_kernel(unsigned cs, unsigned stack) __attribute__((noreturn));
+void jmp_kernel(unsigned cs, unsigned stack) __attribute__ ((noreturn));
 
 #endif

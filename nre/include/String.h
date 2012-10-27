@@ -40,21 +40,21 @@ public:
 	 * @param str the string
 	 * @param len the length of the string (-1 by default, which means: use strlen())
 	 */
-	explicit String(const char *str,size_t len = static_cast<size_t>(-1))
+	explicit String(const char *str, size_t len = static_cast<size_t>(-1))
 		: _str(), _len() {
 		if(str)
-			init(str,len);
+			init(str, len);
 	}
 	/**
 	 * Clones the given string
 	 */
 	explicit String(const String& s)
 		: _str(), _len() {
-		init(s._str,s._len);
+		init(s._str, s._len);
 	}
-	String& operator=(const String& s) {
+	String & operator=(const String& s) {
 		if(&s != this)
-			reset(s._str,s._len);
+			reset(s._str, s._len);
 		return *this;
 	}
 	~String() {
@@ -80,10 +80,10 @@ public:
 	 * @param size the size of the buffer that is created
 	 * @param fmt the format-string
 	 */
-	void format(size_t size,const char *fmt,...) {
+	void format(size_t size, const char *fmt, ...) {
 		va_list ap;
-		va_start(ap,fmt);
-		vformat(size,fmt,ap);
+		va_start(ap, fmt);
+		vformat(size, fmt, ap);
 		va_end(ap);
 	}
 	/**
@@ -93,11 +93,11 @@ public:
 	 * @param fmt the format-string
 	 * @param ap the arguments
 	 */
-	void vformat(size_t size,const char *fmt,va_list ap) {
+	void vformat(size_t size, const char *fmt, va_list ap) {
 		delete[] _str;
 		_str = new char[size];
-		OStringStream os(_str,size);
-		os.vwritef(fmt,ap);
+		OStringStream os(_str, size);
+		os.vwritef(fmt, ap);
 		_len = os.length();
 	}
 
@@ -108,16 +108,16 @@ public:
 	 * @param str the string
 	 * @param len the length of the string (-1 by default, which means: use strlen())
 	 */
-	void reset(const char *str,size_t len = static_cast<size_t>(-1)) {
+	void reset(const char *str, size_t len = static_cast<size_t>(-1)) {
 		delete[] _str;
-		init(str,len);
+		init(str, len);
 	}
 
 private:
-	void init(const char *str,size_t len) {
+	void init(const char *str, size_t len) {
 		_len = len == static_cast<size_t>(-1) ? strlen(str) : len;
 		_str = new char[_len + 1];
-		memcpy(_str,str,_len);
+		memcpy(_str, str, _len);
 		_str[_len] = '\0';
 	}
 
@@ -128,14 +128,14 @@ private:
 /**
  * @return true if s1 and s2 are equal
  */
-static inline bool operator==(const String &s1,const String &s2) {
-	return s1.length() == s2.length() && strcmp(s1.str(),s2.str()) == 0;
+static inline bool operator==(const String &s1, const String &s2) {
+	return s1.length() == s2.length() && strcmp(s1.str(), s2.str()) == 0;
 }
 /**
  * @return true if s1 and s2 are not equal
  */
-static inline bool operator!=(const String &s1,const String &s2) {
-	return !operator==(s1,s2);
+static inline bool operator!=(const String &s1, const String &s2) {
+	return !operator==(s1, s2);
 }
 
 /**
@@ -145,7 +145,7 @@ static inline bool operator!=(const String &s1,const String &s2) {
  * @param str the string
  * @return the stream
  */
-static inline OStream &operator <<(OStream &os,const String &str) {
+static inline OStream &operator<<(OStream &os, const String &str) {
 	return os << str.str();
 }
 

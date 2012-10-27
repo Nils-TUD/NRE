@@ -39,18 +39,18 @@ public:
 	 * Maps <size> bytes at <phys> to <virt>. It assumes that both the virtual and the physical
 	 * pages are available.
 	 */
-	static void map_mem(uintptr_t phys,uintptr_t virt,size_t size);
+	static void map_mem(uintptr_t phys, uintptr_t virt, size_t size);
 	/**
 	 * Undos the operation of map_mem(). That is, unmaps <size> bytes at <virt>.
 	 */
-	static void unmap_mem(uintptr_t virt,size_t size);
+	static void unmap_mem(uintptr_t virt, size_t size);
 
 	/**
 	 * Maps the string at physical address <phys> to a free virtual address. The string can be
 	 * at most <max_pages> long, starting at the beginning of the page of <phys>.
 	 * This function is intended for Hip-module cmdlines.
 	 */
-	static char *map_string(uintptr_t phys,uint max_pages = 2);
+	static char *map_string(uintptr_t phys, uint max_pages = 2);
 	/**
 	 * Undos the operation of map_string(). That is, it unmaps the pages the given string touches
 	 * and free's the virtual memory that has been allocated.
@@ -64,12 +64,12 @@ public:
 	 * @param gsi the gsi (will be determined automatically if pcicfg != 0)
 	 * @param pcicfg the address in the PCI configuration space of the device
 	 */
-	static void allocate_gsi(uint &gsi,void *pcicfg = 0) {
+	static void allocate_gsi(uint &gsi, void *pcicfg = 0) {
 		nre::ScopedLock<nre::UserSm> guard(&_gsi_sm);
 		if(pcicfg)
 			gsi = nre::Hip::get().cfg_gsi - ++_next_msi;
 		if(_gsis.is_set(gsi))
-			throw nre::Exception(nre::E_EXISTS,32,"GSI %u already in use",gsi);
+			throw nre::Exception(nre::E_EXISTS, 32, "GSI %u already in use", gsi);
 		_gsis.set(gsi);
 	}
 	/**
@@ -88,9 +88,9 @@ public:
 	 * @param base the start of the port range
 	 * @param count the number of ports
 	 */
-	static void allocate_ports(nre::Ports::port_t base,uint count) {
+	static void allocate_ports(nre::Ports::port_t base, uint count) {
 		nre::ScopedLock<nre::UserSm> guard(&_io_sm);
-		_io.alloc_region(base,count);
+		_io.alloc_region(base, count);
 	}
 	/**
 	 * Releases the I/O ports <base>..<base>+<count>-1.
@@ -98,9 +98,9 @@ public:
 	 * @param base the start of the port range
 	 * @param count the number of ports
 	 */
-	static void release_ports(nre::Ports::port_t base,uint count) {
+	static void release_ports(nre::Ports::port_t base, uint count) {
 		nre::ScopedLock<nre::UserSm> guard(&_io_sm);
-		_io.free(base,count);
+		_io.free(base, count);
 	}
 
 	/**
@@ -111,8 +111,8 @@ public:
 	 */
 	static capsel_t request_idle_sc(cpu_t cpu) {
 		nre::UtcbFrame uf;
-		uf.accept_delegates(0,nre::Crd::OBJ_ALL);
-		uf << nre::CapRange(cpu,1,nre::Crd::OBJ_ALL);
+		uf.accept_delegates(0, nre::Crd::OBJ_ALL);
+		uf << nre::CapRange(cpu, 1, nre::Crd::OBJ_ALL);
 		_map_pts[nre::CPU::current().log_id()]->call(uf);
 		return uf.get_delegated(0).offset();
 	}
@@ -125,7 +125,7 @@ public:
 
 private:
 	Hypervisor();
-	
+
 	PORTAL static void portal_map(capsel_t pid);
 
 	static uchar _stack[];

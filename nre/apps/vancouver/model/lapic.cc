@@ -17,15 +17,15 @@
  */
 
 #ifndef REGBASE
-#include <stream/Serial.h>
-#include <util/Atomic.h>
-#include <util/Util.h>
-#include <util/Math.h>
+#    include <stream/Serial.h>
+#    include <util/Atomic.h>
+#    include <util/Util.h>
+#    include <util/Math.h>
 
-#include "../bus/motherboard.h"
-#include "../bus/discovery.h"
-#include "../bus/helper.h"
-#include "../bus/vcpu.h"
+#    include "../bus/motherboard.h"
+#    include "../bus/discovery.h"
+#    include "../bus/helper.h"
+#    include "../bus/vcpu.h"
 
 using namespace nre;
 
@@ -34,14 +34,14 @@ using namespace nre;
  *
  * State: testing
  * Features: MEM, MSR, MSR-base and CPUID, LVT, LINT0/1, EOI, prioritize IRQ, error, RemoteEOI,
- * 			timer, IPI, lowest prio, reset, x2apic mode, BIOS ACPI tables
+ *          timer, IPI, lowest prio, reset, x2apic mode, BIOS ACPI tables
  * Missing:  focus checking, CR8/TPR setting
  * Difference:  no interrupt polarity, lowest prio is round-robin
  * Documentation: Intel SDM Volume 3a Chapter 10 253668-033.
  */
-class Lapic: public DiscoveryHelper<Lapic>,public StaticReceiver<Lapic> {
-#define REGBASE "lapic.cc"
-#include "reg.h"
+class Lapic : public DiscoveryHelper<Lapic>, public StaticReceiver<Lapic> {
+#    define REGBASE "lapic.cc"
+#    include "reg.h"
 	enum {
 		MAX_FREQ = 200000000,
 		LVT_MASK_BIT = 16,
@@ -98,9 +98,9 @@ private:
 
 		// init dynamic state
 		_timer_dcr_shift = 1 + _timer_clock_shift;
-		memset(_vector,0,sizeof(_vector));
-		memset(_lvtds,0,sizeof(_lvtds));
-		memset(_rirr,0,sizeof(_rirr));
+		memset(_vector, 0, sizeof(_vector));
+		memset(_lvtds, 0, sizeof(_lvtds));
+		memset(_rirr, 0, sizeof(_rirr));
 		_isrv = 0;
 		_esr_shadow = 0;
 		_lowest_rr = 0;
@@ -136,10 +136,10 @@ private:
 		if((_msr ^ value) & 0x800) {
 			bool apic_enabled = value & 0x800;
 			CpuMessage msg[] = {
-					// update CPUID leaf 1 EDX
-					CpuMessage(1,3,~(1 << 9),apic_enabled << 9),
-					// support for X2Apic
-					CpuMessage(1,2,~(1 << 21),apic_enabled << 21),
+				// update CPUID leaf 1 EDX
+				CpuMessage(1, 3, ~(1 << 9), apic_enabled << 9),
+				// support for X2Apic
+				CpuMessage(1, 2, ~(1 << 21), apic_enabled << 21),
 			};
 			for(size_t i = 0; i < ARRAY_SIZE(msg); i++)
 				_vcpu->executor.send(msg[i]);
@@ -194,14 +194,14 @@ private:
 		unsigned value = get_ccr(now);
 		if(!value || (_TIMER & (1 << LVT_MASK_BIT)))
 			return;
-		MessageTimer msg(_timer,now + (value << _timer_dcr_shift));
+		MessageTimer msg(_timer, now + (value << _timer_dcr_shift));
 		_mb.bus_timer.send(msg);
 	}
 
 	/**
 	 * We send an IPI.
 	 */
-	bool send_ipi(unsigned icr,unsigned dst) {
+	bool send_ipi(unsigned icr, unsigned dst) {
 		COUNTER_INC("IPI");
 
 		unsigned shorthand = (icr >> 18) & 0x3;
@@ -218,17 +218,17 @@ private:
 
 		// self IPIs can only be fixed
 		if((self && event != VCVCpu::EVENT_FIXED)
-		// we can not send EXTINT and RRD
-				|| (event & (VCVCpu::EVENT_EXTINT | VCVCpu::EVENT_RRD))
-				//  and INIT deassert messages
-				|| (event == VCVCpu::EVENT_INIT && (~icr & MessageApic::ICR_ASSERT))
+		   // we can not send EXTINT and RRD
+		   || (event & (VCVCpu::EVENT_EXTINT | VCVCpu::EVENT_RRD))
+		   //  and INIT deassert messages
+		   || (event == VCVCpu::EVENT_INIT && (~icr & MessageApic::ICR_ASSERT))
 
-				/**
-				 * This is a strange thing in the manual: lowest priority with
-				 * a broadcast shorthand is invalid. But what about physical
-				 * destination mode with dst=0xff?
-				 */
-				|| (event == VCVCpu::EVENT_LOWEST && shorthand == 2))
+		   /**
+		    * This is a strange thing in the manual: lowest priority with
+		    * a broadcast shorthand is invalid. But what about physical
+		    * destination mode with dst=0xff?
+		    */
+		   || (event == VCVCpu::EVENT_LOWEST && shorthand == 2))
 			return false;
 
 		// send vector error check
@@ -251,13 +251,13 @@ private:
 		if(event == VCVCpu::EVENT_LOWEST) {
 
 			// we send them round-robin as EVENT_FIXED
-			MessageApic msg((icr & ~0x700u),dst,0);
+			MessageApic msg((icr & ~0x700u), dst, 0);
 
 			// we could set an send accept error here if nobody got the
 			// message, but that is not supported in the P4...
-			return _mb.bus_apic.send_rr(msg,_lowest_rr);
+			return _mb.bus_apic.send_rr(msg, _lowest_rr);
 		}
-		MessageApic msg(icr,dst,shorthand == 3 ? this : 0);
+		MessageApic msg(icr, dst, shorthand == 3 ? this : 0);
 		return _mb.bus_apic.send(msg);
 	}
 
@@ -291,7 +291,7 @@ private:
 		// EXTINT pending?
 		for(size_t i = 0; i < NUM_LVT; i++) {
 			unsigned lvt;
-			Lapic_read(i + LVT_BASE,lvt);
+			Lapic_read(i + LVT_BASE, lvt);
 			if(_lvtds[i] && ((1 << ((lvt >> 8) & 7)) == VCVCpu::EVENT_EXTINT))
 				return 0x100 | i;
 		}
@@ -318,7 +318,7 @@ private:
 		_vcpu->bus_event.send(msg);
 	}
 
-	static void set_bit(unsigned *vector,unsigned bit,bool value = true) {
+	static void set_bit(unsigned *vector, unsigned bit, bool value = true) {
 		unsigned index = bit >> 5;
 		unsigned mask = 1 << (bit & 0x1f);
 		if(value)
@@ -327,7 +327,7 @@ private:
 			vector[index] &= ~mask;
 	}
 
-	static bool get_bit(unsigned *vector,unsigned bit) {
+	static bool get_bit(unsigned *vector, unsigned bit) {
 		return vector[bit >> 5] & (1 << (bit & 0x1f));
 	}
 
@@ -341,20 +341,20 @@ private:
 		 */
 		if(_esr_shadow & (1 << bit))
 			return true;
-		Atomic::set_bit(&_esr_shadow,bit);
+		Atomic::set_bit(&_esr_shadow, bit);
 		return trigger_lvt(_ERROR_offset - LVT_BASE);
 	}
 
 	/**
 	 * Accept a fixed vector in the IRR.
 	 */
-	void accept_vector(unsigned char vector,bool level,bool value) {
+	void accept_vector(unsigned char vector, bool level, bool value) {
 		// lower vectors are reserved
 		if(vector < 16)
 			set_error(6);
 		else {
-			Atomic::set_bit(_vector,OFS_IRR + vector,!level || value);
-			Atomic::set_bit(_vector,OFS_TMR + vector,level);
+			Atomic::set_bit(_vector, OFS_IRR + vector, !level || value);
+			Atomic::set_bit(_vector, OFS_TMR + vector, level);
 		}
 		update_irqs();
 	}
@@ -363,7 +363,7 @@ private:
 	 * Broadcast an EOI on the bus if it is level triggered.
 	 */
 	void broadcast_eoi(unsigned vector) {
-		if(!get_bit(_vector,OFS_TMR + _isrv))
+		if(!get_bit(_vector, OFS_TMR + _isrv))
 			return;
 
 		// we clear our LVT entries first
@@ -376,14 +376,14 @@ private:
 		if(_SVR & 0x1000)
 			return;
 
-		MessageMem msg(false,MessageApic::IOAPIC_EOI,&vector);
+		MessageMem msg(false, MessageApic::IOAPIC_EOI, &vector);
 		_mb.bus_mem.send(msg);
 	}
 
 	/**
 	 *
 	 */
-	bool register_read(unsigned offset,unsigned &value) {
+	bool register_read(unsigned offset, unsigned &value) {
 		COUNTER_INC("lapic read");
 		bool res = true;
 		switch(offset) {
@@ -398,13 +398,13 @@ private:
 				value = get_ccr(_mb.clock().source_time());
 				break;
 			default:
-				if(!(res = Lapic_read(offset,value)))
+				if(!(res = Lapic_read(offset, value)))
 					set_error(7);
 				break;
 		}
 
 		// LVT bits
-		if(in_range(offset,LVT_BASE,NUM_LVT)) {
+		if(in_range(offset, LVT_BASE, NUM_LVT)) {
 			value &= ~(1 << 12);
 			if(_lvtds[offset - LVT_BASE])
 				value |= 1 << 12;
@@ -414,12 +414,12 @@ private:
 		return res;
 	}
 
-	bool register_write(unsigned offset,unsigned value,bool strict) {
+	bool register_write(unsigned offset, unsigned value, bool strict) {
 		bool res;
 		COUNTER_INC("lapic write");
 
 		// XXX
-		if(sw_disabled() && in_range(offset,LVT_BASE,NUM_LVT))
+		if(sw_disabled() && in_range(offset, LVT_BASE, NUM_LVT))
 			value |= 1 << 16;
 		switch(offset) {
 			case 0x9: // APR
@@ -431,7 +431,7 @@ private:
 				if(strict && value)
 					return false;
 				if(_isrv) {
-					set_bit(_vector,OFS_ISR + _isrv,false);
+					set_bit(_vector, OFS_ISR + _isrv, false);
 					broadcast_eoi(_isrv);
 
 					// if we eoi the timer IRQ, rearm the timer
@@ -443,9 +443,9 @@ private:
 				}
 				return true;
 			default:
-				if(!(res = Lapic_write(offset,value,strict))) {
+				if(!(res = Lapic_write(offset, value, strict))) {
 					if(offset != 3)
-						Serial::get().writef("LAPIC write %x at offset %x failed\n",value,offset);
+						Serial::get().writef("LAPIC write %x at offset %x failed\n", value, offset);
 					set_error(7);
 				}
 				break;
@@ -454,12 +454,12 @@ private:
 		// mask all entries on SVR writes
 		if(offset == _SVR_offset && sw_disabled())
 			for(size_t i = 0; i < NUM_LVT; i++) {
-				register_read(i + LVT_BASE,value);
-				register_write(i + LVT_BASE,value,false);
+				register_read(i + LVT_BASE, value);
+				register_write(i + LVT_BASE, value, false);
 			}
 
 		// do side effects of a changed LVT entry
-		if(in_range(offset,LVT_BASE,NUM_LVT)) {
+		if(in_range(offset, LVT_BASE, NUM_LVT)) {
 			if(_lvtds[offset - LVT_BASE])
 				trigger_lvt(offset - LVT_BASE);
 			if(offset == _TIMER_offset)
@@ -475,13 +475,13 @@ private:
 	bool trigger_lvt(unsigned num) {
 		assert(num < NUM_LVT);
 		unsigned lvt = 0;
-		Lapic_read(num + LVT_BASE,lvt);
+		Lapic_read(num + LVT_BASE, lvt);
 		if(!num)
 			COUNTER_INC("LVT0");
 
 		unsigned event = 1 << ((lvt >> 8) & 7);
 		bool level = ((lvt & MessageApic::ICR_LEVEL) && event == VCVCpu::EVENT_FIXED)
-				|| (event == VCVCpu::EVENT_EXTINT);
+		             || (event == VCVCpu::EVENT_EXTINT);
 
 		// do not accept more IRQs if no EOI was performed
 		if(_rirr[num])
@@ -497,12 +497,12 @@ private:
 
 		// perf IRQs are auto masked
 		if(num == (_PERF_offset - LVT_BASE))
-			Atomic::set_bit(&_PERF,LVT_MASK_BIT);
+			Atomic::set_bit(&_PERF, LVT_MASK_BIT);
 
 		if(event == VCVCpu::EVENT_FIXED) {
 			// set Remote IRR on level triggered IRQs
 			_rirr[num] = level;
-			accept_vector(lvt,level,true);
+			accept_vector(lvt, level, true);
 
 			// we have delivered it
 			// XXX what about level triggered LVT0 DS?
@@ -540,7 +540,7 @@ private:
 		// and adding debugging info does only work to a certain degree (otherwise the issue
 		// disappears)
 		else
-			Serial::get().writef("event=%#x\n",event);
+			Serial::get().writef("event=%#x\n", event);
 
 		/**
 		 * It is not defined how invalid Delivery Modes are handled. We
@@ -595,15 +595,15 @@ public:
 	 * Receive MMIO access.
 	 */
 	bool receive(MessageMem &msg) {
-		if(((_msr & 0xc00) != 0x800) || !in_range(msg.phys,_msr & ~0xfffull,0x1000))
+		if(((_msr & 0xc00) != 0x800) || !in_range(msg.phys, _msr & ~0xfffull, 0x1000))
 			return false;
 		if((msg.phys & 0xf) || (msg.phys & 0xfff) >= 0x400)
 			return false;
 
 		if(msg.read)
-			register_read((msg.phys >> 4) & 0x3f,*msg.ptr);
+			register_read((msg.phys >> 4) & 0x3f, *msg.ptr);
 		else
-			register_write((msg.phys >> 4) & 0x3f,*msg.ptr,false);
+			register_write((msg.phys >> 4) & 0x3f, *msg.ptr, false);
 		return true;
 	}
 
@@ -648,8 +648,8 @@ public:
 		assert(event != VCVCpu::EVENT_LOWEST);
 
 		if(event == VCVCpu::EVENT_FIXED)
-			accept_vector(msg.icr,msg.icr & MessageApic::ICR_LEVEL,
-					msg.icr & MessageApic::ICR_ASSERT);
+			accept_vector(msg.icr, msg.icr & MessageApic::ICR_LEVEL,
+			              msg.icr & MessageApic::ICR_ASSERT);
 		else {
 			if(event == VCVCpu::EVENT_SIPI)
 				event |= (msg.icr & 0xff) << 8;
@@ -678,8 +678,8 @@ public:
 			}
 			else if(irrv) {
 				assert(irrv > _isrv);
-				Atomic::set_bit(_vector,OFS_IRR + irrv,false);
-				set_bit(_vector,OFS_ISR + irrv);
+				Atomic::set_bit(_vector, OFS_IRR + irrv, false);
+				set_bit(_vector, OFS_ISR + irrv);
 				_isrv = irrv;
 				msg.value = irrv;
 			}
@@ -708,8 +708,8 @@ public:
 			}
 
 			// check whether the register is available
-			if(!in_range(msg.cpu->ecx,0x800,64) || !x2apic_mode() || msg.cpu->ecx == 0x831
-					|| msg.cpu->ecx == 0x80e)
+			if(!in_range(msg.cpu->ecx, 0x800, 64) || !x2apic_mode() || msg.cpu->ecx == 0x831
+			   || msg.cpu->ecx == 0x80e)
 				return false;
 
 			if(msg.cpu->ecx == 0x80d) {
@@ -719,7 +719,7 @@ public:
 
 			// read register
 			unsigned eax = msg.cpu->eax;
-			if(!register_read(msg.cpu->ecx & 0x3f,eax))
+			if(!register_read(msg.cpu->ecx & 0x3f, eax))
 				return false;
 			msg.cpu->eax = eax;
 
@@ -736,14 +736,14 @@ public:
 				return set_base_msr(msg.cpu->edx_eax());
 
 			// check whether the register is available
-			if(!in_range(msg.cpu->ecx,0x800,64) || !x2apic_mode() || msg.cpu->ecx == 0x831
-					|| msg.cpu->ecx == 0x802 || msg.cpu->ecx == 0x80d || msg.cpu->ecx == 0x80e
-					|| (msg.cpu->edx && msg.cpu->ecx != 0x830))
+			if(!in_range(msg.cpu->ecx, 0x800, 64) || !x2apic_mode() || msg.cpu->ecx == 0x831
+			   || msg.cpu->ecx == 0x802 || msg.cpu->ecx == 0x80d || msg.cpu->ecx == 0x80e
+			   || (msg.cpu->edx && msg.cpu->ecx != 0x830))
 				return false;
 
 			// self IPI?
 			if(msg.cpu->ecx == 0x83f && msg.cpu->eax < 0x100 && !msg.cpu->edx)
-				return send_ipi(0x40000 | msg.cpu->eax,0);
+				return send_ipi(0x40000 | msg.cpu->eax, 0);
 
 			// write upper half of the ICR first
 			unsigned old_ICR1 = _ICR1;
@@ -751,9 +751,9 @@ public:
 				_ICR1 = msg.cpu->edx;
 
 			// write lower half in strict mode with reserved bit checking
-			if(!register_write(msg.cpu->ecx & 0x3f,msg.cpu->eax,true)) {
+			if(!register_write(msg.cpu->ecx & 0x3f, msg.cpu->eax, true)) {
 				_ICR1 = old_ICR1;
-				Serial::get().writef("FAILED %x strict\n",msg.cpu->ecx);
+				Serial::get().writef("FAILED %x strict\n", msg.cpu->ecx);
 				return false;
 			}
 			return true;
@@ -785,132 +785,132 @@ public:
 
 	void discovery() {
 		unsigned value = 0;
-		discovery_read_dw("APIC",36,value);
-		size_t length = discovery_length("APIC",44);
+		discovery_read_dw("APIC", 36, value);
+		size_t length = discovery_length("APIC", 44);
 		if(value == 0) {
 			// NMI is connected to LINT1 on all LAPICs
-			discovery_write_dw("APIC",length + 0,0x00ff0604 | (_initial_apic_id << 24),4);
-			discovery_write_dw("APIC",length + 4,0x0100,2);
+			discovery_write_dw("APIC", length + 0, 0x00ff0604 | (_initial_apic_id << 24), 4);
+			discovery_write_dw("APIC", length + 4, 0x0100, 2);
 			length += 6;
 
 			// NMI is connected to LINT1 on all x2APICs
-			discovery_write_dw("APIC",length + 0,0x00000c0a | (_initial_apic_id << 24),4);
-			discovery_write_dw("APIC",length + 4,0xffffffff,4);
-			discovery_write_dw("APIC",length + 8,1,4);
+			discovery_write_dw("APIC", length + 0, 0x00000c0a | (_initial_apic_id << 24), 4);
+			discovery_write_dw("APIC", length + 4, 0xffffffff, 4);
+			discovery_write_dw("APIC", length + 8, 1, 4);
 			length += 12;
 
 			// write the default APIC address to the MADT
-			discovery_write_dw("APIC",36,APIC_ADDR,4);
+			discovery_write_dw("APIC", 36, APIC_ADDR, 4);
 
 			// and that we have legacy PICs
-			discovery_write_dw("APIC",40,1,4);
+			discovery_write_dw("APIC", 40, 1, 4);
 		}
 
 		// add the LAPIC structure to the MADT
 		if(_initial_apic_id < 255) {
-			discovery_write_dw("APIC",length,(_initial_apic_id << 24) | 0x0800,4);
-			discovery_write_dw("APIC",length + 4,1,4);
+			discovery_write_dw("APIC", length, (_initial_apic_id << 24) | 0x0800, 4);
+			discovery_write_dw("APIC", length + 4, 1, 4);
 		}
 		else {
-			discovery_write_dw("APIC",length + 0,0x1009,4);
-			discovery_write_dw("APIC",length + 4,_initial_apic_id,4);
-			discovery_write_dw("APIC",length + 8,1,4);
-			discovery_write_dw("APIC",length + 12,_initial_apic_id,4);
+			discovery_write_dw("APIC", length + 0, 0x1009, 4);
+			discovery_write_dw("APIC", length + 4, _initial_apic_id, 4);
+			discovery_write_dw("APIC", length + 8, 1, 4);
+			discovery_write_dw("APIC", length + 12, _initial_apic_id, 4);
 		}
 	}
 
-	Lapic(Motherboard &mb,VCVCpu *vcpu,unsigned initial_apic_id,unsigned timer) :
-			_mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer),
-			_timer_clock_shift(), _timer_dcr_shift(), _timer_start(), _msr(), _vector(),
-			_esr_shadow(), _isrv(), _lvtds(), _rirr(), _lowest_rr() {
+	Lapic(Motherboard &mb, VCVCpu *vcpu, unsigned initial_apic_id, unsigned timer)
+		: _mb(mb), _vcpu(vcpu), _initial_apic_id(initial_apic_id), _timer(timer),
+		  _timer_clock_shift(), _timer_dcr_shift(), _timer_start(), _msr(), _vector(),
+		  _esr_shadow(), _isrv(), _lvtds(), _rirr(), _lowest_rr() {
 		// find a FREQ that is not too high
 		for(_timer_clock_shift = 0; _timer_clock_shift < 32; _timer_clock_shift++)
 			if((_mb.clock().source_freq() >> _timer_clock_shift) <= MAX_FREQ)
 				break;
 
-		Serial::get().writef("LAPIC freq %Ld\n",_mb.clock().source_freq() >> _timer_clock_shift);
+		Serial::get().writef("LAPIC freq %Ld\n", _mb.clock().source_freq() >> _timer_clock_shift);
 		CpuMessage msg[] = {
-				// propagate initial APIC id
-				CpuMessage(1,1,0xffffff,_initial_apic_id << 24),CpuMessage(11,3,0,_initial_apic_id),
-				// support for APIC timer that does not sleep in C-states
-				CpuMessage(6,0,~(1 << 2),1 << 2),
+			// propagate initial APIC id
+			CpuMessage(1, 1, 0xffffff, _initial_apic_id << 24), CpuMessage(11, 3, 0, _initial_apic_id),
+			// support for APIC timer that does not sleep in C-states
+			CpuMessage(6, 0, ~(1 << 2), 1 << 2),
 		};
 		for(size_t i = 0; i < ARRAY_SIZE(msg); i++)
 			_vcpu->executor.send(msg[i]);
 
 		reset();
 
-		mb.bus_legacy.add(this,receive_static<MessageLegacy>);
-		mb.bus_apic.add(this,receive_static<MessageApic>);
-		mb.bus_timeout.add(this,receive_static<MessageTimeout>);
-		mb.bus_discovery.add(this,discover);
-		vcpu->executor.add(this,receive_static<CpuMessage>);
-		vcpu->mem.add(this,receive_static<MessageMem>);
-		vcpu->memregion.add(this,receive_static<MessageMemRegion>);
-		vcpu->bus_lapic.add(this,receive_static<LapicEvent>);
+		mb.bus_legacy.add(this, receive_static<MessageLegacy> );
+		mb.bus_apic.add(this, receive_static<MessageApic> );
+		mb.bus_timeout.add(this, receive_static<MessageTimeout> );
+		mb.bus_discovery.add(this, discover);
+		vcpu->executor.add(this, receive_static<CpuMessage> );
+		vcpu->mem.add(this, receive_static<MessageMem> );
+		vcpu->memregion.add(this, receive_static<MessageMemRegion> );
+		vcpu->bus_lapic.add(this, receive_static<LapicEvent> );
 	}
 };
 
 PARAM_HANDLER(lapic,
-		"lapic:inital_apic_id - provide an x2APIC for the last VCPU",
-		"Example: 'lapic:2'",
-		"If no inital_apic_id is given the lapic number is used.") {
+              "lapic:inital_apic_id - provide an x2APIC for the last VCPU",
+              "Example: 'lapic:2'",
+              "If no inital_apic_id is given the lapic number is used.") {
 	if(!mb.last_vcpu)
 		Util::panic("no VCPU for this APIC");
 	// allocate a timer
 	MessageTimer msg0;
 	if(!mb.bus_timer.send(msg0))
-		Util::panic("%s can't get a timer",__PRETTY_FUNCTION__);
+		Util::panic("%s can't get a timer", __PRETTY_FUNCTION__);
 
 	static unsigned lapic_count;
-	new Lapic(mb,mb.last_vcpu,~argv[0] ? argv[0] : lapic_count,msg0.nr);
+	new Lapic(mb, mb.last_vcpu, ~argv[0] ? argv[0] : lapic_count, msg0.nr);
 	lapic_count++;
 }
 
 template<typename T>
-static T xchg(volatile T *x,T y) {
-	asm volatile ("xchg%z1 %1, %0": "+m"(*x), "+r"(y) :: "memory");
+static T xchg(volatile T *x, T y) {
+	asm volatile ("xchg%z1 %1, %0" : "+m" (*x), "+r" (y) :: "memory");
 	return y;
 }
 
 #else
 REGSET(Lapic,
-		REG_RW(_ID, 0x02, 0, 0xff000000,)
-		REG_RO(_VERSION, 0x03, 0x01050014)
-		REG_RW(_TPR, 0x08, 0, 0xff,)
-		REG_RW(_LDR, 0x0d, 0, 0xff000000,)
-		REG_RW(_DFR, 0x0e, 0xffffffff, 0xf0000000,)
-		REG_RW(_SVR, 0x0f, 0x000000ff, 0x11ff, update_irqs();)
-		REG_RW(_ESR, 0x28, 0, 0xffffffff,
-				uint y = 0;
-				asm volatile ("xchg%z1 %1, %0": "+m"(_esr_shadow), "+r"(y) :: "memory");
-				_ESR = y;
-				return !value; )
-		REG_RW(_ICR, 0x30, 0, 0x000ccfff, if (!send_ipi(_ICR, _ICR1)) COUNTER_INC("IPI missed");)
-		REG_RW(_ICR1, 0x31, 0, 0xff000000,)
-		REG_RW(_TIMER, 0x32, 0x00010000, 0x310ff, )
-		REG_RW(_TERM, 0x33, 0x00010000, 0x117ff, )
-		REG_RW(_PERF, 0x34, 0x00010000, 0x117ff, )
-		REG_RW(_LINT0, 0x35, 0x00010000, 0x1b7ff, )
-		REG_RW(_LINT1, 0x36, 0x00010000, 0x1b7ff, )
-		REG_RW(_ERROR, 0x37, 0x00010000, 0x110ff, )
-		REG_RW(_ICT, 0x38, 0, ~0u,
-				COUNTER_INC("lapic ict");
-				_timer_start = _mb.clock().source_time();
-				update_timer(_timer_start); )
-		REG_RW(_DCR, 0x3e, 0, 0xb
-				,
-				{
-					timevalue now = _mb.clock().source_time();
-					unsigned done = _ICT - get_ccr(now);
-					_timer_dcr_shift = _timer_clock_shift + ((((_DCR & 0x3) | ((_DCR >> 1) & 4)) + 1) & 7);
+       REG_RW(_ID, 0x02, 0, 0xff000000, )
+       REG_RO(_VERSION, 0x03, 0x01050014)
+       REG_RW(_TPR, 0x08, 0, 0xff, )
+       REG_RW(_LDR, 0x0d, 0, 0xff000000, )
+       REG_RW(_DFR, 0x0e, 0xffffffff, 0xf0000000, )
+       REG_RW(_SVR, 0x0f, 0x000000ff, 0x11ff, update_irqs(); )
+       REG_RW(_ESR, 0x28, 0, 0xffffffff,
+              uint y = 0;
+              asm volatile ("xchg%z1 %1, %0" : "+m" (_esr_shadow), "+r" (y) :: "memory");
+              _ESR = y;
+              return !value; )
+       REG_RW(_ICR, 0x30, 0, 0x000ccfff, if(!send_ipi(_ICR, _ICR1)) COUNTER_INC("IPI missed"); )
+       REG_RW(_ICR1, 0x31, 0, 0xff000000, )
+       REG_RW(_TIMER, 0x32, 0x00010000, 0x310ff, )
+       REG_RW(_TERM, 0x33, 0x00010000, 0x117ff, )
+       REG_RW(_PERF, 0x34, 0x00010000, 0x117ff, )
+       REG_RW(_LINT0, 0x35, 0x00010000, 0x1b7ff, )
+       REG_RW(_LINT1, 0x36, 0x00010000, 0x1b7ff, )
+       REG_RW(_ERROR, 0x37, 0x00010000, 0x110ff, )
+       REG_RW(_ICT, 0x38, 0, ~0u,
+              COUNTER_INC("lapic ict");
+              _timer_start = _mb.clock().source_time();
+              update_timer(_timer_start); )
+       REG_RW(_DCR, 0x3e, 0, 0xb
+              ,
+              {
+                  timevalue now = _mb.clock().source_time();
+                  unsigned done = _ICT - get_ccr(now);
+                  _timer_dcr_shift = _timer_clock_shift + ((((_DCR & 0x3) | ((_DCR >> 1) & 4)) + 1) & 7);
 
-					/**
-					 * Move timer_start in the past, which what would be
-					 * already done on this period with the current speed.
-					 */
-					_timer_start = now - (done << _timer_dcr_shift);
-					update_timer(now);
-				}
-		))
+                  /**
+                   * Move timer_start in the past, which what would be
+                   * already done on this period with the current speed.
+                   */
+                  _timer_start = now - (done << _timer_dcr_shift);
+                  update_timer(now);
+			  }
+              ))
 #endif

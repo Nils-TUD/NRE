@@ -12,13 +12,13 @@
 #include <arch/Types.h>
 #include <Compiler.h>
 
-EXTERN_C void* memcpy(void *dest,const void *src,size_t len);
-EXTERN_C void *memmove(void *dest,const void *src,size_t count);
-EXTERN_C void *memset(void *addr,int value,size_t count);
+EXTERN_C void* memcpy(void *dest, const void *src, size_t len);
+EXTERN_C void *memmove(void *dest, const void *src, size_t count);
+EXTERN_C void *memset(void *addr, int value, size_t count);
 EXTERN_C size_t strlen(const char *src);
-EXTERN_C int memcmp(const void *str1,const void *str2,size_t count);
-EXTERN_C int strcmp(const char *dst,const char *src);
-EXTERN_C int strncmp(const char *str1,const char *str2,size_t count);
-EXTERN_C char *strchr(const char *str,int ch);
-EXTERN_C char *strstr(const char *str1,const char *str2);
-EXTERN_C size_t strcspn(const char *s,const char *reject);
+EXTERN_C int memcmp(const void *str1, const void *str2, size_t count);
+EXTERN_C int strcmp(const char *dst, const char *src);
+EXTERN_C int strncmp(const char *str1, const char *str2, size_t count);
+EXTERN_C char *strchr(const char *str, int ch);
+EXTERN_C char *strstr(const char *str1, const char *str2);
+EXTERN_C size_t strcspn(const char *s, const char *reject);

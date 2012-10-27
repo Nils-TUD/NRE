@@ -49,7 +49,7 @@ public:
 
 		if(msg.port == _port_b) {
 			msg.value = 0;
-			MessagePit msg2(MessagePit::GET_OUT,1);
+			MessagePit msg2(MessagePit::GET_OUT, 1);
 			if(_bus_pit.send(msg2))
 				msg.value |= msg2.value << 4;
 			msg2.pit = 2;
@@ -68,11 +68,11 @@ public:
 		if(msg.port == _port_a) {
 			// fast A20 gate
 			if((_last_porta ^ msg.value) & 2) {
-				MessageLegacy msg2(MessageLegacy::FAST_A20,((msg.value & 2) >> 1));
+				MessageLegacy msg2(MessageLegacy::FAST_A20, ((msg.value & 2) >> 1));
 				_bus_legacy.send(msg2);
 			}
 			if(!(_last_porta & 1) && msg.value & 1) {
-				MessageLegacy msg2(MessageLegacy::INIT,1);
+				MessageLegacy msg2(MessageLegacy::INIT, 1);
 				_bus_legacy.send(msg2);
 			}
 			_last_porta = msg.value;
@@ -81,23 +81,24 @@ public:
 
 		if(msg.port == _port_b) {
 			_last_portb = msg.value;
-			MessagePit msg2(MessagePit::SET_GATE,2,msg.value & 1);
+			MessagePit msg2(MessagePit::SET_GATE, 2, msg.value & 1);
 			_bus_pit.send(msg2);
 			return true;
 		}
 		return false;
 	}
 
-	SystemControlPort(DBus<MessageLegacy> &bus_legacy,DBus<MessagePit> &bus_pit,unsigned port_a,unsigned port_b)
+	SystemControlPort(DBus<MessageLegacy> &bus_legacy, DBus<MessagePit> &bus_pit, unsigned port_a,
+	                  unsigned port_b)
 		: _bus_legacy(bus_legacy), _bus_pit(bus_pit), _port_a(port_a), _port_b(port_b),
 		  _last_porta(0), _last_portb(0) {
 	}
 };
 
 PARAM_HANDLER(scp,
-		"scp:porta,portb - provide the system control ports A+B.",
-		"Example: 'scp:0x92,0x61'") {
-	SystemControlPort *scp = new SystemControlPort(mb.bus_legacy,mb.bus_pit,argv[0],argv[1]);
-	mb.bus_ioin.add(scp,SystemControlPort::receive_static<MessageIOIn>);
-	mb.bus_ioout.add(scp,SystemControlPort::receive_static<MessageIOOut>);
+              "scp:porta,portb - provide the system control ports A+B.",
+              "Example: 'scp:0x92,0x61'") {
+	SystemControlPort *scp = new SystemControlPort(mb.bus_legacy, mb.bus_pit, argv[0], argv[1]);
+	mb.bus_ioin.add(scp, SystemControlPort::receive_static<MessageIOIn> );
+	mb.bus_ioout.add(scp, SystemControlPort::receive_static<MessageIOOut> );
 }

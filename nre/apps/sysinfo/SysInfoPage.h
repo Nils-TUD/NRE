@@ -21,10 +21,10 @@
 
 class SysInfoPage {
 public:
-	static const size_t MAX_NAME_LEN	= 16;
-	static const size_t ROWS			= nre::Console::ROWS - 3;
+	static const size_t MAX_NAME_LEN    = 16;
+	static const size_t ROWS            = nre::Console::ROWS - 3;
 
-	explicit SysInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
+	explicit SysInfoPage(nre::ConsoleSession &cons, nre::SysInfoSession &sysinfo)
 		: _top(0), _cons(cons), _sysinfo(sysinfo), _sm() {
 	}
 	virtual ~SysInfoPage() {
@@ -40,17 +40,17 @@ public:
 	virtual void refresh_console(bool update) = 0;
 
 protected:
-	void display_footer(nre::ConsoleStream &cs,size_t i) {
-		cs.pos(0,nre::Console::ROWS - 1);
+	void display_footer(nre::ConsoleStream &cs, size_t i) {
+		cs.pos(0, nre::Console::ROWS - 1);
 		cs.color(i == 0 ? 0x17 : 0x71);
-		cs.writef("%*s",nre::Console::COLS / 2,"Scs");
+		cs.writef("%*s", nre::Console::COLS / 2, "Scs");
 		cs.color(i == 1 ? 0x17 : 0x71);
-		cs.writef("%*s",nre::Console::COLS / 2,"Pds");
+		cs.writef("%*s", nre::Console::COLS / 2, "Pds");
 	}
 
-	const char *getname(const nre::String &name,size_t &len) {
+	const char *getname(const nre::String &name, size_t &len) {
 		// don't display the path to the program (might be long) and cut off arguments
-		size_t lastslash = 0,end = name.length();
+		size_t lastslash = 0, end = name.length();
 		for(size_t i = 0; i < name.length(); ++i) {
 			if(name.str()[i] == '/')
 				lastslash = i + 1;
@@ -70,19 +70,19 @@ protected:
 };
 
 class ScInfoPage : public SysInfoPage {
-	static const size_t MAX_TIME_LEN		= 6;
-	static const size_t MAX_SUMTIME_LEN	= 12;
+	static const size_t MAX_TIME_LEN        = 6;
+	static const size_t MAX_SUMTIME_LEN = 12;
 public:
-	explicit ScInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
-		: SysInfoPage(cons,sysinfo) {
+	explicit ScInfoPage(nre::ConsoleSession &cons, nre::SysInfoSession &sysinfo)
+		: SysInfoPage(cons, sysinfo) {
 	}
 	virtual void refresh_console(bool update);
 };
 
 class PdInfoPage : public SysInfoPage {
 public:
-	explicit PdInfoPage(nre::ConsoleSession &cons,nre::SysInfoSession &sysinfo)
-		: SysInfoPage(cons,sysinfo) {
+	explicit PdInfoPage(nre::ConsoleSession &cons, nre::SysInfoSession &sysinfo)
+		: SysInfoPage(cons, sysinfo) {
 	}
 	virtual void refresh_console(bool update);
 };

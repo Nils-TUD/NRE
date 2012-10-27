@@ -49,7 +49,7 @@ public:
 	 */
 	virtual ~ClientSession() {
 		close();
-		CapSelSpace::get().free(_caps,1 << CPU::order());
+		CapSelSpace::get().free(_caps, 1 << CPU::order());
 	}
 
 	/**
@@ -68,8 +68,8 @@ public:
 private:
 	capsel_t open(Connection &con) {
 		UtcbFrame uf;
-		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
-		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
 		// we delegate our pd-cap because it will be revoked if we get killed. of course, the service
 		// can't validate that easily whether its our pd-cap. later, this doesn't matter because
 		// NOVA will revoke all caps of this Pd. until that is implemented, we use something that

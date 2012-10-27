@@ -37,13 +37,13 @@ public:
 	};
 	enum Flags {
 		// note that this equals the values in a Crd
-		R			= 1 << 0,
-		W			= 1 << 1,
-		X			= 1 << 2,
-		RW			= R | W,
-		RX			= R | X,
-		RWX			= R | W | X,
-		BIGPAGES	= 1 << 3,	// use 4M pages; requires an align to 4M
+		R           = 1 << 0,
+		W           = 1 << 1,
+		X           = 1 << 2,
+		RW          = R | W,
+		RX          = R | X,
+		RWX         = R | W | X,
+		BIGPAGES    = 1 << 3,   // use 4M pages; requires an align to 4M
 	};
 
 	/**
@@ -62,8 +62,8 @@ public:
 	 * @param origin the origin of the memory (only used by the dataspace infrastructure)
 	 * @param align the alignment in order of pages, i.e. 2^<align> * PAGE_SIZE
 	 */
-	explicit DataSpaceDesc(size_t size,Type type,uint flags,uintptr_t phys = 0,uintptr_t virt = 0,
-			uintptr_t origin = 0,uint align = 0)
+	explicit DataSpaceDesc(size_t size, Type type, uint flags, uintptr_t phys = 0, uintptr_t virt = 0,
+	                       uintptr_t origin = 0, uint align = 0)
 		: _virt(virt), _phys(phys), _origin(origin), _size(size), _align(align), _flags(flags),
 		  _type(type) {
 	}
@@ -148,10 +148,10 @@ private:
 	Type _type;
 };
 
-static inline OStream &operator<<(OStream &os,const DataSpaceDesc &desc) {
+static inline OStream &operator<<(OStream &os, const DataSpaceDesc &desc) {
 	os.writef("virt=%p phys=%p size=%zu org=%p flags=%#x align=%u",
-			reinterpret_cast<void*>(desc.virt()),reinterpret_cast<void*>(desc.phys()),
-			desc.size(),reinterpret_cast<void*>(desc.origin()),desc.flags(),desc.align());
+	          reinterpret_cast<void*>(desc.virt()), reinterpret_cast<void*>(desc.phys()),
+	          desc.size(), reinterpret_cast<void*>(desc.origin()), desc.flags(), desc.align());
 	return os;
 }
 

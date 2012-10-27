@@ -22,13 +22,13 @@
 
 class Screen {
 public:
-	static const uint COLS			= nre::Console::COLS;
-	static const uint ROWS			= nre::Console::ROWS;
-	static const size_t SIZE		= COLS * ROWS * 2;
-	static const size_t PAGES		= nre::Console::PAGES;
-	static const size_t PAGE_SIZE	= nre::Console::PAGE_SIZE;
-	static const size_t TEXT_OFF	= nre::Console::TEXT_OFF;
-	static const size_t TEXT_PAGES	= nre::Console::TEXT_PAGES;
+	static const uint COLS          = nre::Console::COLS;
+	static const uint ROWS          = nre::Console::ROWS;
+	static const size_t SIZE        = COLS * ROWS * 2;
+	static const size_t PAGES       = nre::Console::PAGES;
+	static const size_t PAGE_SIZE   = nre::Console::PAGE_SIZE;
+	static const size_t TEXT_OFF    = nre::Console::TEXT_OFF;
+	static const size_t TEXT_PAGES  = nre::Console::TEXT_PAGES;
 
 	explicit Screen() {
 	}

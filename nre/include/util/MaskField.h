@@ -29,7 +29,7 @@ namespace nre {
 template<uint BITS>
 class MaskField;
 template<uint BITS>
-static inline OStream &operator<<(OStream &os,const MaskField<BITS> &bf);
+static inline OStream &operator<<(OStream &os, const MaskField<BITS> &bf);
 
 /**
  * MaskField is essentially the same as BitField but allows multiple bits. That is, it manages
@@ -38,7 +38,7 @@ static inline OStream &operator<<(OStream &os,const MaskField<BITS> &bf);
 template<uint BITS>
 class MaskField {
 	template<uint N>
-	friend OStream &operator<<(OStream &os,const MaskField<N> &bf);
+	friend OStream & operator<<(OStream &os, const MaskField<N> &bf);
 
 	static const word_t MASK = (1 << BITS) - 1;
 
@@ -56,8 +56,8 @@ public:
 	 * @param total the total number of bits
 	 */
 	explicit MaskField(size_t total)
-			: _bits(total), _count(Math::blockcount<size_t>(total,(sizeof(word_t) * 8))),
-			  _words(new word_t[_count]) {
+		: _bits(total), _count(Math::blockcount<size_t>(total, (sizeof(word_t) * 8))),
+		  _words(new word_t[_count]) {
 		STATIC_ASSERT((BITS & (BITS - 1)) == 0);
 	}
 	~MaskField() {
@@ -80,7 +80,7 @@ public:
 	 * @param i the index of the mask (starting with 0)
 	 * @param mask the new value
 	 */
-	void set(size_t i,word_t mask) {
+	void set(size_t i, word_t mask) {
 		assert(i < _bits / BITS);
 		size_t id = idx(i);
 		uint ob = obj(i);
@@ -91,20 +91,20 @@ public:
 	 * Sets all bits to 1
 	 */
 	void set_all() {
-		memset(_words,-1,_count * sizeof(word_t));
+		memset(_words, -1, _count * sizeof(word_t));
 	}
 	/**
 	 * Sets all masks to <mask>
 	 */
 	void set_all(word_t mask) {
 		for(size_t i = 0; i < _bits / BITS; ++i)
-			set(i,mask);
+			set(i, mask);
 	}
 	/**
 	 * Sets all bits to 0
 	 */
 	void clear_all() {
-		memset(_words,0,_count * sizeof(word_t));
+		memset(_words, 0, _count * sizeof(word_t));
 	}
 
 private:
@@ -117,11 +117,11 @@ private:
 };
 
 template<uint BITS>
-static inline OStream &operator<<(OStream &os,const MaskField<BITS> &mf) {
+static inline OStream &operator<<(OStream &os, const MaskField<BITS> &mf) {
 	os << "Maskfield[";
 	size_t count = mf._bits / BITS;
 	for(size_t i = 0; i < count; ++i) {
-		os.writef("%#0*x",Math::blockcount<uint>(BITS,4),mf.get(i));
+		os.writef("%#0*x", Math::blockcount<uint>(BITS, 4), mf.get(i));
 		if(i < count - 1)
 			os << ' ';
 	}

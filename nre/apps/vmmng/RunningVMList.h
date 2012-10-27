@@ -34,14 +34,14 @@ public:
 	size_t count() const {
 		return _list.length();
 	}
-	void add(nre::ChildManager &cm,VMConfig *cfg,cpu_t cpu) {
+	void add(nre::ChildManager &cm, VMConfig *cfg, cpu_t cpu) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		size_t console = count() + 1;
-		nre::Child::id_type id = cfg->start(cm,console,cpu);
+		nre::Child::id_type id = cfg->start(cm, console, cpu);
 		nre::ScopedLock<nre::RCULock> rcuguard(&nre::RCU::lock());
 		const nre::Child *child = cm.get(id);
 		if(child)
-			_list.append(new RunningVM(cfg,id,child->pd()));
+			_list.append(new RunningVM(cfg, id, child->pd()));
 	}
 	RunningVM *get(size_t idx) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);

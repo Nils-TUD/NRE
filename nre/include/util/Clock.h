@@ -57,19 +57,19 @@ public:
 	/**
 	 * @param delta the delta to add to the current TSC value in the destination frequency
 	 * @return the TSC value of now + the given delta. That is, if you pass delta=5 and have a
-	 * 	destination frequency of 1000, it will return <now> + 5ms as TSC value.
+	 *  destination frequency of 1000, it will return <now> + 5ms as TSC value.
 	 */
 	timevalue_t source_time(timevalue_t delta) const {
-		return source_time(delta,_dst_freq);
+		return source_time(delta, _dst_freq);
 	}
 	/**
 	 * @param delta the delta to add to the current TSC value in <freq>
 	 * @param freq the frequency of delta
 	 * @return the TSC value of now + the given delta. That is, if you pass delta=5 and freq=1000,
-	 * 	it will return <now> + 5ms as TSC value.
+	 *  it will return <now> + 5ms as TSC value.
 	 */
-	timevalue_t source_time(timevalue_t delta,timevalue_t freq) const {
-		return source_time() + Math::muldiv128(delta,_src_freq,freq);
+	timevalue_t source_time(timevalue_t delta, timevalue_t freq) const {
+		return source_time() + Math::muldiv128(delta, _src_freq, freq);
 	}
 
 	/**
@@ -83,7 +83,7 @@ public:
 	 * @return the given TSC value into the destination frequency
 	 */
 	timevalue_t dest_time_of(timevalue_t tsc) const {
-		return Math::muldiv128(tsc,_dst_freq,_src_freq);
+		return Math::muldiv128(tsc, _dst_freq, _src_freq);
 	}
 	/**
 	 * Computes the delta in the destination frequency from now to the given TSC value.
@@ -92,7 +92,7 @@ public:
 	 * @return the delta in the destination frequency
 	 */
 	timevalue_t dest_delta(timevalue_t tsc) const {
-		return delta(_dst_freq,tsc);
+		return delta(_dst_freq, tsc);
 	}
 
 	/**
@@ -100,26 +100,26 @@ public:
 	 * @return the current time in the given frequency
 	 */
 	timevalue_t time(timevalue_t freq) const {
-		return time_of(freq,source_time());
+		return time_of(freq, source_time());
 	}
 	/**
 	 * @param freq the frequency
 	 * @param tsc the time
 	 * @return the given time in the given frequency
 	 */
-	timevalue_t time_of(timevalue_t freq,timevalue_t tsc) const {
-		return Math::muldiv128(tsc,freq,_src_freq);
+	timevalue_t time_of(timevalue_t freq, timevalue_t tsc) const {
+		return Math::muldiv128(tsc, freq, _src_freq);
 	}
 	/**
 	 * @param freq the frequency
 	 * @param tsc the time
 	 * @return the delta of now and the given time in the given frequency
 	 */
-	timevalue_t delta(timevalue_t freq,timevalue_t tsc) const {
+	timevalue_t delta(timevalue_t freq, timevalue_t tsc) const {
 		timevalue_t now = source_time();
 		if(now > tsc)
 			return 0;
-		return Math::muldiv128(tsc - now,freq,_src_freq);
+		return Math::muldiv128(tsc - now, freq, _src_freq);
 	}
 
 private:

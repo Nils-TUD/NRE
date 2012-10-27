@@ -21,7 +21,7 @@
 
 namespace nre {
 
-OStream &operator<<(OStream &os,const Utcb &utcb) {
+OStream &operator<<(OStream &os, const Utcb &utcb) {
 	os << "Utcb @ " << &utcb << ":\n";
 	os << "top: " << utcb.top << "\n";
 	os << "bottom: " << utcb.bottom << "\n";
@@ -29,7 +29,7 @@ OStream &operator<<(OStream &os,const Utcb &utcb) {
 	uint16_t toff = utcb.top;
 	while(1) {
 		Utcb *u = reinterpret_cast<Utcb*>(reinterpret_cast<uintptr_t>(&utcb) + boff * sizeof(word_t));
-		UtcbFrameRef frame(u,toff);
+		UtcbFrameRef frame(u, toff);
 		os << frame;
 		if(boff == 0)
 			break;

@@ -25,15 +25,15 @@ namespace nre {
  */
 class ObjCap {
 public:
-	static const capsel_t INVALID	= 0x3FFFFFFF;
+	static const capsel_t INVALID   = 0x3FFFFFFF;
 
 protected:
 	enum {
 		// whether we don't want to free the selector
-		KEEP_SEL_BIT	= 1 << (sizeof(capsel_t) * 8 - 1),
+		KEEP_SEL_BIT    = 1 << (sizeof(capsel_t) * 8 - 1),
 		// whether we don't want to free the capability
-		KEEP_CAP_BIT	= 1 << (sizeof(capsel_t) * 8 - 2),
-		KEEP_BITS		= KEEP_SEL_BIT | KEEP_CAP_BIT
+		KEEP_CAP_BIT    = 1 << (sizeof(capsel_t) * 8 - 2),
+		KEEP_BITS       = KEEP_SEL_BIT | KEEP_CAP_BIT
 	};
 
 	/**
@@ -42,9 +42,9 @@ protected:
 	 *
 	 * @param sel the selector
 	 * @param flags control whether the selector and/or the capability should be free'd
-	 * 	during destruction
+	 *  during destruction
 	 */
-	explicit ObjCap(capsel_t sel = INVALID,uint flags = 0) : _sel(sel | flags) {
+	explicit ObjCap(capsel_t sel = INVALID, uint flags = 0) : _sel(sel | flags) {
 	}
 
 public:

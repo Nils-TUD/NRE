@@ -29,12 +29,12 @@ void VMMngService::portal(capsel_t pid) {
 		capsel_t pd = uf.get_translated(0).offset();
 		uf.finish_input();
 
-		sess->init(new nre::DataSpace(ds),pd);
+		sess->init(new nre::DataSpace(ds), pd);
 		uf.accept_delegates();
 		uf << nre::E_SUCCESS;
 	}
 	catch(const nre::Exception &e) {
-		nre::Syscalls::revoke(uf.delegation_window(),true);
+		nre::Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}

@@ -26,7 +26,7 @@ class UtcbFrameRef;
 class UtcbFrame;
 class OStream;
 
-OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
+OStream &operator<<(OStream &os, const UtcbFrameRef &frm);
 
 /**
  * The base class for the two variants of the UTCB that exist currently.
@@ -34,13 +34,13 @@ OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
 class UtcbBase : public UtcbHead {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
-	friend OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
+	friend OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
 
 public:
-	static const size_t SIZE		= ExecEnv::PAGE_SIZE;
+	static const size_t SIZE        = ExecEnv::PAGE_SIZE;
 
 protected:
-	static const size_t WORDS		= SIZE / sizeof(word_t);
+	static const size_t WORDS       = SIZE / sizeof(word_t);
 
 	word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 

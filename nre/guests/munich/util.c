@@ -24,24 +24,23 @@
 void
 wait(int ms)
 {
-  /* the PIT counts with 1.193 Mhz */
-  ms*=1193;
+	/* the PIT counts with 1.193 Mhz */
+	ms *= 1193;
 
-  /* initalize the PIT, let counter0 count from 256 backwards */
-  outb(0x43, 0x34);
-  outb(0x40, 0);
-  outb(0x40, 0);
+	/* initalize the PIT, let counter0 count from 256 backwards */
+	outb(0x43, 0x34);
+	outb(0x40, 0);
+	outb(0x40, 0);
 
-  unsigned short state;
-  unsigned short old = 0;
-  while (ms>0)
-    {
-      outb(0x43, 0);
-      state = inb(0x40);
-      state |= inb(0x40) << 8;
-      ms -= (unsigned short)(old - state);
-      old = state;
-    }
+	unsigned short state;
+	unsigned short old = 0;
+	while(ms > 0) {
+		outb(0x43, 0);
+		state = inb(0x40);
+		state |= inb(0x40) << 8;
+		ms -= (unsigned short)(old - state);
+		old = state;
+	}
 }
 
 /**
@@ -50,39 +49,38 @@ wait(int ms)
 void
 __exit(unsigned status)
 {
-  out_char('\n');
-  out_description("exit()", status);
-  for (unsigned i=0; i<16;i++)
-    {
-      wait(1000);
-      out_char('.');
-    }
-  out_string("-> OK, reboot now!\n");
-  reboot();
+	out_char('\n');
+	out_description("exit()", status);
+	for(unsigned i = 0; i < 16; i++) {
+		wait(1000);
+		out_char('.');
+	}
+	out_string("-> OK, reboot now!\n");
+	reboot();
 }
 
 #ifndef NDEBUG
 static unsigned int serial_initialized;
-#define SERIAL_BASE 0x3f8
+#    define SERIAL_BASE 0x3f8
 
 void
 serial_init()
 {
-  serial_initialized = 1;
-  // enable DLAB and set baudrate 115200
-  outb(SERIAL_BASE+0x3, 0x80);
-  outb(SERIAL_BASE+0x0, 0x01);
-  outb(SERIAL_BASE+0x1, 0x00);
-  // disable DLAB and set 8N1
-  outb(SERIAL_BASE+0x3, 0x03);
-  // reset IRQ register
-  outb(SERIAL_BASE+0x1, 0x00);
-  // enable fifo, flush buffer, enable fifo
-  outb(SERIAL_BASE+0x2, 0x01);
-  outb(SERIAL_BASE+0x2, 0x07);
-  outb(SERIAL_BASE+0x2, 0x01);
-  // set RTS,DTR
-  outb(SERIAL_BASE+0x4, 0x03);
+	serial_initialized = 1;
+	// enable DLAB and set baudrate 115200
+	outb(SERIAL_BASE + 0x3, 0x80);
+	outb(SERIAL_BASE + 0x0, 0x01);
+	outb(SERIAL_BASE + 0x1, 0x00);
+	// disable DLAB and set 8N1
+	outb(SERIAL_BASE + 0x3, 0x03);
+	// reset IRQ register
+	outb(SERIAL_BASE + 0x1, 0x00);
+	// enable fifo, flush buffer, enable fifo
+	outb(SERIAL_BASE + 0x2, 0x01);
+	outb(SERIAL_BASE + 0x2, 0x07);
+	outb(SERIAL_BASE + 0x2, 0x01);
+	// set RTS,DTR
+	outb(SERIAL_BASE + 0x4, 0x03);
 }
 
 
@@ -90,12 +88,12 @@ static
 void
 serial_send(unsigned value)
 {
-  if (!serial_initialized)
-    return;
+	if(!serial_initialized)
+		return;
 
-  while (!(inb(SERIAL_BASE+0x5) & 0x20))
-    ;
-  outb(SERIAL_BASE, value);
+	while(!(inb(SERIAL_BASE + 0x5) & 0x20))
+		;
+	outb(SERIAL_BASE, value);
 }
 #endif
 
@@ -107,32 +105,30 @@ serial_send(unsigned value)
 int
 out_char(unsigned value)
 {
-#define BASE(ROW) ((unsigned short *) (0xb8000+ROW*160))
-  static unsigned int col;
-  if (value!='\n')
-    {
-      unsigned short *p = BASE(24)+col;
-      *p = 0x0f00 | value;
-      col++;
-    }
+#define BASE(ROW) ((unsigned short *)(0xb8000 + ROW * 160))
+	static unsigned int col;
+	if(value != '\n') {
+		unsigned short *p = BASE(24) + col;
+		*p = 0x0f00 | value;
+		col++;
+	}
 #ifndef NDEBUG
-  else
-    serial_send('\r');
+	else
+		serial_send('\r');
 #endif
 
-  if (col>=80 || value == '\n')
-    {
-      col=0;
-      unsigned short *p=BASE(0);
-      memcpy(p, p+80, 24*160);
-      memset(BASE(24), 0, 160);
-    }
+	if(col >= 80 || value == '\n') {
+		col = 0;
+		unsigned short *p = BASE(0);
+		memcpy(p, p + 80, 24 * 160);
+		memset(BASE(24), 0, 160);
+	}
 
 #ifndef NDEBUG
-  serial_send(value);
+	serial_send(value);
 #endif
 
-  return value;
+	return value;
 }
 
 
@@ -145,8 +141,8 @@ out_char(unsigned value)
 void
 out_string(const char *value)
 {
-  for(; *value; value++)
-    out_char(*value);
+	for(; *value; value++)
+		out_char(*value);
 }
 
 
@@ -156,16 +152,15 @@ out_string(const char *value)
 void
 out_hex(unsigned value, unsigned bitlen)
 {
-  int i;
-  for (i=bsr(value | 1<<bitlen) &0xfc; i>=0; i-=4)
-    {
-      unsigned a = (value >> i) & 0xf;
-      if (a>=10)
-	a += 7;
-      a+=0x30;
+	int i;
+	for(i = bsr(value | 1 << bitlen) & 0xfc; i >= 0; i -= 4) {
+		unsigned a = (value >> i) & 0xf;
+		if(a >= 10)
+			a += 7;
+		a += 0x30;
 
-      out_char(a);
-    }
+		out_char(a);
+	}
 }
 
 /**
@@ -175,11 +170,11 @@ out_hex(unsigned value, unsigned bitlen)
 void
 out_description(const char *prefix, unsigned int value)
 {
-  out_string(message_label);
-  out_string(prefix);
-  out_char(' ');
-  out_hex(value, 0);
-  out_char('\n');
+	out_string(message_label);
+	out_string(prefix);
+	out_char(' ');
+	out_hex(value, 0);
+	out_char('\n');
 }
 
 /**
@@ -188,79 +183,79 @@ out_description(const char *prefix, unsigned int value)
 void
 out_info(const char *msg)
 {
-  out_string(message_label);
-  out_string(msg);
-  out_char('\n');
+	out_string(message_label);
+	out_string(msg);
+	out_char('\n');
 }
 
 int
 strcmp (char const *s1, char const *s2)
 {
-    while (*s1 && *s1 == *s2) 
-        s1++, s2++;
- 
-    return *s1 - *s2;
+	while(*s1 && *s1 == *s2)
+		s1++, s2++;
+
+	return *s1 - *s2;
 }
 
 int
 isspace (int c)
 {
-    return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
+	return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
 }
 
 unsigned long
 strtoul (char const *ptr, char const **end, int base)
-{  
-    while (isspace (*ptr))
-        ptr++;
+{
+	while(isspace(*ptr))
+		ptr++;
 
-    if (!base) {   
-        if (*ptr != '0')
-            base = 10;
-        else if (*(ptr + 1) == 'x')
-            ptr += 2, base = 16;
-        else
-            ptr += 1, base = 8;
-    }
+	if(!base) {
+		if(*ptr != '0')
+			base = 10;
+		else if(*(ptr + 1) == 'x')
+			ptr += 2, base = 16;
+		else
+			ptr += 1, base = 8;
+	}
 
-    unsigned long val = 0;
-    unsigned char c;
+	unsigned long val = 0;
+	unsigned char c;
 
-    while ((c = *ptr)) {
+	while((c = *ptr)) {
 
-        int x = (c >= 'a') ? c - 'a' + 10 :
-                (c >= 'A') ? c - 'A' + 10 :
-                (c >= '0') ? c - '0' : 0xff;
- 
-        if (x >= base)
-            break;
+		int x = (c >= 'a') ? c - 'a' + 10 :
+		        (c >= 'A') ? c - 'A' + 10 :
+		        (c >= '0') ? c - '0' : 0xff;
 
-        val = val * base + x;
+		if(x >= base)
+			break;
 
-        ptr++;
-    }
+		val = val * base + x;
 
-    if (end)
-        *end = ptr;
+		ptr++;
+	}
 
-    return val;
+	if(end)
+		*end = ptr;
+
+	return val;
 }
 
 char *
 get_arg (char **line, char delim)
 {
-    for (; isspace (**line); ++*line) ;
+	for(; isspace(**line); ++*line) ;
 
-    if (!**line)
-        return 0;
+	if(!**line)
+		return 0;
 
-    char *arg = *line;
+	char *arg = *line;
 
-    for (; delim == ' ' ? !isspace (**line) : **line != delim; ++*line)
-        if (!**line)
-            return arg;
+	for(; delim == ' ' ? !isspace(**line) : **line != delim; ++*line)
+		if(!**line)
+			return arg;
 
-    *(*line)++ = 0;
+	*(*line)++ = 0;
 
-    return arg;
+	return arg;
 }

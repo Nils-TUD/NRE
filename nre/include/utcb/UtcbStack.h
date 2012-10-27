@@ -27,7 +27,7 @@ namespace nre {
 class UtcbFrameRef;
 class UtcbFrame;
 class OStream;
-OStream &operator<<(OStream &os,const Utcb &utcb);
+OStream &operator<<(OStream &os, const Utcb &utcb);
 
 /**
  * The stack-based UTCB implementation. Allows it to push and pop frames on the UTCB by simply
@@ -36,25 +36,25 @@ OStream &operator<<(OStream &os,const Utcb &utcb);
 class Utcb : public UtcbBase {
 	friend class UtcbFrameRef;
 	friend class UtcbFrame;
-	friend 	OStream &operator<<(OStream &os,const UtcbBase &utcb);
+	friend  OStream & operator<<(OStream &os, const UtcbBase &utcb);
 
-	static const size_t MAX_TOP		= (SIZE / (4 * sizeof(word_t))) - 1;
-	static const size_t MAX_BOTTOM		= (SIZE / (2 * sizeof(word_t))) - 1;
+	static const size_t MAX_TOP     = (SIZE / (4 * sizeof(word_t))) - 1;
+	static const size_t MAX_BOTTOM      = (SIZE / (2 * sizeof(word_t))) - 1;
 
 	/**
 	 * @param frame the current frame
 	 * @return the pointer to the start of the typed items
 	 */
 	static word_t *get_top(Utcb *frame) {
-		return get_top(frame,frame->top);
+		return get_top(frame, frame->top);
 	}
 	/**
 	 * @param frame the current frame
 	 * @param toff the offset from top (in words)
 	 * @return the pointer to the start of the typed items
 	 */
-	static word_t *get_top(Utcb *frame,size_t toff) {
-		size_t utcbtop = Math::round_dn<size_t>(reinterpret_cast<size_t>(frame + 1),Utcb::SIZE);
+	static word_t *get_top(Utcb *frame, size_t toff) {
+		size_t utcbtop = Math::round_dn<size_t>(reinterpret_cast<size_t>(frame + 1), Utcb::SIZE);
 		return reinterpret_cast<word_t*>(utcbtop) - toff;
 	}
 	/**

@@ -37,7 +37,7 @@ using namespace nre;
  * Ignored bits: FCR2-3, LCR2-6, LSR2-4,7
  * Documentation: NSC 16550D - PC16550D.pdf
  */
-class SerialDevice: public StaticReceiver<SerialDevice>,public DiscoveryHelper<SerialDevice> {
+class SerialDevice : public StaticReceiver<SerialDevice>, public DiscoveryHelper<SerialDevice> {
 public:
 	Motherboard &_mb;
 
@@ -87,7 +87,7 @@ private:
 	}
 
 	void update_irq() {
-		MessageIrqLines msg(MessageIrq::ASSERT_IRQ,_irq);
+		MessageIrqLines msg(MessageIrq::ASSERT_IRQ, _irq);
 		if((~get_iir() & 1) && (_regs[MCR] & 8))
 			_mb.bus_irqlines.send(msg);
 	}
@@ -120,7 +120,7 @@ public:
 	}
 
 	bool receive(MessageIOIn &msg) {
-		if(!in_range(msg.port,_base,8) || msg.type != MessageIOIn::TYPE_INB)
+		if(!in_range(msg.port, _base, 8) || msg.type != MessageIOIn::TYPE_INB)
 			return false;
 
 		unsigned offset = msg.port - _base;
@@ -153,7 +153,7 @@ public:
 			case MSR ... DLM:
 				break;
 			default:
-				Util::panic("SerialDevice::%s() %x",__func__,msg.port);
+				Util::panic("SerialDevice::%s() %x", __func__, msg.port);
 				break;
 		}
 		update_irq();
@@ -161,7 +161,7 @@ public:
 	}
 
 	bool receive(MessageIOOut &msg) {
-		if(!in_range(msg.port,_base,8) || msg.type != MessageIOOut::TYPE_OUTB)
+		if(!in_range(msg.port, _base, 8) || msg.type != MessageIOOut::TYPE_OUTB)
 			return false;
 
 		msg.value &= 0xff;
@@ -171,7 +171,7 @@ public:
 
 		switch(offset) {
 			case THR: {
-				MessageSerial msg2(_hostserial,msg.value & _sendmask);
+				MessageSerial msg2(_hostserial, msg.value & _sendmask);
 				if(_regs[MCR] & 0x10)
 					// loopback
 					receive(msg2);
@@ -193,7 +193,7 @@ public:
 				}
 
 				if(msg.value & 1) {
-					unsigned char level[] = {1,4,8,14};
+					unsigned char level[] = {1, 4, 8, 14};
 					_triggerlevel = level[(msg.value >> 6) & 3];
 				}
 				_regs[FCR] = msg.value;
@@ -205,7 +205,8 @@ public:
 			case MCR:
 				_regs[MCR] = msg.value & 0x1f;
 				if(msg.value & 0x10) {
-					unsigned char input = ((msg.value & 0x1) << 1) | ((msg.value & 0x2) >> 1) | (msg.value & 0xc);
+					unsigned char input =
+					    ((msg.value & 0x1) << 1) | ((msg.value & 0x2) >> 1) | (msg.value & 0xc);
 					_regs[MSR] = (input << 4) | (((_regs[MSR] >> 4) ^ input) & ~(input & 4));
 				}
 				else
@@ -221,7 +222,7 @@ public:
 				_regs[offset] = msg.value;
 				break;
 			default:
-				Util::panic("SerialDevice::%s() %x %x",__func__,msg.port,msg.value);
+				Util::panic("SerialDevice::%s() %x %x", __func__, msg.port, msg.value);
 				break;
 		}
 		update_irq();
@@ -233,28 +234,29 @@ public:
 		check0(!discovery_read_dw("bda", 0x10, installed_hw));
 		unsigned ioports = (installed_hw >> 9) & 0x7;
 		if(ioports < 4) {
-			discovery_write_dw("bda",ioports * 2,_base,2);
+			discovery_write_dw("bda", ioports * 2, _base, 2);
 			ioports++;
-			discovery_write_dw("bda",0x10,(installed_hw & 0xfffff1ff) | (ioports << 9),4);
+			discovery_write_dw("bda", 0x10, (installed_hw & 0xfffff1ff) | (ioports << 9), 4);
 		}
 	}
 
-	SerialDevice(Motherboard &mb,unsigned short base,unsigned char irq,unsigned hostserial)
-			: _mb(mb), _base(base), _irq(irq), _hostserial(hostserial), _regs(), _rfifo(), _rfpos(),
-			  _rfcount(0), _triggerlevel(1), _sendmask(0x1f) {
-		memset(_regs,0,sizeof(_regs));
+	SerialDevice(Motherboard &mb, unsigned short base, unsigned char irq, unsigned hostserial)
+		: _mb(mb), _base(base), _irq(irq), _hostserial(hostserial), _regs(), _rfifo(), _rfpos(),
+		  _rfcount(0), _triggerlevel(1), _sendmask(0x1f) {
+		memset(_regs, 0, sizeof(_regs));
 		_regs[LSR] = 0x60;
 		_regs[MSR] = 0xb0;
-		_mb.bus_ioin.add(this,receive_static<MessageIOIn>);
-		_mb.bus_ioout.add(this,receive_static<MessageIOOut>);
-		_mb.bus_serial.add(this,receive_static<MessageSerial>);
-		_mb.bus_discovery.add(this,discover);
+		_mb.bus_ioin.add(this, receive_static<MessageIOIn> );
+		_mb.bus_ioout.add(this, receive_static<MessageIOOut> );
+		_mb.bus_serial.add(this, receive_static<MessageSerial> );
+		_mb.bus_discovery.add(this, discover);
 	}
 };
 
-PARAM_HANDLER(serial,
-		"serial:iobase,irq,hdev -  attach a virtual serial port that should use the given hostdev as backend.",
-		"Example: 'serial:0x3f8,8,0x47'.",
-		"The input comes from hdev and the output is redirected to hdev+1.") {
-	new SerialDevice(mb,argv[0],argv[1],argv[2]);
+PARAM_HANDLER(
+    serial,
+    "serial:iobase,irq,hdev -  attach a virtual serial port that should use the given hostdev as backend.",
+    "Example: 'serial:0x3f8,8,0x47'.",
+    "The input comes from hdev and the output is redirected to hdev+1.") {
+	new SerialDevice(mb, argv[0], argv[1], argv[2]);
 }

@@ -29,23 +29,23 @@ PORTAL static void portal_test(capsel_t);
 static void test_delegate();
 
 const TestCase delegateperf = {
-	"Delegate-performance",test_delegate
+	"Delegate-performance", test_delegate
 };
 
 static const size_t tries = 1000;
 
 static void portal_test(capsel_t) {
 	UtcbFrameRef uf;
-	uf.delegate(CapRange(0x100,4,Crd::IO_ALL));
+	uf.delegate(CapRange(0x100, 4, Crd::IO_ALL));
 }
 
 static void test_delegate() {
-	Ports ports(0x100,1 << 2);
+	Ports ports(0x100, 1 << 2);
 	LocalThread *ec = LocalThread::create(CPU::current().log_id());
-	Pt pt(ec,portal_test);
+	Pt pt(ec, portal_test);
 	AvgProfiler prof(tries);
 	UtcbFrame uf;
-	uf.delegation_window(Crd(0,31,Crd::IO_ALL));
+	uf.delegation_window(Crd(0, 31, Crd::IO_ALL));
 	for(size_t i = 0; i < tries; i++) {
 		prof.start();
 		pt.call(uf);
@@ -53,7 +53,7 @@ static void test_delegate() {
 		prof.stop();
 	}
 
-	WVPERF(prof.avg(),"cycles");
-	WVPRINTF("min: %Lu",prof.min());
-	WVPRINTF("max: %Lu",prof.max());
+	WVPERF(prof.avg(), "cycles");
+	WVPRINTF("min: %Lu", prof.min());
+	WVPRINTF("max: %Lu", prof.max());
 }

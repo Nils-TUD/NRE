@@ -17,13 +17,13 @@
  */
 
 #ifndef REGBASE
-#include <Desc.h>
+#    include <Desc.h>
 
-#include "../bus/motherboard.h"
-#include "../bus/discovery.h"
-#include "../bus/helper.h"
-#include "../executor/bios.h"
-#include "pci.h"
+#    include "../bus/motherboard.h"
+#    include "../bus/discovery.h"
+#    include "../bus/helper.h"
+#    include "../executor/bios.h"
+#    include "pci.h"
 
 using namespace nre;
 
@@ -45,14 +45,14 @@ private:
 	unsigned _confaddress;
 	unsigned char _cf9;
 
-#define  REGBASE "pcihostbridge.cc"
-#include "reg.h"
+#    define  REGBASE "pcihostbridge.cc"
+#    include "reg.h"
 
 	/**
 	 * Read the PCI config space.
 	 */
 	unsigned read_pcicfg(bool &res) {
-		MessagePciConfig msg((_confaddress & ~0x80000000) >> 8,(_confaddress & 0xff) >> 2);
+		MessagePciConfig msg((_confaddress & ~0x80000000) >> 8, (_confaddress & 0xff) >> 2);
 		res &= _mb.bus_pcicfg.send(msg);
 		return msg.value;
 	}
@@ -62,7 +62,7 @@ public:
 		bool res = true;
 		if(msg.port == _iobase && msg.type == MessageIOIn::TYPE_INL)
 			msg.value = _confaddress;
-		else if(in_range(msg.port,_iobase + 4,4) && (_confaddress & 0x80000000))
+		else if(in_range(msg.port, _iobase + 4, 4) && (_confaddress & 0x80000000))
 			msg.value = read_pcicfg(res) >> 8 * (msg.port & 0x3);
 		else
 			return false;
@@ -96,15 +96,15 @@ public:
 		else if(msg.port == _iobase && msg.type == MessageIOOut::TYPE_OUTL)
 			// PCI spec: the lower two bits are hardwired and must return 0 when read
 			_confaddress = msg.value & ~0x3;
-		else if(in_range(msg.port,_iobase + 4,4) && (_confaddress & 0x80000000)) {
+		else if(in_range(msg.port, _iobase + 4, 4) && (_confaddress & 0x80000000)) {
 			uint64_t value = 0;
 			bool res = true;
 			if(msg.type != MessageIOOut::TYPE_OUTL)
 				value = read_pcicfg(res);
 
 			// we support unaligned dword accesses here
-			cpu_move(reinterpret_cast<char *>(&value) + (msg.port & 3),&msg.value,msg.type);
-			MessagePciConfig msg2((_confaddress & ~0x80000000) >> 8,(_confaddress & 0xff) >> 2,value);
+			cpu_move(reinterpret_cast<char *>(&value) + (msg.port & 3), &msg.value, msg.type);
+			MessagePciConfig msg2((_confaddress & ~0x80000000) >> 8, (_confaddress & 0xff) >> 2, value);
 			if(res)
 				res = _mb.bus_pcicfg.send(msg2);
 			return res;
@@ -118,7 +118,7 @@ public:
 	 * MMConfig access.
 	 */
 	bool receive(MessageMem &msg) {
-		if(!in_range(msg.phys,_membase,_buscount << 20))
+		if(!in_range(msg.phys, _membase, _buscount << 20))
 			return false;
 
 		uint32_t bdf = (msg.phys - _membase) >> 12;
@@ -126,12 +126,12 @@ public:
 
 		// write
 		if(!msg.read) {
-			MessagePciConfig msg1(bdf,dword,*msg.ptr);
+			MessagePciConfig msg1(bdf, dword, *msg.ptr);
 			return _mb.bus_pcicfg.send(msg1);
 		}
 
 		// read
-		MessagePciConfig msg2(bdf,dword);
+		MessagePciConfig msg2(bdf, dword);
 		if(!_mb.bus_pcicfg.send(msg2))
 			return false;
 		*msg.ptr = msg2.value;
@@ -139,7 +139,7 @@ public:
 	}
 
 	bool receive(MessagePciConfig &msg) {
-		return PciHelper::receive(msg,this,_busnum << 8);
+		return PciHelper::receive(msg, this, _busnum << 8);
 	}
 
 	bool receive(MessageLegacy &msg) {
@@ -182,11 +182,11 @@ public:
 					break;
 				}
 
-				MessagePciConfig mr(msg.cpu->bx,msg.cpu->di >> 2);
+				MessagePciConfig mr(msg.cpu->bx, msg.cpu->di >> 2);
 				if(!_mb.bus_pcicfg.send(mr))
 					break;
 
-				cpu_move(&msg.cpu->ecx,reinterpret_cast<char *>(&mr.value) + byteselect,order);
+				cpu_move(&msg.cpu->ecx, reinterpret_cast<char *>(&mr.value) + byteselect, order);
 				return true;
 			}
 			case 0xb ... 0xd: // WRITE CONFIG BYTE, WORD, DWORD
@@ -201,12 +201,12 @@ public:
 				}
 
 				// read the orig word
-				MessagePciConfig msg2(msg.cpu->bx,msg.cpu->di >> 2);
+				MessagePciConfig msg2(msg.cpu->bx, msg.cpu->di >> 2);
 				if(!_mb.bus_pcicfg.send(msg2))
 					break;
 
 				// update the new value
-				cpu_move(reinterpret_cast<char *>(&msg2.value) + byteselect,&msg.cpu->ecx,order);
+				cpu_move(reinterpret_cast<char *>(&msg2.value) + byteselect, &msg.cpu->ecx, order);
 
 				msg2.type = MessagePciConfig::TYPE_WRITE;
 				if(!_mb.bus_pcicfg.send(msg2))
@@ -224,55 +224,58 @@ public:
 	}
 
 	void discovery() {
-		size_t length = discovery_length("MCFG",44);
-		discovery_write_dw("MCFG",length + 0,_membase,4);
-		discovery_write_dw("MCFG",length + 4,static_cast<uint64_t>(_membase) >> 32,4);
-		discovery_write_dw("MCFG",length + 8,
-				((_busnum & 0xff) << 16) | (((_buscount - 1) & 0xff) << 24) | ((_busnum >> 8) & 0xffff),4);
-		discovery_write_dw("MCFG",length + 12,0);
+		size_t length = discovery_length("MCFG", 44);
+		discovery_write_dw("MCFG", length + 0, _membase, 4);
+		discovery_write_dw("MCFG", length + 4, static_cast<uint64_t>(_membase) >> 32, 4);
+		discovery_write_dw(
+		    "MCFG", length + 8,
+		    ((_busnum &
+		      0xff) << 16) | (((_buscount - 1) & 0xff) << 24) | ((_busnum >> 8) & 0xffff),
+		    4);
+		discovery_write_dw("MCFG", length + 12, 0);
 
 		// reset via 0xcf9
-		discovery_write_dw("FACP",116,0x01000801,4);
-		discovery_write_dw("FACP",120,0xcf9,4);
-		discovery_write_dw("FACP",124,0,4);
-		discovery_write_dw("FACP",128,6,1);
+		discovery_write_dw("FACP", 116, 0x01000801, 4);
+		discovery_write_dw("FACP", 120, 0xcf9, 4);
+		discovery_write_dw("FACP", 124, 0, 4);
+		discovery_write_dw("FACP", 128, 6, 1);
 	}
 
-	PciHostBridge(Motherboard &mb,unsigned busnum,size_t buscount,unsigned short iobase,
-			uintptr_t membase)
-			: _mb(mb), _busnum(busnum), _buscount(buscount), _iobase(iobase), _membase(membase),
-			  _confaddress(), _cf9() {
+	PciHostBridge(Motherboard &mb, unsigned busnum, size_t buscount, unsigned short iobase,
+	              uintptr_t membase)
+		: _mb(mb), _busnum(busnum), _buscount(buscount), _iobase(iobase), _membase(membase),
+		  _confaddress(), _cf9() {
 	}
 };
 
 PARAM_HANDLER(pcihostbridge,
-		"pcihostbridge:start,count,iobase,membase - attach a pci host bridge to the system.",
-		"Example: 'pcihostbridge:0,0x10,0xcf8,0xe0000000'",
-		"If not iobase is given, no io-accesses are performed.",
-		"Similar if membase is not given, MMCFG is disabled.") {
+              "pcihostbridge:start,count,iobase,membase - attach a pci host bridge to the system.",
+              "Example: 'pcihostbridge:0,0x10,0xcf8,0xe0000000'",
+              "If not iobase is given, no io-accesses are performed.",
+              "Similar if membase is not given, MMCFG is disabled.") {
 	unsigned busnum = argv[0];
-	PciHostBridge *dev = new PciHostBridge(mb,busnum,argv[1],argv[2],argv[3]);
+	PciHostBridge *dev = new PciHostBridge(mb, busnum, argv[1], argv[2], argv[3]);
 
 	// ioport interface
 	if(~argv[2]) {
-		mb.bus_ioin.add(dev,PciHostBridge::receive_static<MessageIOIn>);
-		mb.bus_ioout.add(dev,PciHostBridge::receive_static<MessageIOOut>);
+		mb.bus_ioin.add(dev, PciHostBridge::receive_static<MessageIOIn> );
+		mb.bus_ioout.add(dev, PciHostBridge::receive_static<MessageIOOut> );
 	}
 
 	// MMCFG interface
 	if(~argv[3]) {
-		mb.bus_mem.add(dev,PciHostBridge::receive_static<MessageMem>);
-		mb.bus_discovery.add(dev,PciHostBridge::discover);
+		mb.bus_mem.add(dev, PciHostBridge::receive_static<MessageMem> );
+		mb.bus_discovery.add(dev, PciHostBridge::discover);
 	}
 
-	mb.bus_pcicfg.add(dev,PciHostBridge::receive_static<MessagePciConfig>);
-	mb.bus_legacy.add(dev,PciHostBridge::receive_static<MessageLegacy>);
-	mb.bus_bios.add(dev,PciHostBridge::receive_static<MessageBios>);
+	mb.bus_pcicfg.add(dev, PciHostBridge::receive_static<MessagePciConfig> );
+	mb.bus_legacy.add(dev, PciHostBridge::receive_static<MessageLegacy> );
+	mb.bus_bios.add(dev, PciHostBridge::receive_static<MessageBios> );
 }
 #else
 REGSET(PCI,
-		REG_RO(PCI_ID, 0x0, 0x27a08086)
-		REG_RW(PCI_CMD, 0x1, 0x000900106, 0x0106,)
-		REG_RO(PCI_CC, 0x2, 0x06000000)
-		REG_RO(PCI_SS, 0xb, 0x27a08086))
+       REG_RO(PCI_ID, 0x0, 0x27a08086)
+       REG_RW(PCI_CMD, 0x1, 0x000900106, 0x0106, )
+       REG_RO(PCI_CC, 0x2, 0x06000000)
+       REG_RO(PCI_SS, 0xb, 0x27a08086))
 #endif

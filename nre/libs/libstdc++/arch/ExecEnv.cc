@@ -27,9 +27,9 @@ void ExecEnv::exit(int code) {
 	// jump to that address to cause a pagefault. this way, we tell our parent that we exited
 	// voluntarily with given exit code
 	asm volatile (
-		"jmp	*%0;"
+	    "jmp	*%0;"
 		:
-		: "r"(EXIT_START + (code & (EXIT_CODE_NUM - 1)))
+		: "r" (EXIT_START + (code & (EXIT_CODE_NUM - 1)))
 	);
 	UNREACHED;
 }
@@ -44,16 +44,16 @@ void ExecEnv::thread_exit() {
 	// now its safe to delete our thread object
 	delete t;
 	asm volatile (
-		"jmp	*%0;"
+	    "jmp	*%0;"
 		:
-		: "r"(THREAD_EXIT),
-		  "S"((~flags & Thread::HAS_OWN_STACK) ? stack : 0),
-		  "D"((~flags & Thread::HAS_OWN_UTCB) ? utcb : 0)
+		: "r" (THREAD_EXIT),
+	    "S" ((~flags & Thread::HAS_OWN_STACK) ? stack : 0),
+	    "D" ((~flags & Thread::HAS_OWN_UTCB) ? utcb : 0)
 	);
 	UNREACHED;
 }
 
-void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uintptr_t stack) {
+void *ExecEnv::setup_stack(Pd *pd, Thread *t, startup_func start, uintptr_t ret, uintptr_t stack) {
 	void **sp = reinterpret_cast<void**>(stack);
 	size_t stack_top = STACK_SIZE / sizeof(void*);
 	sp[--stack_top] = t;
@@ -67,17 +67,17 @@ void *ExecEnv::setup_stack(Pd *pd,Thread *t,startup_func start,uintptr_t ret,uin
 	return sp + stack_top;
 }
 
-size_t ExecEnv::collect_backtrace(uintptr_t *frames,size_t max) {
+size_t ExecEnv::collect_backtrace(uintptr_t *frames, size_t max) {
 	uintptr_t bp;
 	asm volatile ("mov %%" EXPAND(REG(bp)) ",%0" : "=a" (bp));
-	return collect_backtrace(Math::round_dn<uintptr_t>(bp,ExecEnv::STACK_SIZE),bp,frames,max);
+	return collect_backtrace(Math::round_dn<uintptr_t>(bp, ExecEnv::STACK_SIZE), bp, frames, max);
 }
 
-size_t ExecEnv::collect_backtrace(uintptr_t stack,uintptr_t bp,uintptr_t *frames,size_t max) {
-	uintptr_t end,start;
+size_t ExecEnv::collect_backtrace(uintptr_t stack, uintptr_t bp, uintptr_t *frames, size_t max) {
+	uintptr_t end, start;
 	uintptr_t *frame = frames;
 	size_t count = 0;
-	end = Math::round_up<uintptr_t>(bp,ExecEnv::STACK_SIZE);
+	end = Math::round_up<uintptr_t>(bp, ExecEnv::STACK_SIZE);
 	start = end - ExecEnv::STACK_SIZE;
 	for(size_t i = 0; i < max - 1; i++) {
 		// prevent page-fault

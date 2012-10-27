@@ -61,18 +61,18 @@ enum {
  * Lookup table for modrm decoding.
  */
 static const unsigned short modrminfo[64] = {
-	0x36,0x37,0x56 | MRM_SS,0x57 | MRM_SS,0x06,0x07,MRM_DIS16,0x03,0x36 | MRM_DIS08,
-	0x37 | MRM_DIS08,0x56 | MRM_SS | MRM_DIS08,0x57 | MRM_SS | MRM_DIS08,0x06 | MRM_DIS08,
-	0x07 | MRM_DIS08,0x50 | MRM_DIS08 | MRM_SS,0x03 | MRM_DIS08,0x36 | MRM_DIS16,
-	0x37 | MRM_DIS16,0x56 | MRM_SS | MRM_DIS16,0x57 | MRM_SS | MRM_DIS16,0x06 | MRM_DIS16,
-	0x07 | MRM_DIS16,0x50 | MRM_DIS16 | MRM_SS,0x03 | MRM_DIS16,MRM_EAX | MRM_REG,
-	0x01 | MRM_REG,0x02 | MRM_REG,0x03 | MRM_REG,0x04 | MRM_REG,0x05 | MRM_REG,
-	0x06 | MRM_REG,0x07 | MRM_REG,MRM_EAX,0x01,0x02,0x03,MRM_SIB,MRM_DIS32,0x06,0x07,
-	MRM_EAX | MRM_DIS08,0x01 | MRM_DIS08,0x02 | MRM_DIS08,0x03 | MRM_DIS08,MRM_SIB | MRM_DIS08,
-	0x05 | MRM_DIS08 | MRM_SS,0x06 | MRM_DIS08,0x07 | MRM_DIS08,MRM_EAX | MRM_DIS32,
-	0x01 | MRM_DIS32,0x02 | MRM_DIS32,0x03 | MRM_DIS32,MRM_SIB | MRM_DIS32,
-	0x05 | MRM_DIS32 | MRM_SS,0x06 | MRM_DIS32,0x07 | MRM_DIS32,MRM_EAX | MRM_REG,0x01 | MRM_REG,
-	0x02 | MRM_REG,0x03 | MRM_REG,0x04 | MRM_REG,0x05 | MRM_REG,0x06 | MRM_REG,0x07 | MRM_REG
+	0x36, 0x37, 0x56 | MRM_SS, 0x57 | MRM_SS, 0x06, 0x07, MRM_DIS16, 0x03, 0x36 | MRM_DIS08,
+	0x37 | MRM_DIS08, 0x56 | MRM_SS | MRM_DIS08, 0x57 | MRM_SS | MRM_DIS08, 0x06 | MRM_DIS08,
+	0x07 | MRM_DIS08, 0x50 | MRM_DIS08 | MRM_SS, 0x03 | MRM_DIS08, 0x36 | MRM_DIS16,
+	0x37 | MRM_DIS16, 0x56 | MRM_SS | MRM_DIS16, 0x57 | MRM_SS | MRM_DIS16, 0x06 | MRM_DIS16,
+	0x07 | MRM_DIS16, 0x50 | MRM_DIS16 | MRM_SS, 0x03 | MRM_DIS16, MRM_EAX | MRM_REG,
+	0x01 | MRM_REG, 0x02 | MRM_REG, 0x03 | MRM_REG, 0x04 | MRM_REG, 0x05 | MRM_REG,
+	0x06 | MRM_REG, 0x07 | MRM_REG, MRM_EAX, 0x01, 0x02, 0x03, MRM_SIB, MRM_DIS32, 0x06, 0x07,
+	MRM_EAX | MRM_DIS08, 0x01 | MRM_DIS08, 0x02 | MRM_DIS08, 0x03 | MRM_DIS08, MRM_SIB | MRM_DIS08,
+	0x05 | MRM_DIS08 | MRM_SS, 0x06 | MRM_DIS08, 0x07 | MRM_DIS08, MRM_EAX | MRM_DIS32,
+	0x01 | MRM_DIS32, 0x02 | MRM_DIS32, 0x03 | MRM_DIS32, MRM_SIB | MRM_DIS32,
+	0x05 | MRM_DIS32 | MRM_SS, 0x06 | MRM_DIS32, 0x07 | MRM_DIS32, MRM_EAX | MRM_REG, 0x01 | MRM_REG,
+	0x02 | MRM_REG, 0x03 | MRM_REG, 0x04 | MRM_REG, 0x05 | MRM_REG, 0x06 | MRM_REG, 0x07 | MRM_REG
 };
 
 class InstructionCache;
@@ -94,8 +94,8 @@ struct InstructionCacheEntry {
 	unsigned modrminfo;
 	unsigned cs_ar;
 	unsigned prefixes;
-	void __attribute__((regparm(3))) (*execute)(InstructionCache *instr,void *tmp_src,
-			void *tmp_dst);
+	void __attribute__ ((regparm(3))) (*execute)(InstructionCache *instr, void *tmp_src,
+	                                             void *tmp_dst);
 	void *src;
 	void *dst;
 	unsigned immediate;
@@ -104,7 +104,7 @@ struct InstructionCacheEntry {
 /**
  * An instruction cache that keeps decoded instructions.
  */
-class InstructionCache: public MemTlb {
+class InstructionCache : public MemTlb {
 	enum EFLAGS {
 		EFL_ZF = 1 << 6,
 		EFL_TF = 1 << 8,
@@ -152,17 +152,17 @@ class InstructionCache: public MemTlb {
 	unsigned _ointr_state;
 	word_t _dr6;
 	word_t _dr[4];
-	unsigned _fpustate[512 / sizeof(unsigned)] __attribute__((aligned(16)));
+	unsigned _fpustate[512 / sizeof(unsigned)] __attribute__ ((aligned(16)));
 
 	int send_message(CpuMessage::Type type) {
-		CpuMessage msg(type,_cpu,_mtr_in);
-		_vcpu->executor.send(msg,true);
+		CpuMessage msg(type, _cpu, _mtr_in);
+		_vcpu->executor.send(msg, true);
 		return _fault;
 	}
 
 	int event_injection() {
 		if((_mtr_in & nre::Mtd::INJ) && (_cpu->inj_info & 0x80000000)
-				&& !idt_traversal(_cpu->inj_info,_cpu->inj_error)) {
+		   && !idt_traversal(_cpu->inj_info, _cpu->inj_error)) {
 			_cpu->inj_info &= ~0x80000000;
 			RETRY;
 		}
@@ -172,14 +172,15 @@ class InstructionCache: public MemTlb {
 	/**
 	 * Fetch code.
 	 */
-	int fetch_code(InstructionCacheEntry *entry,unsigned len) {
+	int fetch_code(InstructionCacheEntry *entry, unsigned len) {
 		unsigned virt = READ(eip) + entry->inst_len;
 		unsigned limit = READ(cs).limit;
-		if((~limit && limit < (virt + len - 1)) || ((entry->inst_len + len) > InstructionCacheEntry::MAX_INSTLEN))
+		if((~limit &&
+		    limit < (virt + len - 1)) || ((entry->inst_len + len) > InstructionCacheEntry::MAX_INSTLEN))
 			GP0;
 		virt += READ(cs).base;
 
-		read_code(virt,len,entry->data + entry->inst_len);
+		read_code(virt, len, entry->data + entry->inst_len);
 		entry->inst_len += len;
 		return _fault;
 	}
@@ -196,12 +197,12 @@ class InstructionCache: public MemTlb {
 				InstructionCacheEntry tmp;
 				tmp.inst_len = 0;
 				// revalidate entries
-				if(fetch_code(&tmp,_values[i].inst_len))
+				if(fetch_code(&tmp, _values[i].inst_len))
 					return false;
 
 				// either code modified or two entries with different bases?
-				if(memcmp(tmp.data,_values[i].data,_values[i].inst_len)
-						|| cs_ar != _values[i].cs_ar)
+				if(memcmp(tmp.data, _values[i].data, _values[i].inst_len)
+				   || cs_ar != _values[i].cs_ar)
 					continue;
 				index = i;
 				//COUNTER_INC("I$ ok");
@@ -210,7 +211,7 @@ class InstructionCache: public MemTlb {
 		}
 		// allocate new invalid entry
 		index = slot(linear) + (_pos++ % ASSOZ);
-		memset(_values + index,0,sizeof(*_values));
+		memset(_values + index, 0, sizeof(*_values));
 		_values[index].cs_ar = cs_ar;
 		_values[index].prefixes = 0x8300; // default is to use the DS segment
 		_tags[index] = linear;
@@ -221,13 +222,14 @@ class InstructionCache: public MemTlb {
 	 * Fetch the modrm byte including sib byte and displacement.
 	 */
 	int get_modrm() {
-		fetch_code(_entry,1);
+		fetch_code(_entry, 1);
 		unsigned char modrm = _entry->data[_entry->inst_len - 1];
-		unsigned short info = modrminfo[(_entry->address_size == 2) << 5 | ((modrm >> 3) & 0x18) | (modrm & 0x7)];
+		unsigned short info =
+		    modrminfo[(_entry->address_size == 2) << 5 | ((modrm >> 3) & 0x18) | (modrm & 0x7)];
 
 		// sib byte
 		if(info & MRM_SIB) {
-			fetch_code(_entry,1);
+			fetch_code(_entry, 1);
 			if((modrm & 0xc7) == 0x4 && (_entry->data[_entry->inst_len - 1] & 0x7) == 5)
 				info |= MRM_DIS32 | MRM_NOBASE;
 			info = (info & ~0xff) | _entry->data[_entry->inst_len - 1];
@@ -238,7 +240,7 @@ class InstructionCache: public MemTlb {
 		}
 		unsigned disp = ((info >> MRM_DISSHIFT) & 0x3);
 		if(disp)
-			fetch_code(_entry,1 << (disp - 1));
+			fetch_code(_entry, 1 << (disp - 1));
 		_entry->modrminfo = info;
 
 		// SS segment is default for this modrm?
@@ -261,19 +263,20 @@ public:
 		if(!find_entry(index) && !_fault) {
 			_entry = _values + index;
 			_entry->address_size = _entry->operand_size = ((_entry->cs_ar >> 10) & 1) + 1;
-			for(int op_mode = 0; !_entry->execute && !_fault;) {
+			for(int op_mode = 0; !_entry->execute && !_fault; ) {
 				/**
 				 * Handle a new byte of the instruction.
 				 *
 				 * The op_mode, keeps track which parts of the opcode bytes have
 				 * already been seen.  Negative if the whole instruction is fetched.
 				 */
-				fetch_code(_entry,1) || handle_code_byte(_entry,_entry->data[_entry->inst_len - 1],op_mode);
+				fetch_code(_entry, 1) || handle_code_byte(_entry, _entry->data[_entry->inst_len - 1],
+				                                          op_mode);
 			}
 			if(_fault) {
 				// invalidate entry
 				_entry->inst_len = 0;
-				nre::Serial::get().writef("decode fault %x\n",_fault);
+				nre::Serial::get().writef("decode fault %x\n", _fault);
 				return _fault;
 			}
 
@@ -284,10 +287,11 @@ public:
 		_cpu->eip += _entry->inst_len;
 		if(debug) {
 			nre::Serial::get().writef("eip %x:%x esp %x eax %x ebp %x prefix %x\n",
-					_cpu->cs.sel,_oeip,_oesp,_cpu->eax,_cpu->ebp,_entry->prefixes);
+			                          _cpu->cs.sel, _oeip, _oesp, _cpu->eax, _cpu->ebp, _entry->prefixes);
 			nre::Serial::get().writef(".byte ");
 			for(unsigned i = 0; i < _entry->inst_len; i++)
-				nre::Serial::get().writef("0x%02x%c",_entry->data[i],(i == _entry->inst_len - 1) ? '\n' : ',');
+				nre::Serial::get().writef("0x%02x%c", _entry->data[i],
+				                          (i == _entry->inst_len - 1) ? '\n' : ',');
 		}
 		return _fault;
 	}
@@ -347,69 +351,78 @@ public:
 		return virt;
 	}
 
-	int virt_to_ptr(void *&res,unsigned length,Type type,unsigned virt) {
-		InstructionCache::handle_segment((&_cpu->es) + ((_entry->prefixes >> 8) & 0x0f),virt,length,
-				type & TYPE_W,false) || prepare_virtual(virt,length,type,res);
+	int virt_to_ptr(void *&res, unsigned length, Type type, unsigned virt) {
+		InstructionCache::handle_segment((&_cpu->es) + ((_entry->prefixes >> 8) & 0x0f), virt, length,
+		                                 type & TYPE_W, false) || prepare_virtual(virt, length, type,
+		                                                                          res);
 		return _fault;
 	}
 
 	/**
 	 * Convert modrm to a pointer in cache or RAM.
 	 */
-	int modrm2mem(void *&res,unsigned length,Type type) {
+	int modrm2mem(void *&res, unsigned length, Type type) {
 		unsigned short info = _entry->modrminfo;
 		if(info & MRM_REG)
 			res = length == 1 ? get_reg<1>(info & 0x7) : get_reg<0>(info & 0x7);
 		else
-			virt_to_ptr(res,length,type,modrm2virt());
+			virt_to_ptr(res, length, type, modrm2virt());
 		return _fault;
 	}
 
 #ifdef __x86_64__
-#	define PARAM1		"=D"
-#	define PARAM2		"=S"
-#	define PARAM3		"=d"
-#	define CLOBBER		"memory", "eax", "ecx"
+#    define PARAM1       "=D"
+#    define PARAM2       "=S"
+#    define PARAM3       "=d"
+#    define CLOBBER      "memory", "eax", "ecx"
 #else
-#	define PARAM1		"=a"
-#	define PARAM2		"=d"
-#	define PARAM3		"=c"
-#	define CLOBBER		"memory"
+#    define PARAM1       "=a"
+#    define PARAM2       "=d"
+#    define PARAM3       "=c"
+#    define CLOBBER      "memory"
 #endif
 
-	void call_asm(void *tmp_src,void *tmp_dst) {
+	void call_asm(void *tmp_src, void *tmp_dst) {
 		word_t tmp_flag;
-		unsigned dummy1,dummy2,dummy3;
+		unsigned dummy1, dummy2, dummy3;
 		switch(_entry->flags & (IC_LOADFLAGS | IC_SAVEFLAGS)) {
 			case IC_SAVEFLAGS:
-				asm volatile ("call *%4; pushf; pop %3"
-						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "=g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
-						: CLOBBER);
+				asm volatile (
+					"call *%4; pushf; pop %3"
+					: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "=g" (tmp_flag)
+					: "m" (_entry->execute), "0" (this), "1" (tmp_src), "2" (tmp_dst)
+					: CLOBBER
+				);
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
 				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			case IC_LOADFLAGS:
 				tmp_flag = _cpu->efl & 0x8d5;
-				asm volatile ("push %3; popf; call *%4;"
-						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
-						: CLOBBER);
+				asm volatile (
+					"push %3; popf; call *%4;"
+					: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g" (tmp_flag)
+					: "m" (_entry->execute), "0" (this), "1" (tmp_src), "2" (tmp_dst)
+					: CLOBBER
+				);
 				break;
 			case IC_LOADFLAGS | IC_SAVEFLAGS:
 				tmp_flag = _cpu->efl & 0x8d5;
-				asm volatile ("push %3; popf; call *%4; pushf; pop %3"
-						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g"(tmp_flag)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
-						: CLOBBER);
+				asm volatile (
+					"push %3; popf; call *%4; pushf; pop %3"
+					: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3), "+g" (tmp_flag)
+					: "m" (_entry->execute), "0" (this), "1" (tmp_src), "2" (tmp_dst)
+					: CLOBBER
+				);
 				_cpu->efl = (_cpu->efl & ~0x8d5) | (tmp_flag & 0x8d5);
 				_mtr_out |= nre::Mtd::RFLAGS;
 				break;
 			default:
-				asm volatile ("call *%3;"
-						: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3)
-						: "m"(_entry->execute), "0"(this), "1"(tmp_src), "2"(tmp_dst)
-						: CLOBBER);
+				asm volatile (
+					"call *%3;"
+					: PARAM1(dummy1), PARAM2(dummy2), PARAM3(dummy3)
+					: "m" (_entry->execute), "0" (this), "1" (tmp_src), "2" (tmp_dst)
+					: CLOBBER
+				);
 				break;
 		}
 	}
@@ -425,9 +438,9 @@ public:
 		void *tmp_dst = _entry->dst;
 
 		if(((_entry->prefixes & 0xff) == 0xf0)
-				&& ((~_entry->flags & IC_LOCK) || (_entry->modrminfo & MRM_REG))) {
-			nre::Util::panic("LOCK prefix %02x%02x%02x%02x at eip %x:%x\n",_entry->data[0],
-					_entry->data[1],_entry->data[2],_entry->data[3],_cpu->cs.sel,_cpu->eip);
+		   && ((~_entry->flags & IC_LOCK) || (_entry->modrminfo & MRM_REG))) {
+			nre::Util::panic("LOCK prefix %02x%02x%02x%02x at eip %x:%x\n", _entry->data[0],
+			                 _entry->data[1], _entry->data[2], _entry->data[3], _cpu->cs.sel, _cpu->eip);
 			UD0;
 		}
 
@@ -437,13 +450,13 @@ public:
 		if(_entry->flags & IC_RMW)
 			type = Type(type | TYPE_R);
 		if(_entry->flags & IC_MODRM) {
-			if(modrm2mem(tmp_dst,is_byte ? 1 : 1 << _entry->operand_size,type))
+			if(modrm2mem(tmp_dst, is_byte ? 1 : 1 << _entry->operand_size, type))
 				return _fault;
 		}
 		if(_entry->flags & IC_MOFS) {
 			unsigned virt = 0;
-			cpu_move(&virt,_entry->data + _entry->offset_opcode,_entry->address_size);
-			if(virt_to_ptr(tmp_dst,is_byte ? 1 : 1 << _entry->operand_size,type,virt))
+			cpu_move(&virt, _entry->data + _entry->offset_opcode, _entry->address_size);
+			if(virt_to_ptr(tmp_dst, is_byte ? 1 : 1 << _entry->operand_size, type, virt))
 				return _fault;
 		}
 		if(_entry->flags & IC_DIRECTION) {
@@ -453,20 +466,20 @@ public:
 		}
 
 		if(_entry->flags & IC_ASM)
-			call_asm(tmp_src,tmp_dst);
+			call_asm(tmp_src, tmp_dst);
 		else
-			_entry->execute(this,tmp_src,tmp_dst);
+			_entry->execute(this, tmp_src, tmp_dst);
 
 		/**
 		 * Have we accessed more than we are allowed to?
 		 * Do a recall with more state.
 		 */
 		if(_mtr_read & ~_mtr_in) {
-			nre::Util::panic("recall %x out of %x\n",_mtr_read,_mtr_in);
+			nre::Util::panic("recall %x out of %x\n", _mtr_read, _mtr_in);
 			// signal a recall
 			//COUNTER_INC("recall");
-			FAULT(this,FAULT_RECALL);
-		};
+			FAULT(this, FAULT_RECALL);
+		}
 		return _fault;
 	}
 
@@ -498,20 +511,21 @@ public:
 					_cpu->inst_len = 0;
 				switch(_fault) {
 					case FAULT_UNIMPLEMENTED:
-						nre::Util::panic("unimplemented at line %d eip %x\n",_debug_fault_line,
-								_cpu->eip);
+						nre::Util::panic("unimplemented at line %d eip %x\n", _debug_fault_line,
+						                 _cpu->eip);
 						// unimplemented
 						return false;
 					default:
-						nre::Util::panic("internal fault %x at eip %x\n",_fault,_cpu->eip);
+						nre::Util::panic("internal fault %x at eip %x\n", _fault, _cpu->eip);
 						break;
 				}
 			}
 			else {
 				_mtr_out |= nre::Mtd::INJ;
 				nre::Serial::get().writef("fault: %x old %x error %x cr2 %x at eip %x line %d %x\n",
-						_fault,_cpu->inj_info,_error_code,_cpu->cr2,_cpu->eip,_debug_fault_line,
-						_cpu->cr2);
+				                          _fault, _cpu->inj_info, _error_code, _cpu->cr2, _cpu->eip,
+				                          _debug_fault_line,
+				                          _cpu->cr2);
 				// consolidate two exceptions
 
 				// triple fault ?
@@ -519,13 +533,13 @@ public:
 				if(old_info == 0x80000b08) {
 					_cpu->inj_info = 0;
 					// triple fault
-					CpuMessage msg(CpuMessage::TYPE_TRIPLE,_cpu,_mtr_in);
-					_vcpu->executor.send(msg,true);
+					CpuMessage msg(CpuMessage::TYPE_TRIPLE, _cpu, _mtr_in);
+					_vcpu->executor.send(msg, true);
 				}
 				else {
 					if((old_info & _fault & 0x80000700) == 0x80000300) {
 						if(((0x3c01 & (1 << (old_info & 0xff))) && (0x3c01 & (1 << (_fault & 0xff))))
-								|| (old_info == 0x80000b0e && (0x7c01 & (1 << (_fault & 0xff))))) {
+						   || (old_info == 0x80000b0e && (0x7c01 & (1 << (_fault & 0xff))))) {
 							_fault = 0x80000b08;
 							_error_code = 0;
 						}
@@ -558,8 +572,8 @@ public:
 		msg.mtr_out = _mtr_out;
 	}
 
-	InstructionCache(VCVCpu *vcpu) : MemTlb(vcpu->mem,vcpu->memregion), _pos(), _tags(),
-			_values(), _vcpu(vcpu), _entry(), _oeip(), _oesp(), _ointr_state(), _dr6(),
-			_dr(), _fpustate() {
+	InstructionCache(VCVCpu *vcpu)
+		: MemTlb(vcpu->mem, vcpu->memregion), _pos(), _tags(), _values(), _vcpu(vcpu), _entry(),
+		  _oeip(), _oesp(), _ointr_state(), _dr6(), _dr(), _fpustate() {
 	}
 };

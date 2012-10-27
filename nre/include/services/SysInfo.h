@@ -141,7 +141,7 @@ public:
 	 * @param total will be set to the total amount of physical memory available (in bytes)
 	 * @param free will be set to the free physical memory (in bytes)
 	 */
-	void get_mem(size_t &total,size_t &free) {
+	void get_mem(size_t &total, size_t &free) {
 		UtcbFrame uf;
 		uf << SysInfo::GET_MEM;
 		pt().call(uf);
@@ -156,7 +156,7 @@ public:
 	 * @param update whether to update this information
 	 * @return the total time (in microseconds)
 	 */
-	timevalue_t get_total_time(cpu_t cpu,bool update) {
+	timevalue_t get_total_time(cpu_t cpu, bool update) {
 		timevalue_t res;
 		UtcbFrame uf;
 		uf << SysInfo::GET_TOTALTIME << cpu << update;
@@ -173,7 +173,7 @@ public:
 	 * @param tu will be filled
 	 * @return true if <idx> exists
 	 */
-	bool get_timeuser(size_t idx,SysInfo::TimeUser &tu) {
+	bool get_timeuser(size_t idx, SysInfo::TimeUser &tu) {
 		UtcbFrame uf;
 		uf << SysInfo::GET_TIMEUSER << idx;
 		pt().call(uf);
@@ -193,7 +193,7 @@ public:
 	 * @param c will be filled
 	 * @return true if <idx> exists
 	 */
-	bool get_child(size_t idx,SysInfo::Child &c) {
+	bool get_child(size_t idx, SysInfo::Child &c) {
 		UtcbFrame uf;
 		uf << SysInfo::GET_CHILD << idx;
 		pt().call(uf);

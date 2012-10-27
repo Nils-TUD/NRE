@@ -36,7 +36,7 @@ class OStream;
 class Child;
 class ChildManager;
 
-OStream &operator<<(OStream &os,const Child &c);
+OStream &operator<<(OStream &os, const Child &c);
 
 /**
  * Represents a running child task. This is used by the ChildManager to keep track of all its
@@ -44,7 +44,7 @@ OStream &operator<<(OStream &os,const Child &c);
  */
 class Child : public RCUObject {
 	friend class ChildManager;
-	friend OStream &operator<<(OStream &os,const Child &c);
+	friend OStream & operator<<(OStream &os, const Child &c);
 
 	/**
 	 * Holds the properties of an Sc that has been announced by a child
@@ -58,7 +58,7 @@ class Child : public RCUObject {
 		 * @param cpu the cpu its running on
 		 * @param cap the Sc capability
 		 */
-		explicit SchedEntity(const nre::String &name,cpu_t cpu,capsel_t cap)
+		explicit SchedEntity(const nre::String &name, cpu_t cpu, capsel_t cap)
 			: nre::SListItem(), _name(name), _cpu(cpu), _cap(cap) {
 		}
 
@@ -181,11 +181,11 @@ public:
 	}
 
 private:
-	explicit Child(ChildManager *cm,id_type id,const String &cmdline)
-			: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
-			  _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
-			  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),
-			  _main(), _stack(), _utcb(), _hip(), _last_fault_addr(), _last_fault_cpu(), _sm() {
+	explicit Child(ChildManager *cm, id_type id, const String &cmdline)
+		: RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
+		  _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
+		  _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),
+		  _main(), _stack(), _utcb(), _hip(), _last_fault_addr(), _last_fault_cpu(), _sm() {
 	}
 	virtual ~Child() {
 		for(size_t i = 0; i < _ptcount; ++i)
@@ -199,12 +199,12 @@ private:
 		release_ports();
 		release_scs();
 		release_regs();
-		CapSelSpace::get().free(_gsi_caps,Hip::MAX_GSIS);
+		CapSelSpace::get().free(_gsi_caps, Hip::MAX_GSIS);
 	}
 
-	void add_sc(const String &name,cpu_t cpu,capsel_t sc) {
+	void add_sc(const String &name, cpu_t cpu, capsel_t sc) {
 		ScopedLock<UserSm> guard(&_sm);
-		_scs.append(new SchedEntity(name,cpu,sc));
+		_scs.append(new SchedEntity(name, cpu, sc));
 	}
 	void remove_sc(capsel_t sc) {
 		ScopedLock<UserSm> guard(&_sm);

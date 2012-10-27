@@ -31,12 +31,12 @@ class NullMemDevice : public StaticReceiver<NullMemDevice> {
 	uintptr_t _size;
 
 public:
-	NullMemDevice(uintptr_t base,uintptr_t size)
+	NullMemDevice(uintptr_t base, uintptr_t size)
 		: _base(base), _size(size) {
 	}
 
 	bool receive(MessageMem &msg) {
-		if(!in_range(msg.phys,_base,_size))
+		if(!in_range(msg.phys, _base, _size))
 			return false;
 		if(msg.read)
 			*msg.ptr = 0xffffffff;
@@ -45,7 +45,7 @@ public:
 };
 
 PARAM_HANDLER(nullmem,
-		"nullmem:<range> - ignore Memory access to the given physical address range.",
-		"Example: 'nullmem:0xfee00000,0x1000'.") {
-	mb.bus_mem.add(new NullMemDevice(argv[0],argv[1]),NullMemDevice::receive_static<MessageMem>);
+              "nullmem:<range> - ignore Memory access to the given physical address range.",
+              "Example: 'nullmem:0xfee00000,0x1000'.") {
+	mb.bus_mem.add(new NullMemDevice(argv[0], argv[1]), NullMemDevice::receive_static<MessageMem> );
 }

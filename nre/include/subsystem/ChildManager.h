@@ -59,7 +59,7 @@ class ChildManager {
 	 */
 	class Portals {
 	public:
-		static const size_t COUNT	= 9;
+		static const size_t COUNT   = 9;
 
 		PORTAL static void startup(capsel_t pid);
 		PORTAL static void init_caps(capsel_t pid);
@@ -85,9 +85,9 @@ public:
 	/**
 	 * Some settings
 	 */
-	static const size_t MAX_CHILDS			= 32;
-	static const size_t MAX_CMDLINE_LEN	= 256;
-	static const size_t MAX_MODAUX_LEN		= ExecEnv::PAGE_SIZE;
+	static const size_t MAX_CHILDS          = 32;
+	static const size_t MAX_CMDLINE_LEN     = 256;
+	static const size_t MAX_MODAUX_LEN      = ExecEnv::PAGE_SIZE;
 
 	/**
 	 * Creates a new child manager. It will already create all Ecs that are required
@@ -107,12 +107,12 @@ public:
 	 * @param addr the address of the ELF file
 	 * @param size the size of the ELF file
 	 * @param config the config to use. this allows you to specify the access to the modules, the
-	 * 	presented CPUs and other things
+	 *  presented CPUs and other things
 	 * @return the id of the created child
 	 * @throws ELFException if the ELF is invalid
 	 * @throws Exception if something else failed
 	 */
-	Child::id_type load(uintptr_t addr,size_t size,const ChildConfig &config);
+	Child::id_type load(uintptr_t addr, size_t size, const ChildConfig &config);
 
 	/**
 	 * @return the number of childs
@@ -174,8 +174,8 @@ public:
 	 * @param available the CPUs it is available on
 	 * @return a semaphore cap that is used to notify the service about potentially destroyed sessions
 	 */
-	capsel_t reg_service(capsel_t cap,const String& name,const BitField<Hip::MAX_CPUS> &available) {
-		return reg_service(0,cap,name,available);
+	capsel_t reg_service(capsel_t cap, const String& name, const BitField<Hip::MAX_CPUS> &available) {
+		return reg_service(0, cap, name, available);
 	}
 	/**
 	 * Unregisters the service with given name
@@ -183,7 +183,7 @@ public:
 	 * @param name the service name
 	 */
 	void unreg_service(const String& name) {
-		unreg_service(0,name);
+		unreg_service(0, name);
 	}
 
 private:
@@ -193,7 +193,7 @@ private:
 			if(_childs[i] == 0)
 				return i;
 		}
-		throw ChildException(E_CAPACITY,"No free child slots");
+		throw ChildException(E_CAPACITY, "No free child slots");
 	}
 
 	Child *get_child(Child::id_type id) {
@@ -202,7 +202,7 @@ private:
 	Child *get_child_at(size_t idx) {
 		Child *c = rcu_dereference(_childs[idx]);
 		if(!c)
-			throw ChildException(E_NOT_FOUND,32,"Child with idx %zu does not exist",idx);
+			throw ChildException(E_NOT_FOUND, 32, "Child with idx %zu does not exist", idx);
 		return c;
 	}
 	static inline size_t per_child_caps() {
@@ -221,24 +221,24 @@ private:
 		const ServiceRegistry::Service* s = registry().find(name);
 		if(!s) {
 			if(!_startup_info.child)
-				throw ChildException(E_NOT_FOUND,64,"Unable to find service '%s'",name.str());
+				throw ChildException(E_NOT_FOUND, 64, "Unable to find service '%s'", name.str());
 			BitField<Hip::MAX_CPUS> available;
-			capsel_t pts = get_parent_service(name.str(),available);
-			s = _registry.reg(0,name,pts,1 << CPU::order(),available);
+			capsel_t pts = get_parent_service(name.str(), available);
+			s = _registry.reg(0, name, pts, 1 << CPU::order(), available);
 			_regsm.up();
 		}
 		return s;
 	}
-	capsel_t reg_service(Child *c,capsel_t pts,const String& name,
-			const BitField<Hip::MAX_CPUS> &available) {
+	capsel_t reg_service(Child *c, capsel_t pts, const String& name,
+	                     const BitField<Hip::MAX_CPUS> &available) {
 		ScopedLock<UserSm> guard(&_sm);
-		const ServiceRegistry::Service *srv = _registry.reg(c,name,pts,1 << CPU::order(),available);
+		const ServiceRegistry::Service *srv = _registry.reg(c, name, pts, 1 << CPU::order(), available);
 		_regsm.up();
 		return srv->sm().sel();
 	}
-	void unreg_service(Child *c,const String& name) {
+	void unreg_service(Child *c, const String& name) {
 		ScopedLock<UserSm> guard(&_sm);
-		_registry.unreg(c,name);
+		_registry.unreg(c, name);
 	}
 	void notify_services() {
 		{
@@ -251,17 +251,17 @@ private:
 		CPU::current().srv_pt().call(uf);
 	}
 
-	void term_child(capsel_t pid,UtcbExcFrameRef &uf);
-	void kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type);
+	void term_child(capsel_t pid, UtcbExcFrameRef &uf);
+	void kill_child(capsel_t pid, UtcbExcFrameRef &uf, ExitType type);
 	void destroy_child(capsel_t pid);
 
-	static void prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp);
-	void build_hip(Child *c,const ChildConfig &config);
+	static void prepare_stack(Child *c, uintptr_t &sp, uintptr_t csp);
+	void build_hip(Child *c, const ChildConfig &config);
 
-	capsel_t get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available);
-	void map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type);
-	void switch_to(UtcbFrameRef &uf,Child *c);
-	void unmap(UtcbFrameRef &uf,Child *c);
+	capsel_t get_parent_service(const char *name, BitField<Hip::MAX_CPUS> &available);
+	void map(UtcbFrameRef &uf, Child *c, DataSpace::RequestType type);
+	void switch_to(UtcbFrameRef &uf, Child *c);
+	void unmap(UtcbFrameRef &uf, Child *c);
 
 	ChildManager(const ChildManager&);
 	ChildManager& operator=(const ChildManager&);

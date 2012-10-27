@@ -22,12 +22,12 @@
 #include <Compiler.h>
 
 class HostACPI {
-	static const uintptr_t BIOS_MEM_ADDR	= 0xe0000;
-	static const size_t BIOS_MEM_SIZE		= 0x20000;
-	static const uintptr_t BIOS_ADDR		= 0x0;
-	static const size_t BIOS_SIZE			= 0x1000;
-	static const size_t BIOS_EBDA_OFF		= 0x40E;
-	static const size_t BIOS_EBDA_SIZE		= 1024;
+	static const uintptr_t BIOS_MEM_ADDR    = 0xe0000;
+	static const size_t BIOS_MEM_SIZE       = 0x20000;
+	static const uintptr_t BIOS_ADDR        = 0x0;
+	static const size_t BIOS_SIZE           = 0x1000;
+	static const size_t BIOS_EBDA_OFF       = 0x40E;
+	static const size_t BIOS_EBDA_SIZE      = 1024;
 
 	// root system descriptor pointer
 	struct RSDP {
@@ -76,11 +76,11 @@ public:
 	const nre::DataSpace &mem() const {
 		return *_ds;
 	}
-	uintptr_t find(const char *name,uint instance,size_t &length);
+	uintptr_t find(const char *name, uint instance, size_t &length);
 	uint irq_to_gsi(uint irq);
 
 private:
-	static char checksum(char *table,unsigned count) {
+	static char checksum(char *table, unsigned count) {
 		char res = 0;
 		while(count--)
 			res += table[count];

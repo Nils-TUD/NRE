@@ -17,11 +17,11 @@
  */
 #pragma once
 
-#define READ(NAME) ({ _mtr_read |= RMTR_##NAME; _cpu->NAME; })
-#define WRITE(NAME) ({					\
-	_mtr_out |= RMTR_##NAME;			\
-	_cpu->NAME;							\
-})
+#define READ(NAME) ({ _mtr_read |= RMTR_ ## NAME; _cpu->NAME; })
+#define WRITE(NAME) ({ \
+                         _mtr_out |= RMTR_ ## NAME; \
+                         _cpu->NAME; \
+					 })
 #define FAULT(NAME, VALUE) { NAME->_debug_fault_line = __LINE__;  NAME->_fault = VALUE; }
 #define UNIMPLEMENTED(NAME) { return (FAULT(NAME, FAULT_UNIMPLEMENTED)); }
 #define RETRY         { return (FAULT(this, FAULT_RETRY)); }
@@ -34,7 +34,8 @@
 #define SS0   { EXCEPTION(this, 0xc, 0); return _fault; }
 #define GP(X) { EXCEPTION(this, 0xd, X); return _fault; }
 #define GP0   { EXCEPTION(this, 0xd, 0); return _fault; }
-#define PF(ADDR, ERR) { _cpu->cr2 = ADDR; _mtr_out |= nre::Mtd::CR; EXCEPTION(this, 0xe, ERR); return _fault; }
+#define PF(ADDR, ERR) { _cpu->cr2 = ADDR; _mtr_out |= nre::Mtd::CR; EXCEPTION(this, 0xe, ERR); \
+		                return _fault; }
 
 /**
  * A cache for physical memory indexed by page number.
@@ -51,13 +52,13 @@ protected:
 	unsigned _mtr_out;
 private:
 	enum {
-		SIZE		= 64,
+		SIZE        = 64,
 		// Associativity, the minimum is 2 (movs).
-		ASSOZ		= 6,
+		ASSOZ       = 6,
 		// Number of buffers, we need two for movs, push and similar instructions...
-		BUFFERS		= 6,
+		BUFFERS     = 6,
 		// The maximum size of a buffer, the minmum is 16+dword (cmpxchg16b+instruction-reread).
-		BUFFER_SIZE	= 16 + 4
+		BUFFER_SIZE = 16 + 4
 	};
 
 	// the hash function for the cache
@@ -69,12 +70,12 @@ private:
 public:
 	/* universal access types */
 	enum Type {
-		TYPE_R		= 1u << 0,
-		TYPE_W		= 1u << 1,
-		TYPE_RMW	= TYPE_R | TYPE_W,
-		TYPE_U		= 1u << 2,
-		TYPE_RES	= 1u << 3,
-		TYPE_X		= 1u << 4
+		TYPE_R      = 1u << 0,
+		TYPE_W      = 1u << 1,
+		TYPE_RMW    = TYPE_R | TYPE_W,
+		TYPE_U      = 1u << 2,
+		TYPE_RES    = 1u << 3,
+		TYPE_X      = 1u << 4
 	};
 
 	struct CacheEntry {
@@ -87,7 +88,7 @@ public:
 		size_t _len;
 		// a pointer in a single linked list to an older entry in the set or ~0u at the end
 		unsigned _older;
-		bool is_valid(uintptr_t phys1,uintptr_t phys2,size_t len) {
+		bool is_valid(uintptr_t phys1, uintptr_t phys2, size_t len) {
 			if(!_ptr)
 				return false;
 			return _ptr && phys1 == _phys1 && len == _len && phys2 == _phys2;
@@ -106,7 +107,7 @@ private:
 	 * sorted in two single linked lists. The usage list via
 	 * CacheEntry::_older and the dirty list.
 	 */
-	struct Buffers: CacheEntry {
+	struct Buffers : CacheEntry {
 		size_t _newer_write;
 		char data[BUFFER_SIZE];
 	} _buffers[BUFFERS];
@@ -114,14 +115,14 @@ private:
 	size_t _oldest_write;
 	size_t _newest_write;
 
-	void buffer_io(bool read,unsigned index) {
+	void buffer_io(bool read, unsigned index) {
 		assert(!(_buffers[index]._len & 3));
 		assert(!(_buffers[index]._phys1 & 3));
 
 		uintptr_t address = _buffers[index]._phys1;
 		for(unsigned i = 0; i < _buffers[index]._len; i += 4) {
-			MessageMem msg2(read,address,reinterpret_cast<unsigned *>(_buffers[index].data + i));
-			_mem.send(msg2,true);
+			MessageMem msg2(read, address, reinterpret_cast<unsigned *>(_buffers[index].data + i));
+			_mem.send(msg2, true);
 			if((address & 0xfff) != 0xffc)
 				address += 4;
 			else
@@ -143,49 +144,49 @@ private:
 		}
 		_buffers[i]._newer_write = ~0ul;
 
-		buffer_io(false,i);
+		buffer_io(false, i);
 	}
 
 	/**
 	 * Move CacheEntries to the front of the usage list.
 	 */
-#define return_move_to_front(set, newest)			\
-	{												\
-		if(~old)									\
-		{											\
-			set[old]._older = set[entry]._older;	\
-			set[entry]._older = newest;				\
-			newest = entry;							\
-		}											\
-		return set + entry;							\
+#define return_move_to_front(set, newest) \
+	{ \
+		if(~old) \
+		{ \
+			set[old]._older = set[entry]._older; \
+			set[entry]._older = newest; \
+			newest = entry; \
+		} \
+		return set + entry; \
 	}
 
 	/*
 	 * Search for an entry starting from the newest one.
 	 */
-#define search_entry(set, newest)											\
-	unsigned old = ~0;														\
-	unsigned entry = newest;												\
-	for(; ~set[entry]._older; old = entry, entry = set[entry]._older)	{	\
-		if(set[entry].is_valid(phys1,phys2,len))							\
-			return_move_to_front(set, newest);								\
-	}																		\
-	/* we have at least an assoziativity of two! */							\
-	assert(~old);															\
+#define search_entry(set, newest) \
+	unsigned old = ~0; \
+	unsigned entry = newest; \
+	for(; ~set[entry]._older; old = entry, entry = set[entry]._older)   { \
+		if(set[entry].is_valid(phys1, phys2, len)) \
+			return_move_to_front(set, newest); \
+	} \
+	/* we have at least an assoziativity of two! */ \
+	assert(~old); \
 	assert(~entry);
 
 public:
 	/**
 	 * Get an entry from the cache or fetch one from memory.
 	 */
-	CacheEntry *get(uintptr_t phys1,uintptr_t phys2,size_t len,Type type) {
+	CacheEntry *get(uintptr_t phys1, uintptr_t phys2, size_t len, Type type) {
 		assert(!(phys1 & 3));
 		assert(!(len & 3));
 
 		// XXX simplify it by relying on memory ranges
 		{
 			unsigned s = slot(phys1);
-			search_entry(_sets[s]._values,_sets[s]._newest);
+			search_entry(_sets[s]._values, _sets[s]._newest);
 
 			/**
 			 * What should we do if two different pages are referenced?
@@ -198,27 +199,27 @@ public:
 			bool supported = true;
 			if(phys2 != ~0xffful && (((phys1 >> 12) + 1) != (phys2 >> 12))) {
 				nre::Serial::get().writef("joining two non-adjunct pages %lx,%lx is not supported\n",
-						phys1 >> 12,phys2 >> 12);
+				                          phys1 >> 12, phys2 >> 12);
 				supported = false;
 			}
 
 			// try to get a direct memory reference
 			MessageMemRegion msg1(phys1 >> 12);
-			if(supported && _memregion.send(msg1,true) && msg1.ptr
-					&& ((phys1 + len) <= ((msg1.start_page + msg1.count) << 12))) {
+			if(supported && _memregion.send(msg1, true) && msg1.ptr
+			   && ((phys1 + len) <= ((msg1.start_page + msg1.count) << 12))) {
 				CacheEntry *res = _sets[s]._values + entry;
 				res->_ptr = msg1.ptr + (phys1 - (msg1.start_page << 12));
 				res->_len = len;
 				res->_phys1 = phys1;
 				res->_phys2 = phys2;
-				return_move_to_front(_sets[s]._values,_sets[s]._newest);
+				return_move_to_front(_sets[s]._values, _sets[s]._newest);
 			}
 		}
 
 		// we could not alloc the memory region directly from RAM, thus we use our own buffer instead.
 		{
 			assert(len <= BUFFER_SIZE);
-			search_entry(_buffers,_newest_buffer);
+			search_entry(_buffers, _newest_buffer);
 
 			/**
 			 * Invalidate a dirty entry, as we entry points to the last used
@@ -229,7 +230,7 @@ public:
 			assert(!~_buffers[entry]._newer_write);
 
 			// init data as in the floating bus.
-			memset(_buffers[entry].data,0xff,sizeof(_buffers[entry].data));
+			memset(_buffers[entry].data, 0xff, sizeof(_buffers[entry].data));
 			_buffers[entry]._ptr = _buffers[entry].data;
 
 			// put us on the write list
@@ -248,9 +249,9 @@ public:
 
 			// do we have to read the data into the cache?
 			if(type & TYPE_R)
-				buffer_io(true,entry);
+				buffer_io(true, entry);
 
-			return_move_to_front(_buffers,_newest_buffer);
+			return_move_to_front(_buffers, _newest_buffer);
 		}
 	}
 
@@ -269,10 +270,10 @@ public:
 		}
 	}
 
-	MemCache(DBus<MessageMem> &mem,DBus<MessageMemRegion> &memregion)
-			: _mem(mem), _memregion(memregion), _fault(), _error_code(), _debug_fault_line(),
-			  _mtr_in(), _mtr_read(), _mtr_out(), debug(false), _sets(), _buffers(),
-			  _newest_buffer(), _oldest_write(), _newest_write() {
+	MemCache(DBus<MessageMem> &mem, DBus<MessageMemRegion> &memregion)
+		: _mem(mem), _memregion(memregion), _fault(), _error_code(), _debug_fault_line(),
+		  _mtr_in(), _mtr_read(), _mtr_out(), debug(false), _sets(), _buffers(),
+		  _newest_buffer(), _oldest_write(), _newest_write() {
 		assert(ASSOZ >= 2);
 		assert(BUFFERS >= 2);
 

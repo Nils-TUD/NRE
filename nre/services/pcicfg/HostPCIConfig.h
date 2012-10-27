@@ -24,43 +24,43 @@
 #include "Config.h"
 
 class HostPCIConfig : public Config {
-	static const uint PORT_ADDR	= 0xCF8;
-	static const uint PORT_DATA	= 0xCFC;
+	static const uint PORT_ADDR = 0xCF8;
+	static const uint PORT_DATA = 0xCFC;
 
 public:
-	explicit HostPCIConfig() : _sm(), _addr(PORT_ADDR,4), _data(PORT_DATA,4) {
+	explicit HostPCIConfig() : _sm(), _addr(PORT_ADDR, 4), _data(PORT_DATA, 4) {
 	}
 
 	virtual const char *name() const {
 		return "PCIConfig";
 	}
-	virtual bool contains(bdf_type bdf,size_t offset) const {
+	virtual bool contains(bdf_type bdf, size_t offset) const {
 		return offset < 0x100 && bdf < 0x10000;
 	}
-	virtual uintptr_t addr(bdf_type,size_t) {
-		throw nre::Exception(nre::E_ARGS_INVALID,"ADDR cmd not supported in PCI config space");
+	virtual uintptr_t addr(bdf_type, size_t) {
+		throw nre::Exception(nre::E_ARGS_INVALID, "ADDR cmd not supported in PCI config space");
 	}
-	virtual value_type read(bdf_type bdf,size_t offset) {
+	virtual value_type read(bdf_type bdf, size_t offset) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		select(bdf,offset);
+		select(bdf, offset);
 		return _data.in<uint32_t>();
 	}
-	virtual void write(bdf_type bdf,size_t offset,value_type value) {
+	virtual void write(bdf_type bdf, size_t offset, value_type value) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		select(bdf,offset);
+		select(bdf, offset);
 		_data.out<uint32_t>(value);
 	}
 	void reset() {
-		_addr.out<uint8_t>((_addr.in<uint8_t>(1) & ~4) | 0x02,1);
-		_addr.out<uint8_t>(0x06,1);
-		_addr.out<uint8_t>(0x01,1);
+		_addr.out<uint8_t>((_addr.in<uint8_t>(1) & ~4) | 0x02, 1);
+		_addr.out<uint8_t>(0x06, 1);
+		_addr.out<uint8_t>(0x01, 1);
 	}
 
-	bdf_type search_device(value_type theclass = ~0U,value_type subclass = ~0U,uint inst = ~0U);
+	bdf_type search_device(value_type theclass = ~0U, value_type subclass = ~0U, uint inst = ~0U);
 	bdf_type search_bridge(value_type dst);
 
 private:
-	void select(bdf_type bdf,size_t offset) {
+	void select(bdf_type bdf, size_t offset) {
 		uint32_t addr = 0x80000000 | (bdf << 8) | (offset & 0xFC);
 		_addr.out<uint32_t>(addr);
 	}

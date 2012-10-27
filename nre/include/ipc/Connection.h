@@ -38,7 +38,7 @@ public:
 	 * @throws Exception if the connection failed
 	 */
 	explicit Connection(const char *service)
-		: _available(), _caps(connect(service)), _pts(new Pt*[CPU::count()]) {
+		: _available(), _caps(connect(service)), _pts(new Pt *[CPU::count()]) {
 		for(size_t i = 0; i < CPU::count(); ++i)
 			_pts[i] = 0;
 	}
@@ -49,7 +49,7 @@ public:
 		for(size_t i = 0; i < CPU::count(); ++i)
 			delete _pts[i];
 		delete[] _pts;
-		CapSelSpace::get().free(_caps,1 << CPU::order());
+		CapSelSpace::get().free(_caps, 1 << CPU::order());
 	}
 
 	/**
@@ -73,8 +73,8 @@ public:
 private:
 	capsel_t connect(const char *service) {
 		UtcbFrame uf;
-		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
-		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
 		uf << Service::GET << String(service);
 		CPU::current().srv_pt().call(uf);
 		uf.check_reply();

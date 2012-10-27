@@ -28,12 +28,12 @@ namespace nre {
  */
 class ChildConfig {
 public:
-	static const size_t MAX_WAITS		= 4;
+	static const size_t MAX_WAITS       = 4;
 
 	enum ModuleAccess {
-		OWN,				// access only to its own module
-		FOLLOWING,			// access to its own and all following modules
-		ALL,				// access to all modules
+		OWN,                // access only to its own module
+		FOLLOWING,          // access to its own and all following modules
+		ALL,                // access to all modules
 	};
 
 	/**
@@ -43,7 +43,7 @@ public:
 	 * @param cmdline the cmdline
 	 * @param cpu the CPU for the main thread
 	 */
-	explicit ChildConfig(size_t no,const String &cmdline,cpu_t cpu = CPU::current().log_id())
+	explicit ChildConfig(size_t no, const String &cmdline, cpu_t cpu = CPU::current().log_id())
 		: _no(no), _last(false), _modaccess(OWN), _cpu(cpu), _cpus(), _entry(0), _waitcount(),
 		  _waits(), _cmdline() {
 		parse(cmdline);
@@ -112,7 +112,7 @@ public:
 	 * @param mem the destination
 	 * @return false if there should be no module <i>
 	 */
-	virtual bool get_module(size_t i,HipMem &mem) const {
+	virtual bool get_module(size_t i, HipMem &mem) const {
 		if(_modaccess == OWN && i > 0)
 			return false;
 		Hip::mem_iterator it = Hip::get().mem_begin();
@@ -139,25 +139,25 @@ private:
 		for(size_t i = 0; pos < sizeof(buffer) && i <= cmdline.length(); ++i) {
 			if(i == cmdline.length() || str[i] == ' ') {
 				size_t len = str + i - start;
-				if(strncmp(start,"mods=following",len) == 0)
+				if(strncmp(start, "mods=following", len) == 0)
 					_modaccess = FOLLOWING;
-				else if(strncmp(start,"mods=all",len) == 0)
+				else if(strncmp(start, "mods=all", len) == 0)
 					_modaccess = ALL;
-				else if(strncmp(start,"lastmod",7) == 0)
+				else if(strncmp(start, "lastmod", 7) == 0)
 					_last = true;
-				else if(strncmp(start,"provides=",9) == 0 && _waitcount < MAX_WAITS)
-					_waits[_waitcount++] = String(start + 9,len - 9);
+				else if(strncmp(start, "provides=", 9) == 0 && _waitcount < MAX_WAITS)
+					_waits[_waitcount++] = String(start + 9, len - 9);
 				else {
 					if(pos + len + 1 >= sizeof(buffer))
 						len = sizeof(buffer) - (pos + 2);
-					memcpy(buffer + pos,start,len + 1);
+					memcpy(buffer + pos, start, len + 1);
 					pos += len + 1;
 				}
 				start = str + i + 1;
 			}
 		}
 		buffer[pos - 1] = '\0';
-		_cmdline.reset(buffer,pos - 1);
+		_cmdline.reset(buffer, pos - 1);
 	}
 
 	size_t _no;

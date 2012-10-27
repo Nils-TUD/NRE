@@ -20,20 +20,20 @@
 
 namespace nre {
 
-OStream &operator<<(OStream &os,const ChildMemory &cm) {
+OStream &operator<<(OStream &os, const ChildMemory &cm) {
 	os << "\tDataspaces:\n";
 	for(ChildMemory::iterator it = cm.begin(); it != cm.end(); ++it) {
 		uint flags = it->desc().flags();
 		os.writef(
-			"\t\t%p .. %p (%#0"FMT_WORD_HEXLEN"zx bytes) %c%c%c%c <- %p\n",
-				reinterpret_cast<void*>(it->desc().virt()),
-				reinterpret_cast<void*>(it->desc().virt() + it->desc().size()),
-				it->desc().size(),
-				(flags & ChildMemory::OWN) ? 'o' : '-',
-				(flags & ChildMemory::R) ? 'r' : '-',
-				(flags & ChildMemory::W) ? 'w' : '-',
-				(flags & ChildMemory::X) ? 'x' : '-',
-				reinterpret_cast<void*>(it->desc().origin())
+		    "\t\t%p .. %p (%#0" FMT_WORD_HEXLEN "zx bytes) %c%c%c%c <- %p\n",
+		    reinterpret_cast<void*>(it->desc().virt()),
+		    reinterpret_cast<void*>(it->desc().virt() + it->desc().size()),
+		    it->desc().size(),
+		    (flags & ChildMemory::OWN) ? 'o' : '-',
+		    (flags & ChildMemory::R) ? 'r' : '-',
+		    (flags & ChildMemory::W) ? 'w' : '-',
+		    (flags & ChildMemory::X) ? 'x' : '-',
+		    reinterpret_cast<void*>(it->desc().origin())
 		);
 	}
 	return os;

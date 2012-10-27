@@ -34,7 +34,7 @@ public:
 	 */
 	explicit ChildHip(const CPUSet &cpuset = CPUSet(CPUSet::ALL)) : cpus(), reserved() {
 		// the cast is necessary to access the protected members of Hip
-		copy(static_cast<const ChildHip&>(Hip::get()),cpuset);
+		copy(static_cast<const ChildHip&>(Hip::get()), cpuset);
 	}
 
 	/**
@@ -44,8 +44,8 @@ public:
 	 * @param size the size (in bytes)
 	 * @param cmdline the command line
 	 */
-	void add_module(uint64_t addr,uint64_t size,const char *cmdline) {
-		add_mem(addr,size,reinterpret_cast<word_t>(cmdline),HipMem::MB_MODULE);
+	void add_module(uint64_t addr, uint64_t size, const char *cmdline) {
+		add_mem(addr, size, reinterpret_cast<word_t>(cmdline), HipMem::MB_MODULE);
 	}
 	/**
 	 * Adds a memory item to the list.
@@ -55,11 +55,11 @@ public:
 	 * @param aux the aux field (the commandline for modules)
 	 * @param type the type of item
 	 */
-	void add_mem(uint64_t addr,uint64_t size,word_t aux,int32_t type) {
+	void add_mem(uint64_t addr, uint64_t size, word_t aux, int32_t type) {
 		assert(size > 0);
 		size_t i = memcount();
 		assert(reinterpret_cast<uintptr_t>(&mems[i] + 1) <=
-				reinterpret_cast<uintptr_t>(this) + ExecEnv::PAGE_SIZE);
+		       reinterpret_cast<uintptr_t>(this) + ExecEnv::PAGE_SIZE);
 		mems[i].addr = addr;
 		mems[i].size = size;
 		mems[i].type = type;
@@ -77,12 +77,12 @@ public:
 private:
 	size_t memcount() const {
 		size_t memcount;
-		for(memcount = 0; mems[memcount].size != 0 ; ++memcount)
+		for(memcount = 0; mems[memcount].size != 0; ++memcount)
 			;
 		return memcount;
 	}
 
-	void copy(const ChildHip& hip,const CPUSet &cpuset) {
+	void copy(const ChildHip& hip, const CPUSet &cpuset) {
 		signature = hip.signature;
 		checksum = 0;
 		api_flg = hip.api_flg;

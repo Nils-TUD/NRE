@@ -26,24 +26,24 @@ private:
 		/* Code selector that the ISR will use */
 		uint16_t selector;
 		/* these bits are fix: 0.1110.0000.0000b */
-		uint16_t fix		: 13,
+		uint16_t fix        : 13,
 		/* the privilege level, 00 = ring0, 01 = ring1, 10 = ring2, 11 = ring3 */
-		dpl			: 2,
+		         dpl         : 2,
 		/* If Present is not set to 1, an exception will occur */
-		present		: 1;
+		         present     : 1;
 		/* The address[16..31] of the ISR */
-		uint16_t	offsetHigh;
+		uint16_t offsetHigh;
 	} A_PACKED;
-	
+
 	struct Ptr {
 		uint16_t size;
 		uint32_t address;
 	} A_PACKED;
-	
+
 	/* reserved by intel */
 	enum {
-		INTEL_RES1	= 2,
-		INTEL_RES2	= 15
+		INTEL_RES1  = 2,
+		INTEL_RES2  = 15
 	};
 
 public:
@@ -51,11 +51,11 @@ public:
 
 public:
 	static void init();
-	static void set(size_t irq,callback_t cb);
+	static void set(size_t irq, callback_t cb);
 
 private:
 	static void dummy();
-	static void setup(size_t irq,callback_t cb);
+	static void setup(size_t irq, callback_t cb);
 
 	IDT();
 	~IDT();
@@ -64,6 +64,6 @@ private:
 
 private:
 	static Entry idt[];
-	static callback_t callbacks[] asm("idt_callbacks");
+	static callback_t callbacks[] asm ("idt_callbacks");
 };
 

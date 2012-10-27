@@ -33,14 +33,14 @@ class NullIODevice : public StaticReceiver<NullIODevice> {
 	unsigned _value;
 
 public:
-	NullIODevice(unsigned base,unsigned size,unsigned value)
+	NullIODevice(unsigned base, unsigned size, unsigned value)
 		: _base(base), _size(size), _value(value) {
 	}
 	bool receive(MessageIOOut &msg) {
-		return in_range(msg.port,_base,_size);
+		return in_range(msg.port, _base, _size);
 	}
 	bool receive(MessageIOIn &msg) {
-		if(!in_range(msg.port,_base,_size))
+		if(!in_range(msg.port, _base, _size))
 			return false;
 		if(_value != ~0U)
 			msg.value = _value;
@@ -48,10 +48,11 @@ public:
 	}
 };
 
-PARAM_HANDLER(nullio,
-		"nullio:<range>[,value] - ignore IOIO at given port range. An optional value can be given to return a fixed value on read..",
-		"Example: 'nullio:0x80+1'.") {
-	NullIODevice *dev = new NullIODevice(argv[0],argv[1] == ~0UL ? 1 : argv[1],argv[2]);
-	mb.bus_ioin.add(dev,NullIODevice::receive_static<MessageIOIn>);
-	mb.bus_ioout.add(dev,NullIODevice::receive_static<MessageIOOut>);
+PARAM_HANDLER(
+    nullio,
+    "nullio:<range>[,value] - ignore IOIO at given port range. An optional value can be given to return a fixed value on read..",
+    "Example: 'nullio:0x80+1'.") {
+	NullIODevice *dev = new NullIODevice(argv[0], argv[1] == ~0UL ? 1 : argv[1], argv[2]);
+	mb.bus_ioin.add(dev, NullIODevice::receive_static<MessageIOIn> );
+	mb.bus_ioout.add(dev, NullIODevice::receive_static<MessageIOOut> );
 }

@@ -29,11 +29,11 @@
 
 using namespace nre;
 
-#define INTRO_TIME		5000	// ms
-#define WAIT_TIME		50		// ms
-#define SIN_LUTSIZE		(1 << 8)
-#define SQRT_LUTSIZE	(1 << 16)
-#define SQRT_PRESHIFT	(2)
+#define INTRO_TIME      5000    // ms
+#define WAIT_TIME       50      // ms
+#define SIN_LUTSIZE     (1 << 8)
+#define SQRT_LUTSIZE    (1 << 16)
+#define SQRT_PRESHIFT   (2)
 
 static int8_t sinlut[SIN_LUTSIZE];
 static uint8_t sqrtlut[SQRT_LUTSIZE >> SQRT_PRESHIFT];
@@ -66,58 +66,58 @@ static int16_t sqr(int16_t x) {
 	return x * x;
 }
 
-static uint8_t distance(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2) {
+static uint8_t distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
 	return lsqrt(sqr(x1 - x2) + sqr(y1 - y2));
 }
 
-template<unsigned ROW,unsigned COL>
+template<unsigned ROW, unsigned COL>
 class TextBuffer {
 private:
 	uint16_t _buffer[ROW * COL];
 public:
-	uint16_t &character(unsigned row,unsigned col) {
+	uint16_t &character(unsigned row, unsigned col) {
 		return _buffer[row * COL + col];
 	}
 
-	void blt_from(TextBuffer<ROW,COL> *target) {
-		memcpy(_buffer,target->_buffer,sizeof(_buffer));
+	void blt_from(TextBuffer<ROW, COL> *target) {
+		memcpy(_buffer, target->_buffer, sizeof(_buffer));
 	}
 
 	void blt_to(uint16_t *target) {
-		memcpy(target,_buffer,sizeof(_buffer));
+		memcpy(target, _buffer, sizeof(_buffer));
 	}
 
-	void put_text(unsigned row,unsigned col,uint8_t attr,const char *str,int len = -1) {
+	void put_text(unsigned row, unsigned col, uint8_t attr, const char *str, int len = -1) {
 		while((len-- != 0) && *str != 0) {
 			if(*str != ' ')
-				character(row,col) = *str | (attr << 8);
+				character(row, col) = *str | (attr << 8);
 			col++;
 			str++;
 		}
 	}
 
 	TextBuffer() {
-		memset(_buffer,0,sizeof(_buffer));
+		memset(_buffer, 0, sizeof(_buffer));
 	}
 };
 
-template<unsigned ROW,unsigned COL>
-class TextAnimator : public TextBuffer<ROW,COL> {
+template<unsigned ROW, unsigned COL>
+class TextAnimator : public TextBuffer<ROW, COL> {
 public:
 	virtual void render(timevalue_t now) = 0;
 };
 
-template<unsigned ROW,unsigned COL>
-class PlasmaAnimator : public TextAnimator<ROW,COL> {
-	void plasma_put(unsigned row,unsigned col,int8_t color) {
+template<unsigned ROW, unsigned COL>
+class PlasmaAnimator : public TextAnimator<ROW, COL> {
+	void plasma_put(unsigned row, unsigned col, int8_t color) {
 		int icol = (static_cast<int>(color) + 128) >> 4;
-		uint16_t coltab[8] = {' ' | 0x0000,' ' | 0x0000,':' | 0x0200,':' | 0x0A00,'o' | 0x0200,'O'
-				| 0x0200,'O' | 0x0A00,'Q' | 0x0A00};
+		uint16_t coltab[8] = {' ' | 0x0000, ' ' | 0x0000, ':' | 0x0200, ':' | 0x0A00, 'o' | 0x0200, 'O'
+			                  | 0x0200, 'O' | 0x0A00, 'Q' | 0x0A00};
 		uint16_t attr = coltab[(icol <= 8) ? (8 - icol) : (icol - 8)];
 		if(icol <= 8)
 			attr = (attr & 0x8FF) | 0x0100;
 
-		this->character(row,col) = attr;
+		this->character(row, col) = attr;
 	}
 
 public:
@@ -127,23 +127,23 @@ public:
 		// Double ROW to correct aspect ratio.
 		for(unsigned rc = 0; rc < ROW * 2; rc += 2) {
 			for(unsigned cc = 0; cc < COL; cc++) {
-				int8_t v1 = lsin(distance(rc,cc,ROW * 2 / 2,COL / 2) * 2 + 2 * t);
-				int8_t v2 = lsin(distance(rc,cc,(lsin(t >> 5) / 2 + 60),(lcos(t >> 5) / 2 + 60)));
+				int8_t v1 = lsin(distance(rc, cc, ROW * 2 / 2, COL / 2) * 2 + 2 * t);
+				int8_t v2 = lsin(distance(rc, cc, (lsin(t >> 5) / 2 + 60), (lcos(t >> 5) / 2 + 60)));
 
-				int8_t v3 = lsin(distance(rc,cc,(lsin(-t * 3) / 2 + 64),(lcos(-t * 3) / 2 + 64)));
+				int8_t v3 = lsin(distance(rc, cc, (lsin(-t * 3) / 2 + 64), (lcos(-t * 3) / 2 + 64)));
 
-				plasma_put(rc / 2,cc,(v1 + v2 + v3) / 3);
+				plasma_put(rc / 2, cc, (v1 + v2 + v3) / 3);
 			}
 		}
 
-		this->character(ROW - 1,0) = (this->character(ROW - 1,0) & 0xFF00) | 'J';
-		this->character(ROW - 1,1) = (this->character(ROW - 1,0) & 0xFF00) | 'S';
+		this->character(ROW - 1, 0) = (this->character(ROW - 1, 0) & 0xFF00) | 'J';
+		this->character(ROW - 1, 1) = (this->character(ROW - 1, 0) & 0xFF00) | 'S';
 	}
 };
 
-template<unsigned ROW,unsigned COL>
-class QuoteAnimator : public TextAnimator<ROW,COL> {
-	TextAnimator<ROW,COL> *_background;
+template<unsigned ROW, unsigned COL>
+class QuoteAnimator : public TextAnimator<ROW, COL> {
+	TextAnimator<ROW, COL> *_background;
 	bool _start_init;
 	timevalue_t _start;
 
@@ -167,7 +167,7 @@ public:
 			for(unsigned rc = 0; rc < ROW; rc++) {
 				for(unsigned cc = 0; cc < COL; cc++) {
 					if((cc <= t / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc,cc);
+						uint16_t &ch = this->character(rc, cc);
 						ch = (ch & 0xFF) | text_bg_attr;
 					}
 				}
@@ -178,7 +178,7 @@ public:
 			for(unsigned rc = 0; rc < ROW; rc++) {
 				for(unsigned cc = 0; cc < COL; cc++) {
 					if((rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc,cc);
+						uint16_t &ch = this->character(rc, cc);
 						ch = (ch & 0xFF) | text_bg_attr;
 					}
 				}
@@ -202,10 +202,10 @@ public:
 			unsigned msg_len = strlen(cur_msg);
 
 			if((t >= 1300) && (t < 4500)) {
-				this->put_text(ROW / 2,COL / 2 - msg_len / 2 - 1,0x0F,cur_msg,(t - 1300) / 10);
+				this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x0F, cur_msg, (t - 1300) / 10);
 			}
 			if((t >= 4500) && (t < 4600)) {
-				this->put_text(ROW / 2,COL / 2 - msg_len / 2 - 1,0x07,cur_msg,(t - 1300) / 10);
+				this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x07, cur_msg, (t - 1300) / 10);
 			}
 		}
 		else {
@@ -213,7 +213,7 @@ public:
 			for(unsigned rc = 0; rc < ROW; rc++) {
 				for(unsigned cc = 0; cc < COL; cc++) {
 					if((cc >= (t - 5000) / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc,cc);
+						uint16_t &ch = this->character(rc, cc);
 						ch = (ch & 0xFF) | text_bg_attr;
 					}
 				}
@@ -221,8 +221,8 @@ public:
 		}
 	}
 
-	QuoteAnimator(TextAnimator<ROW,COL> *background) :
-			_background(background), _start_init(false) {
+	QuoteAnimator(TextAnimator<ROW, COL> *background)
+		: _background(background), _start_init(false) {
 	}
 };
 
@@ -239,7 +239,7 @@ static uint32_t random() {
 	return x;
 }
 
-class IntroAnimator : public TextAnimator<25,80> {
+class IntroAnimator : public TextAnimator<25, 80> {
 	bool _start_init;
 	timevalue_t _start;
 	bool _done;
@@ -259,7 +259,7 @@ public:
 			for(unsigned rc = 0; rc < ROW; rc++) {
 				for(unsigned cc = 0; cc < COL; cc++) {
 					uint32_t r = random() % (127 - 32) + 32;
-					character(rc,cc) = r | 0x0800;
+					character(rc, cc) = r | 0x0800;
 				}
 			}
 		}
@@ -267,12 +267,12 @@ public:
 			for(unsigned rc = 0; rc < ROW; rc++) {
 				for(unsigned cc = 0; cc < COL; cc++) {
 					unsigned target;
-					uint16_t &chara = character(rc,cc);
+					uint16_t &chara = character(rc, cc);
 
 					unsigned start_row = (ROW - sizeof(intro_text) / sizeof(*intro_text)) / 2;
 					if((rc >= start_row)
-							&& (rc - start_row < sizeof(intro_text) / sizeof(*intro_text))
-							&& (cc < strlen(intro_text[rc - start_row]))) {
+					   && (rc - start_row < sizeof(intro_text) / sizeof(*intro_text))
+					   && (cc < strlen(intro_text[rc - start_row]))) {
 						target = intro_text[rc - start_row][cc];
 					}
 					else {
@@ -300,15 +300,15 @@ int main() {
 	Connection timercon("timer");
 	TimerSession timer(timercon);
 	Connection conscon("console");
-	ConsoleSession console(conscon,1,String("CycleBurner"));
+	ConsoleSession console(conscon, 1, String("CycleBurner"));
 
 	gen_sinlut();
 	gen_sqrtlut();
 
 	Clock clock(1000);
 	IntroAnimator *ia = new IntroAnimator();
-	PlasmaAnimator<25,80> *pa = new PlasmaAnimator<25,80>();
-	QuoteAnimator<25,80> *qa = new QuoteAnimator<25,80>(pa);
+	PlasmaAnimator<25, 80> *pa = new PlasmaAnimator<25, 80>();
+	QuoteAnimator<25, 80> *qa = new QuoteAnimator<25, 80>(pa);
 
 	uint16_t *screen = reinterpret_cast<uint16_t*>(console.screen().virt() + Console::TEXT_OFF);
 	timevalue_t starttime = clock.dest_time();

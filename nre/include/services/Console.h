@@ -33,15 +33,15 @@ public:
 	/**
 	 * Basic attributes
 	 */
-	static const uint COLS				= 80;
-	static const uint ROWS 			= 25;
-	static const uint TAB_WIDTH		= 4;
-	static const size_t BUF_SIZE		= COLS * 2 + 1;
-	static const size_t PAGES			= 32;
-	static const size_t TEXT_OFF		= 0x18000;
-	static const size_t TEXT_PAGES		= 8;
-	static const size_t PAGE_SIZE		= 0x1000;
-	static const size_t SUBCONS		= 32;
+	static const uint COLS              = 80;
+	static const uint ROWS              = 25;
+	static const uint TAB_WIDTH         = 4;
+	static const size_t BUF_SIZE        = COLS * 2 + 1;
+	static const size_t PAGES           = 32;
+	static const size_t TEXT_OFF        = 0x18000;
+	static const size_t TEXT_PAGES      = 8;
+	static const size_t PAGE_SIZE       = 0x1000;
+	static const size_t SUBCONS         = 32;
 
 	/**
 	 * The available commands
@@ -77,8 +77,8 @@ public:
  * Represents a session at the console service
  */
 class ConsoleSession : public ClientSession {
-	static const size_t IN_DS_SIZE		= ExecEnv::PAGE_SIZE;
-	static const size_t OUT_DS_SIZE	= ExecEnv::PAGE_SIZE * Console::PAGES;
+	static const size_t IN_DS_SIZE      = ExecEnv::PAGE_SIZE;
+	static const size_t OUT_DS_SIZE     = ExecEnv::PAGE_SIZE * Console::PAGES;
 
 public:
 	/**
@@ -89,10 +89,10 @@ public:
 	 * @param console the console to attach to
 	 * @param title the subconsole title
 	 */
-	explicit ConsoleSession(Connection &con,size_t console,const String &title)
-			: ClientSession(con), _in_ds(IN_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			  _out_ds(OUT_DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_in_ds,true) {
-		create(console,title);
+	explicit ConsoleSession(Connection &con, size_t console, const String &title)
+		: ClientSession(con), _in_ds(IN_DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
+		  _out_ds(OUT_DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _consumer(&_in_ds, true) {
+		create(console, title);
 	}
 
 	/**
@@ -110,7 +110,7 @@ public:
 	void clear(uint page) {
 		assert(page < Console::TEXT_PAGES);
 		uintptr_t addr = screen().virt() + Console::TEXT_OFF + page * Console::PAGE_SIZE;
-		memset(reinterpret_cast<void*>(addr),	0,Console::PAGE_SIZE);
+		memset(reinterpret_cast<void*>(addr),   0, Console::PAGE_SIZE);
 	}
 
 	/**
@@ -158,18 +158,18 @@ public:
 	Console::ReceivePacket receive() {
 		Console::ReceivePacket *pk = _consumer.get();
 		if(!pk)
-			throw Exception(E_ABORT,"Unable to receive console packet");
+			throw Exception(E_ABORT, "Unable to receive console packet");
 		Console::ReceivePacket res = *pk;
 		_consumer.next();
 		return res;
 	}
 
 private:
-	void create(size_t console,const String &title) {
+	void create(size_t console, const String &title) {
 		UtcbFrame uf;
 		uf << Console::CREATE << console << title;
-		uf.delegate(_in_ds.sel(),0);
-		uf.delegate(_out_ds.sel(),1);
+		uf.delegate(_in_ds.sel(), 0);
+		uf.delegate(_out_ds.sel(), 1);
 		Pt pt(caps() + CPU::current().log_id());
 		pt.call(uf);
 		uf.check_reply();

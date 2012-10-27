@@ -25,7 +25,7 @@
 
 class RunningVM : public nre::SListItem {
 public:
-	explicit RunningVM(VMConfig *cfg,nre::Child::id_type id,capsel_t pd)
+	explicit RunningVM(VMConfig *cfg, nre::Child::id_type id, capsel_t pd)
 		: nre::SListItem(), _cfg(cfg), _id(id), _pd(pd), _prod() {
 	}
 

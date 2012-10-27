@@ -23,7 +23,7 @@ int Video::color = BLACK << 4 | WHITE;
 const char *Video::chars = "0123456789ABCDEF";
 
 void Video::clear() {
-	Util::set(SCREEN,0,ROWS * COLS * 2);
+	Util::set(SCREEN, 0, ROWS * COLS * 2);
 }
 
 void Video::putc(char c) {
@@ -48,16 +48,16 @@ void Video::putc(char c) {
 	else {
 		*video = c;
 		video++;
-		*video = color; 
+		*video = color;
 
 		col++;
 	}
 }
 
-void Video::vprintf(const char *fmt,va_list ap) {
-	char c,b,*s;
+void Video::vprintf(const char *fmt, va_list ap) {
+	char c, b, *s;
 	int n;
-	uint u,base;
+	uint u, base;
 	while(1) {
 		// wait for a '%'
 		while((c = *fmt++) != '%') {
@@ -79,7 +79,7 @@ void Video::vprintf(const char *fmt,va_list ap) {
 			case 'p': {
 				uintptr_t addr = va_arg(ap, uintptr_t);
 				puts("0x");
-				putu(addr,16);
+				putu(addr, 16);
 			}
 			break;
 
@@ -91,7 +91,7 @@ void Video::vprintf(const char *fmt,va_list ap) {
 			case 'X':
 				base = c == 'o' ? 8 : ((c == 'x' || c == 'X') ? 16 : (c == 'b' ? 2 : 10));
 				u = va_arg(ap, uint);
-				putu(u,base);
+				putu(u, base);
 				break;
 
 			// string
@@ -120,8 +120,8 @@ void Video::puts(const char *str) {
 
 void Video::move() {
 	if(row >= ROWS) {
-		Util::move(SCREEN,SCREEN + COLS * 2,(ROWS - 1) * COLS * 2);
-		Util::set(SCREEN + (ROWS - 1) * COLS * 2,0,COLS * 2);
+		Util::move(SCREEN, SCREEN + COLS * 2, (ROWS - 1) * COLS * 2);
+		Util::set(SCREEN + (ROWS - 1) * COLS * 2, 0, COLS * 2);
 		row--;
 	}
 }

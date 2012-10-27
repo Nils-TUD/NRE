@@ -39,48 +39,48 @@ public:
 /**
  * A capability range descriptor;
  */
-class Crd: public Desc {
+class Crd : public Desc {
 public:
 	enum {
-		MEM		= 1,
-		IO		= 2,
-		OBJ		= 3,
+		MEM     = 1,
+		IO      = 2,
+		OBJ     = 3,
 	};
 	enum {
 		// memory capabilities
-		R		= 1 << 2,
-		W		= 1 << 3,
-		X		= 1 << 4,
-		RW		= R | W,
-		RX		= R | X,
-		RWX		= R | W | X,
+		R       = 1 << 2,
+		W       = 1 << 3,
+		X       = 1 << 4,
+		RW      = R | W,
+		RX      = R | X,
+		RWX     = R | W | X,
 
 		// I/O capabilities
-		A		= 1 << 2,
+		A       = 1 << 2,
 
 		// object capabilities for Pd
-		PD_PD	= 1 << 2,		// create_pd
-		PD_EC	= 1 << 3,		// create_ec
-		PD_SC	= 1 << 4,		// create_sc
-		PD_PT	= 1 << 5,		// create_pt
-		PD_SM	= 1 << 6,		// create_sm
+		PD_PD   = 1 << 2,       // create_pd
+		PD_EC   = 1 << 3,       // create_ec
+		PD_SC   = 1 << 4,       // create_sc
+		PD_PT   = 1 << 5,       // create_pt
+		PD_SM   = 1 << 6,       // create_sm
 
 		// object capabilities for Ec
-		EC_CT	= 1 << 2,		// ec_ctrl
-		EC_SC	= 1 << 4,		// create_sc
-		EC_PT	= 1 << 5,		// create_pt
+		EC_CT   = 1 << 2,       // ec_ctrl
+		EC_SC   = 1 << 4,       // create_sc
+		EC_PT   = 1 << 5,       // create_pt
 
 		// object capabilities for Sc
-		SC_CT	= 1 << 2,		// sc_ctrl
+		SC_CT   = 1 << 2,       // sc_ctrl
 
 		// object capabilities for Sm
-		SM_UP	= 1 << 2,		// sm_ctrl[up]
-		SM_DN	= 1 << 3,		// sm_ctrl[down]
+		SM_UP   = 1 << 2,       // sm_ctrl[up]
+		SM_DN   = 1 << 3,       // sm_ctrl[down]
 
 		// abbreviations
-		MEM_ALL		= MEM | RWX,
-		IO_ALL		= IO | A,
-		OBJ_ALL		= OBJ | (0x1F << 2)
+		MEM_ALL     = MEM | RWX,
+		IO_ALL      = IO | A,
+		OBJ_ALL     = OBJ | (0x1F << 2)
 	};
 
 	bool is_null() const {
@@ -96,18 +96,18 @@ public:
 		return value() & 0x1f;
 	}
 
-	explicit Crd(word_t offset,uint order,uint attr) :
-			Desc((offset << 12) | (order << 7) | attr) {
+	explicit Crd(word_t offset, uint order, uint attr)
+		: Desc((offset << 12) | (order << 7) | attr) {
 	}
-	explicit Crd(word_t v) :
-			Desc(v) {
+	explicit Crd(word_t v)
+		: Desc(v) {
 	}
 };
 
-static inline OStream &operator<<(OStream &os,const Crd &crd) {
-	static const char *types[] = {"NULL","MEM","IO","OBJ"};
-	os.writef("Crd[type=%s offset=%#lx order=%#x attr=%#x]",types[crd.attr() & 0x3],
-			crd.offset(),crd.order(),crd.attr());
+static inline OStream &operator<<(OStream &os, const Crd &crd) {
+	static const char *types[] = {"NULL", "MEM", "IO", "OBJ"};
+	os.writef("Crd[type=%s offset=%#lx order=%#x attr=%#x]", types[crd.attr() & 0x3],
+	          crd.offset(), crd.order(), crd.attr());
 	return os;
 }
 
@@ -117,38 +117,38 @@ static inline OStream &operator<<(OStream &os,const Crd &crd) {
 class Mtd : public Desc {
 public:
 	enum {
-		GPR_ACDB	= 1ul << 0,
-		GPR_BSD		= 1ul << 1,
-		RSP			= 1ul << 2,
-		RIP_LEN		= 1ul << 3,
-		RFLAGS		= 1ul << 4,
-		DS_ES		= 1ul << 5,
-		FS_GS		= 1ul << 6,
-		CS_SS		= 1ul << 7,
-		TR			= 1ul << 8,
-		LDTR		= 1ul << 9,
-		GDTR		= 1ul << 10,
-		IDTR		= 1ul << 11,
-		CR			= 1ul << 12,
-		DR			= 1ul << 13,
-		SYSENTER	= 1ul << 14,
-		QUAL		= 1ul << 15,
-		CTRL		= 1ul << 16,
-		INJ			= 1ul << 17,
-		STATE		= 1ul << 18,
-		TSC			= 1ul << 19,
-		IRQ			= RFLAGS | STATE | INJ | TSC,
-		ALL			= (~0U >> 12) & ~CTRL
+		GPR_ACDB    = 1ul << 0,
+		GPR_BSD     = 1ul << 1,
+		RSP         = 1ul << 2,
+		RIP_LEN     = 1ul << 3,
+		RFLAGS      = 1ul << 4,
+		DS_ES       = 1ul << 5,
+		FS_GS       = 1ul << 6,
+		CS_SS       = 1ul << 7,
+		TR          = 1ul << 8,
+		LDTR        = 1ul << 9,
+		GDTR        = 1ul << 10,
+		IDTR        = 1ul << 11,
+		CR          = 1ul << 12,
+		DR          = 1ul << 13,
+		SYSENTER    = 1ul << 14,
+		QUAL        = 1ul << 15,
+		CTRL        = 1ul << 16,
+		INJ         = 1ul << 17,
+		STATE       = 1ul << 18,
+		TSC         = 1ul << 19,
+		IRQ         = RFLAGS | STATE | INJ | TSC,
+		ALL         = (~0U >> 12) & ~CTRL
 	};
 
 	explicit Mtd(word_t flags = 0) : Desc(flags) {
 	}
 };
 
-static inline OStream &operator<<(OStream &os,const Mtd &mtd) {
+static inline OStream &operator<<(OStream &os, const Mtd &mtd) {
 	static const char *flags[] = {
-		"GPR_ACDB","GPR_BSD","RSP","RIP_LEN","RFLAGS","DS_ES","FS_GS","CS_SS","TR","LDTR","GDTR",
-		"IDTR","CR","DR","SYSENTER","QUAL","CTRL","INJ","STATE","TSC"
+		"GPR_ACDB", "GPR_BSD", "RSP", "RIP_LEN", "RFLAGS", "DS_ES", "FS_GS", "CS_SS", "TR", "LDTR",
+		"GDTR", "IDTR", "CR", "DR", "SYSENTER", "QUAL", "CTRL", "INJ", "STATE", "TSC"
 	};
 	os << "Mtd[";
 	bool first = true;
@@ -167,13 +167,13 @@ static inline OStream &operator<<(OStream &os,const Mtd &mtd) {
 /**
  * A quantum+period descriptor.
  */
-class Qpd: public Desc {
-	static const uint DEFAULT_QUANTUM	= 10000;
-	static const uint DEFAULT_PRIORITY	= 1;
+class Qpd : public Desc {
+	static const uint DEFAULT_QUANTUM   = 10000;
+	static const uint DEFAULT_PRIORITY  = 1;
 
 public:
-	explicit Qpd(uint prio = DEFAULT_PRIORITY,uint quantum = DEFAULT_QUANTUM) :
-			Desc((quantum << 12) | prio) {
+	explicit Qpd(uint prio = DEFAULT_PRIORITY, uint quantum = DEFAULT_QUANTUM)
+		: Desc((quantum << 12) | prio) {
 	}
 
 	uint prio() const {
@@ -184,7 +184,7 @@ public:
 	}
 };
 
-static inline OStream &operator<<(OStream &os,const Qpd &qpd) {
+static inline OStream &operator<<(OStream &os, const Qpd &qpd) {
 	os << "Qpd[prio=" << qpd.prio() << " quantum=" << qpd.quantum() << "]";
 	return os;
 }

@@ -26,6 +26,6 @@ VirtualMemory VirtualMemory::_init INIT_PRIO_VMEM;
 size_t VirtualMemory::_used = 0;
 
 VirtualMemory::VirtualMemory() {
-	uintptr_t begin = Math::round_up<uintptr_t>(reinterpret_cast<uintptr_t>(&edata),ExecEnv::PAGE_SIZE);
-	_regs.free(begin,RAM_BEGIN - begin);
+	uintptr_t begin = Math::round_up<uintptr_t>(reinterpret_cast<uintptr_t>(&edata), ExecEnv::PAGE_SIZE);
+	_regs.free(begin, RAM_BEGIN - begin);
 }

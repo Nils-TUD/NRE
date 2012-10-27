@@ -31,7 +31,7 @@ public:
 	 *
 	 * @param con the connection
 	 */
-	explicit PtClientSession(Connection &con) : ClientSession(con), _pts(new Pt*[CPU::count()]) {
+	explicit PtClientSession(Connection &con) : ClientSession(con), _pts(new Pt *[CPU::count()]) {
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
 	}

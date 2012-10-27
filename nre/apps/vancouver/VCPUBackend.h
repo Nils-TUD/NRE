@@ -44,10 +44,10 @@ class VCPUBackend : public nre::SListItem {
 	};
 
 public:
-	VCPUBackend(Motherboard *mb,VCVCpu *vcpu,bool use_svm,cpu_t cpu)
-			: SListItem(), _ec(nre::LocalThread::create(cpu)), _caps(get_portals(use_svm)), _sm(0),
-			  _vcpu(cpu,_caps,nre::String("vmm-vcpu")) {
-		_ec->set_tls<VCVCpu*>(nre::Thread::TLS_PARAM,vcpu);
+	VCPUBackend(Motherboard *mb, VCVCpu *vcpu, bool use_svm, cpu_t cpu)
+		: SListItem(), _ec(nre::LocalThread::create(cpu)), _caps(get_portals(use_svm)), _sm(0),
+		  _vcpu(cpu, _caps, nre::String("vmm-vcpu")) {
+		_ec->set_tls<VCVCpu*>(nre::Thread::TLS_PARAM, vcpu);
 		_vcpu.start();
 		_mb = mb;
 	}
@@ -62,9 +62,9 @@ public:
 private:
 	capsel_t get_portals(bool use_svm);
 
-	static void handle_io(bool is_in,unsigned io_order,unsigned port);
-	static void handle_vcpu(capsel_t pid,bool skip,CpuMessage::Type type);
-	static nre::Crd lookup(uintptr_t base,size_t size,uintptr_t hotspot);
+	static void handle_io(bool is_in, unsigned io_order, unsigned port);
+	static void handle_vcpu(capsel_t pid, bool skip, CpuMessage::Type type);
+	static nre::Crd lookup(uintptr_t base, size_t size, uintptr_t hotspot);
 	static bool handle_memory(bool need_unmap);
 
 	static void force_invalid_gueststate_amd(nre::UtcbExcFrameRef &uf);

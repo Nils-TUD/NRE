@@ -27,7 +27,7 @@
 
 using namespace nre;
 
-class VBios: public DiscoveryHelper<VBios>,public StaticReceiver<VBios> {
+class VBios : public DiscoveryHelper<VBios>, public StaticReceiver<VBios> {
 public:
 	Motherboard &_mb;
 
@@ -45,8 +45,8 @@ public:
 
 		CpuState *cpu = msg.cpu;
 		if((cpu->pm() && !cpu->v86())
-				|| !in_range(cpu->cs.base + cpu->eip,BIOS_BASE,BiosCommon::MAX_VECTOR)
-				|| (cpu->inj_info & 0x80000000))
+		   || !in_range(cpu->cs.base + cpu->eip, BIOS_BASE, BiosCommon::MAX_VECTOR)
+		   || (cpu->inj_info & 0x80000000))
 			return false;
 
 		COUNTER_INC("VB");
@@ -62,13 +62,13 @@ public:
 		cpu->eip = 0xffff;
 		msg.mtr_out |= Mtd::CS_SS | Mtd::RIP_LEN | Mtd::RFLAGS;
 
-		MessageBios msg1(_vcpu,cpu,irq);
-		if(!_mb.bus_bios.send(msg1,irq != BiosCommon::RESET_VECTOR))
+		MessageBios msg1(_vcpu, cpu, irq);
+		if(!_mb.bus_bios.send(msg1, irq != BiosCommon::RESET_VECTOR))
 			return false;
 
 		// we have to propagate the flags to the user stack!
 		unsigned flags;
-		MessageMem msg2(true,cpu->ss.base + cpu->esp + 4,&flags);
+		MessageMem msg2(true, cpu->ss.base + cpu->esp + 4, &flags);
 		_vcpu->mem.send(msg2);
 		flags = (flags & ~0xffffu) | (cpu->efl & 0xffffu) | (flags & 0x200);
 		msg2.read = false;
@@ -86,7 +86,8 @@ public:
 	 * The memory read routine for the last 16byte below 4G and below 1M.
 	 */
 	bool receive(MessageMem &msg) {
-		if(!msg.read || (!in_range(msg.phys,0xfffffff0,0x10) && !in_range(msg.phys,BIOS_BASE + 0xfff0,0x10)))
+		if(!msg.read ||
+		   (!in_range(msg.phys, 0xfffffff0, 0x10) && !in_range(msg.phys, BIOS_BASE + 0xfff0, 0x10)))
 			return false;
 		*msg.ptr = *reinterpret_cast<unsigned *>(_resetvector + (msg.phys & 0xc));
 		return true;
@@ -101,15 +102,15 @@ public:
 		for(size_t i = 0; i < 256; i++) {
 			// XXX init only whats needed and done on compatible BIOSes
 			if(i != 0x43)
-				discovery_write_dw("realmode idt",i * 4,value,4);
+				discovery_write_dw("realmode idt", i * 4, value, 4);
 			value++;
 		}
 		return true;
 	}
 
-	VBios(Motherboard &mb,VCVCpu *vcpu) : _mb(mb), _vcpu(vcpu), _resetvector() {
+	VBios(Motherboard &mb, VCVCpu *vcpu) : _mb(mb), _vcpu(vcpu), _resetvector() {
 		// initialize the reset vector with noops
-		memset(_resetvector,0x90,sizeof(_resetvector));
+		memset(_resetvector, 0x90, sizeof(_resetvector));
 		// realmode longjump to reset code
 		_resetvector[0x0] = 0xea;
 		_resetvector[0x1] = BiosCommon::RESET_VECTOR & 0xff;
@@ -122,15 +123,15 @@ public:
 
 		// the iret that is the default operation
 		_resetvector[0xf] = 0xcf;
-		_vcpu->executor.add(this,VBios::receive_static<CpuMessage>);
-		_vcpu->mem.add(this,VBios::receive_static<MessageMem>);
-		_mb.bus_discovery.add(this,VBios::receive_static<MessageDiscovery>);
+		_vcpu->executor.add(this, VBios::receive_static<CpuMessage> );
+		_vcpu->mem.add(this, VBios::receive_static<MessageMem> );
+		_mb.bus_discovery.add(this, VBios::receive_static<MessageDiscovery> );
 	}
 };
 
 PARAM_HANDLER(vbios,
-		"vbios - create a bridge between VCPU and the BIOS bus.") {
+              "vbios - create a bridge between VCPU and the BIOS bus.") {
 	if(!mb.last_vcpu)
 		Util::panic("no VCPU for this VBIOS");
-	new VBios(mb,mb.last_vcpu);
+	new VBios(mb, mb.last_vcpu);
 }

@@ -30,15 +30,15 @@ typedef unsigned long uintptr_t;
 typedef unsigned long size_t;
 
 #define assert(x)
-#define ARRAY_SIZE(a)	(sizeof((a)) / sizeof((a)[0]))
-#define A_PACKED		__attribute__((packed))
-#define A_ALIGNED(x)	__attribute__((aligned (x)))
+#define ARRAY_SIZE(a)   (sizeof((a)) / sizeof((a)[0]))
+#define A_PACKED        __attribute__ ((packed))
+#define A_ALIGNED(x)    __attribute__ ((aligned(x)))
 
 class Util {
 public:
 	static inline void set_cr0(uint32_t val) {
 		asm (
-			"mov	%0,%%cr0"
+		    "mov	%0,%%cr0"
 			: : "r" (val)
 		);
 	}
@@ -46,15 +46,15 @@ public:
 	static inline uint32_t get_cr0() {
 		uint32_t res;
 		asm (
-			"mov	%%cr0,%0"
-				: "=r" (res)
+		    "mov	%%cr0,%0"
+			: "=r" (res)
 		);
 		return res;
 	}
 
 	static inline void set_cr3(uint32_t val) {
 		asm (
-			"mov	%0,%%cr3"
+		    "mov	%0,%%cr3"
 			: : "r" (val)
 		);
 	}
@@ -67,9 +67,9 @@ public:
 		asm volatile ("cli");
 	}
 
-	static void copy(void* dst,const void* src,size_t len);
-	static void set(void* addr,int value,size_t count);
-	static void move(void* dest,const void* src,size_t count);
+	static void copy(void* dst, const void* src, size_t len);
+	static void set(void* addr, int value, size_t count);
+	static void move(void* dest, const void* src, size_t count);
 
 private:
 	Util();

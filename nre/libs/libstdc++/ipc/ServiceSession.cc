@@ -19,14 +19,14 @@
 
 namespace nre {
 
-ServiceSession::ServiceSession(Service *s,size_t id,capsel_t cap,capsel_t pts,Pt::portal_func func)
-	: RCUObject(), _id(id), _cap(cap), _caps(pts), _pts(new Pt*[CPU::count()]) {
+ServiceSession::ServiceSession(Service *s, size_t id, capsel_t cap, capsel_t pts, Pt::portal_func func)
+	: RCUObject(), _id(id), _cap(cap), _caps(pts), _pts(new Pt *[CPU::count()]) {
 	for(uint i = 0; i < CPU::count(); ++i) {
 		_pts[i] = 0;
 		if(s->available().is_set(i)) {
 			LocalThread *ec = s->get_thread(i);
 			assert(ec != 0);
-			_pts[i] = new Pt(ec,pts + i,func);
+			_pts[i] = new Pt(ec, pts + i, func);
 		}
 	}
 }

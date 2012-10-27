@@ -35,9 +35,9 @@ public:
 	typedef ulong tag_type;
 	typedef uint64_t sector_type;
 
-	static const size_t MAX_CONTROLLER		= 8;
-	static const size_t MAX_DRIVES			= 32;	// per controller
-	static const size_t MAX_DMA_DESCS		= 64;
+	static const size_t MAX_CONTROLLER      = 8;
+	static const size_t MAX_DRIVES          = 32;   // per controller
+	static const size_t MAX_DMA_DESCS       = 64;
 
 	typedef DMADescList<MAX_DMA_DESCS> dma_type;
 
@@ -56,8 +56,8 @@ public:
 	 */
 	struct Parameter {
 		enum Type {
-			FLAG_HARDDISK	= 1,
-			FLAG_ATAPI		= 2
+			FLAG_HARDDISK   = 1,
+			FLAG_ATAPI      = 2
 		};
 		uint flags;
 		sector_type sectors;
@@ -73,7 +73,7 @@ public:
 		tag_type tag;
 		uint status;
 
-		explicit Packet(tag_type tag,uint status) : tag(tag), status(status) {
+		explicit Packet(tag_type tag, uint status) : tag(tag), status(status) {
 		}
 	};
 
@@ -96,11 +96,11 @@ public:
 	 * @param ds the dataspace to use for data exchange
 	 * @param drive the drive
 	 */
-	explicit StorageSession(Connection &con,DataSpace &ds,size_t drive)
-			: PtClientSession(con),
-			  _ctrlds(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW),
-			  _cons(&_ctrlds,true) {
-		init(ds,drive);
+	explicit StorageSession(Connection &con, DataSpace &ds, size_t drive)
+		: PtClientSession(con),
+		  _ctrlds(ExecEnv::PAGE_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
+		  _cons(&_ctrlds, true) {
+		init(ds, drive);
 	}
 
 	/**
@@ -137,10 +137,10 @@ public:
 	 * @param count the number of sectors
 	 * @param offset the offset in the dataspace where to put the data (in bytes)
 	 */
-	void read(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
+	void read(tag_type tag, sector_type sector, sector_type count = 1, size_t offset = 0) {
 		Storage::dma_type dma;
-		dma.push(DMADesc(offset,count * _params.sector_size));
-		read(tag,sector,dma);
+		dma.push(DMADesc(offset, count * _params.sector_size));
+		read(tag, sector, dma);
 	}
 
 	/**
@@ -152,7 +152,7 @@ public:
 	 * @param sector the start sector
 	 * @param dma describes what to transfer where
 	 */
-	void read(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
+	void read(tag_type tag, sector_type sector, const Storage::dma_type &dma) {
 		UtcbFrame uf;
 		uf << Storage::READ << tag << sector << dma;
 		pt().call(uf);
@@ -168,10 +168,10 @@ public:
 	 * @param count the number of sectors
 	 * @param offset the offset in the dataspace from where to read the data (in bytes)
 	 */
-	void write(tag_type tag,sector_type sector,sector_type count = 1,size_t offset = 0) {
+	void write(tag_type tag, sector_type sector, sector_type count = 1, size_t offset = 0) {
 		Storage::dma_type dma;
-		dma.push(DMADesc(offset,count * _params.sector_size));
-		write(tag,sector,dma);
+		dma.push(DMADesc(offset, count * _params.sector_size));
+		write(tag, sector, dma);
 	}
 
 	/**
@@ -183,7 +183,7 @@ public:
 	 * @param sector the start sector
 	 * @param dma describes what to transfer where
 	 */
-	void write(tag_type tag,sector_type sector,const Storage::dma_type &dma) {
+	void write(tag_type tag, sector_type sector, const Storage::dma_type &dma) {
 		UtcbFrame uf;
 		uf << Storage::WRITE << tag << sector << dma;
 		pt().call(uf);
@@ -191,10 +191,10 @@ public:
 	}
 
 private:
-	void init(DataSpace &ds,size_t drive) {
+	void init(DataSpace &ds, size_t drive) {
 		UtcbFrame uf;
-		uf.delegate(_ctrlds.sel(),0);
-		uf.delegate(ds.sel(),1);
+		uf.delegate(_ctrlds.sel(), 0);
+		uf.delegate(ds.sel(), 1);
 		uf << Storage::INIT << drive;
 		pt().call(uf);
 		uf.check_reply();

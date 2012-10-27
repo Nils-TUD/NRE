@@ -31,10 +31,10 @@ class HostTimer {
 	struct PerCpu;
 
 public:
-	static const size_t MAX_CLIENTS	= 64;
+	static const size_t MAX_CLIENTS = 64;
 	// Resolution of our TSC clocks per HPET clock measurement. Lower
 	// resolution mean larger error in HPET counter estimation.
-	static const uint CPT_RES			= /* 1 divided by */ (1U<<13); /* clocks per hpet tick */
+	static const uint CPT_RES           = /* 1 divided by */ (1U << 13); /* clocks per hpet tick */
 
 	struct ClientData {
 		// This field has different semantics: When this ClientData
@@ -53,7 +53,7 @@ public:
 		explicit ClientData() : abstimeout(0), count(0), nr(0), cpu(0), sm(0), sid() {
 		}
 
-		void init(size_t sid,cpu_t cpu,HostTimer::PerCpu *per_cpu);
+		void init(size_t sid, cpu_t cpu, HostTimer::PerCpu *per_cpu);
 	};
 
 private:
@@ -73,7 +73,7 @@ private:
 	struct PerCpu {
 		bool has_timer;
 		HostTimerDevice::Timer *timer;
-		nre::TimeoutList<MAX_CLIENTS,ClientData> abstimeouts;
+		nre::TimeoutList<MAX_CLIENTS, ClientData> abstimeouts;
 
 		nre::LocalThread *ec;
 		nre::Pt worker_pt;
@@ -88,22 +88,22 @@ private:
 		RemoteSlot *slots; // Array
 		size_t slot_count; // with this many entries
 
-		explicit PerCpu(HostTimer *ht,cpu_t cpu)
+		explicit PerCpu(HostTimer *ht, cpu_t cpu)
 			: has_timer(false), timer(0), abstimeouts(), ec(nre::LocalThread::create(cpu)),
-			  worker_pt(ec,portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
+			  worker_pt(ec, portal_per_cpu), xcpu_sm(0), last_to(~0ULL), remote_sm(),
 			  remote_slot(), slots(), slot_count() {
-			ec->set_tls(nre::Thread::TLS_PARAM,ht);
+			ec->set_tls(nre::Thread::TLS_PARAM, ht);
 		}
 	};
 
 public:
-	explicit HostTimer(bool force_pit = false,bool force_hpet_legacy = false,bool slow_rtc = false);
+	explicit HostTimer(bool force_pit = false, bool force_hpet_legacy = false, bool slow_rtc = false);
 
-	void setup_clientdata(size_t sid,ClientData *data,cpu_t cpu) {
-		data->init(sid,cpu,_per_cpu[cpu]);
+	void setup_clientdata(size_t sid, ClientData *data, cpu_t cpu) {
+		data->init(sid, cpu, _per_cpu[cpu]);
 	}
 
-	void program_timer(ClientData *data,timevalue_t time) {
+	void program_timer(ClientData *data, timevalue_t time) {
 		data->abstimeout = time;
 		nre::UtcbFrame uf;
 		WorkerMessage m;
@@ -113,10 +113,10 @@ public:
 		_per_cpu[data->cpu]->worker_pt.call(uf);
 	}
 
-	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
+	void get_time(timevalue_t &uptime, timevalue_t &unixts) {
 		timevalue_t ticks = _timer->current_ticks();
 		uptime = _clock.dest_time();
-		unixts = nre::Math::muldiv128(ticks,nre::Timer::WALLCLOCK_FREQ,_timer->freq());
+		unixts = nre::Math::muldiv128(ticks, nre::Timer::WALLCLOCK_FREQ, _timer->freq());
 	}
 
 private:
@@ -128,13 +128,13 @@ private:
 		int64_t diff = tsc - nre::Util::tsc();
 		if(diff <= 0)
 			return 0;
-		diff = nre::Math::muldiv128(diff,CPT_RES,_clocks_per_tick);
+		diff = nre::Math::muldiv128(diff, CPT_RES, _clocks_per_tick);
 		return diff + _timer->current_ticks();
 	}
 
 	bool per_cpu_handle_xcpu(PerCpu *per_cpu);
-	bool per_cpu_client_request(PerCpu *per_cpu,ClientData *data);
-	timevalue_t handle_expired_timers(PerCpu *per_cpu,timevalue_t now);
+	bool per_cpu_client_request(PerCpu *per_cpu, ClientData *data);
+	timevalue_t handle_expired_timers(PerCpu *per_cpu, timevalue_t now);
 
 	PORTAL static void portal_per_cpu(capsel_t pid);
 	NORETURN static void xcpu_wakeup_thread(void *);

@@ -26,7 +26,7 @@ public:
 	}
 
 	template<typename T>
-	static inline void out(unsigned port,T val) {
+	static inline void out(unsigned port, T val) {
 		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (port));
 	}
 };

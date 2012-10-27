@@ -27,16 +27,17 @@
 
 namespace nre {
 
-ChildManager::ChildManager() : _child_count(), _childs(),
-		_portal_caps(CapSelSpace::get().allocate(MAX_CHILDS * per_child_caps(),per_child_caps())),
-		_dsm(), _registry(), _sm(), _switchsm(), _slotsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
-	_ecs = new LocalThread*[CPU::count()];
-	_regecs = new LocalThread*[CPU::count()];
+ChildManager::ChildManager()
+	: _child_count(), _childs(),
+	  _portal_caps(CapSelSpace::get().allocate(MAX_CHILDS * per_child_caps(), per_child_caps())),
+	  _dsm(), _registry(), _sm(), _switchsm(), _slotsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
+	_ecs = new LocalThread *[CPU::count()];
+	_regecs = new LocalThread *[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-		LocalThread **ecs[] = {_ecs,_regecs};
+		LocalThread **ecs[] = {_ecs, _regecs};
 		for(size_t i = 0; i < ARRAY_SIZE(ecs); ++i) {
 			ecs[i][it->log_id()] = LocalThread::create(it->log_id());
-			ecs[i][it->log_id()]->set_tls(Thread::TLS_PARAM,this);
+			ecs[i][it->log_id()]->set_tls(Thread::TLS_PARAM, this);
 		}
 
 		UtcbFrameRef defuf(_ecs[it->log_id()]->utcb());
@@ -65,7 +66,7 @@ ChildManager::~ChildManager() {
 	RCU::gc(true);
 }
 
-void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
+void ChildManager::prepare_stack(Child *c, uintptr_t &sp, uintptr_t csp) {
 	/*
 	 * Initial stack:
 	 * +------------------+  <- top
@@ -88,12 +89,12 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 
 	// first, simply copy the command-line to the stack
 	const String &cmdline = c->cmdline();
-	size_t len = Math::min<size_t>(MAX_CMDLINE_LEN,cmdline.length());
-	char *bottom = reinterpret_cast<char*>(sp - Math::round_up<size_t>(len + 1,sizeof(word_t)));
-	memcpy(bottom,cmdline.str(),len + 1);
+	size_t len = Math::min<size_t>(MAX_CMDLINE_LEN, cmdline.length());
+	char *bottom = reinterpret_cast<char*>(sp - Math::round_up<size_t>(len + 1, sizeof(word_t)));
+	memcpy(bottom, cmdline.str(), len + 1);
 
 	// count number of arguments
-	size_t i = 0,argc = 0;
+	size_t i = 0, argc = 0;
 	char *str = bottom;
 	while(*str) {
 		if(*str == ' ' && i > 0)
@@ -137,92 +138,96 @@ void ChildManager::prepare_stack(Child *c,uintptr_t &sp,uintptr_t csp) {
 	*ptrs++ = 0;
 }
 
-void ChildManager::build_hip(Child *c,const ChildConfig &config) {
+void ChildManager::build_hip(Child *c, const ChildConfig &config) {
 	// create ds for cmdlines in Hip mem-items
 	uintptr_t cmdlinesaddr = c->reglist().find_free(MAX_MODAUX_LEN);
 	const DataSpace &auxds = _dsm.create(
-			DataSpaceDesc(MAX_MODAUX_LEN,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX));
+	    DataSpaceDesc(MAX_MODAUX_LEN, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RWX));
 	char *cmdlines = reinterpret_cast<char*>(auxds.virt());
 	char *cmdlinesend = cmdlines + MAX_MODAUX_LEN;
-	c->reglist().add(auxds.desc(),cmdlinesaddr,ChildMemory::R | ChildMemory::OWN,auxds.unmapsel());
+	c->reglist().add(auxds.desc(), cmdlinesaddr, ChildMemory::R | ChildMemory::OWN, auxds.unmapsel());
 
 	// create ds for hip
 	const DataSpace &ds = _dsm.create(
-			DataSpaceDesc(ExecEnv::PAGE_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW));
+	    DataSpaceDesc(ExecEnv::PAGE_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW));
 	c->_hip = c->reglist().find_free(ExecEnv::PAGE_SIZE);
 	ChildHip *hip = reinterpret_cast<ChildHip*>(ds.virt());
 
 	// setup Hip
-	new (hip) ChildHip(config.cpus());
+	new (hip)ChildHip(config.cpus());
 	HipMem mem;
-	for(size_t memidx = 0; config.get_module(memidx,mem); ++memidx) {
+	for(size_t memidx = 0; config.get_module(memidx, mem); ++memidx) {
 		uintptr_t auxaddr = 0;
 		if(mem.aux) {
 			size_t len = strlen(mem.cmdline()) + 1;
 			if(cmdlines + len <= cmdlinesend) {
-				memcpy(cmdlines,mem.cmdline(),len);
+				memcpy(cmdlines, mem.cmdline(), len);
 				auxaddr = cmdlinesaddr;
 			}
 			cmdlines += len;
 			cmdlinesaddr += len;
 		}
-		hip->add_mem(mem.addr,mem.size,auxaddr,mem.type);
+		hip->add_mem(mem.addr, mem.size, auxaddr, mem.type);
 	}
 	hip->finalize();
 
 	// add to region list
-	c->reglist().add(ds.desc(),c->_hip,ChildMemory::R | ChildMemory::OWN,ds.unmapsel());
+	c->reglist().add(ds.desc(), c->_hip, ChildMemory::R | ChildMemory::OWN, ds.unmapsel());
 }
 
-Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &config) {
+Child::id_type ChildManager::load(uintptr_t addr, size_t size, const ChildConfig &config) {
 	ElfEh *elf = reinterpret_cast<ElfEh*>(addr);
 
 	// check ELF
 	if(size < sizeof(ElfEh) || sizeof(ElfPh) > elf->e_phentsize ||
-			size < elf->e_phoff + elf->e_phentsize * elf->e_phnum)
-		throw ElfException(E_ELF_INVALID,"Size of ELF file invalid");
+	   size < elf->e_phoff + elf->e_phentsize * elf->e_phnum)
+		throw ElfException(E_ELF_INVALID, "Size of ELF file invalid");
 	if(!(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' &&
-			elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
-		throw ElfException(E_ELF_SIG,"No ELF signature");
+	     elf->e_ident[2] == 'L' && elf->e_ident[3] == 'F'))
+		throw ElfException(E_ELF_SIG, "No ELF signature");
 
 	static int exc[] = {
-		CapSelSpace::EV_DIVIDE,CapSelSpace::EV_DEBUG,CapSelSpace::EV_BREAKPOINT,CapSelSpace::EV_OVERFLOW,
-		CapSelSpace::EV_BOUNDRANGE,CapSelSpace::EV_UNDEFOP,CapSelSpace::EV_NOMATHPROC,
-		CapSelSpace::EV_DBLFAULT,CapSelSpace::EV_TSS,CapSelSpace::EV_INVSEG,CapSelSpace::EV_STACK,
-		CapSelSpace::EV_GENPROT,CapSelSpace::EV_MATHFAULT,CapSelSpace::EV_ALIGNCHK,CapSelSpace::EV_MACHCHK,
+		CapSelSpace::EV_DIVIDE, CapSelSpace::EV_DEBUG, CapSelSpace::EV_BREAKPOINT,
+		CapSelSpace::EV_OVERFLOW, CapSelSpace::EV_BOUNDRANGE, CapSelSpace::EV_UNDEFOP,
+		CapSelSpace::EV_NOMATHPROC, CapSelSpace::EV_DBLFAULT, CapSelSpace::EV_TSS,
+		CapSelSpace::EV_INVSEG, CapSelSpace::EV_STACK, CapSelSpace::EV_GENPROT,
+		CapSelSpace::EV_MATHFAULT, CapSelSpace::EV_ALIGNCHK, CapSelSpace::EV_MACHCHK,
 		CapSelSpace::EV_SIMD
 	};
 
 	// create child
 	size_t idx = free_slot();
 	capsel_t pts = _portal_caps + idx * per_child_caps();
-	Child *c = new Child(this,pts,config.cmdline());
+	Child *c = new Child(this, pts, config.cmdline());
 	try {
 		// we have to create the portals first to be able to delegate them to the new Pd
 		c->_ptcount = CPU::count() * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
-		c->_pts = new Pt*[c->_ptcount];
-		memset(c->_pts,0,c->_ptcount * sizeof(Pt*));
+		c->_pts = new Pt *[c->_ptcount];
+		memset(c->_pts, 0, c->_ptcount * sizeof(Pt*));
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu) {
 			size_t idx = cpu * (ARRAY_SIZE(exc) + Portals::COUNT - 1);
 			size_t off = cpu * Hip::get().service_caps();
 			size_t i = 0;
 			for(; i < ARRAY_SIZE(exc); ++i) {
-				c->_pts[idx + i] = new Pt(_ecs[cpu],pts + off + exc[i],Portals::exception,
-						Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
+				c->_pts[idx + i] = new Pt(_ecs[cpu], pts + off + exc[i], Portals::exception,
+				                          Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
 			}
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::EV_PAGEFAULT,Portals::pf,
-					Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::EV_STARTUP,Portals::startup,
-					Mtd(Mtd::RSP));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_INIT,Portals::init_caps,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_regecs[cpu],pts + off + CapSelSpace::SRV_SERVICE,Portals::service,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_IO,Portals::io,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_SC,Portals::sc,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_GSI,Portals::gsi,Mtd(0));
-			c->_pts[idx + i++] = new Pt(_ecs[cpu],pts + off + CapSelSpace::SRV_DS,Portals::dataspace,Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::EV_PAGEFAULT, Portals::pf,
+			                            Mtd(Mtd::GPR_BSD | Mtd::QUAL | Mtd::RIP_LEN));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::EV_STARTUP, Portals::startup,
+			                            Mtd(Mtd::RSP));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::SRV_INIT, Portals::init_caps,
+			                            Mtd(0));
+			c->_pts[idx + i++] = new Pt(_regecs[cpu], pts + off + CapSelSpace::SRV_SERVICE,
+			                            Portals::service, Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::SRV_IO, Portals::io, Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::SRV_SC, Portals::sc, Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::SRV_GSI, Portals::gsi, Mtd(0));
+			c->_pts[idx + i++] = new Pt(_ecs[cpu], pts + off + CapSelSpace::SRV_DS, Portals::dataspace,
+			                            Mtd(0));
 		}
 		// now create Pd and pass portals
-		c->_pd = new Pd(Crd(pts,Math::next_pow2_shift(per_child_caps()),Crd::OBJ_ALL));
+		c->_pd = new Pd(Crd(pts, Math::next_pow2_shift(per_child_caps()), Crd::OBJ_ALL));
 		c->_entry = elf->e_entry;
 		c->_main = config.entry();
 
@@ -230,11 +235,11 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &
 		for(size_t i = 0; i < elf->e_phnum; i++) {
 			ElfPh *ph = reinterpret_cast<ElfPh*>(addr + elf->e_phoff + i * elf->e_phentsize);
 			if(reinterpret_cast<uintptr_t>(ph) + sizeof(ElfPh) > addr + size)
-				throw ElfException(E_ELF_INVALID,"Program header outside binary");
+				throw ElfException(E_ELF_INVALID, "Program header outside binary");
 			if(ph->p_type != 1)
 				continue;
 			if(size < ph->p_offset + ph->p_filesz)
-				throw ElfException(E_ELF_INVALID,"LOAD segment outside binary");
+				throw ElfException(E_ELF_INVALID, "LOAD segment outside binary");
 
 			uint perms = ChildMemory::OWN;
 			if(ph->p_flags & PF_R)
@@ -244,44 +249,44 @@ Child::id_type ChildManager::load(uintptr_t addr,size_t size,const ChildConfig &
 			if(ph->p_flags & PF_X)
 				perms |= ChildMemory::X;
 
-			size_t dssize = Math::round_up<size_t>(ph->p_memsz,ExecEnv::PAGE_SIZE);
+			size_t dssize = Math::round_up<size_t>(ph->p_memsz, ExecEnv::PAGE_SIZE);
 			// TODO leak, if reglist().add throws
 			const DataSpace &ds = _dsm.create(
-					DataSpaceDesc(dssize,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RWX));
+			    DataSpaceDesc(dssize, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RWX));
 			// TODO actually it would be better to do that later
 			memcpy(reinterpret_cast<void*>(ds.virt()),
-					reinterpret_cast<void*>(addr + ph->p_offset),ph->p_filesz);
-			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz),0,ph->p_memsz - ph->p_filesz);
-			c->reglist().add(ds.desc(),ph->p_vaddr,perms,ds.unmapsel());
+			       reinterpret_cast<void*>(addr + ph->p_offset), ph->p_filesz);
+			memset(reinterpret_cast<void*>(ds.virt() + ph->p_filesz), 0, ph->p_memsz - ph->p_filesz);
+			c->reglist().add(ds.desc(), ph->p_vaddr, perms, ds.unmapsel());
 		}
 
 		// utcb
 		c->_utcb = c->reglist().find_free(Utcb::SIZE);
 		// just reserve the virtual memory with no permissions; it will not be requested
-		c->reglist().add(DataSpaceDesc(Utcb::SIZE,DataSpaceDesc::VIRTUAL,0),c->_utcb,0);
+		c->reglist().add(DataSpaceDesc(Utcb::SIZE, DataSpaceDesc::VIRTUAL, 0), c->_utcb, 0);
 		c->_ec = new GlobalThread(reinterpret_cast<GlobalThread::startup_func>(elf->e_entry),
-				config.cpu(),c->cmdline(),c->_pd,c->_utcb);
+		                          config.cpu(), c->cmdline(), c->_pd, c->_utcb);
 
 		// he needs a stack
 		uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
-		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE,ExecEnv::STACK_SIZE);
-		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE,DataSpaceDesc::ANONYMOUS,0,0,
-				c->_ec->stack(),align - ExecEnv::PAGE_SHIFT),
-				c->stack(),ChildMemory::RW | ChildMemory::OWN);
+		c->_stack = c->reglist().find_free(ExecEnv::STACK_SIZE, ExecEnv::STACK_SIZE);
+		c->reglist().add(DataSpaceDesc(ExecEnv::STACK_SIZE, DataSpaceDesc::ANONYMOUS, 0, 0,
+		                               c->_ec->stack(), align - ExecEnv::PAGE_SHIFT),
+		                 c->stack(), ChildMemory::RW | ChildMemory::OWN);
 
 		// and a Hip
-		build_hip(c,config);
+		build_hip(c, config);
 
-		LOG(Logging::CHILD_CREATE,Serial::get() << "Starting child '" << c->cmdline() << "'...\n");
-		LOG(Logging::CHILD_CREATE,Serial::get() << *c << "\n");
+		LOG(Logging::CHILD_CREATE, Serial::get() << "Starting child '" << c->cmdline() << "'...\n");
+		LOG(Logging::CHILD_CREATE, Serial::get() << *c << "\n");
 
 		// start child; we have to put the child into the list before that
-		rcu_assign_pointer(_childs[idx],c);
-		c->_ec->start(Qpd(),c->_pd);
+		rcu_assign_pointer(_childs[idx], c);
+		c->_ec->start(Qpd(), c->_pd);
 	}
 	catch(...) {
 		delete c;
-		rcu_assign_pointer(_childs[idx],0);
+		rcu_assign_pointer(_childs[idx], 0);
 		throw;
 	}
 
@@ -313,14 +318,14 @@ void ChildManager::Portals::startup(capsel_t pid) {
 			uintptr_t stack = uf->rsp & ~(ExecEnv::PAGE_SIZE - 1);
 			ChildMemory::DS *ds = c->reglist().find_by_addr(stack);
 			if(!ds)
-				throw ChildMemoryException(E_NOT_FOUND,64,"Dataspace not found for stack @ %p",stack);
+				throw ChildMemoryException(E_NOT_FOUND, 64, "Dataspace not found for stack @ %p", stack);
 			uf->rip = *reinterpret_cast<word_t*>(
-					ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
+			    ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
 			uf->mtd = Mtd::RIP_LEN;
 		}
 		else {
 			uf->rip = *reinterpret_cast<word_t*>(uf->rsp + sizeof(word_t));
-			prepare_stack(c,uf->rsp,c->stack());
+			prepare_stack(c, uf->rsp, c->stack());
 			// the bit indicates that its not the root-task
 			// TODO not nice
 	#ifdef __i386__
@@ -352,14 +357,14 @@ void ChildManager::Portals::init_caps(capsel_t pid) {
 		// grabs them afterwards with this portal
 		uf.finish_input();
 		// don't allow them to create Sc's
-		uf.delegate(c->_pd->sel(),0,UtcbFrame::NONE,Crd::OBJ | Crd::PD_EC |
-				Crd::PD_PD | Crd::PD_PT | Crd::PD_SM);
-		uf.delegate(c->_ec->sel(),1);
-		uf.delegate(c->_ec->sc()->sel(),2);
+		uf.delegate(c->_pd->sel(), 0, UtcbFrame::NONE, Crd::OBJ | Crd::PD_EC |
+		            Crd::PD_PD | Crd::PD_PT | Crd::PD_SM);
+		uf.delegate(c->_ec->sel(), 1);
+		uf.delegate(c->_ec->sc()->sel(), 2);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
@@ -383,8 +388,9 @@ void ChildManager::Portals::service(capsel_t pid) {
 				uf >> available;
 				uf.finish_input();
 
-				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
-				capsel_t sm = cm->reg_service(c,cap,name,available);
+				LOG(Logging::SERVICES,
+				    Serial::get() << "Child '" << c->cmdline() << "' regs " << name << "\n");
+				capsel_t sm = cm->reg_service(c, cap, name, available);
 				uf.accept_delegates();
 				uf.delegate(sm);
 				uf << E_SUCCESS;
@@ -394,8 +400,9 @@ void ChildManager::Portals::service(capsel_t pid) {
 			case Service::UNREGISTER: {
 				uf.finish_input();
 
-				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' unregs " << name << "\n");
-				cm->unreg_service(c,name);
+				LOG(Logging::SERVICES,
+				    Serial::get() << "Child '" << c->cmdline() << "' unregs " << name << "\n");
+				cm->unreg_service(c, name);
 				uf << E_SUCCESS;
 			}
 			break;
@@ -403,10 +410,11 @@ void ChildManager::Portals::service(capsel_t pid) {
 			case Service::GET: {
 				uf.finish_input();
 
-				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
+				LOG(Logging::SERVICES,
+				    Serial::get() << "Child '" << c->cmdline() << "' gets " << name << "\n");
 				const ServiceRegistry::Service* s = cm->get_service(name);
 
-				uf.delegate(CapRange(s->pts(),CPU::count(),Crd::OBJ_ALL));
+				uf.delegate(CapRange(s->pts(), CPU::count(), Crd::OBJ_ALL));
 				uf << E_SUCCESS << s->available();
 			}
 			break;
@@ -414,7 +422,8 @@ void ChildManager::Portals::service(capsel_t pid) {
 			case Service::CLIENT_DIED: {
 				uf.finish_input();
 
-				LOG(Logging::SERVICES,Serial::get() << "Child '" << c->cmdline() << "' says clients died\n");
+				LOG(Logging::SERVICES,
+				    Serial::get() << "Child '" << c->cmdline() << "' says clients died\n");
 				cm->notify_services();
 
 				uf << E_SUCCESS;
@@ -423,16 +432,16 @@ void ChildManager::Portals::service(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
 }
 
-capsel_t ChildManager::get_parent_service(const char *name,BitField<Hip::MAX_CPUS> &available) {
+capsel_t ChildManager::get_parent_service(const char *name, BitField<Hip::MAX_CPUS> &available) {
 	UtcbFrame uf;
-	ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
-	uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
+	ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+	uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
 	uf << Service::GET << String(name);
 	CPU::current().srv_pt().call(uf);
 	uf.check_reply();
@@ -458,21 +467,21 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		{
 			ScopedLock<UserSm> guard(&c->_sm);
 			if(op == Gsi::ALLOC) {
-				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' allocates GSI %u (PCI %p)\n",
-							c->cmdline().str(),gsi,pcicfg));
+				LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' allocates GSI %u (PCI %p)\n",
+				                                             c->cmdline().str(), gsi, pcicfg));
 			}
 			else {
-				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' releases GSI %u\n",
-							c->cmdline().str(),gsi));
+				LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' releases GSI %u\n",
+				                                             c->cmdline().str(), gsi));
 			}
 
 			if(gsi >= Hip::MAX_GSIS)
-				throw Exception(E_ARGS_INVALID,32,"Invalid GSI %u",gsi);
+				throw Exception(E_ARGS_INVALID, 32, "Invalid GSI %u", gsi);
 			// make sure that just the owner can release it
 			if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
-				throw Exception(E_ARGS_INVALID,32,"Can't release GSI %u. Not owner",gsi);
+				throw Exception(E_ARGS_INVALID, 32, "Can't release GSI %u. Not owner", gsi);
 			if(c->_gsi_next == Hip::MAX_GSIS)
-				throw Exception(E_CAPACITY,"No free GSI slots");
+				throw Exception(E_CAPACITY, "No free GSI slots");
 
 			{
 				UtcbFrame puf;
@@ -480,13 +489,13 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 				if(op == Gsi::ALLOC) {
 					puf << pcicfg;
 					cap = c->_gsi_next++;
-					puf.delegation_window(Crd(c->_gsi_caps + cap,0,Crd::OBJ_ALL));
+					puf.delegation_window(Crd(c->_gsi_caps + cap, 0, Crd::OBJ_ALL));
 				}
 				CPU::current().gsi_pt().call(puf);
 				puf.check_reply();
 				if(op == Gsi::ALLOC)
 					puf >> gsi;
-				c->gsis().set(gsi,op == Gsi::ALLOC);
+				c->gsis().set(gsi, op == Gsi::ALLOC);
 			}
 		}
 
@@ -497,7 +506,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
@@ -518,36 +527,36 @@ void ChildManager::Portals::io(capsel_t pid) {
 		{
 			ScopedLock<UserSm> guard(&c->_sm);
 			if(op == Ports::ALLOC) {
-				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' allocates ports %#x..%#x\n",
-							c->cmdline().str(),base,base + count - 1));
+				LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' allocates ports %#x..%#x\n",
+				                                             c->cmdline().str(), base, base + count - 1));
 			}
 			else {
-				LOG(Logging::RESOURCES,Serial::get().writef("Child '%s' releases ports %#x..%#x\n",
-							c->cmdline().str(),base,base + count - 1));
+				LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' releases ports %#x..%#x\n",
+				                                             c->cmdline().str(), base, base + count - 1));
 			}
 
 			// alloc() makes sure that nobody can free something from other childs.
 			if(op == Ports::RELEASE)
-				c->io().alloc_region(base,count);
+				c->io().alloc_region(base, count);
 
 			{
 				UtcbFrame puf;
 				if(op == Ports::ALLOC)
-					puf.delegation_window(Crd(0,31,Crd::IO_ALL));
+					puf.delegation_window(Crd(0, 31, Crd::IO_ALL));
 				puf << op << base << count;
 				CPU::current().io_pt().call(puf);
 				puf.check_reply();
 			}
 
 			if(op == Ports::ALLOC) {
-				c->io().free(base,count);
-				uf.delegate(CapRange(base,count,Crd::IO_ALL));
+				c->io().free(base, count);
+				uf.delegate(CapRange(base, count, Crd::IO_ALL));
 			}
 		}
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
@@ -564,23 +573,24 @@ void ChildManager::Portals::sc(capsel_t pid) {
 
 		switch(cmd) {
 			case Sc::CREATE: {
-				uintptr_t stackaddr = 0,utcbaddr = 0;
-				bool stack,utcb;
+				uintptr_t stackaddr = 0, utcbaddr = 0;
+				bool stack, utcb;
 				uf >> stack >> utcb;
 				uf.finish_input();
 
 				// TODO we might leak resources here if something fails
 				if(stack) {
 					uint align = Math::next_pow2_shift(ExecEnv::STACK_SIZE);
-					const DataSpace &ds = cm->_dsm.create(DataSpaceDesc(ExecEnv::STACK_SIZE,
-							DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW,0,0,align - ExecEnv::PAGE_SHIFT));
-					stackaddr = c->reglist().find_free(ds.size(),ExecEnv::STACK_SIZE);
-					c->reglist().add(ds.desc(),stackaddr,ds.flags() | ChildMemory::OWN,ds.unmapsel());
+					DataSpaceDesc desc(ExecEnv::STACK_SIZE, DataSpaceDesc::ANONYMOUS,
+					                   DataSpaceDesc::RW, 0, 0, align - ExecEnv::PAGE_SHIFT);
+					const DataSpace &ds = cm->_dsm.create(desc);
+					stackaddr = c->reglist().find_free(ds.size(), ExecEnv::STACK_SIZE);
+					c->reglist().add(ds.desc(), stackaddr, ds.flags() | ChildMemory::OWN, ds.unmapsel());
 				}
 				if(utcb) {
-					DataSpaceDesc desc(ExecEnv::PAGE_SIZE,DataSpaceDesc::VIRTUAL,DataSpaceDesc::RW);
+					DataSpaceDesc desc(ExecEnv::PAGE_SIZE, DataSpaceDesc::VIRTUAL, DataSpaceDesc::RW);
 					utcbaddr = c->reglist().find_free(ExecEnv::PAGE_SIZE);
-					c->reglist().add(desc,utcbaddr,desc.flags());
+					c->reglist().add(desc, utcbaddr, desc.flags());
 				}
 
 				uf << E_SUCCESS;
@@ -612,10 +622,11 @@ void ChildManager::Portals::sc(capsel_t pid) {
 					sc = puf.get_delegated(0).offset();
 					puf >> qpd;
 				}
-				c->add_sc(name,cpu,sc);
+				c->add_sc(name, cpu, sc);
 
-				LOG(Logging::ADMISSION,Serial::get().writef("Child '%s' created sc '%s' on cpu %u (%u)\n",
-							c->cmdline().str(),name.str(),cpu,sc));
+				LOG(Logging::ADMISSION,
+				    Serial::get().writef("Child '%s' created sc '%s' on cpu %u (%u)\n",
+				                         c->cmdline().str(), name.str(), cpu, sc));
 
 				uf.accept_delegates();
 				uf.delegate(sc);
@@ -636,20 +647,20 @@ void ChildManager::Portals::sc(capsel_t pid) {
 					puf.check_reply();
 				}
 
-				LOG(Logging::ADMISSION,Serial::get().writef("Child '%s' destroyed sc (%u)\n",
-							c->cmdline().str(),sc));
+				LOG(Logging::ADMISSION, Serial::get().writef("Child '%s' destroyed sc (%u)\n",
+				                                             c->cmdline().str(), sc));
 			}
 			break;
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
 }
 
-void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
+void ChildManager::map(UtcbFrameRef &uf, Child *c, DataSpace::RequestType type) {
 	capsel_t sel = 0;
 	DataSpaceDesc desc;
 	if(type == DataSpace::JOIN)
@@ -662,11 +673,11 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 	uintptr_t addr = 0;
 	if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
 		addr = c->reglist().find_free(desc.size());
-		desc = DataSpaceDesc(desc.size(),desc.type(),desc.flags(),0,0,desc.align());
-		c->reglist().add(desc,addr,desc.flags());
+		desc = DataSpaceDesc(desc.size(), desc.type(), desc.flags(), 0, 0, desc.align());
+		c->reglist().add(desc, addr, desc.flags());
 		desc.virt(addr);
 		LOG(Logging::DATASPACES,
-				Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
+		    Serial::get() << "Child '" << c->cmdline() << "' allocated virtual ds:\n\t" << desc << "\n");
 		uf << E_SUCCESS << desc;
 	}
 	else {
@@ -680,33 +691,33 @@ void ChildManager::map(UtcbFrameRef &uf,Child *c,DataSpace::RequestType type) {
 			if(type != DataSpace::JOIN && desc.phys() == 0)
 				flags |= ChildMemory::OWN;
 			size_t align = 1 << (desc.align() + ExecEnv::PAGE_SHIFT);
-			addr = c->reglist().find_free(ds.size(),align);
-			c->reglist().add(ds.desc(),addr,flags,ds.unmapsel());
+			addr = c->reglist().find_free(ds.size(), align);
+			c->reglist().add(ds.desc(), addr, flags, ds.unmapsel());
 		}
 		catch(...) {
-			_dsm.release(desc,ds.unmapsel());
+			_dsm.release(desc, ds.unmapsel());
 			throw;
 		}
 
 		// build answer
 		if(type == DataSpace::CREATE) {
 			LOG(Logging::DATASPACES,
-					Serial::get() << "Child '" << c->cmdline() << "' created:\n\t" << ds << "\n");
-			uf.delegate(ds.sel(),0);
-			uf.delegate(ds.unmapsel(),1);
+			    Serial::get() << "Child '" << c->cmdline() << "' created:\n\t" << ds << "\n");
+			uf.delegate(ds.sel(), 0);
+			uf.delegate(ds.unmapsel(), 1);
 		}
 		else {
 			LOG(Logging::DATASPACES,
-					Serial::get() << "Child '" << c->cmdline() << "' joined:\n\t" << ds << "\n");
+			    Serial::get() << "Child '" << c->cmdline() << "' joined:\n\t" << ds << "\n");
 			uf.accept_delegates();
 			uf.delegate(ds.unmapsel());
 		}
-		uf << E_SUCCESS << DataSpaceDesc(ds.size(),ds.type(),ds.flags(),ds.phys(),addr,ds.virt(),
-				ds.desc().align());
+		uf << E_SUCCESS << DataSpaceDesc(ds.size(), ds.type(), ds.flags(), ds.phys(), addr, ds.virt(),
+		                                 ds.desc().align());
 	}
 }
 
-void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
+void ChildManager::switch_to(UtcbFrameRef &uf, Child *c) {
 	capsel_t srcsel = uf.get_translated(0).offset();
 	capsel_t dstsel = uf.get_translated(0).offset();
 	uf.finish_input();
@@ -717,27 +728,30 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 		// results)
 		ScopedLock<UserSm> guard_switch(&_switchsm);
 
-		uintptr_t srcorg,dstorg;
+		uintptr_t srcorg, dstorg;
 		{
 			// first do the stuff for the child that requested the switch
 			ScopedLock<UserSm> guard_regs(&c->_sm);
-			ChildMemory::DS *src,*dst;
+			ChildMemory::DS *src, *dst;
 			src = c->reglist().find(srcsel);
 			dst = c->reglist().find(dstsel);
-			LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
-						<< "' switches:\n\t" << src->desc() << "\n\t" << dst->desc() << "\n");
+			LOG(Logging::DATASPACES, Serial::get() << "Child '" << c->cmdline()
+			                                       << "' switches:\n\t" << src->desc() << "\n\t" <<
+			    dst->desc() << "\n");
 			if(!src || !dst)
-				throw Exception(E_ARGS_INVALID,64,"Unable to switch. DS %u or %u not found",srcsel,dstsel);
+				throw Exception(E_ARGS_INVALID, 64, "Unable to switch. DS %u or %u not found", srcsel,
+				                dstsel);
 			if(src->desc().size() != dst->desc().size()) {
-				throw Exception(E_ARGS_INVALID,64,"Unable to switch non-equal-sized dataspaces (%zu,%zu)",
-						src->desc().size(),dst->desc().size());
+				throw Exception(E_ARGS_INVALID, 64,
+				                "Unable to switch non-equal-sized dataspaces (%zu,%zu)",
+				                src->desc().size(), dst->desc().size());
 			}
 
 			// first revoke the memory to prevent further accesses
 			CapRange(src->desc().origin() >> ExecEnv::PAGE_SHIFT,
-					src->desc().size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			         src->desc().size() >> ExecEnv::PAGE_SHIFT, Crd::MEM_ALL).revoke(false);
 			CapRange(dst->desc().origin() >> ExecEnv::PAGE_SHIFT,
-					dst->desc().size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(false);
+			         dst->desc().size() >> ExecEnv::PAGE_SHIFT, Crd::MEM_ALL).revoke(false);
 			// we have to reset the last pf information here, because of the revoke. otherwise it
 			// can happen that last time CPU X caused the last fault and this time, CPU X causes
 			// the second fault (the first one will handle it and the second one will find it already
@@ -747,8 +761,8 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 			c->_last_fault_cpu = 0;
 			// now copy the content
 			memcpy(reinterpret_cast<char*>(dst->desc().origin()),
-					reinterpret_cast<char*>(src->desc().origin()),
-					src->desc().size());
+			       reinterpret_cast<char*>(src->desc().origin()),
+			       src->desc().size());
 			// change mapping
 			srcorg = src->desc().origin();
 			dstorg = dst->desc().origin();
@@ -759,14 +773,14 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 		}
 
 		// now change the mapping for all other childs that have one of these dataspaces
-		for(size_t x = 0,i = 0; i < MAX_CHILDS && x < _child_count; ++i) {
+		for(size_t x = 0, i = 0; i < MAX_CHILDS && x < _child_count; ++i) {
 			Child *ch = rcu_dereference(_childs[i]);
 			if(ch == 0 || ch == c)
 				continue;
 
 			ScopedLock<UserSm> guard_regs(&ch->_sm);
 			DataSpaceDesc dummy;
-			ChildMemory::DS *src,*dst;
+			ChildMemory::DS *src, *dst;
 			src = ch->reglist().find(srcsel);
 			dst = ch->reglist().find(dstsel);
 			if(!src && !dst)
@@ -788,13 +802,13 @@ void ChildManager::switch_to(UtcbFrameRef &uf,Child *c) {
 
 		// now swap the origins also in the dataspace-manager (otherwise clients that join
 		// afterwards will receive the wrong location)
-		_dsm.swap(srcsel,dstsel);
+		_dsm.swap(srcsel, dstsel);
 	}
 
 	uf << E_SUCCESS;
 }
 
-void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
+void ChildManager::unmap(UtcbFrameRef &uf, Child *c) {
 	capsel_t sel = 0;
 	DataSpaceDesc desc;
 	uf >> desc;
@@ -804,15 +818,15 @@ void ChildManager::unmap(UtcbFrameRef &uf,Child *c) {
 
 	ScopedLock<UserSm> guard(&c->_sm);
 	if(desc.type() == DataSpaceDesc::VIRTUAL) {
-		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
-				<< "' destroys virtual ds " << desc << "\n");
+		LOG(Logging::DATASPACES, Serial::get() << "Child '" << c->cmdline()
+		                                       << "' destroys virtual ds " << desc << "\n");
 		c->reglist().remove_by_addr(desc.virt());
 	}
 	else {
-		LOG(Logging::DATASPACES,Serial::get() << "Child '" << c->cmdline()
-				<< "' destroys " << sel << ": " << desc << "\n");
+		LOG(Logging::DATASPACES, Serial::get() << "Child '" << c->cmdline()
+		                                       << "' destroys " << sel << ": " << desc << "\n");
 		// destroy (decrease refs) the ds
-		_dsm.release(desc,sel);
+		_dsm.release(desc, sel);
 		c->reglist().remove(sel);
 	}
 	uf << E_SUCCESS;
@@ -830,20 +844,20 @@ void ChildManager::Portals::dataspace(capsel_t pid) {
 		switch(type) {
 			case DataSpace::CREATE:
 			case DataSpace::JOIN:
-				cm->map(uf,c,type);
+				cm->map(uf, c, type);
 				break;
 
 			case DataSpace::SWITCH_TO:
-				cm->switch_to(uf,c);
+				cm->switch_to(uf, c);
 				break;
 
 			case DataSpace::DESTROY:
-				cm->unmap(uf,c);
+				cm->unmap(uf, c);
 				break;
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
@@ -861,7 +875,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 
 	// voluntary exit?
 	if(pfaddr == eip && pfaddr >= ExecEnv::EXIT_START && pfaddr <= ExecEnv::THREAD_EXIT) {
-		cm->term_child(pid,uf);
+		cm->term_child(pid, uf);
 		return;
 	}
 
@@ -871,9 +885,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		ScopedLock<UserSm> guard_switch(&cm->_switchsm);
 		ScopedLock<UserSm> guard_regs(&c->_sm);
 
-		LOG(Logging::PFS,Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-				c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
-				reinterpret_cast<void*>(eip),cpu,error));
+		LOG(Logging::PFS,
+		    Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
+		                         c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
+		                         reinterpret_cast<void*>(eip), cpu, error));
 
 		// TODO different handlers (cow, ...)
 		uintptr_t pfpage = pfaddr & ~(ExecEnv::PAGE_SIZE - 1);
@@ -897,7 +912,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
 		// is the page already mapped (may be ok if two cpus accessed the page at the same time)
 		if(!kill && flags) {
 			// first check if our parent has unmapped the memory
-			Crd res = Syscalls::lookup(Crd(ds->origin(pfaddr) >> ExecEnv::PAGE_SHIFT,0,Crd::MEM));
+			Crd res = Syscalls::lookup(Crd(ds->origin(pfaddr) >> ExecEnv::PAGE_SHIFT, 0, Crd::MEM));
 			// if so, remap it
 			if(res.is_null()) {
 				// reset it here as well. this is necessary for subsystems (where our parent has
@@ -911,17 +926,17 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			}
 			// same fault for same cpu again?
 			else if(pfpage == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
-				LOG(Logging::CHILD_KILL,Serial::get().writef(
-						"Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
-						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),CPU::get(cpu).phys_id()));
+				LOG(Logging::CHILD_KILL, Serial::get().writef(
+				        "Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
+				        c->cmdline().str(), reinterpret_cast<void*>(pfaddr), CPU::get(cpu).phys_id()));
 				kill = true;
 			}
 			else {
-				LOG(Logging::PFS,Serial::get().writef(
-						"Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
-						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
-						reinterpret_cast<void*>(eip),CPU::get(cpu).phys_id(),error));
-				LOG(Logging::PFS_DETAIL,Serial::get() << "See regionlist:\n" << c->reglist());
+				LOG(Logging::PFS, Serial::get().writef(
+				        "Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
+				        c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
+				        reinterpret_cast<void*>(eip), CPU::get(cpu).phys_id(), error));
+				LOG(Logging::PFS_DETAIL, Serial::get() << "See regionlist:\n" << c->reglist());
 				c->_last_fault_addr = pfpage;
 				c->_last_fault_cpu = cpu;
 			}
@@ -938,11 +953,11 @@ void ChildManager::Portals::pf(capsel_t pid) {
 				pfpage &= ~(ExecEnv::BIG_PAGE_SIZE - 1);
 			}
 			uintptr_t src = ds->origin(pfpage);
-			CapRange cr(src >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM | (perms << 2),
-					pfpage >> ExecEnv::PAGE_SHIFT);
+			CapRange cr(src >> ExecEnv::PAGE_SHIFT, pages, Crd::MEM | (perms << 2),
+			            pfpage >> ExecEnv::PAGE_SHIFT);
 			// ensure that it fits into the utcb
 			cr.limit_to(uf.free_typed());
-			cr.count(ds->page_perms(pfpage,cr.count(),perms));
+			cr.count(ds->page_perms(pfpage, cr.count(), perms));
 			uf.delegate(cr);
 			// ensure that we have the memory (if we're a subsystem this might not be true)
 			// TODO this is not sufficient, in general
@@ -963,12 +978,12 @@ void ChildManager::Portals::pf(capsel_t pid) {
 			{
 				ScopedLock<RCULock> guard(&RCU::lock());
 				Child *c = cm->get_child(pid);
-				LOG(Logging::CHILD_KILL,Serial::get().writef(
-						"Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
-						c->cmdline().str(),reinterpret_cast<void*>(pfaddr),
-						reinterpret_cast<void*>(uf->rip),CPU::get(cpu).phys_id(),error));
+				LOG(Logging::CHILD_KILL, Serial::get().writef(
+				        "Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
+				        c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
+				        reinterpret_cast<void*>(uf->rip), CPU::get(cpu).phys_id(), error));
 			}
-			cm->kill_child(pid,uf,FAULT);
+			cm->kill_child(pid, uf, FAULT);
 		}
 		catch(...) {
 			// just let the kernel kill the Ec here
@@ -981,10 +996,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
 void ChildManager::Portals::exception(capsel_t pid) {
 	ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
 	UtcbExcFrameRef uf;
-	cm->kill_child(pid,uf,FAULT);
+	cm->kill_child(pid, uf, FAULT);
 }
 
-void ChildManager::term_child(capsel_t pid,UtcbExcFrameRef &uf) {
+void ChildManager::term_child(capsel_t pid, UtcbExcFrameRef &uf) {
 	try {
 		bool pd = uf->eip != ExecEnv::THREAD_EXIT;
 		{
@@ -997,12 +1012,12 @@ void ChildManager::term_child(capsel_t pid,UtcbExcFrameRef &uf) {
 				exitcode -= ExecEnv::EXIT_START;
 			else
 				exitcode -= ExecEnv::THREAD_EXIT;
-			LOG(Logging::CHILD_KILL,Serial::get().writef(
-					"Child '%s': %s terminated with exit code %d on cpu %u\n",
-					c->cmdline().str(),pd ? "Pd" : "Thread",exitcode,get_cpu(pid)));
+			LOG(Logging::CHILD_KILL, Serial::get().writef(
+			        "Child '%s': %s terminated with exit code %d on cpu %u\n",
+			        c->cmdline().str(), pd ? "Pd" : "Thread", exitcode, get_cpu(pid)));
 		}
 
-		kill_child(pid,uf,pd ? PROC_EXIT : THREAD_EXIT);
+		kill_child(pid, uf, pd ? PROC_EXIT : THREAD_EXIT);
 	}
 	catch(...) {
 		// just let the kernel kill the Ec here
@@ -1011,19 +1026,19 @@ void ChildManager::term_child(capsel_t pid,UtcbExcFrameRef &uf) {
 	}
 }
 
-void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
+void ChildManager::kill_child(capsel_t pid, UtcbExcFrameRef &uf, ExitType type) {
 	bool dead = false;
 	try {
 		ScopedLock<RCULock> guard(&RCU::lock());
 		Child *c = get_child(pid);
-		uintptr_t *addr,addrs[32];
+		uintptr_t *addr, addrs[32];
 		if(type == FAULT) {
-			LOG(Logging::CHILD_KILL,Serial::get().writef(
-					"Child '%s': caused exception %u @ %p on cpu %u\n",
-					c->cmdline().str(),get_vector(pid),reinterpret_cast<void*>(uf->rip),
-					CPU::get(get_cpu(pid)).phys_id()));
-			LOG(Logging::CHILD_KILL,Serial::get() << c->reglist());
-			LOG(Logging::CHILD_KILL,Serial::get().writef("Unable to resolve fault; killing child\n"));
+			LOG(Logging::CHILD_KILL, Serial::get().writef(
+			        "Child '%s': caused exception %u @ %p on cpu %u\n",
+			        c->cmdline().str(), get_vector(pid), reinterpret_cast<void*>(uf->rip),
+			        CPU::get(get_cpu(pid)).phys_id()));
+			LOG(Logging::CHILD_KILL, Serial::get() << c->reglist());
+			LOG(Logging::CHILD_KILL, Serial::get().writef("Unable to resolve fault; killing child\n"));
 		}
 		// if its a thread exit, free stack and utcb
 		else if(type == THREAD_EXIT) {
@@ -1033,25 +1048,25 @@ void ChildManager::kill_child(capsel_t pid,UtcbExcFrameRef &uf,ExitType type) {
 			// 0 indicates that this thread has used its own stack
 			if(stack) {
 				capsel_t sel;
-				DataSpaceDesc desc = c->reglist().remove_by_addr(stack,&sel);
-				_dsm.release(desc,sel);
+				DataSpaceDesc desc = c->reglist().remove_by_addr(stack, &sel);
+				_dsm.release(desc, sel);
 			}
 			if(utcb)
 				c->reglist().remove_by_addr(utcb);
 		}
-		ExecEnv::collect_backtrace(c->_ec->stack(),uf->rbp,addrs,32);
-		LOG(Logging::CHILD_KILL,Serial::get().writef("Backtrace:\n"));
+		ExecEnv::collect_backtrace(c->_ec->stack(), uf->rbp, addrs, 32);
+		LOG(Logging::CHILD_KILL, Serial::get().writef("Backtrace:\n"));
 		addr = addrs;
 		while(*addr != 0) {
-			LOG(Logging::CHILD_KILL,Serial::get().writef("\t%p\n",reinterpret_cast<void*>(*addr)));
+			LOG(Logging::CHILD_KILL, Serial::get().writef("\t%p\n", reinterpret_cast<void*>(*addr)));
 			addr++;
 		}
 	}
 	catch(const ChildMemoryException &e) {
 		// this happens if removing the stack or utcb fails. we consider this as a protocol violation
 		// of the child and thus kill it.
-		LOG(Logging::CHILD_KILL,Serial::get() << "Child thread violated exit protocol ("
-				<< e.msg() << "); killing it\n");
+		LOG(Logging::CHILD_KILL, Serial::get() << "Child thread violated exit protocol ("
+		                                       << e.msg() << "); killing it\n");
 		type = FAULT;
 	}
 	catch(...) {
@@ -1074,7 +1089,7 @@ void ChildManager::destroy_child(capsel_t pid) {
 	Child *c = rcu_dereference(_childs[i]);
 	if(!c)
 		return;
-	rcu_assign_pointer(_childs[i],0);
+	rcu_assign_pointer(_childs[i], 0);
 	_registry.remove(c);
 	RCU::invalidate(c);
 	// we have to wait until its deleted here because before that we can't reuse the slot.

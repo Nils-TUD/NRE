@@ -44,7 +44,7 @@ struct DMADesc {
 	/**
 	 * Creates a descriptor with given offset and count
 	 */
-	explicit DMADesc(size_t offset,size_t count) : offset(offset), count(count) {
+	explicit DMADesc(size_t offset, size_t count) : offset(offset), count(count) {
 	}
 };
 
@@ -127,8 +127,8 @@ public:
 	 * @param src the dataspace to read from
 	 * @return true if successful
 	 */
-	bool in(void *dst,size_t len,size_t offset,const DataSpace &src) const {
-		return inout(dst,len,offset,src,false);
+	bool in(void *dst, size_t len, size_t offset, const DataSpace &src) const {
+		return inout(dst, len, offset, src, false);
 	}
 	/**
 	 * Copies <len> bytes from <src> to <dst>. The offset specified the number of bytes you've
@@ -140,27 +140,27 @@ public:
 	 * @param dst the dataspace to write to
 	 * @return true if successful
 	 */
-	bool out(const void *src,size_t len,size_t offset,const DataSpace &dst) const {
-		return inout(const_cast<void*>(src),len,offset,dst,true);
+	bool out(const void *src, size_t len, size_t offset, const DataSpace &dst) const {
+		return inout(const_cast<void*>(src), len, offset, dst, true);
 	}
 
 private:
-	bool inout(void *buffer,size_t len,size_t offset,const DataSpace &ds,bool out) const {
+	bool inout(void *buffer, size_t len, size_t offset, const DataSpace &ds, bool out) const {
 		iterator it;
 		char *buf = reinterpret_cast<char*>(buffer);
 		for(it = begin(); it != end() && offset >= it->count; ++it)
 			offset -= it->count;
 		for(; len > 0 && it != end(); ++it) {
 			assert(it->count >= offset);
-			size_t sublen = Math::min<size_t>(it->count - offset,len);
+			size_t sublen = Math::min<size_t>(it->count - offset, len);
 			if((it->offset + offset) > ds.size() || (it->offset + offset + sublen) > ds.size())
 				break;
 
 			char *addr = reinterpret_cast<char*>(it->offset + ds.virt() + offset);
 			if(out)
-				memcpy(addr,buf,sublen);
+				memcpy(addr, buf, sublen);
 			else
-				memcpy(buf,addr,sublen);
+				memcpy(buf, addr, sublen);
 
 			buf += sublen;
 			len -= sublen;
@@ -178,10 +178,10 @@ private:
  * Writes a string-representation into <os>
  */
 template<size_t MAX>
-static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
+static inline OStream &operator<<(OStream &os, const DMADescList<MAX> &l) {
 	os << "DMADescList[" << l.count() << ", " << l.bytecount() << "] (";
 	for(typename DMADescList<MAX>::iterator it = l.begin(); it != l.end(); ) {
-		os.writef("o=%p s=%#zu",reinterpret_cast<void*>(it->offset),it->count);
+		os.writef("o=%p s=%#zu", reinterpret_cast<void*>(it->offset), it->count);
 		if(++it != l.end())
 			os << ",";
 	}
@@ -193,7 +193,7 @@ static inline OStream &operator<<(OStream &os,const DMADescList<MAX> &l) {
  * Writes the list into the UTCB. Note that the UTCB size is limited!
  */
 template<size_t MAX>
-static inline UtcbFrameRef &operator<<(UtcbFrameRef &uf,const DMADescList<MAX> &l) {
+static inline UtcbFrameRef &operator<<(UtcbFrameRef &uf, const DMADescList<MAX> &l) {
 	uf << l.count();
 	for(typename DMADescList<MAX>::iterator it = l.begin(); it != l.end(); ++it)
 		uf << *it;
@@ -203,7 +203,7 @@ static inline UtcbFrameRef &operator<<(UtcbFrameRef &uf,const DMADescList<MAX> &
  * Reads the list back from the UTCB
  */
 template<size_t MAX>
-static inline UtcbFrameRef &operator>>(UtcbFrameRef &uf,DMADescList<MAX> &l) {
+static inline UtcbFrameRef &operator>>(UtcbFrameRef &uf, DMADescList<MAX> &l) {
 	size_t count;
 	uf >> count;
 	l.clear();

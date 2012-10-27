@@ -21,9 +21,9 @@
 /**
  * Placement new
  */
-inline void *operator new(size_t,void* ptr) throw() {
+inline void *operator new(size_t, void* ptr) throw() {
 	return ptr;
 }
-inline void *operator new[](size_t,void *ptr) throw() {
+inline void *operator new[](size_t, void *ptr) throw() {
 	return ptr;
 }

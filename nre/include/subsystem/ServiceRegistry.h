@@ -49,8 +49,8 @@ public:
 		 * @param count the number of selectors
 		 * @param available bitfield that specifies on what CPUs its available
 		 */
-		explicit Service(Child *child,const String &name,capsel_t pts,size_t count,
-				const BitField<Hip::MAX_CPUS> &available)
+		explicit Service(Child *child, const String &name, capsel_t pts, size_t count,
+		                 const BitField<Hip::MAX_CPUS> &available)
 			: SListItem(), _child(child), _name(name), _pts(pts), _count(count), _sm(0),
 			  _available(available) {
 		}
@@ -58,8 +58,8 @@ public:
 		 * The destructor revokes the caps and frees the selectors
 		 */
 		~Service() {
-			CapRange(_pts,_count,Crd::OBJ_ALL).revoke(true);
-			CapSelSpace::get().free(_pts,_count);
+			CapRange(_pts, _count, Crd::OBJ_ALL).revoke(true);
+			CapSelSpace::get().free(_pts, _count);
 		}
 
 	public:
@@ -147,11 +147,11 @@ public:
 	 * @return the created service
 	 * @throws ServiceRegistryException if the service does already exist
 	 */
-	const Service* reg(Child *child,const String &name,capsel_t pts,size_t count,
-			const BitField<Hip::MAX_CPUS> &available) {
+	const Service* reg(Child *child, const String &name, capsel_t pts, size_t count,
+	                   const BitField<Hip::MAX_CPUS> &available) {
 		if(search(name))
-			throw ServiceRegistryException(E_EXISTS,64,"Service '%s' does already exist",name.str());
-		Service *s = new Service(child,name,pts,count,available);
+			throw ServiceRegistryException(E_EXISTS, 64, "Service '%s' does already exist", name.str());
+		Service *s = new Service(child, name, pts, count, available);
 		_srvs.append(s);
 		return s;
 	}
@@ -163,13 +163,13 @@ public:
 	 * @param name the name of the service
 	 * @throws ServiceRegistryException if the service doesn't exist or doesn't belong to <child>
 	 */
-	void unreg(Child *child,const String &name) {
+	void unreg(Child *child, const String &name) {
 		Service *s = search(name);
 		if(!s)
-			throw ServiceRegistryException(E_NOT_FOUND,64,"Service '%s' does not exist",name.str());
+			throw ServiceRegistryException(E_NOT_FOUND, 64, "Service '%s' does not exist", name.str());
 		if(s->child() != child) {
-			throw ServiceRegistryException(E_NOT_FOUND,128,"Child '%s' does not own service '%s'",
-					child->cmdline().str(),name.str());
+			throw ServiceRegistryException(E_NOT_FOUND, 128, "Child '%s' does not own service '%s'",
+			                               child->cmdline().str(), name.str());
 		}
 		_srvs.remove(s);
 		delete s;

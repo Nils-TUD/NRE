@@ -36,23 +36,23 @@ public:
 
 class OStream;
 class ChildMemory;
-OStream &operator<<(OStream &os,const ChildMemory &cm);
+OStream &operator<<(OStream &os, const ChildMemory &cm);
 
 /**
  * Manages the virtual memory of a child process
  */
 class ChildMemory {
 	friend void ::test_reglist();
-	friend OStream &operator<<(OStream &os,const ChildMemory &cm);
+	friend OStream & operator<<(OStream &os, const ChildMemory &cm);
 
 public:
 	enum Flags {
-		R	= DataSpaceDesc::R,
-		W	= DataSpaceDesc::W,
-		X	= DataSpaceDesc::X,
-		RW	= R | W,
-		RX	= R | X,
-		RWX	= R | W | X,
+		R   = DataSpaceDesc::R,
+		W   = DataSpaceDesc::W,
+		X   = DataSpaceDesc::X,
+		RW  = R | W,
+		RX  = R | X,
+		RWX = R | W | X,
 		// indicates that the memory has been requested by us, i.e. we haven't just joined the DS
 		OWN = 1 << 4,
 	};
@@ -65,9 +65,9 @@ public:
 		/**
 		 * Creates the dataspace with given descriptor and cap
 		 */
-		explicit DS(const DataSpaceDesc &desc,capsel_t cap)
+		explicit DS(const DataSpaceDesc &desc, capsel_t cap)
 			: SListItem(), _desc(desc), _cap(cap),
-			  _perms(Math::blockcount<size_t>(desc.size(),ExecEnv::PAGE_SIZE) * 4) {
+			  _perms(Math::blockcount<size_t>(desc.size(), ExecEnv::PAGE_SIZE) * 4) {
 		}
 
 		/**
@@ -118,14 +118,14 @@ public:
 		 * @param perms the permissions to set
 		 * @return the actual number of pages that have been changed
 		 */
-		size_t page_perms(uintptr_t addr,size_t pages,uint perms) {
+		size_t page_perms(uintptr_t addr, size_t pages, uint perms) {
 			uintptr_t off = addr - _desc.virt();
-			pages = Math::min<size_t>(pages,(_desc.size() - off) / ExecEnv::PAGE_SIZE);
+			pages = Math::min<size_t>(pages, (_desc.size() - off) / ExecEnv::PAGE_SIZE);
 			for(size_t i = 0, o = off / ExecEnv::PAGE_SIZE; i < pages; ++i, ++o) {
 				uint oldperms = _perms.get(o);
 				if(oldperms == perms)
 					return i;
-				_perms.set(o,perms);
+				_perms.set(o, perms);
 			}
 			return pages;
 		}
@@ -167,7 +167,7 @@ public:
 	 * @param virt will be set to the total amount of virtual memory that is in use
 	 * @param phys will be set to the total amount of physical memory that this child has aquired
 	 */
-	void memusage(size_t &virt,size_t &phys) const {
+	void memusage(size_t &virt, size_t &phys) const {
 		virt = 0;
 		phys = 0;
 		for(iterator it = begin(); it != end(); ++it) {
@@ -221,7 +221,7 @@ public:
 	 * @return the address where it can be mapped
 	 * @throw ChildMemoryException if there is not enough space
 	 */
-	uintptr_t find_free(size_t size,size_t align = 1) const {
+	uintptr_t find_free(size_t size, size_t align = 1) const {
 		// the list is sorted, so use the last ds
 		uintptr_t e = _list.length() > 0 ? _list.tail()->desc().virt() + _list.tail()->desc().size() : 0;
 		// leave one page space (earlier error detection)
@@ -230,8 +230,8 @@ public:
 		e = (e + align - 1) & ~(align - 1);
 		// check if the size fits below the kernel
 		if(e + size < e || e + size > ExecEnv::KERNEL_START) {
-			throw ChildMemoryException(E_CAPACITY,64,
-					"Unable to allocate %zu bytes in childs address space",size);
+			throw ChildMemoryException(E_CAPACITY, 64,
+			                           "Unable to allocate %zu bytes in childs address space", size);
 		}
 		return e;
 	}
@@ -240,13 +240,14 @@ public:
 	 * Adds the given dataspace to the address space
 	 *
 	 * @param desc the dataspace descriptor (desc.virt() is expected to contain the address where
-	 * 	the memory is located in the parent (=us))
+	 *  the memory is located in the parent (=us))
 	 * @param addr the virtual address where to map it to in the child
 	 * @param flags the flags to use (desc.flags() is ignored)
 	 * @param sel the selector for the dataspace
 	 */
-	void add(const DataSpaceDesc& desc,uintptr_t addr,uint flags,capsel_t sel = ObjCap::INVALID) {
-		DS *ds = new DS(DataSpaceDesc(desc.size(),desc.type(),flags,desc.phys(),addr,desc.virt()),sel);
+	void add(const DataSpaceDesc& desc, uintptr_t addr, uint flags, capsel_t sel = ObjCap::INVALID) {
+		DS *ds = new DS(DataSpaceDesc(desc.size(), desc.type(), flags, desc.phys(), addr,
+		                              desc.virt()), sel);
 		_list.insert(ds);
 	}
 
@@ -258,7 +259,7 @@ public:
 	 * @throws ChildMemoryException if not found
 	 */
 	DataSpaceDesc remove(capsel_t sel) {
-		return remove(get(sel),0);
+		return remove(get(sel), 0);
 	}
 
 	/**
@@ -269,8 +270,8 @@ public:
 	 * @return the descriptor
 	 * @throws ChildMemoryException if not found
 	 */
-	DataSpaceDesc remove_by_addr(uintptr_t addr,capsel_t *sel = 0) {
-		return remove(find_by_addr(addr),sel);
+	DataSpaceDesc remove_by_addr(uintptr_t addr, capsel_t *sel = 0) {
+		return remove(find_by_addr(addr), sel);
 	}
 
 private:
@@ -281,10 +282,10 @@ private:
 		}
 		return 0;
 	}
-	DataSpaceDesc remove(DS *ds,capsel_t *sel) {
+	DataSpaceDesc remove(DS *ds, capsel_t *sel) {
 		DataSpaceDesc desc;
 		if(!ds)
-			throw ChildMemoryException(E_NOT_FOUND,"Dataspace not found");
+			throw ChildMemoryException(E_NOT_FOUND, "Dataspace not found");
 		_list.remove(ds);
 		if(sel)
 			*sel = ds->cap();
@@ -293,7 +294,7 @@ private:
 		return desc;
 	}
 
-	static bool isless(const DS &a,const DS &b) {
+	static bool isless(const DS &a, const DS &b) {
 		return a.desc().virt() < b.desc().virt();
 	}
 

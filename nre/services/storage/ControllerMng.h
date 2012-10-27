@@ -25,15 +25,15 @@
 
 class ControllerMng {
 	enum {
-		CLASS_STORAGE_CTRL		= 0x1,
-		SUBCLASS_IDE			= 0x1,
-		SUBCLASS_SATA			= 0x6,
+		CLASS_STORAGE_CTRL      = 0x1,
+		SUBCLASS_IDE            = 0x1,
+		SUBCLASS_SATA           = 0x6,
 	};
 
 public:
 	explicit ControllerMng(bool idedma)
-			: _idedma(idedma), _pcicfgcon("pcicfg"), _pcicfg(_pcicfgcon), _acpicon("acpi"),
-			  _acpi(_acpicon), _pci(_pcicfg,&_acpi), _count(0), _ctrls() {
+		: _idedma(idedma), _pcicfgcon("pcicfg"), _pcicfg(_pcicfgcon), _acpicon("acpi"),
+		  _acpi(_acpicon), _pci(_pcicfg, &_acpi), _count(0), _ctrls() {
 		find_ahci_controller();
 		find_ide_controller();
 	}

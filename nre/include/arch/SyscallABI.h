@@ -34,9 +34,9 @@ public:
 }
 
 #ifdef __i386__
-#include <arch/x86_32/SyscallABI.h>
+#    include <arch/x86_32/SyscallABI.h>
 #elif defined __x86_64__
-#include <arch/x86_64/SyscallABI.h>
+#    include <arch/x86_64/SyscallABI.h>
 #else
-#error "Unsupported architecture"
+#    error "Unsupported architecture"
 #endif

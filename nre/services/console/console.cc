@@ -43,15 +43,15 @@ static void input_thread(void*) {
 	}
 }
 
-int main(int argc,char *argv[]) {
+int main(int argc, char *argv[]) {
 	uint modifier = Keyboard::LCTRL;
 	for(int i = 1; i < argc; ++i) {
-		if(strncmp(argv[i],"modifier=",9) == 0)
-			modifier = 1 << IStringStream::read_from<uint>(argv[i] + 9,strlen(argv[i] + 9));
+		if(strncmp(argv[i], "modifier=", 9) == 0)
+			modifier = 1 << IStringStream::read_from<uint>(argv[i] + 9, strlen(argv[i] + 9));
 	}
 
-	srv = new ConsoleService("console",modifier);
-	GlobalThread::create(input_thread,CPU::current().log_id(),String("console-input"))->start();
+	srv = new ConsoleService("console", modifier);
+	GlobalThread::create(input_thread, CPU::current().log_id(), String("console-input"))->start();
 	srv->start();
 	return 0;
 }

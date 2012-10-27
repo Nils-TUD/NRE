@@ -39,12 +39,12 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 	unsigned _hostmouse;
 	uint64_t _packet;
 	enum {
-		STATUS_RIGHT		= 1 << 0,
-		STATUS_MIDDLE		= 1 << 1,
-		STATUS_LEFT			= 1 << 2,
-		STATUS_SCALING		= 1 << 4,
-		STATUS_ENABLED		= 1 << 5,
-		STATUS_REMOTE		= 1 << 6,
+		STATUS_RIGHT        = 1 << 0,
+		STATUS_MIDDLE       = 1 << 1,
+		STATUS_LEFT         = 1 << 2,
+		STATUS_SCALING      = 1 << 4,
+		STATUS_ENABLED      = 1 << 5,
+		STATUS_REMOTE       = 1 << 6,
 	};
 	unsigned char _status;
 	unsigned char _resolution;
@@ -58,7 +58,7 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 		PARAM_SET_SAMPLERATE,
 	} _param;
 
-	int scale_coord(bool report,int value) {
+	int scale_coord(bool report, int value) {
 		if(_resolution < HOST_RESOLUTION_SHIFT)
 			value >>= HOST_RESOLUTION_SHIFT - _resolution;
 		else
@@ -98,8 +98,8 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 	unsigned gen_packet(bool report) {
 		unsigned value;
 
-		_posx = scale_coord(report,_posx);
-		_posy = scale_coord(report,_posy);
+		_posx = scale_coord(report, _posx);
+		_posy = scale_coord(report, _posy);
 		bool negx = _posx < 0;
 		bool negy = _posy < 0;
 		bool ovx = _posx > 255 || _posx < -256;
@@ -107,7 +107,7 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 
 		// correctly report overflows
 		value = (ovy ? 0x8000 : 0) | (ovx ? 0x4000 : 0) | (negy ? 0x2000 : 0) | (negx ? 0x1000 : 0)
-				| ((_status & 0xf) << 8) | 0x3;
+		        | ((_status & 0xf) << 8) | 0x3;
 
 		// upper limit movements
 		_posx = ovx ? (negx ? -256 : 255) : _posx;
@@ -125,7 +125,7 @@ class PS2Mouse : public StaticReceiver<PS2Mouse> {
 
 	void set_packet(uint64_t packet) {
 		_packet = packet;
-		MessagePS2 msg2(_ps2port,MessagePS2::NOTIFY,0);
+		MessagePS2 msg2(_ps2port, MessagePS2::NOTIFY, 0);
 		_bus_ps2.send(msg2);
 	}
 
@@ -200,7 +200,7 @@ public:
 							break;
 						case 0xe9: // status request
 							packet =
-									union64(_samplerate, _resolution << 24 | _status << 16 | 0xfa00 | 4);
+							    union64(_samplerate, _resolution << 24 | _status << 16 | 0xfa00 | 4);
 							break;
 						case 0xea: // set stream mode
 							_status &= ~STATUS_REMOTE;
@@ -241,7 +241,7 @@ public:
 							break;
 						default:
 							Serial::get().writef("%s(%x, %x) unknown command\n",
-									__PRETTY_FUNCTION__,msg.port,msg.value);
+							                     __PRETTY_FUNCTION__, msg.port, msg.value);
 						case 0xe1: // read secondary ID - used to identify trackpoints
 							packet = 0xfc01;
 							break;
@@ -264,17 +264,18 @@ public:
 		_posy = 0;
 	}
 
-	PS2Mouse(DBus<MessagePS2> &bus_ps2,unsigned ps2port,unsigned hostmouse)
-			: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostmouse(hostmouse), _packet(),
-			  _status(), _resolution(), _samplerate(), _posx(), _posy(), _param() {
+	PS2Mouse(DBus<MessagePS2> &bus_ps2, unsigned ps2port, unsigned hostmouse)
+		: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostmouse(hostmouse), _packet(),
+		  _status(), _resolution(), _samplerate(), _posx(), _posy(), _param() {
 		set_defaults();
 	}
 };
 
-PARAM_HANDLER(mouse,
-		"mouse:ps2port,hostmouse:  attach a PS2 mouse at the given PS2 port that gets input from the given hostmouse.",
-		"Example: 'mouse:1,0x17'") {
-	PS2Mouse *dev = new PS2Mouse(mb.bus_ps2,argv[0],argv[1]);
-	mb.bus_ps2.add(dev,PS2Mouse::receive_static<MessagePS2>);
-	mb.bus_input.add(dev,PS2Mouse::receive_static<MessageInput>);
+PARAM_HANDLER(
+    mouse,
+    "mouse:ps2port,hostmouse:  attach a PS2 mouse at the given PS2 port that gets input from the given hostmouse.",
+    "Example: 'mouse:1,0x17'") {
+	PS2Mouse *dev = new PS2Mouse(mb.bus_ps2, argv[0], argv[1]);
+	mb.bus_ps2.add(dev, PS2Mouse::receive_static<MessagePS2> );
+	mb.bus_input.add(dev, PS2Mouse::receive_static<MessageInput> );
 }

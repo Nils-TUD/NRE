@@ -59,16 +59,17 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	static void create(DataSpaceDesc &desc,capsel_t *sel = 0,capsel_t *unmapsel = 0);
+	static void create(DataSpaceDesc &desc, capsel_t *sel = 0, capsel_t *unmapsel = 0);
 
 	/**
 	 * Creates a new dataspace with given properties
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	explicit DataSpace(size_t size,DataSpaceDesc::Type type,uint flags,uintptr_t phys = 0,
-			uintptr_t virt = 0,uint align = 0)
-		: _desc(size,type,flags,phys,virt,0,align), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
+	explicit DataSpace(size_t size, DataSpaceDesc::Type type, uint flags, uintptr_t phys = 0,
+	                   uintptr_t virt = 0, uint align = 0)
+		: _desc(size, type, flags, phys, virt, 0, align), _sel(ObjCap::INVALID),
+		  _unmapsel(ObjCap::INVALID) {
 		create();
 	}
 	/**
@@ -76,8 +77,8 @@ public:
 	 *
 	 * @throws DataSpaceException if the creation failed
 	 */
-	explicit DataSpace(const DataSpaceDesc &desc) : _desc(desc), _sel(ObjCap::INVALID),
-			_unmapsel(ObjCap::INVALID) {
+	explicit DataSpace(const DataSpaceDesc &desc)
+		: _desc(desc), _sel(ObjCap::INVALID), _unmapsel(ObjCap::INVALID) {
 		create();
 	}
 	/**
@@ -162,8 +163,8 @@ private:
 	capsel_t _unmapsel;
 };
 
-static inline OStream &operator<<(OStream &os,const DataSpace &ds) {
-	os.writef("DataSpace[sel=%#x, umsel=%#x]: ",ds.sel(),ds.unmapsel());
+static inline OStream &operator<<(OStream &os, const DataSpace &ds) {
+	os.writef("DataSpace[sel=%#x, umsel=%#x]: ", ds.sel(), ds.unmapsel());
 	os << ds.desc();
 	return os;
 }

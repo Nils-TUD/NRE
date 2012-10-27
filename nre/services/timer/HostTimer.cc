@@ -28,15 +28,15 @@
 
 using namespace nre;
 
-void HostTimer::ClientData::init(size_t _sid,cpu_t cpuno,HostTimer::PerCpu *per_cpu) {
+void HostTimer::ClientData::init(size_t _sid, cpu_t cpuno, HostTimer::PerCpu *per_cpu) {
 	sm = new nre::Sm(0);
 	nr = per_cpu->abstimeouts.alloc(this);
 	cpu = cpuno;
 	sid = _sid;
 }
 
-HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
-		: _clocks_per_tick(0), _timer(), _rtc(), _clock(Timer::WALLCLOCK_FREQ), _per_cpu(), _xcpu_up(0) {
+HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
+	: _clocks_per_tick(0), _timer(), _rtc(), _clock(Timer::WALLCLOCK_FREQ), _per_cpu(), _xcpu_up(0) {
 	if(!force_pit) {
 		try {
 			_timer = new HostHPET(force_hpet_legacy);
@@ -52,41 +52,44 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	// PIT:  PIT is programmed to run in periodic mode, if HPET didn't work for us.
 
 	_clocks_per_tick = (static_cast<timevalue_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / _timer->freq();
-	LOG(Logging::TIMER,Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
-			_clocks_per_tick / CPT_RES,_clocks_per_tick % CPT_RES,CPT_RES));
+	LOG(Logging::TIMER,
+	    Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
+	                         _clocks_per_tick / CPT_RES, _clocks_per_tick % CPT_RES, CPT_RES));
 
 	// Get wallclock time
 	if(slow_rtc)
 		_rtc.sync();
 	timevalue_t msecs = _rtc.timestamp();
 	DateInfo date;
-	Date::gmtime(msecs / Timer::WALLCLOCK_FREQ,&date);
-	LOG(Logging::TIMER,Serial::get().writef("TIMER: timestamp: %Lu secs\n",msecs / Timer::WALLCLOCK_FREQ));
-	LOG(Logging::TIMER,Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
-			date.mday,date.mon,date.year,date.hour,date.min,date.sec));
+	Date::gmtime(msecs / Timer::WALLCLOCK_FREQ, &date);
+	LOG(Logging::TIMER,
+	    Serial::get().writef("TIMER: timestamp: %Lu secs\n", msecs / Timer::WALLCLOCK_FREQ));
+	LOG(Logging::TIMER,
+	    Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
+	                         date.mday, date.mon, date.year, date.hour, date.min, date.sec));
 
-	_timer->start(Math::muldiv128(msecs,_timer->freq(),Timer::WALLCLOCK_FREQ));
+	_timer->start(Math::muldiv128(msecs, _timer->freq(), Timer::WALLCLOCK_FREQ));
 
 	// Initialize per cpu data structure
-	_per_cpu = new PerCpu*[CPU::count()];
+	_per_cpu = new PerCpu *[CPU::count()];
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-		_per_cpu[it->log_id()] = new PerCpu(this,it->log_id());
+		_per_cpu[it->log_id()] = new PerCpu(this, it->log_id());
 
 	// Create remote slot mapping
 	size_t n = CPU::count();
 	size_t parts = _timer->timer_count();
 	cpu_t cpu_cpu[n];
 	cpu_t part_cpu[n];
-	Topology::divide(CPU::begin(),CPU::end(),n,parts,part_cpu,cpu_cpu);
+	Topology::divide(CPU::begin(), CPU::end(), n, parts, part_cpu, cpu_cpu);
 
 	// Bootstrap IRQ handlers. IRQs are disabled. Each worker enables its IRQ when it comes up.
 	for(size_t i = 0; i < parts; i++) {
 		cpu_t cpu = part_cpu[i];
-		LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u owns Timer%zu.\n",cpu,i));
+		LOG(Logging::TIMER_DETAIL, Serial::get().writef("TIMER: CPU%u owns Timer%zu.\n", cpu, i));
 
 		_per_cpu[cpu]->has_timer = true;
 		_per_cpu[cpu]->timer = _timer->timer(i);
-		_per_cpu[cpu]->timer->init(*_timer,cpu);
+		_per_cpu[cpu]->timer->init(*_timer, cpu);
 
 		// We allocate a couple of unused slots if there is an odd
 		// combination of CPU count and usable timers. Who cares.
@@ -107,8 +110,9 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 			rslot->data.abstimeout = 0;
 			rslot->data.nr = remote.abstimeouts.alloc(&rslot->data);
 
-			LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %zu.\n",
-					cpu,cpu_cpu[cpu],remote.slot_count));
+			LOG(Logging::TIMER_DETAIL,
+			    Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %zu.\n",
+			                         cpu, cpu_cpu[cpu], remote.slot_count));
 			remote.slot_count++;
 		}
 	}
@@ -117,30 +121,30 @@ HostTimer::HostTimer(bool force_pit,bool force_hpet_legacy,bool slow_rtc)
 	uint xcpu_threads_started = 0;
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		cpu_t cpu = it->log_id();
-		_timer->enable(_per_cpu[cpu]->timer,_per_cpu[cpu]->has_timer);
+		_timer->enable(_per_cpu[cpu]->timer, _per_cpu[cpu]->has_timer);
 
 		// Enable XCPU threads for CPUs that either have to serve or
 		// need to query other CPUs.
 		if((_per_cpu[cpu]->slot_count > 0) || !_per_cpu[cpu]->has_timer) {
 			// Create wakeup thread
-			GlobalThread *gt = GlobalThread::create(xcpu_wakeup_thread,cpu,String("timer-wakeup"));
-			gt->set_tls(Thread::TLS_PARAM,this);
+			GlobalThread *gt = GlobalThread::create(xcpu_wakeup_thread, cpu, String("timer-wakeup"));
+			gt->set_tls(Thread::TLS_PARAM, this);
 			gt->start();
 			xcpu_threads_started++;
 		}
 		if(_per_cpu[cpu]->has_timer) {
-			GlobalThread *gt = GlobalThread::create(gsi_thread,cpu,String("timer-gsi"));
-			gt->set_tls(Thread::TLS_PARAM,this);
+			GlobalThread *gt = GlobalThread::create(gsi_thread, cpu, String("timer-gsi"));
+			gt->set_tls(Thread::TLS_PARAM, this);
 			gt->start();
 		}
 	}
 
 	// XXX Do we need those when we have enough timers for all CPUs?
-	LOG(Logging::TIMER_DETAIL,Serial::get().writef(
-			"TIMER: Waiting for %u XCPU threads to come up.\n",xcpu_threads_started));
+	LOG(Logging::TIMER_DETAIL, Serial::get().writef(
+	        "TIMER: Waiting for %u XCPU threads to come up.\n", xcpu_threads_started));
 	while(xcpu_threads_started-- > 0)
 		_xcpu_up.down();
-	LOG(Logging::TIMER_DETAIL,Serial::get().writef("TIMER: Initialized!\n"));
+	LOG(Logging::TIMER_DETAIL, Serial::get().writef("TIMER: Initialized!\n"));
 }
 
 bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
@@ -158,13 +162,13 @@ bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
 			if(to == 0ULL)
 				goto next;
 		}
-		while(!Atomic::swap<timevalue_t,timevalue_t>(&cur.data.abstimeout,to,0));
+		while(!Atomic::swap<timevalue_t, timevalue_t>(&cur.data.abstimeout, to, 0));
 
 		if(to < per_cpu->last_to)
 			reprogram = true;
 
 		per_cpu->abstimeouts.cancel(cur.data.nr);
-		per_cpu->abstimeouts.request(cur.data.nr,to);
+		per_cpu->abstimeouts.request(cur.data.nr, to);
 
 next:
 		;
@@ -172,7 +176,7 @@ next:
 	return reprogram;
 }
 
-bool HostTimer::per_cpu_client_request(PerCpu *per_cpu,ClientData *data) {
+bool HostTimer::per_cpu_client_request(PerCpu *per_cpu, ClientData *data) {
 	unsigned nr = data->nr;
 	per_cpu->abstimeouts.cancel(nr);
 
@@ -180,22 +184,22 @@ bool HostTimer::per_cpu_client_request(PerCpu *per_cpu,ClientData *data) {
 	// XXX Set abstimeout to zero here?
 	// timer in the past?
 	if(t == 0) {
-		LOG(Logging::TIMER_DETAIL,Serial::get().writef("Timeout in past\n"));
+		LOG(Logging::TIMER_DETAIL, Serial::get().writef("Timeout in past\n"));
 		data->sm->up();
 		return false;
 	}
-	per_cpu->abstimeouts.request(nr,t);
+	per_cpu->abstimeouts.request(nr, t);
 	return (t < per_cpu->last_to);
 }
 
 // Returns the next timeout.
-timevalue_t HostTimer::handle_expired_timers(PerCpu *per_cpu,timevalue_t now) {
+timevalue_t HostTimer::handle_expired_timers(PerCpu *per_cpu, timevalue_t now) {
 	ClientData *data;
 	uint nr;
-	while((nr = per_cpu->abstimeouts.trigger(now,&data))) {
+	while((nr = per_cpu->abstimeouts.trigger(now, &data))) {
 		assert(data);
 		per_cpu->abstimeouts.cancel(nr);
-		Atomic::add(&data->count,1U);
+		Atomic::add(&data->count, 1U);
 		data->sm->up();
 	}
 	return per_cpu->abstimeouts.timeout();
@@ -219,11 +223,11 @@ again:
 			reprogram = ht->per_cpu_handle_xcpu(per_cpu);
 			break;
 		case WorkerMessage::CLIENT_REQUEST:
-			reprogram = ht->per_cpu_client_request(per_cpu,m.data);
+			reprogram = ht->per_cpu_client_request(per_cpu, m.data);
 			break;
 		case WorkerMessage::TIMER_IRQ: {
 			timevalue_t now = ht->_timer->update_ticks(false);
-			ht->handle_expired_timers(per_cpu,now);
+			ht->handle_expired_timers(per_cpu, now);
 			reprogram = true;
 			break;
 		}
@@ -239,14 +243,14 @@ again:
 	timevalue_t estimated_now = ht->_timer->last_ticks();
 	// give the timer a chance to change the next timer we're about to program. this is used by
 	// HPET to tick every once in a while to ensure proper overflow detection.
-	next_to = ht->_timer->next_timeout(estimated_now,next_to);
+	next_to = ht->_timer->next_timeout(estimated_now, next_to);
 	per_cpu->last_to = next_to;
 
 	if(per_cpu->has_timer) {
 		per_cpu->timer->program_timeout(next_to);
 		// Check whether we might have missed that interrupt.
 		if(ht->_timer->is_in_past(next_to)) {
-			LOG(Logging::TIMER_DETAIL,Serial::get().writef("Missed interrupt...goto again\n"));
+			LOG(Logging::TIMER_DETAIL, Serial::get().writef("Missed interrupt...goto again\n"));
 			m.type = WorkerMessage::TIMER_IRQ;
 			goto again;
 		}
@@ -288,7 +292,7 @@ NORETURN void HostTimer::gsi_thread(void *) {
 	WorkerMessage m;
 	m.type = WorkerMessage::TIMER_IRQ;
 	m.data = 0;
-	LOG(Logging::TIMER,Serial::get().writef("Listening to GSI %u\n",our->timer->gsi().gsi()));
+	LOG(Logging::TIMER, Serial::get().writef("Listening to GSI %u\n", our->timer->gsi().gsi()));
 	while(1) {
 		our->timer->gsi().down();
 

@@ -23,22 +23,22 @@ namespace nre {
 class Math {
 public:
 	template<typename T>
-	static inline T min(T a,T b) {
+	static inline T min(T a, T b) {
 		return a < b ? a : b;
 	}
 
 	template<typename T>
-	static inline T max(T a,T b) {
+	static inline T max(T a, T b) {
 		return a < b ? b : a;
 	}
 
 	template<typename T>
-	static inline T round_up(T value,T align) {
+	static inline T round_up(T value, T align) {
 		return (value + align - 1) & ~(align - 1);
 	}
 
 	template<typename T>
-	static inline T round_dn(T value,T align) {
+	static inline T round_dn(T value, T align) {
 		return value & ~(align - 1);
 	}
 
@@ -50,13 +50,13 @@ public:
 	}
 
 	template<typename T>
-	static inline T moddiv(T &value,T divisor) {
+	static inline T moddiv(T &value, T divisor) {
 		T res = value % divisor;
 		value /= divisor;
 		return res;
 	}
 	template<typename T>
-	static inline T divmod(T &value,T divisor) {
+	static inline T divmod(T &value, T divisor) {
 		T res = value / divisor;
 		value %= divisor;
 		return res;
@@ -65,12 +65,12 @@ public:
 	 * Computes (<value> * <factor>) / <divisor> and takes care that <value> * <factor> might be
 	 * larger than 64 bit (the end-result has to fit in 64-bit again, of course).
 	 */
-	static uint64_t muldiv128(uint64_t value,uint64_t factor,uint64_t divisor) {
+	static uint64_t muldiv128(uint64_t value, uint64_t factor, uint64_t divisor) {
 		uint32_t low = value & 0xFFFFFFFF;
 		uint32_t high = value >> 32;
 		uint64_t lower = static_cast<uint64_t>(low) * factor;
 		uint64_t upper = static_cast<uint64_t>(high) * factor;
-		uint32_t rem = moddiv<uint64_t>(upper,divisor);
+		uint32_t rem = moddiv<uint64_t>(upper, divisor);
 		lower += static_cast<uint64_t>(rem) << 32;
 		lower /= divisor;
 		return (upper << 32) + lower;
@@ -80,7 +80,7 @@ public:
 	 * @return the number of blocks of size <blocksize> that <value> contains
 	 */
 	template<typename T>
-	static inline T blockcount(T value,T blocksize) {
+	static inline T blockcount(T value, T blocksize) {
 		return (value + blocksize - 1) / blocksize;
 	}
 
@@ -94,20 +94,20 @@ public:
 	/**
 	 * @return true if <address> is in the range [base..base+size)
 	 */
-	static inline bool in_range(uintptr_t  address,uintptr_t base,uintptr_t size) {
+	static inline bool in_range(uintptr_t address, uintptr_t base, uintptr_t size) {
 		return (base <= address) && (address <= base + size - 1);
 	}
 
 	/**
 	 * @return whether the ranges [<b1>..<b1>+<s1>) and [<b2>..<b2>+<s2>) overlap somewhere.
 	 */
-	static inline bool overlapped(uint64_t b1,size_t s1,uint64_t b2,size_t s2) {
+	static inline bool overlapped(uint64_t b1, size_t s1, uint64_t b2, size_t s2) {
 		// note that we use 64-bit address here to support the Hip-memory-entries
 		uint64_t e1 = b1 + s1;
 		uint64_t e2 = b2 + s2;
-		return (b1 >= b2 && b1 < e2) ||			// start in range
-				(e1 > b2 && e1 <= e2) ||		// end in range
-				(b1 < b2 && e1 > e2);			// completely overlapped
+		return (b1 >= b2 && b1 < e2) ||         // start in range
+		       (e1 > b2 && e1 <= e2) ||         // end in range
+		       (b1<b2 && e1> e2);               // completely overlapped
 	}
 
 	/**
@@ -133,7 +133,7 @@ public:
 
 	/**
 	 * @return the prev power of two. That is, if it is already a power of 2 it returns the input. If
-	 * 	not it rounds down to the prev power of two.
+	 *  not it rounds down to the prev power of two.
 	 */
 	template<typename T>
 	static inline T prev_pow2(T value) {
@@ -150,7 +150,7 @@ public:
 
 	/**
 	 * @return the next power of two. That is, if it is already a power of 2 it returns the input. If
-	 * 	not it rounds up to the next power of two.
+	 *  not it rounds up to the next power of two.
 	 */
 	template<typename T>
 	static inline T next_pow2(T value) {
@@ -176,11 +176,11 @@ public:
 	 * @return The calculated order or the minshift parameter is it is
 	 * smaller then the order.
 	 */
-	static inline uint minshift(uintptr_t start,size_t size) {
+	static inline uint minshift(uintptr_t start, size_t size) {
 		uint basealign = static_cast<uint>(bit_scan_forward(
-				start | (1ul << (8 * sizeof(uintptr_t) - 1))));
+		                                       start | (1ul << (8 * sizeof(uintptr_t) - 1))));
 		uint shiftalign = static_cast<uint>(bit_scan_reverse(size | 1));
-		return min(basealign,shiftalign);
+		return min(basealign, shiftalign);
 	}
 
 private:

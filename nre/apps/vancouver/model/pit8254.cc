@@ -35,17 +35,17 @@ class PitCounter : public StaticReceiver<PitCounter> {
 	friend class PitTest;
 
 	enum Modes {
-		BCD						= 0x001,
-		RW_LOW					= 0x010,
-		RW_HIGH					= 0x020,
-		NULL_COUNT				= 0x040,
+		BCD                     = 0x001,
+		RW_LOW                  = 0x010,
+		RW_HIGH                 = 0x020,
+		NULL_COUNT              = 0x040,
 	};
 	enum Features {
-		FPERIODIC				= 1 << 0,
-		FSOFTWARE_TRIGGER		= 1 << 1,
-		FGATE_DISABLE_COUNTING	= 1 << 2,
-		FSQUARE_WAVE			= 1 << 3,
-		FCOUNTDOWN				= 1 << 4,
+		FPERIODIC               = 1 << 0,
+		FSOFTWARE_TRIGGER       = 1 << 1,
+		FGATE_DISABLE_COUNTING  = 1 << 2,
+		FSQUARE_WAVE            = 1 << 3,
+		FCOUNTDOWN              = 1 << 4,
 	};
 
 	unsigned short _modus;
@@ -72,12 +72,12 @@ class PitCounter : public StaticReceiver<PitCounter> {
 
 	bool feature(Features f) {
 		int features[6] = {
-				FCOUNTDOWN | FSOFTWARE_TRIGGER | FGATE_DISABLE_COUNTING,
-				FCOUNTDOWN,
-				FPERIODIC | FGATE_DISABLE_COUNTING,
-				FPERIODIC | FGATE_DISABLE_COUNTING | FSQUARE_WAVE,
-				FSOFTWARE_TRIGGER | FGATE_DISABLE_COUNTING,
-				0
+			FCOUNTDOWN | FSOFTWARE_TRIGGER | FGATE_DISABLE_COUNTING,
+			FCOUNTDOWN,
+			FPERIODIC | FGATE_DISABLE_COUNTING,
+			FPERIODIC | FGATE_DISABLE_COUNTING | FSQUARE_WAVE,
+			FSOFTWARE_TRIGGER | FGATE_DISABLE_COUNTING,
+			0
 		};
 		return (features[(_modus >> 1) & 0x7] & f) == f;
 	}
@@ -85,14 +85,14 @@ class PitCounter : public StaticReceiver<PitCounter> {
 	unsigned short s2bcd(unsigned short value) {
 		if(_modus & BCD)
 			value = (((value / 1000) % 10) << 12) + (((value / 100) % 10) << 8)
-					+ (((value / 10) % 10) << 4) + value % 10;
+			        + (((value / 10) % 10) << 4) + value % 10;
 		return value;
 	}
 
 	unsigned short bcd2s(unsigned short value) {
 		if(_modus & BCD)
 			value = ((value & 0xf000) >> 12) * 1000 + ((value & 0xf00) >> 8) * 100
-					+ ((value & 0xf0) >> 4) * 10 + (value & 0xf);
+			        + ((value & 0xf0) >> 4) * 10 + (value & 0xf);
 		return value;
 	}
 
@@ -118,7 +118,7 @@ class PitCounter : public StaticReceiver<PitCounter> {
 		timevalue to = _start;
 		if(feature(FPERIODIC))
 			to = t + (_initial + _start - t) % _initial;
-		MessageTimer msg(_timer,_clock.source_time((to < t) ? 0 : (to - t),FREQ));
+		MessageTimer msg(_timer, _clock.source_time((to < t) ? 0 : (to - t), FREQ));
 		_bus_timer->send(msg);
 	}
 
@@ -310,21 +310,21 @@ public:
 	bool receive(MessageTimeout &msg) {
 		if(msg.nr == _timer) {
 			// a timeout has triggerd
-			MessageIrqLines msg1(MessageIrq::ASSERT_NOTIFY,_irq);
+			MessageIrqLines msg1(MessageIrq::ASSERT_NOTIFY, _irq);
 			_bus_irq->send(msg1);
 			return true;
 		}
 		return false;
 	}
 
-	PitCounter(DBus<MessageTimer> *bus_timer,DBus<MessageIrqLines> *bus_irq,unsigned irq,Clock &clock)
-			: _modus(), _latch(), _new_counter(), _initial(), _latched_status(), _start(0),
-			  _bus_timer(bus_timer), _bus_irq(bus_irq), _irq(irq), _clock(clock), _timer(0) {
+	PitCounter(DBus<MessageTimer> *bus_timer, DBus<MessageIrqLines> *bus_irq, unsigned irq, Clock &clock)
+		: _modus(), _latch(), _new_counter(), _initial(), _latched_status(), _start(0),
+		  _bus_timer(bus_timer), _bus_irq(bus_irq), _irq(irq), _clock(clock), _timer(0) {
 		assert(_clock.source_freq() != 0);
 		if(_irq != ~0U) {
 			MessageTimer msg0;
 			if(!_bus_timer->send(msg0))
-				Util::panic("%s can't get a timer",__PRETTY_FUNCTION__);
+				Util::panic("%s can't get a timer", __PRETTY_FUNCTION__);
 			_timer = msg0.nr;
 		}
 	}
@@ -337,7 +337,7 @@ public:
  *
  * State: stable
  */
-class PitDevice: public StaticReceiver<PitDevice> {
+class PitDevice : public StaticReceiver<PitDevice> {
 	friend class PitTest;
 	unsigned short _base;
 	unsigned _addr;
@@ -347,7 +347,7 @@ class PitDevice: public StaticReceiver<PitDevice> {
 public:
 
 	bool receive(MessagePit &msg) {
-		if(!in_range(msg.pit,_addr,COUNTER))
+		if(!in_range(msg.pit, _addr, COUNTER))
 			return false;
 		switch(msg.type) {
 			case MessagePit::GET_OUT:
@@ -364,14 +364,14 @@ public:
 	}
 
 	bool receive(MessageIOIn &msg) {
-		if(!in_range(msg.port,_base,COUNTER) || msg.type != MessageIOIn::TYPE_INB)
+		if(!in_range(msg.port, _base, COUNTER) || msg.type != MessageIOIn::TYPE_INB)
 			return false;
 		msg.value = _c[msg.port - _base].read();
 		return true;
 	}
 
 	bool receive(MessageIOOut &msg) {
-		if(!in_range(msg.port,_base,COUNTER + 1) || msg.type != MessageIOOut::TYPE_OUTB)
+		if(!in_range(msg.port, _base, COUNTER + 1) || msg.type != MessageIOOut::TYPE_OUTB)
 			return false;
 		if(msg.port == _base + COUNTER) {
 			if((msg.value & 0xc0) == 0xc0) {
@@ -389,26 +389,26 @@ public:
 		return true;
 	}
 
-	PitDevice(Motherboard &mb,unsigned short base,unsigned irq,unsigned pit)
-			: _base(base), _addr(pit * COUNTER), _c() {
+	PitDevice(Motherboard &mb, unsigned short base, unsigned irq, unsigned pit)
+		: _base(base), _addr(pit * COUNTER), _c() {
 		for(size_t i = 0; i < COUNTER; i++) {
-			_c[i] = PitCounter(&mb.bus_timer,&mb.bus_irqlines,i ? ~0U : irq,mb.clock());
+			_c[i] = PitCounter(&mb.bus_timer, &mb.bus_irqlines, i ? ~0U : irq, mb.clock());
 			if(!i)
-				mb.bus_irqnotify.add(&_c[i],PitCounter::receive_static<MessageIrqNotify>);
+				mb.bus_irqnotify.add(&_c[i], PitCounter::receive_static<MessageIrqNotify> );
 			if(!i)
-				mb.bus_timeout.add(&_c[i],PitCounter::receive_static<MessageTimeout>);
+				mb.bus_timeout.add(&_c[i], PitCounter::receive_static<MessageTimeout> );
 			_c[i].set_gate(1);
 		}
 	}
 };
 
 PARAM_HANDLER(pit,
-		"pit:iobase,irq - attach a PIT8254 to the system.",
-		"Example: 'pit:0x40,0'") {
+              "pit:iobase,irq - attach a PIT8254 to the system.",
+              "Example: 'pit:0x40,0'") {
 	static unsigned pit_count;
-	PitDevice *dev = new PitDevice(mb,argv[0],argv[1],pit_count++);
+	PitDevice *dev = new PitDevice(mb, argv[0], argv[1], pit_count++);
 
-	mb.bus_ioin.add(dev,PitDevice::receive_static<MessageIOIn>);
-	mb.bus_ioout.add(dev,PitDevice::receive_static<MessageIOOut>);
-	mb.bus_pit.add(dev,PitDevice::receive_static<MessagePit>);
+	mb.bus_ioin.add(dev, PitDevice::receive_static<MessageIOIn> );
+	mb.bus_ioout.add(dev, PitDevice::receive_static<MessageIOOut> );
+	mb.bus_pit.add(dev, PitDevice::receive_static<MessagePit> );
 }

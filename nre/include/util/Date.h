@@ -45,31 +45,31 @@ public:
 	static timevalue_t mktime(const DateInfo *tm) {
 		bool before_march = tm->mon < 3;
 		timevalue_t days = ((tm->mon + 10) * 367) / 12 + 2 * before_march - 719866
-				+ tm->mday - before_march * is_leap(tm->year) + tm->year * 365;
+		                   + tm->mday - before_march * is_leap(tm->year) + tm->year * 365;
 		days += tm->year / 4 - tm->year / 100 + tm->year / 400;
 		return ((days * 24 + tm->hour) * 60 + tm->min) * 60 + tm->sec;
 	}
 
-	static void gmtime(timevalue_t seconds,DateInfo *tm) {
-		static uint leap[] = {0,31,60,91,121,152,182,213,244,274,305,335,366};
-		static uint noleap[] = {0,31,59,90,120,151,181,212,243,273,304,334,365};
+	static void gmtime(timevalue_t seconds, DateInfo *tm) {
+		static uint leap[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
+		static uint noleap[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 		// move from 1970 to 1 as epoch, to be able to use division with positive values
 		seconds = seconds + (719528ull - 366ull) * 86400ull;
-		tm->sec = Math::moddiv<timevalue_t>(seconds,60);
-		tm->min = Math::moddiv<timevalue_t>(seconds,60);
-		tm->hour = Math::moddiv<timevalue_t>(seconds,24);
+		tm->sec = Math::moddiv<timevalue_t>(seconds, 60);
+		tm->min = Math::moddiv<timevalue_t>(seconds, 60);
+		tm->hour = Math::moddiv<timevalue_t>(seconds, 24);
 		timevalue_t days = seconds++;
-		tm->wday = Math::moddiv<timevalue_t>(seconds,7);
-		uint years400 = Math::divmod<timevalue_t>(days,4 * 36524 + 1);
-		uint years100 = Math::divmod<timevalue_t>(days,36524);
+		tm->wday = Math::moddiv<timevalue_t>(seconds, 7);
+		uint years400 = Math::divmod<timevalue_t>(days, 4 * 36524 + 1);
+		uint years100 = Math::divmod<timevalue_t>(days, 36524);
 		// overflow on a 400year boundary?
 		if(years100 == 4) {
 			years100--;
 			days += 36524;
 		}
 
-		uint years4 = Math::divmod<timevalue_t>(days,1461);
-		uint years = Math::divmod<timevalue_t>(days,365);
+		uint years4 = Math::divmod<timevalue_t>(days, 1461);
+		uint years = Math::divmod<timevalue_t>(days, 365);
 		// overflow on the 4year boundary?
 		if(years == 4) {
 			years -= 1;

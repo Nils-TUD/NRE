@@ -42,9 +42,9 @@ public:
 	 * @param cap a cap of the client that will be valid as long as the client exists
 	 * @param pts the portal selectors
 	 * @param func the portal function
-	 * 	Otherwise, portals are created
+	 *  Otherwise, portals are created
 	 */
-	explicit ServiceSession(Service *s,size_t id,capsel_t cap,capsel_t pts,Pt::portal_func func);
+	explicit ServiceSession(Service *s, size_t id, capsel_t cap, capsel_t pts, Pt::portal_func func);
 	/**
 	 * Destroyes this session
 	 */

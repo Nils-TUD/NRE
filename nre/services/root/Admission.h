@@ -34,12 +34,12 @@ class Admission {
 	 */
 	class SchedEntity : public nre::SListItem {
 	public:
-		explicit SchedEntity(const nre::String &name,cpu_t cpu,capsel_t cap)
+		explicit SchedEntity(const nre::String &name, cpu_t cpu, capsel_t cap)
 			: nre::SListItem(), _name(name), _cpu(cpu), _cap(cap),
 			  _last(nre::Syscalls::sc_time(_cap)), _lastdiff() {
 		}
 		virtual ~SchedEntity() {
-			nre::CapRange(_cap,1,nre::Crd::OBJ_ALL).revoke(true);
+			nre::CapRange(_cap, 1, nre::Crd::OBJ_ALL).revoke(true);
 			nre::CapSelSpace::get().free(_cap);
 		}
 
@@ -85,10 +85,10 @@ public:
 	 *
 	 * @param cpu the logical cpu id
 	 * @param update if true, the time will be requested from NOVA again and thus, a new
-	 * 	second is started
+	 *  second is started
 	 * @return the total time (in microseconds)
 	 */
-	static timevalue_t total_time(cpu_t cpu,bool update) {
+	static timevalue_t total_time(cpu_t cpu, bool update) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		timevalue_t total = 0;
 		for(nre::SList<SchedEntity>::iterator s = _list.begin(); s != _list.end(); ++s) {
@@ -107,8 +107,8 @@ public:
 	 * @param time will be set to the time it has run in the last second (in microseconds)
 	 * @param totaltime will be set to the total time it has run so far (in microseconds)
 	 */
-	static bool get_sched_entity(size_t idx,nre::String &name,cpu_t &cpu,timevalue_t &time,
-			timevalue_t &totaltime) {
+	static bool get_sched_entity(size_t idx, nre::String &name, cpu_t &cpu, timevalue_t &time,
+	                             timevalue_t &totaltime) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
 		if(idx < _list.length()) {
 			nre::SList<SchedEntity>::iterator s;
@@ -122,7 +122,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	/**
 	 * End-of-recursion service portal
 	 */
@@ -143,7 +143,7 @@ private:
 				return &*it;
 			}
 		}
-		throw nre::Exception(nre::E_NOT_FOUND,32,"Unable to find Sc %u",sc);
+		throw nre::Exception(nre::E_NOT_FOUND, 32, "Unable to find Sc %u", sc);
 	}
 
 	static nre::UserSm _sm;

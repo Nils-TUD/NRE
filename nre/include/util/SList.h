@@ -63,25 +63,25 @@ public:
 	explicit SListIterator(T *n = 0) : _n(n) {
 	}
 
-	T& operator *() const {
+	T & operator*() const {
 		return *_n;
 	}
-	T *operator ->() const {
-		return &operator *();
+	T *operator->() const {
+		return &operator*();
 	}
-	SListIterator<T>& operator ++() {
+	SListIterator<T>& operator++() {
 		_n = static_cast<T*>(_n->next());
 		return *this;
 	}
-	SListIterator<T> operator ++(int) {
+	SListIterator<T> operator++(int) {
 		SListIterator<T> tmp(*this);
 		operator++();
 		return tmp;
 	}
-	bool operator ==(const SListIterator<T>& rhs) const {
+	bool operator==(const SListIterator<T>& rhs) const {
 		return _n == rhs._n;
 	}
-	bool operator !=(const SListIterator<T>& rhs) const {
+	bool operator!=(const SListIterator<T>& rhs) const {
 		return _n != rhs._n;
 	}
 
@@ -154,7 +154,7 @@ public:
 	 * @param e the list item
 	 * @return the position where it has been inserted
 	 */
-	iterator insert(T *p,T *e) {
+	iterator insert(T *p, T *e) {
 		e->next(p ? p->next() : _head);
 		if(p)
 			p->next(e);

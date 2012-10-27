@@ -18,19 +18,19 @@
 #include <iostream>
 #include <fstream>
 
-#define BYTES_PER_LINE	8
+#define BYTES_PER_LINE  8
 
 using namespace std;
 
-int main(int argc,char *argv[]) {
-	int c,pos;
+int main(int argc, char *argv[]) {
+	int c, pos;
 	ifstream in;
 	if(argc != 2) {
 		cerr << "Usage: " << argv[0] << " <infile>" << endl;
 		return EXIT_FAILURE;
 	}
 
-	in.open(argv[1],ios::in | ios::binary);
+	in.open(argv[1], ios::in | ios::binary);
 	if(!in) {
 		cerr << "Unable to open " << argv[1] << " for reading" << endl;
 		return EXIT_FAILURE;
@@ -39,7 +39,7 @@ int main(int argc,char *argv[]) {
 	pos = 0;
 	while(!in.eof()) {
 		c = in.get();
-		printf("0x%02x",c & 0xFF);
+		printf("0x%02x", c & 0xFF);
 		if(!in.eof())
 			printf(", ");
 		if(pos % BYTES_PER_LINE == BYTES_PER_LINE - 1)

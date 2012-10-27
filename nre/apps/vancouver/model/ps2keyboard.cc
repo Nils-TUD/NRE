@@ -103,8 +103,8 @@ class PS2Keyboard : public StaticReceiver<PS2Keyboard> {
 		_pread = 0;
 		_pwrite = 0;
 		_response = 0;
-		memset(_no_breakcode,0,sizeof(_no_breakcode));
-		memcpy(_no_breakcode,"\x80\x81\x80\x80\x80\x80\x80\x82\x80\x80\xc0\xc1\xa4\xfa\xff\x66\x10",17);
+		memset(_no_breakcode, 0, sizeof(_no_breakcode));
+		memcpy(_no_breakcode, "\x80\x81\x80\x80\x80\x80\x80\x82\x80\x80\xc0\xc1\xa4\xfa\xff\x66\x10", 17);
 		_indicators = 0;
 		_last_command = 0;
 		_last_reply = 0;
@@ -143,8 +143,9 @@ class PS2Keyboard : public StaticReceiver<PS2Keyboard> {
 			if((value & Keyboard::RSHIFT) && (key == 0x4a || (~value & Keyboard::NUM)))
 				modifiers = value & Keyboard::RELEASE ? 0x59 | (modifiers << 8) : 0x5900 | modifiers;
 			if((key == 0x7c
-			        && !(value & (Keyboard::RSHIFT | Keyboard::LSHIFT | Keyboard::RCTRL | Keyboard::LCTRL)))
-			        || (!(value & (Keyboard::RSHIFT | Keyboard::LSHIFT)) && (value & Keyboard::NUM) && key != 0x4a)) {
+			    && !(value & (Keyboard::RSHIFT | Keyboard::LSHIFT | Keyboard::RCTRL | Keyboard::LCTRL)))
+			   || (!(value & (Keyboard::RSHIFT | Keyboard::LSHIFT)) && (value & Keyboard::NUM) && key !=
+			       0x4a)) {
 				value ^= Keyboard::RELEASE;
 				modifiers = 0x12;
 			}
@@ -177,7 +178,7 @@ public:
 					enqueue_string("\x14\x77\xe1\xf0\x14");
 			}
 			if(key == 0x7e && (msg.data & Keyboard::EXTEND0) && (msg.data & Keyboard::RELEASE))
-				enqueue_string("\xe0\0x7e"); // sysctrl key
+				enqueue_string("\xe0\0x7e");  // sysctrl key
 
 			if(~msg.data & Keyboard::RELEASE)
 				handle_shift_modifiers(msg.data);
@@ -190,8 +191,7 @@ public:
 				handle_shift_modifiers(msg.data);
 
 #if 0
-			if ((_pwrite - _pread) % BUFFERSIZE == BUFFERSIZE - 1)
-			{
+			if((_pwrite - _pread) % BUFFERSIZE == BUFFERSIZE - 1) {
 				_pwrite = oldwrite;
 				enqueue(0x00);
 			}
@@ -213,7 +213,7 @@ public:
 		}
 
 		if(oldwrite == _pread) {
-			MessagePS2 msg2(_ps2port,MessagePS2::NOTIFY,0);
+			MessagePS2 msg2(_ps2port, MessagePS2::NOTIFY, 0);
 			_bus_ps2.send(msg2);
 		}
 		return true;
@@ -280,10 +280,10 @@ public:
 					break;
 				case 0xf8: // all keys make-break
 				case 0xfa: // all keys make-break+typematic
-					memset(_no_breakcode,0,sizeof(_no_breakcode));
+					memset(_no_breakcode, 0, sizeof(_no_breakcode));
 					break;
 				case 0xf9: // all keys make
-					memset(_no_breakcode,0xff,sizeof(_no_breakcode));
+					memset(_no_breakcode, 0xff, sizeof(_no_breakcode));
 				case 0xf7: // all keys typematic
 					break;
 				case 0xfe:
@@ -340,7 +340,7 @@ public:
 			if(new_response)
 				_response = new_response;
 			if(_response || (_mode & MODE_RESEND)) {
-				MessagePS2 msg2(_ps2port,MessagePS2::NOTIFY,0);
+				MessagePS2 msg2(_ps2port, MessagePS2::NOTIFY, 0);
 				_bus_ps2.send(msg2);
 			}
 		}
@@ -356,18 +356,19 @@ public:
 		return true;
 	}
 
-	PS2Keyboard(DBus<MessagePS2> &bus_ps2,unsigned ps2port,unsigned hostkeyboard)
+	PS2Keyboard(DBus<MessagePS2> &bus_ps2, unsigned ps2port, unsigned hostkeyboard)
 		: _bus_ps2(bus_ps2), _ps2port(ps2port), _hostkeyboard(hostkeyboard), _scset(),
 		  _buffer(), _pread(), _pwrite(), _response(), _no_breakcode(), _indicators(), _last_command(),
 		  _last_reply(), _mode() {
 	}
 };
 
-PARAM_HANDLER(keyb,
-		"keyb:ps2port,hostkeyboard - attach a PS2 keyboard at the given PS2 port that gets input from the given hostkeyboard.",
-		"Example: 'keyb:0,0x17'") {
-	PS2Keyboard *dev = new PS2Keyboard(mb.bus_ps2,argv[0],argv[1]);
-	mb.bus_ps2.add(dev,PS2Keyboard::receive_static<MessagePS2>);
-	mb.bus_input.add(dev,PS2Keyboard::receive_static<MessageInput>);
-	mb.bus_legacy.add(dev,PS2Keyboard::receive_static<MessageLegacy>);
+PARAM_HANDLER(
+    keyb,
+    "keyb:ps2port,hostkeyboard - attach a PS2 keyboard at the given PS2 port that gets input from the given hostkeyboard.",
+    "Example: 'keyb:0,0x17'") {
+	PS2Keyboard *dev = new PS2Keyboard(mb.bus_ps2, argv[0], argv[1]);
+	mb.bus_ps2.add(dev, PS2Keyboard::receive_static<MessagePS2> );
+	mb.bus_input.add(dev, PS2Keyboard::receive_static<MessageInput> );
+	mb.bus_legacy.add(dev, PS2Keyboard::receive_static<MessageLegacy> );
 }

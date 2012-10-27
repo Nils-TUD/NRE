@@ -24,7 +24,7 @@ struct DmaDescriptor {
 	uintptr_t byteoffset;
 	size_t bytecount;
 
-	static size_t sum_length(size_t dmacount,DmaDescriptor *dma) {
+	static size_t sum_length(size_t dmacount, DmaDescriptor *dma) {
 		size_t res = 0;
 		for(size_t i = 0; i < dmacount; i++)
 			res += dma[i].bytecount;
@@ -34,8 +34,8 @@ struct DmaDescriptor {
 	/**
 	 * Copy data from an internal buffer to an DMA buffer.
 	 */
-	static bool copy_inout(char *buffer,size_t len,size_t offset,size_t dmacount,
-			DmaDescriptor *dma,bool copyout,size_t physoffset,size_t physsize) {
+	static bool copy_inout(char *buffer, size_t len, size_t offset, size_t dmacount,
+	                       DmaDescriptor *dma, bool copyout, size_t physoffset, size_t physsize) {
 		size_t i;
 		for(i = 0; i < dmacount && offset >= dma[i].bytecount; i++)
 			offset -= dma[i].bytecount;
@@ -45,13 +45,14 @@ struct DmaDescriptor {
 			if(sublen > len)
 				sublen = len;
 
-			if((dma[i].byteoffset + offset) > physsize || (dma[i].byteoffset + offset + sublen) > physsize)
+			if((dma[i].byteoffset + offset) > physsize || (dma[i].byteoffset + offset + sublen) >
+			   physsize)
 				break;
 
 			if(copyout)
-				memcpy(reinterpret_cast<char*>(dma[i].byteoffset + physoffset) + offset,buffer,sublen);
+				memcpy(reinterpret_cast<char*>(dma[i].byteoffset + physoffset) + offset, buffer, sublen);
 			else
-				memcpy(buffer,reinterpret_cast<char*>(dma[i].byteoffset + physoffset) + offset,sublen);
+				memcpy(buffer, reinterpret_cast<char*>(dma[i].byteoffset + physoffset) + offset, sublen);
 
 			buffer += sublen;
 			len -= sublen;

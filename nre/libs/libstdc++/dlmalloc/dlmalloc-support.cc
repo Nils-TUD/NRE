@@ -28,18 +28,18 @@
 using namespace nre;
 
 typedef void *(*malloc_func)(size_t);
-typedef void *(*realloc_func)(void*,size_t);
+typedef void *(*realloc_func)(void*, size_t);
 typedef void (*free_func)(void*);
 
-EXTERN_C void* dlmemalign(size_t,size_t);
+EXTERN_C void* dlmemalign(size_t, size_t);
 EXTERN_C void* dlmalloc(size_t);
-EXTERN_C void* dlrealloc(void*,size_t);
+EXTERN_C void* dlrealloc(void*, size_t);
 EXTERN_C void dlfree(void*);
 
 EXTERN_C void dlmalloc_init();
 EXTERN_C void dlmalloc_init_locks(void);
 EXTERN_C void* malloc(size_t);
-EXTERN_C void* realloc(void*,size_t);
+EXTERN_C void* realloc(void*, size_t);
 EXTERN_C void free(void*);
 
 static void* startup_malloc(size_t size);
@@ -54,37 +54,37 @@ static size_t pos = 0;
 
 // Semaphore glue
 
-void semaphore_init(DlMallocSm *lk,unsigned initial) {
+void semaphore_init(DlMallocSm *lk, unsigned initial) {
 	lk->sm = CapSelSpace::get().allocate();
-	Syscalls::create_sm(lk->sm,0,Pd::current()->sel());
+	Syscalls::create_sm(lk->sm, 0, Pd::current()->sel());
 	lk->value = initial;
 }
 
 void semaphore_destroy(DlMallocSm *lk) {
-	Syscalls::revoke(Crd(lk->sm,0,Crd::OBJ_ALL),true);
+	Syscalls::revoke(Crd(lk->sm, 0, Crd::OBJ_ALL), true);
 	CapSelSpace::get().free(lk->sm);
 }
 
 void semaphore_down(DlMallocSm *lk) {
-	if(Atomic::add(&lk->value,-1) <= 0)
-		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_DOWN);
+	if(Atomic::add(&lk->value, -1) <= 0)
+		Syscalls::sm_ctrl(lk->sm, Syscalls::SM_DOWN);
 }
 
 void semaphore_up(DlMallocSm *lk) {
-	if(Atomic::add(&lk->value,+1) < 0)
-		Syscalls::sm_ctrl(lk->sm,Syscalls::SM_UP);
+	if(Atomic::add(&lk->value, +1) < 0)
+		Syscalls::sm_ctrl(lk->sm, Syscalls::SM_UP);
 }
 
 // Backend allocator
 
-void *mmap(void *,size_t size,int prot,int,int,off_t) {
-	DataSpaceDesc desc(size,DataSpaceDesc::ANONYMOUS,prot);
+void *mmap(void *, size_t size, int prot, int, int, off_t) {
+	DataSpaceDesc desc(size, DataSpaceDesc::ANONYMOUS, prot);
 	DataSpace::create(desc);
-	memset(reinterpret_cast<void*>(desc.virt()),0,desc.size());
+	memset(reinterpret_cast<void*>(desc.virt()), 0, desc.size());
 	return reinterpret_cast<void*>(desc.virt());
 }
 
-int munmap(void *,size_t) {
+int munmap(void *, size_t) {
 	// TODO implement me
 	return 0;
 }
@@ -101,8 +101,8 @@ void dlmalloc_init() {
 void* malloc(size_t size) {
 	return malloc_ptr(size);
 }
-void* realloc(void *p,size_t size) {
-	return realloc_ptr(p,size);
+void* realloc(void *p, size_t size) {
+	return realloc_ptr(p, size);
 }
 void free(void *p) {
 	char *addr = reinterpret_cast<char*>(p);

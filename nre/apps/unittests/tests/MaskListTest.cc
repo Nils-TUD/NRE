@@ -24,42 +24,42 @@ using namespace nre::test;
 static void test_maskfield();
 
 const TestCase maskfield = {
-	"MaskField",test_maskfield
+	"MaskField", test_maskfield
 };
 
 static void test_maskfield() {
 	{
 		MaskField<2> mf(8);
 		mf.set_all();
-		WVPASSEQ(mf.get(0),0x3UL);
-		WVPASSEQ(mf.get(1),0x3UL);
-		WVPASSEQ(mf.get(2),0x3UL);
-		WVPASSEQ(mf.get(3),0x3UL);
+		WVPASSEQ(mf.get(0), 0x3UL);
+		WVPASSEQ(mf.get(1), 0x3UL);
+		WVPASSEQ(mf.get(2), 0x3UL);
+		WVPASSEQ(mf.get(3), 0x3UL);
 
 		mf.clear_all();
-		WVPASSEQ(mf.get(0),0UL);
-		WVPASSEQ(mf.get(1),0UL);
-		WVPASSEQ(mf.get(2),0UL);
-		WVPASSEQ(mf.get(3),0UL);
+		WVPASSEQ(mf.get(0), 0UL);
+		WVPASSEQ(mf.get(1), 0UL);
+		WVPASSEQ(mf.get(2), 0UL);
+		WVPASSEQ(mf.get(3), 0UL);
 	}
 
 	{
 		MaskField<4> mf(64);
-		mf.set(0,0xF);
-		mf.set(1,0x3);
-		mf.set(2,0x1);
-		mf.set(3,0x5);
-		mf.set(4,0x6);
-		mf.set(10,0x8);
-		mf.set(11,0x0);
-		mf.set(12,0xF);
-		WVPASSEQ(mf.get(0),0xFUL);
-		WVPASSEQ(mf.get(1),0x3UL);
-		WVPASSEQ(mf.get(2),0x1UL);
-		WVPASSEQ(mf.get(3),0x5UL);
-		WVPASSEQ(mf.get(4),0x6UL);
-		WVPASSEQ(mf.get(10),0x8UL);
-		WVPASSEQ(mf.get(11),0x0UL);
-		WVPASSEQ(mf.get(12),0xFUL);
+		mf.set(0, 0xF);
+		mf.set(1, 0x3);
+		mf.set(2, 0x1);
+		mf.set(3, 0x5);
+		mf.set(4, 0x6);
+		mf.set(10, 0x8);
+		mf.set(11, 0x0);
+		mf.set(12, 0xF);
+		WVPASSEQ(mf.get(0), 0xFUL);
+		WVPASSEQ(mf.get(1), 0x3UL);
+		WVPASSEQ(mf.get(2), 0x1UL);
+		WVPASSEQ(mf.get(3), 0x5UL);
+		WVPASSEQ(mf.get(4), 0x6UL);
+		WVPASSEQ(mf.get(10), 0x8UL);
+		WVPASSEQ(mf.get(11), 0x0UL);
+		WVPASSEQ(mf.get(12), 0xFUL);
 	}
 }

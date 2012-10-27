@@ -14,29 +14,29 @@
 
 #pragma once
 
-void reboot(void) __attribute__((noreturn));
+void reboot(void) __attribute__ ((noreturn));
 
 static inline
 unsigned char
 inb(const unsigned short port)
 {
-  unsigned char res;
-  asm volatile("inb %1, %0" : "=a"(res): "Nd"(port));
-  return res;
+	unsigned char res;
+	asm volatile ("inb %1, %0" : "=a" (res) : "Nd" (port));
+	return res;
 }
 
 static inline
 void
 outb(const unsigned short port, unsigned char value)
 {
-  asm volatile("outb %0,%1" :: "a"(value),"Nd"(port));
+	asm volatile ("outb %0,%1" :: "a" (value), "Nd" (port));
 }
 
 static inline
 unsigned
 bsr(unsigned int value)
 {
-  unsigned res;
-  asm volatile("bsr %1,%0" : "=r"(res): "r"(value));
-  return res;
+	unsigned res;
+	asm volatile ("bsr %1,%0" : "=r" (res) : "r" (value));
+	return res;
 }

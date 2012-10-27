@@ -16,30 +16,32 @@
 
 #pragma once
 
-#define REGPARMS(X)				__attribute__((regparm(X)))
-#define ALIGNED(X)				__attribute__((aligned(X)))
-#define PACKED					__attribute__((packed))
-#define NORETURN				__attribute__((__noreturn__))
-#define NOINLINE				__attribute__((noinline))
-#define INIT_PRIORITY(X)		__attribute__((init_priority((X))))
-#define WEAK					__attribute__((weak))
-#define EXPECT_FALSE(X)			__builtin_expect(!!(X),0)
-#define EXPECT_TRUE(X)			__builtin_expect(!!(X),1)
-#define UNUSED					__attribute__((unused))
-#define UNREACHED				__builtin_unreachable()
+#define REGPARMS(X)             __attribute__ ((regparm(X)))
+#define ALIGNED(X)              __attribute__ ((aligned(X)))
+#define PACKED                  __attribute__ ((packed))
+#define NORETURN                __attribute__ ((__noreturn__))
+#define NOINLINE                __attribute__ ((noinline))
+#define INIT_PRIORITY(X)        __attribute__ ((init_priority((X))))
+#define WEAK                    __attribute__ ((weak))
+#define EXPECT_FALSE(X)         __builtin_expect(!!(X), 0)
+#define EXPECT_TRUE(X)          __builtin_expect(!!(X), 1)
+#define UNUSED                  __attribute__ ((unused))
+#define UNREACHED               __builtin_unreachable()
 
 #ifdef __clang__
-#	define _STATIC_ASSERT(X,M)	typedef char static_assertion_##M[(!!(X)) * 2 - 1]
-#	define STATIC_ASSERT(X)		_STATIC_ASSERT(X,__LINE__)
+#    define _STATIC_ASSERT(X, M)  typedef char static_assertion_ ## M[(!!(X)) * 2 - 1]
+#    define STATIC_ASSERT(X)     _STATIC_ASSERT (X, __LINE__)
 #else
-#	define STATIC_ASSERT(X)		({ \
-		extern int __attribute__((error("static assert failed: '" #X "'"))) check(); \
-		((X) ? 0 : check()); \
+#    define STATIC_ASSERT(X)                                                  \
+	({                                                                        \
+		extern int __attribute__((error("static assert failed: '" # X "'")))  \
+		check();                                                              \
+		((X) ? 0 : check());                                                  \
 	})
 #endif
 
 #ifdef __cplusplus
-#	define EXTERN_C				extern "C"
+#    define EXTERN_C             extern "C"
 #else
-#	define EXTERN_C
+#    define EXTERN_C
 #endif

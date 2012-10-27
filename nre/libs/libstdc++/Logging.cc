@@ -19,6 +19,6 @@
 
 namespace nre {
 
-UserSm Logging::sm INIT_PRIO_LOGGING (1);
+UserSm Logging::sm INIT_PRIO_LOGGING(1);
 
 }

@@ -32,10 +32,10 @@ namespace nre {
 class Pt;
 class UtcbFrameRef;
 class UtcbExcFrameRef;
-OStream &operator<<(OStream &os,const Utcb &utcb);
-OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
-OStream &operator<<(OStream &os,const UtcbExc::Descriptor &desc);
-OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm);
+OStream &operator<<(OStream &os, const Utcb &utcb);
+OStream &operator<<(OStream &os, const UtcbFrameRef &frm);
+OStream &operator<<(OStream &os, const UtcbExc::Descriptor &desc);
+OStream &operator<<(OStream &os, const UtcbExcFrameRef &frm);
 
 /**
  * The exception that will be thrown in case of UTCB errors
@@ -63,16 +63,16 @@ public:
 class UtcbFrameRef {
 	friend class Pt;
 	friend class Utcb;
-	friend OStream &operator<<(OStream &os,const Utcb &utcb);
-	friend 	OStream &operator<<(OStream &os,const UtcbFrameRef &frm);
-	friend OStream &operator<<(OStream &os,const UtcbExcFrameRef &frm);
+	friend OStream & operator<<(OStream &os, const Utcb &utcb);
+	friend  OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
+	friend OStream & operator<<(OStream &os, const UtcbExcFrameRef &frm);
 
 public:
 	enum DelFlags {
-		NONE	= 0,
-		FROM_HV	= 0x800,		// source = hypervisor
-		UPD_GPT	= 0x400,		// update guest page table
-		UPD_DPT	= 0x200,		// update DMA page table
+		NONE    = 0,
+		FROM_HV = 0x800,        // source = hypervisor
+		UPD_GPT = 0x400,        // update guest page table
+		UPD_DPT = 0x200,        // update DMA page table
 	};
 
 private:
@@ -83,11 +83,11 @@ private:
 		friend class UtcbFrameRef;
 	public:
 		enum Type {
-			TYPE_XLT		= 0,
-			TYPE_DEL		= 1,
+			TYPE_XLT        = 0,
+			TYPE_DEL        = 1,
 		};
 
-		explicit TypedItem(Crd crd = Crd(0),word_t aux = 0) : _crd(crd), _aux(aux) {
+		explicit TypedItem(Crd crd = Crd(0), word_t aux = 0) : _crd(crd), _aux(aux) {
 		}
 
 		Crd crd() const {
@@ -107,7 +107,7 @@ private:
 	 */
 	class XltItem : public TypedItem {
 	public:
-		explicit XltItem(Crd crd) : TypedItem(crd,TYPE_XLT) {
+		explicit XltItem(Crd crd) : TypedItem(crd, TYPE_XLT) {
 		}
 	};
 
@@ -116,18 +116,18 @@ private:
 	 */
 	class DelItem : public TypedItem {
 	public:
-		explicit DelItem(Crd crd,unsigned flags,word_t hotspot = 0)
-			: TypedItem(crd,TYPE_DEL | flags | (hotspot << 12)) {
+		explicit DelItem(Crd crd, unsigned flags, word_t hotspot = 0)
+			: TypedItem(crd, TYPE_DEL | flags | (hotspot << 12)) {
 		}
 	};
 
 	void check_untyped_write(size_t u) {
 		if(free_untyped() < u)
-			throw UtcbException(E_CAPACITY,"No free slots for untyped items");
+			throw UtcbException(E_CAPACITY, "No free slots for untyped items");
 	}
 	void check_typed_write(size_t t) {
 		if(free_typed() < t)
-			throw UtcbException(E_CAPACITY,"No free slots for typed items");
+			throw UtcbException(E_CAPACITY, "No free slots for typed items");
 	}
 	void check_untyped_read(size_t u) {
 		if(_upos + u > untyped())
@@ -138,8 +138,8 @@ private:
 			throw UtcbException(E_UTCB_TYPED);
 	}
 
-	explicit UtcbFrameRef(Utcb *utcb,size_t top)
-			: _utcb(utcb), _top(Utcb::get_top(utcb,top)), _upos(), _tpos() {
+	explicit UtcbFrameRef(Utcb *utcb, size_t top)
+		: _utcb(utcb), _top(Utcb::get_top(utcb, top)), _upos(), _tpos() {
 		_utcb->push_layer();
 	}
 public:
@@ -149,7 +149,7 @@ public:
 	 * @param utcb the UTCB to access (the one of the current thread by default)
 	 */
 	explicit UtcbFrameRef(Utcb *utcb = Thread::current()->utcb())
-			: _utcb(utcb), _top(Utcb::get_top(_utcb)), _upos(), _tpos() {
+		: _utcb(utcb), _top(Utcb::get_top(_utcb)), _upos(), _tpos() {
 		_utcb = Utcb::get_current_frame(_utcb);
 		_utcb->push_layer();
 	}
@@ -204,15 +204,15 @@ public:
 	 * @param order the allowed order of translations (default 31)
 	 * @param attr the allowed attributes (default Crd::OBJ_ALL)
 	 */
-	void accept_translates(word_t offset = 0,uint order = 31,uint attr = Crd::OBJ_ALL) {
-		translation_window(Crd(offset,order,attr));
+	void accept_translates(word_t offset = 0, uint order = 31, uint attr = Crd::OBJ_ALL) {
+		translation_window(Crd(offset, order, attr));
 	}
 	/**
 	 * Prepares the UTCB frame again(!) for capability delegations. That is, it reserves new cap
 	 * selectors in your CapSpace.
 	 */
 	void accept_delegates() {
-		accept_delegates(delegation_window().order(),delegation_window().attr());
+		accept_delegates(delegation_window().order(), delegation_window().attr());
 	}
 	/**
 	 * Prepares the UTCB frame for capability delegations. That is, it allocates new cap selectors
@@ -221,9 +221,9 @@ public:
 	 * @param order set the receive window size to 2^<order>
 	 * @param attr the allowed attributes (default Crd::OBJ_ALL)
 	 */
-	void accept_delegates(uint order,uint attr = Crd::OBJ_ALL) {
-		capsel_t caps = CapSelSpace::get().allocate(1 << order,1 << order);
-		delegation_window(Crd(caps,order,attr));
+	void accept_delegates(uint order, uint attr = Crd::OBJ_ALL) {
+		capsel_t caps = CapSelSpace::get().allocate(1 << order, 1 << order);
+		delegation_window(Crd(caps, order, attr));
 	}
 
 	/**
@@ -235,7 +235,7 @@ public:
 	 */
 	void finish_input() {
 		if(has_more_untyped() || has_more_typed())
-			throw UtcbException(E_ARGS_INVALID,"Received more typed/untyped items than expected");
+			throw UtcbException(E_ARGS_INVALID, "Received more typed/untyped items than expected");
 		clear();
 	}
 
@@ -301,8 +301,8 @@ public:
 	 * @param attr the attributes to translate
 	 * @throws UtcbException if there is not enough space
 	 */
-	void translate(capsel_t cap,uint attr = Crd::OBJ_ALL) {
-		add_typed(XltItem(Crd(cap,0,attr)));
+	void translate(capsel_t cap, uint attr = Crd::OBJ_ALL) {
+		add_typed(XltItem(Crd(cap, 0, attr)));
 	}
 	/**
 	 * Puts in as many typed items as required to translate the given CapRange. Note that the
@@ -315,8 +315,8 @@ public:
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {
-			uint minshift = Math::minshift(start,count);
-			add_typed(XltItem(Crd(start,minshift,range.attr())));
+			uint minshift = Math::minshift(start, count);
+			add_typed(XltItem(Crd(start, minshift, range.attr())));
 			start += 1 << minshift;
 			count -= 1 << minshift;
 		}
@@ -330,9 +330,9 @@ public:
 	 * @param flags the flags for the delegation (default NONE)
 	 * @param attr the attributes to delegate (default Crd::OBJ_ALL)
 	 */
-	void delegate(capsel_t cap,uintptr_t hotspot = CapRange::NO_HOTSPOT,DelFlags flags = NONE,
-			uint attr = Crd::OBJ_ALL) {
-		add_typed(DelItem(Crd(cap,0,attr),flags,hotspot != CapRange::NO_HOTSPOT ? hotspot : cap));
+	void delegate(capsel_t cap, uintptr_t hotspot = CapRange::NO_HOTSPOT, DelFlags flags = NONE,
+	              uint attr = Crd::OBJ_ALL) {
+		add_typed(DelItem(Crd(cap, 0, attr), flags, hotspot != CapRange::NO_HOTSPOT ? hotspot : cap));
 	}
 	/**
 	 * Puts in as many typed items as required to delegate the given CapRange. Note that the
@@ -341,13 +341,13 @@ public:
 	 * @param range the CapRange to delegate
 	 * @param flags the flags for the delegation (default NONE)
 	 */
-	void delegate(const CapRange& range,DelFlags flags = NONE) {
+	void delegate(const CapRange& range, DelFlags flags = NONE) {
 		uintptr_t hotspot = range.hotspot() != CapRange::NO_HOTSPOT ? range.hotspot() : range.start();
 		size_t count = range.count();
 		uintptr_t start = range.start();
 		while(count > 0) {
-			uint minshift = Math::minshift(start | hotspot,count);
-			add_typed(DelItem(Crd(start,minshift,range.attr()),flags,hotspot));
+			uint minshift = Math::minshift(start | hotspot, count);
+			add_typed(DelItem(Crd(start, minshift, range.attr()), flags, hotspot));
 			start += 1 << minshift;
 			hotspot += 1 << minshift;
 			count -= 1 << minshift;
@@ -366,7 +366,7 @@ public:
 		TypedItem ti;
 		get_typed(ti);
 		if(ti.crd().is_null() || (ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
-			throw UtcbException(E_ARGS_INVALID,"Received invalid translation");
+			throw UtcbException(E_ARGS_INVALID, "Received invalid translation");
 		return ti.crd();
 	}
 	/**
@@ -381,7 +381,7 @@ public:
 		TypedItem ti;
 		get_typed(ti);
 		if(ti.crd().is_null() || !(ti.aux() & TypedItem::TYPE_DEL) || ti.crd().order() != order)
-			throw UtcbException(E_ARGS_INVALID,"Received invalid delegation");
+			throw UtcbException(E_ARGS_INVALID, "Received invalid delegation");
 		return ti.crd();
 	}
 	/**
@@ -405,7 +405,7 @@ public:
 	 * @throws UtcbException if there is not enough space
 	 */
 	template<typename T>
-	UtcbFrameRef &operator <<(const T& value) {
+	UtcbFrameRef & operator<<(const T& value) {
 		const size_t words = (sizeof(T) + sizeof(word_t) - 1) / sizeof(word_t);
 		check_untyped_write(words);
 		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
@@ -413,12 +413,12 @@ public:
 		_utcb->untyped += words;
 		return *this;
 	}
-	UtcbFrameRef &operator <<(const String& value) {
-		const size_t words = Math::blockcount<size_t>(value.length(),sizeof(word_t)) + 1;
+	UtcbFrameRef & operator<<(const String& value) {
+		const size_t words = Math::blockcount<size_t>(value.length(), sizeof(word_t)) + 1;
 		check_untyped_write(words);
 		assert(Utcb::get_current_frame(_utcb->base()) == _utcb);
 		*reinterpret_cast<size_t*>(_utcb->msg + untyped()) = value.length();
-		memcpy(_utcb->msg + untyped() + 1,value.str(),value.length());
+		memcpy(_utcb->msg + untyped() + 1, value.str(), value.length());
 		_utcb->untyped += words;
 		return *this;
 	}
@@ -432,19 +432,19 @@ public:
 	 * @throws UtcbException if there is no untyped item anymore
 	 */
 	template<typename T>
-	UtcbFrameRef &operator >>(T &value) {
+	UtcbFrameRef & operator>>(T &value) {
 		const size_t words = (sizeof(T) + sizeof(word_t) - 1) / sizeof(word_t);
 		check_untyped_read(words);
 		value = *reinterpret_cast<T*>(_utcb->msg + _upos);
 		_upos += words;
 		return *this;
 	}
-	UtcbFrameRef &operator >>(String &value) {
+	UtcbFrameRef & operator>>(String &value) {
 		check_untyped_read(1);
 		size_t len = *reinterpret_cast<size_t*>(_utcb->msg + _upos);
-		const size_t words = Math::blockcount<size_t>(len,sizeof(word_t)) + 1;
+		const size_t words = Math::blockcount<size_t>(len, sizeof(word_t)) + 1;
 		check_untyped_read(words);
-		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1),len);
+		value.reset(reinterpret_cast<const char*>(_utcb->msg + _upos + 1), len);
 		_upos += words;
 		return *this;
 	}

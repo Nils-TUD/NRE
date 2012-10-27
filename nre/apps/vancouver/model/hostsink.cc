@@ -47,9 +47,9 @@ public:
 		if(msg.ch == '\n' || _count == _size) {
 			_buffer[_count] = 0;
 			if(_overflow)
-				Serial::get().writef("%c %c   %s\n",_head_char,_cont_char,_buffer);
+				Serial::get().writef("%c %c   %s\n", _head_char, _cont_char, _buffer);
 			else
-				Serial::get().writef("%c   %s\n",_head_char,_buffer);
+				Serial::get().writef("%c   %s\n", _head_char, _buffer);
 			_overflow = msg.ch != '\n';
 			_count = 0;
 		}
@@ -58,9 +58,9 @@ public:
 		return true;
 	}
 
-	HostSink(unsigned hdev,size_t size,ulong head_char,ulong cont_char)
-			: _hdev(hdev), _size(size), _count(0), _overflow(false), _head_char(), _cont_char(),
-			  _buffer() {
+	HostSink(unsigned hdev, size_t size, ulong head_char, ulong cont_char)
+		: _hdev(hdev), _size(size), _count(0), _overflow(false), _head_char(), _cont_char(),
+		  _buffer() {
 		if((size == ~0UL) || (size < 1))
 			size = 1;
 		_head_char = (head_char == ~0UL) ? '#' : head_char;
@@ -70,8 +70,9 @@ public:
 };
 
 PARAM_HANDLER(hostsink,
-		"hostsink:hostdevnr,bufferlen,sinkchar,contchar - provide an output for a serial port.",
-		"Example: 'hostsink:0x4712,80'.")
+              "hostsink:hostdevnr,bufferlen,sinkchar,contchar - provide an output for a serial port.",
+              "Example: 'hostsink:0x4712,80'.")
 {
-	mb.bus_serial.add(new HostSink(argv[0], argv[1], argv[2], argv[3]), HostSink::receive_static<MessageSerial>);
+	mb.bus_serial.add(new HostSink(argv[0], argv[1], argv[2],
+	                               argv[3]), HostSink::receive_static<MessageSerial> );
 }

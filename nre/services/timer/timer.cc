@@ -29,10 +29,10 @@ static TimerService *srv;
 
 class TimerSessionData : public ServiceSession {
 public:
-	explicit TimerSessionData(Service *s,size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func)
-		: ServiceSession(s,id,cap,caps,func), _data(new HostTimer::ClientData[CPU::count()]) {
+	explicit TimerSessionData(Service *s, size_t id, capsel_t cap, capsel_t caps, Pt::portal_func func)
+		: ServiceSession(s, id, cap, caps, func), _data(new HostTimer::ClientData[CPU::count()]) {
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			timer->setup_clientdata(id,_data + it->log_id(),it->log_id());
+			timer->setup_clientdata(id, _data + it->log_id(), it->log_id());
 	}
 	virtual ~TimerSessionData() {
 		delete[] _data;
@@ -48,13 +48,14 @@ private:
 
 class TimerService : public Service {
 public:
-	explicit TimerService(const char *name,Pt::portal_func func)
-		: Service(name,CPUSet(CPUSet::ALL),func) {
+	explicit TimerService(const char *name, Pt::portal_func func)
+		: Service(name, CPUSet(CPUSet::ALL), func) {
 	}
 
 private:
-	virtual ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,Pt::portal_func func) {
-		return new TimerSessionData(this,id,cap,caps,func);
+	virtual ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
+	                                       Pt::portal_func func) {
+		return new TimerSessionData(this, id, cap, caps, func);
 	}
 };
 
@@ -71,7 +72,7 @@ PORTAL static void portal_timer(capsel_t pid) {
 				uf.finish_input();
 
 				for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-					uf.delegate(sess->data(it->log_id())->sm->sel(),it->log_id());
+					uf.delegate(sess->data(it->log_id())->sm->sel(), it->log_id());
 				uf << E_SUCCESS;
 				break;
 
@@ -80,10 +81,10 @@ PORTAL static void portal_timer(capsel_t pid) {
 				uf >> time;
 				uf.finish_input();
 
-				LOG(Logging::TIMER_DETAIL,Serial::get().writef(
-						"TIMER: (%zu) Programming for %#Lx on %u\n",sess->id(),time,
-						CPU::current().log_id()));
-				timer->program_timer(sess->data(CPU::current().log_id()),time);
+				LOG(Logging::TIMER_DETAIL,
+				    Serial::get().writef("TIMER: (%zu) Programming for %#Lx on %u\n",
+				                         sess->id(), time, CPU::current().log_id()));
+				timer->program_timer(sess->data(CPU::current().log_id()), time);
 				uf << E_SUCCESS;
 			}
 			break;
@@ -91,10 +92,11 @@ PORTAL static void portal_timer(capsel_t pid) {
 			case nre::Timer::GET_TIME: {
 				uf.finish_input();
 
-				timevalue_t uptime,unixts;
-				timer->get_time(uptime,unixts);
-				LOG(Logging::TIMER_DETAIL,Serial::get().writef(
-						"TIMER: (%zu) Getting time up=%#Lx unix=%#Lx\n",sess->id(),uptime,unixts));
+				timevalue_t uptime, unixts;
+				timer->get_time(uptime, unixts);
+				LOG(Logging::TIMER_DETAIL,
+				    Serial::get().writef("TIMER: (%zu) Getting time up=%#Lx unix=%#Lx\n",
+				                         sess->id(), uptime, unixts));
 				uf << E_SUCCESS << uptime << unixts;
 			}
 			break;
@@ -106,21 +108,21 @@ PORTAL static void portal_timer(capsel_t pid) {
 	}
 }
 
-int main(int argc,char *argv[]) {
+int main(int argc, char *argv[]) {
 	bool forcepit = false;
 	bool forcehpetlegacy = false;
 	bool slowrtc = false;
 	for(int i = 1; i < argc; ++i) {
-		if(strcmp(argv[i],"forcepit") == 0)
+		if(strcmp(argv[i], "forcepit") == 0)
 			forcepit = true;
-		if(strcmp(argv[i],"forcehpetlegacy") == 0)
+		if(strcmp(argv[i], "forcehpetlegacy") == 0)
 			forcehpetlegacy = true;
-		if(strcmp(argv[i],"slowrtc") == 0)
+		if(strcmp(argv[i], "slowrtc") == 0)
 			slowrtc = true;
 	}
 
-	timer = new HostTimer(forcepit,forcehpetlegacy,slowrtc);
-	srv = new TimerService("timer",portal_timer);
+	timer = new HostTimer(forcepit, forcehpetlegacy, slowrtc);
+	srv = new TimerService("timer", portal_timer);
 	srv->start();
 	return 0;
 }

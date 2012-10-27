@@ -59,7 +59,7 @@ class HostAHCICtrl : public Controller {
 	};
 
 public:
-	explicit HostAHCICtrl(uint id,nre::PCI &pci,nre::PCI::bdf_type bdf,nre::Gsi *gsi,bool dmar);
+	explicit HostAHCICtrl(uint id, nre::PCI &pci, nre::PCI::bdf_type bdf, nre::Gsi *gsi, bool dmar);
 	virtual ~HostAHCICtrl() {
 		delete _gsi;
 		delete _regs_ds;
@@ -72,31 +72,31 @@ public:
 	virtual size_t drive_count() const {
 		return _portcount;
 	}
-	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const {
+	virtual void get_params(size_t drive, nre::Storage::Parameter *params) const {
 		assert(_ports[idx(drive)]);
 		_ports[idx(drive)]->get_params(params);
 	}
 
-	virtual void flush(size_t drive,producer_type *prod,tag_type tag) {
+	virtual void flush(size_t drive, producer_type *prod, tag_type tag) {
 		assert(_ports[idx(drive)]);
-		_ports[idx(drive)]->flush(prod,tag);
+		_ports[idx(drive)]->flush(prod, tag);
 	}
-	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma) {
+	virtual void read(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                  sector_type sector, const dma_type &dma) {
 		assert(_ports[idx(drive)]);
-		_ports[idx(drive)]->readwrite(prod,tag,ds,sector,dma,false);
+		_ports[idx(drive)]->readwrite(prod, tag, ds, sector, dma, false);
 	}
-	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma) {
+	virtual void write(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                   sector_type sector, const dma_type &dma) {
 		assert(_ports[idx(drive)]);
-		_ports[idx(drive)]->readwrite(prod,tag,ds,sector,dma,true);
+		_ports[idx(drive)]->readwrite(prod, tag, ds, sector, dma, true);
 	}
 
 private:
 	static size_t idx(size_t drive) {
 		return drive % nre::Storage::MAX_DRIVES;
 	}
-	void create_ahci_port(uint nr,HostAHCIDevice::Register *portreg,bool dmar);
+	void create_ahci_port(uint nr, HostAHCIDevice::Register *portreg, bool dmar);
 	static void gsi_thread(void*);
 
 	nre::Gsi *_gsi;

@@ -20,11 +20,11 @@
 #ifndef SYMBOLS_H_
 #define SYMBOLS_H_
 
-#define MAX_FUNC_LEN	255
+#define MAX_FUNC_LEN    255
 
 void sym_init(void);
 void sym_addFile(const char *file);
 const char *sym_resolve(unsigned long addr);
-void specialChars(const char *src,char *dst,size_t dstSize);
+void specialChars(const char *src, char *dst, size_t dstSize);
 
 #endif /* SYMBOLS_H_ */

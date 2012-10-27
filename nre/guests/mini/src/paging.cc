@@ -32,11 +32,10 @@ void Paging::init() {
 	Util::set_cr0(Util::get_cr0() | CR0_PAGING);
 }
 
-void Paging::map(uintptr_t virt,uintptr_t phys,int flags) {
+void Paging::map(uintptr_t virt, uintptr_t phys, int flags) {
 	assert(virt < PAGE_SIZE * (PAGE_SIZE / sizeof(pte)));
 	assert((virt & (PAGE_SIZE - 1)) == 0);
 	assert((phys & (PAGE_SIZE - 1)) == 0);
 	pt[virt / PAGE_SIZE] = phys | flags;
 	flush(virt);
 }
-

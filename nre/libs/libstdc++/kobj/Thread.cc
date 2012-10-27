@@ -25,9 +25,12 @@
 
 namespace nre {
 
-Thread::Thread(cpu_t cpu,capsel_t evb,capsel_t cap,uintptr_t stack,uintptr_t uaddr)
-		: Ec(cpu,evb,cap), SListItem(), _rcu_counter(0), _utcb_addr(uaddr), _stack_addr(stack),
-		  _flags(), _tls() {
+// slot 0 is reserved
+size_t Thread::_tls_idx = 1;
+
+Thread::Thread(cpu_t cpu, capsel_t evb, capsel_t cap, uintptr_t stack, uintptr_t uaddr)
+	: Ec(cpu, evb, cap), SListItem(), _rcu_counter(0), _utcb_addr(uaddr), _stack_addr(stack),
+	  _flags(), _tls() {
 	if(stack == 0 || uaddr == 0) {
 		UtcbFrame uf;
 		uf << Sc::CREATE << (stack == 0) << (uaddr == 0);
@@ -44,9 +47,9 @@ Thread::Thread(cpu_t cpu,capsel_t evb,capsel_t cap,uintptr_t stack,uintptr_t uad
 	}
 }
 
-void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
+void Thread::create(Pd *pd, Syscalls::ECType type, void *sp) {
 	ScopedCapSels scs;
-	Syscalls::create_ec(scs.get(),utcb(),sp,CPU::get(cpu()).phys_id(),event_base(),type,pd->sel());
+	Syscalls::create_ec(scs.get(), utcb(), sp, CPU::get(cpu()).phys_id(), event_base(), type, pd->sel());
 	if(pd == Pd::current())
 		RCU::add(this);
 	sel(scs.release());
@@ -55,8 +58,5 @@ void Thread::create(Pd *pd,Syscalls::ECType type,void *sp) {
 Thread::~Thread() {
 	RCU::remove(this);
 }
-
-// slot 0 is reserved
-size_t Thread::_tls_idx = 1;
 
 }

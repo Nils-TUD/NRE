@@ -26,27 +26,27 @@
 #include "HostTimerDevice.h"
 
 class HostHPET : public HostTimerDevice {
-	static const size_t MAX_TIMERS				= 24;
-	static const uint MIN_TICKS_BETWEEN_WRAP	= 4;
+	static const size_t MAX_TIMERS              = 24;
+	static const uint MIN_TICKS_BETWEEN_WRAP    = 4;
 
 	enum {
 		// General Configuration Register
-		ENABLE_CNF		= (1U << 0),
-		LEG_RT_CNF		= (1U << 1),
+		ENABLE_CNF      = (1U << 0),
+		LEG_RT_CNF      = (1U << 1),
 
 		// General Capabilities Register
-		LEG_RT_CAP		= (1U << 15),
-		BIT64_CAP		= (1U << 13),
+		LEG_RT_CAP      = (1U << 15),
+		BIT64_CAP       = (1U << 13),
 
 		// Timer Configuration
-		FSB_INT_DEL_CAP	= (1U << 15),
-		FSB_INT_EN_CNF	= (1U << 14),
+		FSB_INT_DEL_CAP = (1U << 15),
+		FSB_INT_EN_CNF  = (1U << 14),
 
-		MODE32_CNF		= (1U << 8),
-		PER_INT_CAP		= (1U << 4),
-		TYPE_CNF		= (1U << 3),
-		INT_ENB_CNF		= (1U << 2),
-		INT_TYPE_CNF	= (1U << 1),
+		MODE32_CNF      = (1U << 8),
+		PER_INT_CAP     = (1U << 4),
+		TYPE_CNF        = (1U << 3),
+		INT_ENB_CNF     = (1U << 2),
+		INT_TYPE_CNF    = (1U << 1),
 	};
 
 	struct HostHpetTimer {
@@ -86,7 +86,7 @@ class HostHPET : public HostTimerDevice {
 		virtual nre::Gsi &gsi() {
 			return *_gsi;
 		}
-		virtual void init(HostTimerDevice &dev,cpu_t cpu);
+		virtual void init(HostTimerDevice &dev, cpu_t cpu);
 		virtual void program_timeout(timevalue_t next) {
 			// Program a new timeout. Top 32-bits are discarded.
 			_reg->comp[0] = next;
@@ -108,12 +108,12 @@ public:
 	}
 	virtual timevalue_t current_ticks() {
 		uint32_t r = _reg->counter[0];
-		return correct_overflow(nre::Atomic::read_atonce(_last),r);
+		return correct_overflow(nre::Atomic::read_atonce(_last), r);
 	}
 	virtual timevalue_t update_ticks(bool) {
 		timevalue_t newv = _reg->counter[0];
-		newv = correct_overflow(nre::Atomic::read_atonce(_last),newv);
-		nre::Atomic::write_atonce(_last,newv);
+		newv = correct_overflow(nre::Atomic::read_atonce(_last), newv);
+		nre::Atomic::write_atonce(_last, newv);
 		return newv;
 	}
 
@@ -133,24 +133,24 @@ public:
 	virtual bool is_in_past(timevalue_t ticks) const {
 		return static_cast<int32_t>(ticks - _reg->counter[0]) <= 8;
 	}
-	virtual timevalue_t next_timeout(timevalue_t now,timevalue_t next) {
+	virtual timevalue_t next_timeout(timevalue_t now, timevalue_t next) {
 		// Generate at least some IRQs between wraparound IRQs to make
 		// overflow detection robust. Only needed with HPETs.
 		if(next == ~0ULL ||
-				(static_cast<int64_t>(next - now) > 0x100000000LL / MIN_TICKS_BETWEEN_WRAP)) {
+		   (static_cast<int64_t>(next - now) > 0x100000000LL / MIN_TICKS_BETWEEN_WRAP)) {
 			next = now + 0x100000000ULL / MIN_TICKS_BETWEEN_WRAP;
 		}
 		return next;
 	}
 	virtual void start(timevalue_t ticks) {
-	    assert((_reg->config & ENABLE_CNF) == 0);
+		assert((_reg->config & ENABLE_CNF) == 0);
 		// Start HPET counter at value. HPET might be 32-bit. In this case,
 		// the upper 32-bit of value are ignored.
-	    _reg->main    = ticks;
-	    _reg->config |= ENABLE_CNF;
-	    _last = ticks;
+		_reg->main    = ticks;
+		_reg->config |= ENABLE_CNF;
+		_last = ticks;
 	}
-	virtual void enable(Timer *t,bool enable_ints) {
+	virtual void enable(Timer *t, bool enable_ints) {
 		HPETTimer *timer = static_cast<HPETTimer*>(t);
 		if(enable_ints)
 			timer->_reg->config |= INT_ENB_CNF;
@@ -162,7 +162,7 @@ public:
 	}
 
 private:
-	static timevalue_t correct_overflow(timevalue_t last,uint32_t newv) {
+	static timevalue_t correct_overflow(timevalue_t last, uint32_t newv) {
 		// the problem is that e.g. in current_ticks() it might happen that we read the counter
 		// register and are interrupted by the scheduler before we read the last value. when we
 		// wake up, the read counter register might be smaller than the last value if the last
@@ -174,12 +174,12 @@ private:
 		// its a real overflow, the difference should be really large. if it's that false overflow
 		// from above, its typically small.
 		bool of = (static_cast<uint32_t>(newv) < static_cast<uint32_t>(last) &&
-				static_cast<uint32_t>(last) - static_cast<uint32_t>(newv) > 100000000);
+		           static_cast<uint32_t>(last) - static_cast<uint32_t>(newv) > 100000000);
 		return (((last >> 32) + of) << 32) | newv;
 	}
 
 	static uintptr_t get_address();
-	static uint16_t get_rid(uint8_t block,uint comparator);
+	static uint16_t get_rid(uint8_t block, uint comparator);
 
 	uintptr_t _addr;
 	nre::DataSpace _mem;

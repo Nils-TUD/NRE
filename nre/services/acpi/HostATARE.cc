@@ -21,25 +21,25 @@ using namespace nre;
 
 void HostATARE::debug_show_items() {
 	NamedRef *ref = _head;
-	for(unsigned i = 0; ref; ref = ref->next,i++) {
+	for(unsigned i = 0; ref; ref = ref->next, i++) {
 		Serial::get().writef("at: %3d %p+%04x type %02x %.*s\n",
-				i,ref->ptr,ref->len,ref->ptr[0],ref->namelen,ref->name);
+		                     i, ref->ptr, ref->len, ref->ptr[0], ref->namelen, ref->name);
 	}
 }
 
 void HostATARE::debug_show_routing() {
-	if(!search_ref(_head,0,"_PIC",false))
+	if(!search_ref(_head, 0, "_PIC", false))
 		Serial::get().writef("at: APIC mode unavailable - no _PIC method\n");
 
 	for(NamedRef *dev = _head; dev; dev = dev->next) {
 		if(dev->ptr[0] == 0x82) {
-			bdf_type bdf = get_device_bdf(_head,dev);
+			bdf_type bdf = get_device_bdf(_head, dev);
 			Serial::get().writef("at: %04x:%02x:%02x.%x tag %p name %.*s\n",
-					bdf >> 16,(bdf >> 8) & 0xff,(bdf >> 3) & 0x1f,bdf & 7,dev->ptr - 1,4,
-					dev->name + dev->namelen - 4);
+			                     bdf >> 16, (bdf >> 8) & 0xff, (bdf >> 3) & 0x1f, bdf & 7, dev->ptr - 1,
+			                     4, dev->name + dev->namelen - 4);
 			for(PciRoutingEntry *p = dev->routing; p; p = p->next) {
 				Serial::get().writef("at:\t  parent %p addr %02x_%x gsi %x\n",
-						dev->ptr - 1,p->adr >> 16,p->pin,p->gsi);
+				                     dev->ptr - 1, p->adr >> 16, p->pin, p->gsi);
 			}
 		}
 	}
@@ -68,7 +68,7 @@ size_t HostATARE::read_pkgsize(const uint8_t *data) {
 bool HostATARE::name_seg(const uint8_t *res) {
 	for(size_t i = 0; i < 4; i++) {
 		if(!((res[i] >= 'A' && res[i] <= 'Z') || (res[i] == '_')
-				|| (i && res[i] >= '0' && res[i] <= '9')))
+		     || (i && res[i] >= '0' && res[i] <= '9')))
 			return false;
 	}
 	return true;
@@ -128,21 +128,22 @@ size_t HostATARE::get_name_len(const uint8_t *table) {
 /**
  * Calc an absname.
  */
-void HostATARE::get_absname(NamedRef *parent,const uint8_t *name,size_t &namelen,char *res,size_t skip) {
+void HostATARE::get_absname(NamedRef *parent, const uint8_t *name, size_t &namelen, char *res,
+                            size_t skip) {
 	size_t nameprefixlen = get_nameprefix_len(name);
 	namelen = namelen - nameprefixlen;
 
 	// we already have an absname?
 	if(*name == 0x5c || !parent)
-		memcpy(res,name + nameprefixlen,namelen);
+		memcpy(res, name + nameprefixlen, namelen);
 	else {
 		ssize_t parent_namelen = parent->namelen - skip * 4;
 		if(parent_namelen < 0)
 			parent_namelen = 0;
 		for(size_t pre = 0; name[pre] == 0x5e && parent_namelen; pre++)
 			parent_namelen -= 4;
-		memcpy(res,parent->name,parent_namelen);
-		memcpy(res + parent_namelen,name + nameprefixlen,namelen);
+		memcpy(res, parent->name, parent_namelen);
+		memcpy(res + parent_namelen, name + nameprefixlen, namelen);
 		namelen += parent_namelen;
 	}
 }
@@ -152,7 +153,7 @@ void HostATARE::get_absname(NamedRef *parent,const uint8_t *name,size_t &namelen
  *
  * Note: We support only numbers here.
  */
-uint HostATARE::read_data(const uint8_t *data,size_t &length) {
+uint HostATARE::read_data(const uint8_t *data, size_t &length) {
 	switch(data[0]) {
 		case 0:
 			length = 1;
@@ -181,7 +182,7 @@ uint HostATARE::read_data(const uint8_t *data,size_t &length) {
 /**
  * Search and read a packet with 4 entries.
  */
-ssize_t HostATARE::get_packet4(const uint8_t *table,ssize_t len,uint *x) {
+ssize_t HostATARE::get_packet4(const uint8_t *table, ssize_t len, uint *x) {
 	for(const uint8_t *data = table; data < table + len; data++) {
 		if(data[0] == 0x12) {
 			size_t pkgsize_len = get_pkgsize_len(data + 1);
@@ -191,7 +192,7 @@ ssize_t HostATARE::get_packet4(const uint8_t *table,ssize_t len,uint *x) {
 			size_t offset = 1 + pkgsize_len + 1;
 			for(size_t i = 0; i < 4; i++) {
 				size_t len;
-				x[i] = read_data(data + offset,len);
+				x[i] = read_data(data + offset, len);
 				if(!len)
 					return 0;
 				offset += len;
@@ -205,17 +206,17 @@ ssize_t HostATARE::get_packet4(const uint8_t *table,ssize_t len,uint *x) {
 /**
  * Searches for PCI routing information in some region and adds them to dev.
  */
-void HostATARE::search_prt_direct(NamedRef *dev,NamedRef *ref) {
+void HostATARE::search_prt_direct(NamedRef *dev, NamedRef *ref) {
 	size_t l;
 	for(size_t offset = 0; offset < ref->len; offset += l) {
 		uint x[4];
-		ssize_t packet = get_packet4(ref->ptr + offset,ref->len - offset,x);
+		ssize_t packet = get_packet4(ref->ptr + offset, ref->len - offset, x);
 		l = 1;
 		if(!packet)
 			continue;
 
 		l = packet + read_pkgsize(ref->ptr + offset + packet + 1);
-		dev->routing = new PciRoutingEntry(dev->routing,x[0],x[1],x[3]);
+		dev->routing = new PciRoutingEntry(dev->routing, x[0], x[1], x[3]);
 	}
 }
 
@@ -223,7 +224,7 @@ void HostATARE::search_prt_direct(NamedRef *dev,NamedRef *ref) {
  * Searches for PCI routing information by following references in
  * the PRT method and adds them to dev.
  */
-void HostATARE::search_prt_indirect(NamedRef *head,NamedRef *dev,NamedRef *prt) {
+void HostATARE::search_prt_indirect(NamedRef *head, NamedRef *dev, NamedRef *prt) {
 	uint found = 0;
 	size_t name_len;
 	for(size_t offset = get_pkgsize_len(prt->ptr + 1); offset < prt->len; offset += name_len) {
@@ -234,11 +235,11 @@ void HostATARE::search_prt_indirect(NamedRef *head,NamedRef *dev,NamedRef *prt) 
 				continue;
 
 			char name[name_len + 1];
-			memcpy(name,prt->ptr + offset,name_len);
+			memcpy(name, prt->ptr + offset, name_len);
 			name[name_len] = 0;
-			NamedRef *ref = search_ref(head,dev,name,true);
+			NamedRef *ref = search_ref(head, dev, name, true);
 			if(ref)
-				search_prt_direct(dev,ref);
+				search_prt_direct(dev, ref);
 		}
 		else
 			name_len = 1;
@@ -248,12 +249,12 @@ void HostATARE::search_prt_indirect(NamedRef *head,NamedRef *dev,NamedRef *prt) 
 /**
  * Return a single value of a namedef declaration.
  */
-uint HostATARE::get_namedef_value(NamedRef *head,NamedRef *parent,const char *name) {
-	NamedRef *ref = search_ref(head,parent,name,false);
+uint HostATARE::get_namedef_value(NamedRef *head, NamedRef *parent, const char *name) {
+	NamedRef *ref = search_ref(head, parent, name, false);
 	if(ref && ref->ptr[0] == 0x8) {
 		size_t name_len = get_name_len(ref->ptr + 1);
 		size_t len;
-		uint x = read_data(ref->ptr + 1 + name_len,len);
+		uint x = read_data(ref->ptr + 1 + name_len, len);
 		if(len)
 			return x;
 	}
@@ -263,16 +264,16 @@ uint HostATARE::get_namedef_value(NamedRef *head,NamedRef *parent,const char *na
 /**
  * Search some reference per name, either absolute or relative to some parent.
  */
-HostATARE::NamedRef *HostATARE::search_ref(NamedRef *head,NamedRef *parent,const char *name,
-		bool upstream) {
+HostATARE::NamedRef *HostATARE::search_ref(NamedRef *head, NamedRef *parent, const char *name,
+                                           bool upstream) {
 	size_t slen = strlen(name);
 	size_t plen = parent ? parent->namelen : 0;
 	for(size_t skip = 0; skip <= plen / 4; skip++) {
 		size_t n = slen;
 		char output[slen + plen];
-		get_absname(parent,reinterpret_cast<const uint8_t*>(name),n,output,skip);
+		get_absname(parent, reinterpret_cast<const uint8_t*>(name), n, output, skip);
 		for(NamedRef *ref = head; ref; ref = ref->next) {
-			if(ref->namelen == n && !memcmp(ref->name,output,n))
+			if(ref->namelen == n && !memcmp(ref->name, output, n))
 				return ref;
 		}
 		if(!upstream)
@@ -284,23 +285,23 @@ HostATARE::NamedRef *HostATARE::search_ref(NamedRef *head,NamedRef *parent,const
 /**
  * Return a single bdf for a device struct by combining different device properties.
  */
-HostATARE::bdf_type HostATARE::get_device_bdf(NamedRef *head,NamedRef *dev) {
-	uint adr = get_namedef_value(head,dev,"_ADR");
-	uint bbn = get_namedef_value(head,dev,"_BBN");
-	uint seg = get_namedef_value(head,dev,"_SEG");
+HostATARE::bdf_type HostATARE::get_device_bdf(NamedRef *head, NamedRef *dev) {
+	uint adr = get_namedef_value(head, dev, "_ADR");
+	uint bbn = get_namedef_value(head, dev, "_BBN");
+	uint seg = get_namedef_value(head, dev, "_SEG");
 	return (seg << 16) + (bbn << 8) + ((adr >> 16) << 3) + (adr & 0xffff);
 }
 
 /**
  * Add all named refs from a table and return the list head pointer.
  */
-HostATARE::NamedRef *HostATARE::add_refs(const uint8_t *table,unsigned len,NamedRef *res) {
+HostATARE::NamedRef *HostATARE::add_refs(const uint8_t *table, unsigned len, NamedRef *res) {
 	for(const uint8_t *data = table; data < table + len; data++) {
 		if((data[0] == 0x5b && data[1] == 0x82) // devices
-				|| (data[0] == 0x08) // named objects
-				|| (data[0] == 0x10) // scopes
-				|| (data[0] == 0x14) // methods
-				) {
+		   || (data[0] == 0x08)      // named objects
+		   || (data[0] == 0x10)      // scopes
+		   || (data[0] == 0x14)      // methods
+		   ) {
 			if(data[0] == 0x5b)
 				data++;
 
@@ -328,8 +329,8 @@ HostATARE::NamedRef *HostATARE::add_refs(const uint8_t *table,unsigned len,Named
 
 			// to get an absolute name
 			char *name = new char[name_len + (parent ? parent->namelen : 0)];
-			get_absname(parent,data + 1 + pkgsize_len,name_len,name);
-			res = new NamedRef(res,data,pkgsize,name,name_len);
+			get_absname(parent, data + 1 + pkgsize_len, name_len, name);
+			res = new NamedRef(res, data, pkgsize, name, name_len);
 
 			// at least skip the header
 			data += pkgsize_len;
@@ -348,10 +349,10 @@ HostATARE::NamedRef *HostATARE::add_refs(const uint8_t *table,unsigned len,Named
 void HostATARE::add_routing(NamedRef *head) {
 	for(NamedRef *dev = head; dev; dev = dev->next) {
 		if(dev->ptr[0] == 0x82) {
-			NamedRef *prt = search_ref(head,dev,"_PRT",false);
+			NamedRef *prt = search_ref(head, dev, "_PRT", false);
 			if(prt) {
-				search_prt_direct(dev,prt);
-				search_prt_indirect(head,dev,prt);
+				search_prt_direct(dev, prt);
+				search_prt_indirect(head, dev, prt);
 			}
 		}
 	}

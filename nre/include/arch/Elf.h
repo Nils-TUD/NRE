@@ -19,19 +19,19 @@
 #include <arch/Types.h>
 
 #ifdef __i386__
-#include <arch/x86_32/Elf.h>
+#    include <arch/x86_32/Elf.h>
 #elif defined __x86_64__
-#include <arch/x86_64/Elf.h>
+#    include <arch/x86_64/Elf.h>
 #else
-#error "Unsupported architecture"
+#    error "Unsupported architecture"
 #endif
 
 namespace nre {
 
 enum ElfPhFlags {
-	PF_X	= 1 << 0,
-	PF_W	= 1 << 1,
-	PF_R	= 1 << 2,
+	PF_X    = 1 << 0,
+	PF_W    = 1 << 1,
+	PF_R    = 1 << 2,
 };
 
 #ifdef __i386__

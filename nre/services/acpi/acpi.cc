@@ -33,7 +33,7 @@ PORTAL static void portal_acpi(capsel_t) {
 		uf >> cmd;
 
 		if(!hostacpi)
-			throw Exception(E_NOT_FOUND,"No ACPI");
+			throw Exception(E_NOT_FOUND, "No ACPI");
 
 		switch(cmd) {
 			case ACPI::GET_MEM: {
@@ -49,7 +49,7 @@ PORTAL static void portal_acpi(capsel_t) {
 				uf.finish_input();
 
 				size_t len;
-				uintptr_t off = hostacpi->find(name.str(),instance,len);
+				uintptr_t off = hostacpi->find(name.str(), instance, len);
 				uf << E_SUCCESS << off;
 			}
 			break;
@@ -65,12 +65,12 @@ PORTAL static void portal_acpi(capsel_t) {
 			break;
 
 			case ACPI::GET_GSI: {
-				HostATARE::bdf_type bdf,parentbdf;
+				HostATARE::bdf_type bdf, parentbdf;
 				uint8_t pin;
 				uf >> bdf >> pin >> parentbdf;
 				uf.finish_input();
 
-				uint gsi = hostatare->get_gsi(bdf,pin,parentbdf);
+				uint gsi = hostatare->get_gsi(bdf, pin, parentbdf);
 				uf << E_SUCCESS << gsi;
 			}
 			break;
@@ -85,13 +85,13 @@ PORTAL static void portal_acpi(capsel_t) {
 int main() {
 	try {
 		hostacpi = new HostACPI();
-		hostatare = new HostATARE(*hostacpi,0);
+		hostatare = new HostATARE(*hostacpi, 0);
 	}
 	catch(const Exception &e) {
 		Serial::get() << e;
 	}
 
-	Service *srv = new Service("acpi",CPUSet(CPUSet::ALL),portal_acpi);
+	Service *srv = new Service("acpi", CPUSet(CPUSet::ALL), portal_acpi);
 	srv->start();
 	return 0;
 }

@@ -30,16 +30,16 @@ using namespace nre;
  *
  * State: testing
  */
-class DirectMemDevice: public StaticReceiver<DirectMemDevice> {
+class DirectMemDevice : public StaticReceiver<DirectMemDevice> {
 	char *_ptr;
 	uintptr_t _phys;
 	size_t _size;
 
 public:
 	bool receive(MessageMemRegion &msg) {
-		if(!in_range(msg.page,_phys >> 12,_size >> 12))
+		if(!in_range(msg.page, _phys >> 12, _size >> 12))
 			return false;
-		Serial::get().writef("%s: %p base %lx+%lx\n",__PRETTY_FUNCTION__,_ptr,_phys,_size);
+		Serial::get().writef("%s: %p base %lx+%lx\n", __PRETTY_FUNCTION__, _ptr, _phys, _size);
 		msg.start_page = _phys >> 12;
 		msg.count = _size >> 12;
 		msg.ptr = _ptr;
@@ -48,7 +48,7 @@ public:
 
 	bool receive(MessageMem &msg) {
 		unsigned *ptr;
-		if(in_range(msg.phys,_phys,_size))
+		if(in_range(msg.phys, _phys, _size))
 			ptr = reinterpret_cast<unsigned *>(_ptr + msg.phys - _phys);
 		else
 			return false;
@@ -60,15 +60,15 @@ public:
 		return true;
 	}
 
-	DirectMemDevice(char *ptr,uintptr_t phys,size_t size)
+	DirectMemDevice(char *ptr, uintptr_t phys, size_t size)
 		: _ptr(ptr), _phys(phys), _size(size) {
-		Serial::get().writef("DirectMem: %p base %lx+%lx\n",ptr,phys,size);
+		Serial::get().writef("DirectMem: %p base %lx+%lx\n", ptr, phys, size);
 	}
 };
 
 PARAM_HANDLER(mio,
-		"mio:base,size,dest=base - map hostmemory directly into the VM.",
-		"Example: 'mio:0xa0000,0x10000'.") {
+              "mio:base,size,dest=base - map hostmemory directly into the VM.",
+              "Example: 'mio:0xa0000,0x10000'.") {
 	size_t size;
 	uintptr_t dest = (argv[2] == ~0UL) ? argv[0] : argv[2];
 	if(argv[1] == ~0UL)
@@ -76,11 +76,11 @@ PARAM_HANDLER(mio,
 	else
 		size = Math::bit_scan_reverse(argv[1] | 1);
 
-	MessageHostOp msg(MessageHostOp::OP_ALLOC_IOMEM,argv[0],1 << size);
+	MessageHostOp msg(MessageHostOp::OP_ALLOC_IOMEM, argv[0], 1 << size);
 	if(!mb.bus_hostop.send(msg) || !msg.ptr)
-		Util::panic("can not map IOMEM region %lx+%lx",msg.value,msg.len);
+		Util::panic("can not map IOMEM region %lx+%lx", msg.value, msg.len);
 
-	DirectMemDevice *dev = new DirectMemDevice(msg.ptr,dest,1 << size);
-	mb.bus_memregion.add(dev,DirectMemDevice::receive_static<MessageMemRegion>);
-	mb.bus_mem.add(dev,DirectMemDevice::receive_static<MessageMem>);
+	DirectMemDevice *dev = new DirectMemDevice(msg.ptr, dest, 1 << size);
+	mb.bus_memregion.add(dev, DirectMemDevice::receive_static<MessageMemRegion> );
+	mb.bus_mem.add(dev, DirectMemDevice::receive_static<MessageMem> );
 }

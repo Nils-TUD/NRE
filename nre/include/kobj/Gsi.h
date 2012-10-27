@@ -43,7 +43,7 @@ public:
 	 * @param gsi the GSI
 	 * @param cpu the CPU to route the gsi to
 	 */
-	explicit Gsi(uint gsi,cpu_t cpu = CPU::current().log_id()) : Sm(alloc(gsi,0,cpu),true) {
+	explicit Gsi(uint gsi, cpu_t cpu = CPU::current().log_id()) : Sm(alloc(gsi, 0, cpu), true) {
 		// neither keep the cap nor the selector
 		set_flags(0);
 	}
@@ -54,7 +54,7 @@ public:
 	 * @param pcicfg the location in the PCI configuration space
 	 * @param cpu the CPU to route the gsi to
 	 */
-	explicit Gsi(void *pcicfg,cpu_t cpu = CPU::current().log_id()) : Sm(alloc(0,pcicfg,cpu),true) {
+	explicit Gsi(void *pcicfg, cpu_t cpu = CPU::current().log_id()) : Sm(alloc(0, pcicfg, cpu), true) {
 		// neither keep the cap nor the selector
 		set_flags(0);
 	}
@@ -86,16 +86,16 @@ public:
 	}
 
 private:
-	capsel_t alloc(uint gsi,void *pcicfg,cpu_t cpu) {
+	capsel_t alloc(uint gsi, void *pcicfg, cpu_t cpu) {
 		UtcbFrame uf;
 		ScopedCapSels cap;
-		uf.delegation_window(Crd(cap.get(),0,Crd::OBJ_ALL));
+		uf.delegation_window(Crd(cap.get(), 0, Crd::OBJ_ALL));
 		uf << ALLOC << gsi << pcicfg;
 		CPU::current().gsi_pt().call(uf);
 
 		uf.check_reply();
 		uf >> _gsi;
-		Syscalls::assign_gsi(cap.get(),CPU::get(cpu).phys_id(),pcicfg,&_msi_addr,&_msi_value);
+		Syscalls::assign_gsi(cap.get(), CPU::get(cpu).phys_id(), pcicfg, &_msi_addr, &_msi_value);
 		return cap.release();
 	}
 	void release() {

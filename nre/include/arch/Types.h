@@ -17,11 +17,11 @@
 #pragma once
 
 #ifdef __i386__
-#include <arch/x86_32/Types.h>
+#    include <arch/x86_32/Types.h>
 #elif defined __x86_64__
-#include <arch/x86_64/Types.h>
+#    include <arch/x86_64/Types.h>
 #else
-#error "Unsupported architecture"
+#    error "Unsupported architecture"
 #endif
 
 typedef long long llong;

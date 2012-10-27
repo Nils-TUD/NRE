@@ -30,7 +30,7 @@ extern void *__fini_array_end;
 extern void *__fini_array_end;
 extern void *end;
 
-const char *SysInfoService::get_root_info(size_t &virt,size_t &phys,size_t &threads) {
+const char *SysInfoService::get_root_info(size_t &virt, size_t &phys, size_t &threads) {
 	// find our own module; we're always the first one
 	const char *cmdline = "";
 	for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
@@ -44,16 +44,16 @@ const char *SysInfoService::get_root_info(size_t &virt,size_t &phys,size_t &thre
 	phys = PhysicalMemory::total_size() - PhysicalMemory::free_size();
 	const Child *c;
 	for(size_t i = 0; (c = _cm->get_at(i)) != 0; ++i) {
-		size_t cvirt,cphys;
-		c->reglist().memusage(cvirt,cphys);
+		size_t cvirt, cphys;
+		c->reglist().memusage(cvirt, cphys);
 		phys -= cphys;
 	}
 	// determine virtual memory by calculating the mem for our text and data area and the one we
 	// assign dynamically.
 	size_t textsize = reinterpret_cast<uintptr_t>(&__fini_array_end)
-			- reinterpret_cast<uintptr_t>(&_init);
+	                  - reinterpret_cast<uintptr_t>(&_init);
 	size_t datasize = reinterpret_cast<uintptr_t>(&end)
-			- reinterpret_cast<uintptr_t>(&__fini_array_end);
+	                  - reinterpret_cast<uintptr_t>(&__fini_array_end);
 	virt = VirtualMemory::used() + textsize + datasize;
 	// log and sysinfo
 	threads = 2;
@@ -80,7 +80,7 @@ void SysInfoService::portal(capsel_t) {
 				bool update;
 				uf >> cpu >> update;
 				uf.finish_input();
-				uf << E_SUCCESS << Admission::total_time(cpu,update);
+				uf << E_SUCCESS << Admission::total_time(cpu, update);
 			}
 			break;
 
@@ -91,8 +91,8 @@ void SysInfoService::portal(capsel_t) {
 
 				String name;
 				cpu_t cpu = 0;
-				timevalue_t total = 0,time = 0;
-				bool res = Admission::get_sched_entity(idx,name,cpu,time,total);
+				timevalue_t total = 0, time = 0;
+				bool res = Admission::get_sched_entity(idx, name, cpu, time, total);
 				uf << E_SUCCESS;
 				if(res)
 					uf << true << name << cpu << time << total;
@@ -107,7 +107,7 @@ void SysInfoService::portal(capsel_t) {
 				uf >> idx;
 				uf.finish_input();
 
-				size_t virt,phys,threads;
+				size_t virt, phys, threads;
 				if(idx > 0) {
 					ScopedLock<RCULock> guard(&RCU::lock());
 					idx--;
@@ -115,7 +115,7 @@ void SysInfoService::portal(capsel_t) {
 					if(c) {
 						// the main thread is not included in the sc-list
 						threads = c->scs().length() + 1;
-						c->reglist().memusage(virt,phys);
+						c->reglist().memusage(virt, phys);
 
 						uf << E_SUCCESS << true << c->cmdline() << virt << phys << threads;
 					}
@@ -124,7 +124,7 @@ void SysInfoService::portal(capsel_t) {
 				}
 				// idx 0 is root
 				else {
-					const char *cmdline = srv->get_root_info(virt,phys,threads);
+					const char *cmdline = srv->get_root_info(virt, phys, threads);
 					uf << E_SUCCESS << true << String(cmdline) << virt << phys << threads;
 				}
 			}
@@ -132,7 +132,7 @@ void SysInfoService::portal(capsel_t) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}

@@ -28,17 +28,19 @@ HostMMConfig::HostMMConfig() {
 	ACPISession sess(con);
 	ACPI::RSDT *addr = sess.find_table(String("MCFG"));
 	if(addr == 0)
-		throw Exception(E_NOT_FOUND,"No MCFG table found");
+		throw Exception(E_NOT_FOUND, "No MCFG table found");
 
 	AcpiMCFG *mcfg = reinterpret_cast<AcpiMCFG*>(addr);
 	size_t count = (mcfg->len - sizeof(AcpiMCFG)) / sizeof(AcpiMCFG::Entry);
 	for(size_t i = 0; i < count; ++i) {
 		AcpiMCFG::Entry *entry = mcfg->entries + i;
-		LOG(Logging::PCICFG,Serial::get().writef("MMConfig: base %#Lx seg %#02x bus %#02x-%#02x\n",
-				entry->base,entry->pci_seg,entry->pci_bus_start,entry->pci_bus_end));
+		LOG(Logging::PCICFG,
+		    Serial::get().writef("MMConfig: base %#Lx seg %#02x bus %#02x-%#02x\n",
+		                         entry->base, entry->pci_seg, entry->pci_bus_start,
+		                         entry->pci_bus_end));
 
 		uint start = (entry->pci_seg << 16) + entry->pci_bus_start * 32 * 8;
 		uint buses = entry->pci_bus_end - entry->pci_bus_start + 1;
-		_ranges.append(new MMConfigRange(entry->base,start,buses * 32 * 8));
+		_ranges.append(new MMConfigRange(entry->base, start, buses * 32 * 8));
 	}
 }

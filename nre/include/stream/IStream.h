@@ -33,34 +33,34 @@ public:
 	virtual ~IStream() {
 	}
 
-	IStream &operator>>(uchar &u) {
+	IStream & operator>>(uchar &u) {
 		return readu<uchar>(u);
 	}
-	IStream &operator>>(char &n) {
+	IStream & operator>>(char &n) {
 		return readn<char>(n);
 	}
-	IStream &operator>>(ushort &u) {
+	IStream & operator>>(ushort &u) {
 		return readu<ushort>(u);
 	}
-	IStream &operator>>(short &n) {
+	IStream & operator>>(short &n) {
 		return readn<short>(n);
 	}
-	IStream &operator>>(uint &u) {
+	IStream & operator>>(uint &u) {
 		return readu<uint>(u);
 	}
-	IStream &operator>>(int &n) {
+	IStream & operator>>(int &n) {
 		return readn<int>(n);
 	}
-	IStream &operator>>(ulong &u) {
+	IStream & operator>>(ulong &u) {
 		return readu<ulong>(u);
 	}
-	IStream &operator>>(long &n) {
+	IStream & operator>>(long &n) {
 		return readn<long>(n);
 	}
-	IStream &operator>>(ullong &u) {
+	IStream & operator>>(ullong &u) {
 		return readu<ullong>(u);
 	}
-	IStream &operator>>(llong &n) {
+	IStream & operator>>(llong &n) {
 		return readn<llong>(n);
 	}
 
@@ -84,7 +84,7 @@ private:
 			_last = read();
 		}
 		while((_last >= '0' && _last <= '9') ||
-				(base == 16 && ((_last >= 'a' && _last <= 'f') || (_last >= 'A' && _last <= 'F')))) {
+		      (base == 16 && ((_last >= 'a' && _last <= 'f') || (_last >= 'A' && _last <= 'F')))) {
 			if(_last >= 'a' && _last <= 'f')
 				u = u * base + _last + 10 - 'a';
 			else if(_last >= 'A' && _last <= 'F')

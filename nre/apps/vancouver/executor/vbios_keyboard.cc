@@ -43,30 +43,30 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 			unsigned short code;
 			unsigned keycode;
 		} bios_key_map[] = {
-			{72 << 8,Keyboard::EXTEND0 | 0x75},		// up
-			{80 << 8,Keyboard::EXTEND0 | 0x72},		// down
-			{77 << 8,Keyboard::EXTEND0 | 0x74},		// right
-			{75 << 8,Keyboard::EXTEND0 | 0x6b},		// left
-			{59 << 8,0x05},							// F1
-			{60 << 8,0x06},							// F2
-			{61 << 8,0x04},							// F3
-			{62 << 8,0x0c},							// F4
-			{63 << 8,0x03},							// F5
-			{64 << 8,0x0b},							// F6
-			{65 << 8,0x83},							// F7
-			{66 << 8,0x0a},							// F8
-			{67 << 8,0x01},							// F9
-			{68 << 8,0x09},							// F10
-			{133 << 8,0x78},						// F11
-			{134 << 8,0x07},						// F12
-			{71 << 8,Keyboard::EXTEND0 | 0x6c},		// home
-			{82 << 8,Keyboard::EXTEND0 | 0x70},		// insert
-			{83 << 8,Keyboard::EXTEND0 | 0x71},		// delete
-			{79 << 8,Keyboard::EXTEND0 | 0x69},		// end
-			{73 << 8,Keyboard::EXTEND0 | 0x7d}, 	// pgup
-			{81 << 8,Keyboard::EXTEND0 | 0x7a},		// pgdown
-			{110 << 8,0x76},						// esc
-			{8,0x66},								// backspace
+			{72 << 8, Keyboard::EXTEND0 | 0x75},     // up
+			{80 << 8, Keyboard::EXTEND0 | 0x72},     // down
+			{77 << 8, Keyboard::EXTEND0 | 0x74},     // right
+			{75 << 8, Keyboard::EXTEND0 | 0x6b},     // left
+			{59 << 8, 0x05},                         // F1
+			{60 << 8, 0x06},                         // F2
+			{61 << 8, 0x04},                         // F3
+			{62 << 8, 0x0c},                         // F4
+			{63 << 8, 0x03},                         // F5
+			{64 << 8, 0x0b},                         // F6
+			{65 << 8, 0x83},                         // F7
+			{66 << 8, 0x0a},                         // F8
+			{67 << 8, 0x01},                         // F9
+			{68 << 8, 0x09},                         // F10
+			{133 << 8, 0x78},                        // F11
+			{134 << 8, 0x07},                        // F12
+			{71 << 8, Keyboard::EXTEND0 | 0x6c},     // home
+			{82 << 8, Keyboard::EXTEND0 | 0x70},     // insert
+			{83 << 8, Keyboard::EXTEND0 | 0x71},     // delete
+			{79 << 8, Keyboard::EXTEND0 | 0x69},     // end
+			{73 << 8, Keyboard::EXTEND0 | 0x7d},     // pgup
+			{81 << 8, Keyboard::EXTEND0 | 0x7a},     // pgdown
+			{110 << 8, 0x76},                        // esc
+			{8, 0x66},                               // backspace
 		};
 
 		value = value & ~Keyboard::NUM;
@@ -86,7 +86,7 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 		return 0;
 	}
 
-	void check_key(unsigned &status,unsigned key,unsigned bit,unsigned keycode) {
+	void check_key(unsigned &status, unsigned key, unsigned bit, unsigned keycode) {
 		if((key & (0xff | Keyboard::EXTEND0 | Keyboard::EXTEND1)) == keycode) {
 			if(~key & Keyboard::RELEASE)
 				status |= (1 << bit);
@@ -113,20 +113,20 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 			status ^= 1 << 6;
 		if((key & (0xff | Keyboard::RELEASE)) == KeyboardUtil::KBCODE_NUM)
 			status ^= 1 << 7;
-		check_key(status,key,10,KeyboardUtil::KBCODE_SYSREQ);
-		check_key(status,key,11,KeyboardUtil::KBCODE_PAUSE);
-		check_key(status,key,12,KeyboardUtil::KBCODE_SCROLL);
-		check_key(status,key,13,KeyboardUtil::KBCODE_NUM);
-		check_key(status,key,14,KeyboardUtil::KBCODE_CAPS);
-		check_key(status,key,15,KeyboardUtil::KBCODE_INSERT);
-		write_bda(0x17,status,2);
+		check_key(status, key, 10, KeyboardUtil::KBCODE_SYSREQ);
+		check_key(status, key, 11, KeyboardUtil::KBCODE_PAUSE);
+		check_key(status, key, 12, KeyboardUtil::KBCODE_SCROLL);
+		check_key(status, key, 13, KeyboardUtil::KBCODE_NUM);
+		check_key(status, key, 14, KeyboardUtil::KBCODE_CAPS);
+		check_key(status, key, 15, KeyboardUtil::KBCODE_INSERT);
+		write_bda(0x17, status, 2);
 	}
 
 	/**
 	 * Handle the Keyboard IRQ.
 	 */
 	bool handle_int09(CpuState *cpu) {
-		MessageIrq msg(MessageIrq::ASSERT_IRQ,1);
+		MessageIrq msg(MessageIrq::ASSERT_IRQ, 1);
 		_hostmb->bus_hostirq.send(msg);
 		return true;
 	}
@@ -152,7 +152,7 @@ class VirtualBiosKeyboard : public StaticReceiver<VirtualBiosKeyboard>, public B
 					next += 2;
 					if(next > end)
 						next = start;
-					write_bda(0x1a,next,2);
+					write_bda(0x1a, next, 2);
 				}
 				else
 					// we should block here until the next IRQ arives, but we return a zero keycode instead
@@ -201,12 +201,12 @@ public:
 			if(first >= end)
 				first = start;
 			if(value && first != next) {
-				write_bda(read_bda(0x1c),value,2);
-				write_bda(0x1c,first,2);
+				write_bda(read_bda(0x1c), value, 2);
+				write_bda(0x1c, first, 2);
 			}
 			return true;
 		}
-		Serial::get().writef("%s() ignored %x %x\n",__PRETTY_FUNCTION__,msg.device,msg.data);
+		Serial::get().writef("%s() ignored %x %x\n", __PRETTY_FUNCTION__, msg.device, msg.data);
 		return false;
 	}
 
@@ -239,7 +239,7 @@ public:
 			case MessageHostOp::OP_WAIT_CHILD:
 			case MessageHostOp::OP_CREATE_EC4PT:
 			default:
-				Util::panic("%s - unimplemented operation %x",__PRETTY_FUNCTION__,msg.type);
+				Util::panic("%s - unimplemented operation %x", __PRETTY_FUNCTION__, msg.type);
 				return false;
 		}
 	}
@@ -277,25 +277,25 @@ public:
 
 		unsigned start = 0x1e001e;
 		unsigned end = 0x2f001e;
-		MessageDiscovery msg1("bda",0x1a,&start,4);
-		MessageDiscovery msg2("bda",0x80,&end,4);
+		MessageDiscovery msg1("bda", 0x1a, &start, 4);
+		MessageDiscovery msg2("bda", 0x80, &end, 4);
 		_mb.bus_discovery.send(msg1);
 		_mb.bus_discovery.send(msg2);
 		return true;
 	}
 
 	VirtualBiosKeyboard(Motherboard &mb) : BiosCommon(mb), _hostmb(new Motherboard()), _lastkey() {
-		_hostmb->bus_input.add(this,receive_static<MessageInput>);
-		_hostmb->bus_hostop.add(this,receive_static<MessageHostOp>);
-		_hostmb->bus_hwioin.add(this,receive_static<MessageHwIOIn>);
-		_hostmb->bus_hwioout.add(this,receive_static<MessageHwIOOut>);
-		_mb.bus_bios.add(this,receive_static<MessageBios>);
-		_mb.bus_discovery.add(this,receive_static<MessageDiscovery>);
+		_hostmb->bus_input.add(this, receive_static<MessageInput> );
+		_hostmb->bus_hostop.add(this, receive_static<MessageHostOp> );
+		_hostmb->bus_hwioin.add(this, receive_static<MessageHwIOIn> );
+		_hostmb->bus_hwioout.add(this, receive_static<MessageHwIOOut> );
+		_mb.bus_bios.add(this, receive_static<MessageBios> );
+		_mb.bus_discovery.add(this, receive_static<MessageDiscovery> );
 		_hostmb->parse_args("hostkeyb:0x10,0x60,1,,1");
 	}
 };
 
 PARAM_HANDLER(vbios_keyboard,
-		"vbios_keyboard - provide keyboard related virtual BIOS functions.") {
+              "vbios_keyboard - provide keyboard related virtual BIOS functions.") {
 	new VirtualBiosKeyboard(mb);
 }

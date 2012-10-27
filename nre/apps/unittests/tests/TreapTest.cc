@@ -20,8 +20,8 @@
 
 #include "TreapTest.h"
 
-#define TEST_NODE_COUNT		10
-#define PERF_NODE_COUNT		5000
+#define TEST_NODE_COUNT     10
+#define PERF_NODE_COUNT     5000
 
 using namespace nre;
 using namespace nre::test;
@@ -31,23 +31,23 @@ static void test_rev_order();
 static void test_rand_order();
 static void test_perf();
 static void test_add_and_rem(int *vals);
-static void print_perf(const char *name,AvgProfiler &prof);
+static void print_perf(const char *name, AvgProfiler &prof);
 
 const TestCase treaptest_inorder = {
-	"Treap - add and remove nodes with increasing values",test_in_order,
+	"Treap - add and remove nodes with increasing values", test_in_order,
 };
 const TestCase treaptest_revorder = {
-	"Treap - add and remove nodes with decreasing values",test_rev_order,
+	"Treap - add and remove nodes with decreasing values", test_rev_order,
 };
 const TestCase treaptest_randorder = {
-	"Treap - add and remove regions with addresses in rand order",test_rand_order
+	"Treap - add and remove regions with addresses in rand order", test_rand_order
 };
 const TestCase treaptest_perf = {
-	"Treap - performance",test_perf
+	"Treap - performance", test_perf
 };
 
 struct MyNode : public TreapNode<int> {
-	MyNode(int key,int _data) : TreapNode<int>(key), data(_data) {
+	MyNode(int key, int _data) : TreapNode<int>(key), data(_data) {
 	}
 	int data;
 };
@@ -83,19 +83,19 @@ static void test_rand_order() {
 
 static void test_perf() {
 	Treap<MyNode> tree;
-	MyNode **nodes = new MyNode*[PERF_NODE_COUNT];
+	MyNode **nodes = new MyNode *[PERF_NODE_COUNT];
 
 	// create
 	{
 		AvgProfiler prof(PERF_NODE_COUNT);
 		for(size_t i = 0; i < PERF_NODE_COUNT; i++) {
-			nodes[i] = new MyNode(i,i);
+			nodes[i] = new MyNode(i, i);
 
 			prof.start();
 			tree.insert(nodes[i]);
 			prof.stop();
 		}
-		print_perf("Node insertion:",prof);
+		print_perf("Node insertion:", prof);
 	}
 
 	// find all
@@ -106,7 +106,7 @@ static void test_perf() {
 			tree.find(i);
 			prof.stop();
 		}
-		print_perf("Node searching:",prof);
+		print_perf("Node searching:", prof);
 	}
 
 	// remove
@@ -117,7 +117,7 @@ static void test_perf() {
 			tree.remove(nodes[i]);
 			prof.stop();
 		}
-		print_perf("Node removal:",prof);
+		print_perf("Node removal:", prof);
 	}
 
 	for(size_t i = 0; i < PERF_NODE_COUNT; i++)
@@ -132,33 +132,33 @@ static void test_add_and_rem(int *vals) {
 
 	// create
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
-		nodes[i] = new MyNode(vals[i],i);
+		nodes[i] = new MyNode(vals[i], i);
 		tree.insert(nodes[i]);
 	}
 
 	// find all
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
 		node = tree.find(vals[i]);
-		WVPASSEQPTR(node,nodes[i]);
+		WVPASSEQPTR(node, nodes[i]);
 	}
 
 	// remove
 	for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
 		tree.remove(nodes[i]);
 		node = tree.find(vals[i]);
-		WVPASSEQPTR(node,(MyNode*)0);
+		WVPASSEQPTR(node, (MyNode*)0);
 		delete nodes[i];
 
 		for(size_t j = i + 1; j < TEST_NODE_COUNT; j++) {
 			node = tree.find(vals[j]);
-			WVPASSEQPTR(node,nodes[j]);
+			WVPASSEQPTR(node, nodes[j]);
 		}
 	}
 }
 
-static void print_perf(const char *name,AvgProfiler &prof) {
-	WVPRINTF("%s",name);
-	WVPERF(prof.avg(),"cycles");
-	WVPRINTF("min: %Lu",prof.min());
-	WVPRINTF("max: %Lu",prof.max());
+static void print_perf(const char *name, AvgProfiler &prof) {
+	WVPRINTF("%s", name);
+	WVPERF(prof.avg(), "cycles");
+	WVPRINTF("min: %Lu", prof.min());
+	WVPRINTF("max: %Lu", prof.max());
 }

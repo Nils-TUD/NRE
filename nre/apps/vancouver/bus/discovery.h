@@ -29,38 +29,40 @@ protected:
 	/*
 	 * Write a string to a resource.
 	 */
-	NOINLINE bool discovery_write_st(const char *resource,size_t offset,const void *value,size_t count) {
-		MessageDiscovery msg(resource,offset,value,count);
+	NOINLINE bool discovery_write_st(const char *resource, size_t offset, const void *value,
+	                                 size_t count) {
+		MessageDiscovery msg(resource, offset, value, count);
 		return static_cast<Y*>(this)->_mb.bus_discovery.send(msg);
 	}
 
 	/**
 	 * Write a dword or less than it.
 	 */
-	NOINLINE bool discovery_write_dw(const char *resource,size_t offset,unsigned value,size_t count = 4) {
-		return discovery_write_st(resource,offset,&value,count);
+	NOINLINE bool discovery_write_dw(const char *resource, size_t offset, unsigned value,
+	                                 size_t count = 4) {
+		return discovery_write_st(resource, offset, &value, count);
 	}
 
 	/**
 	 * Read a dword.
 	 */
-	NOINLINE bool discovery_read_dw(const char *resource,size_t offset,unsigned &value) {
-		MessageDiscovery msg(resource,offset,&value);
+	NOINLINE bool discovery_read_dw(const char *resource, size_t offset, unsigned &value) {
+		MessageDiscovery msg(resource, offset, &value);
 		return static_cast<Y*>(this)->_mb.bus_discovery.send(msg);
 	}
 
 	/**
 	 * Return the length of an ACPI table or minlen if it is smaller.
 	 */
-	NOINLINE size_t discovery_length(const char *resource,size_t minlen) {
+	NOINLINE size_t discovery_length(const char *resource, size_t minlen) {
 		unsigned res;
-		if(!discovery_read_dw(resource,4,res) || res < minlen)
+		if(!discovery_read_dw(resource, 4, res) || res < minlen)
 			return minlen;
 		return res;
 	}
 
 public:
-	static bool discover(Device *o,MessageDiscovery &msg) {
+	static bool discover(Device *o, MessageDiscovery &msg) {
 		if(msg.type != MessageDiscovery::DISCOVERY)
 			return false;
 		static_cast<Y*>(o)->discovery();

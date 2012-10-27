@@ -53,7 +53,7 @@ PORTAL static void portal_reboot(capsel_t) {
 }
 
 int main() {
-	Service *srv = new Service("reboot",CPUSet(CPUSet::ALL),portal_reboot);
+	Service *srv = new Service("reboot", CPUSet(CPUSet::ALL), portal_reboot);
 	srv->start();
 	return 0;
 }

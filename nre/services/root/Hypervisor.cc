@@ -39,11 +39,11 @@ Hypervisor::Hypervisor() {
 	// note that we have to use a different Thread for the mem-portal than for all the other portals
 	// in the root-task, because the map portal uses the mem-portal.
 	uintptr_t ec_utcb = VirtualMemory::alloc(Utcb::SIZE);
-	LocalThread *ec = LocalThread::create(CPU::current().log_id(),ObjCap::INVALID,
-			reinterpret_cast<uintptr_t>(_stack),ec_utcb);
-	_map_pts[CPU::current().log_id()] = new Pt(ec,portal_map);
+	LocalThread *ec = LocalThread::create(CPU::current().log_id(), ObjCap::INVALID,
+	                                      reinterpret_cast<uintptr_t>(_stack), ec_utcb);
+	_map_pts[CPU::current().log_id()] = new Pt(ec, portal_map);
 	// make all I/O ports available
-	_io.free(0,0xFFFF);
+	_io.free(0, 0xFFFF);
 }
 
 void Hypervisor::init() {
@@ -51,15 +51,15 @@ void Hypervisor::init() {
 		if(it->log_id() == CPU::current().log_id())
 			continue;
 		LocalThread *ec = LocalThread::create(it->log_id());
-		_map_pts[it->log_id()] = new Pt(ec,portal_map);
+		_map_pts[it->log_id()] = new Pt(ec, portal_map);
 	}
 }
 
-void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
+void Hypervisor::map_mem(uintptr_t phys, uintptr_t virt, size_t size) {
 	UtcbFrame uf;
-	uf.delegation_window(Crd(0,31,Crd::MEM_ALL));
-	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SIZE);
-	CapRange cr(phys >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM_ALL,virt >> ExecEnv::PAGE_SHIFT);
+	uf.delegation_window(Crd(0, 31, Crd::MEM_ALL));
+	size_t pages = Math::blockcount<size_t>(size, ExecEnv::PAGE_SIZE);
+	CapRange cr(phys >> ExecEnv::PAGE_SHIFT, pages, Crd::MEM_ALL, virt >> ExecEnv::PAGE_SHIFT);
 	size_t count = pages;
 	while(count > 0) {
 		uf.clear();
@@ -75,8 +75,8 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 					// at most at_once typed items.
 					size_t free = uf.free_typed();
 					// we still have to put in the caprange
-					free -= Math::blockcount(sizeof(CapRange),sizeof(word_t) * 2);
-					size_t min = Math::min<uintptr_t>(free - at_once,count >> at_once);
+					free -= Math::blockcount(sizeof(CapRange), sizeof(word_t) * 2);
+					size_t min = Math::min<uintptr_t>(free - at_once, count >> at_once);
 					cr.count(min << at_once);
 				}
 			}
@@ -94,12 +94,12 @@ void Hypervisor::map_mem(uintptr_t phys,uintptr_t virt,size_t size) {
 	}
 }
 
-void Hypervisor::unmap_mem(uintptr_t virt,size_t size) {
-	size_t pages = Math::blockcount<size_t>(size,ExecEnv::PAGE_SIZE);
-	CapRange(virt >> ExecEnv::PAGE_SHIFT,pages,Crd::MEM_ALL).revoke(true);
+void Hypervisor::unmap_mem(uintptr_t virt, size_t size) {
+	size_t pages = Math::blockcount<size_t>(size, ExecEnv::PAGE_SIZE);
+	CapRange(virt >> ExecEnv::PAGE_SHIFT, pages, Crd::MEM_ALL).revoke(true);
 }
 
-char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
+char *Hypervisor::map_string(uintptr_t phys, uint max_pages) {
 	if(!phys)
 		return 0;
 
@@ -109,7 +109,7 @@ char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 	char *str = vaddr;
 	phys &= ~(ExecEnv::PAGE_SIZE - 1);
 	for(uint i = 0; i < max_pages; ++i) {
-		map_mem(phys,auxvirt,ExecEnv::PAGE_SIZE);
+		map_mem(phys, auxvirt, ExecEnv::PAGE_SIZE);
 		while(reinterpret_cast<uintptr_t>(str) < auxvirt + ExecEnv::PAGE_SIZE) {
 			if(!*str)
 				return vaddr;
@@ -126,10 +126,10 @@ char *Hypervisor::map_string(uintptr_t phys,uint max_pages) {
 void Hypervisor::unmap_string(const char *str) {
 	uintptr_t begin = reinterpret_cast<uintptr_t>(str) & ~(ExecEnv::PAGE_SIZE - 1);
 	size_t len = reinterpret_cast<uintptr_t>(str) - begin + strlen(str);
-	VirtualMemory::free(begin,len);
-	size_t pages = Math::blockcount<size_t>(len,ExecEnv::PAGE_SIZE);
+	VirtualMemory::free(begin, len);
+	size_t pages = Math::blockcount<size_t>(len, ExecEnv::PAGE_SIZE);
 	while(pages-- > 0) {
-		CapRange(begin >> ExecEnv::PAGE_SHIFT,1,Crd::MEM_ALL).revoke(true);
+		CapRange(begin >> ExecEnv::PAGE_SHIFT, 1, Crd::MEM_ALL).revoke(true);
 		begin += ExecEnv::PAGE_SIZE;
 	}
 }
@@ -139,7 +139,7 @@ void Hypervisor::portal_map(capsel_t) {
 	CapRange range;
 	uf >> range;
 	uf.clear();
-	uf.delegate(range,UtcbFrame::FROM_HV);
+	uf.delegate(range, UtcbFrame::FROM_HV);
 }
 
 void Hypervisor::portal_gsi(capsel_t) {
@@ -158,26 +158,26 @@ void Hypervisor::portal_gsi(capsel_t) {
 		switch(op) {
 			case Gsi::ALLOC:
 				LOG(Logging::RESOURCES,
-						Serial::get().writef("Root: Allocating GSI %u (PCI %p)\n",gsi,pcicfg));
-				allocate_gsi(gsi,pcicfg);
+				    Serial::get().writef("Root: Allocating GSI %u (PCI %p)\n", gsi, pcicfg));
+				allocate_gsi(gsi, pcicfg);
 				break;
 
 			case Gsi::RELEASE:
 				LOG(Logging::RESOURCES,
-						Serial::get().writef("Root: Releasing GSI %u\n",gsi));
+				    Serial::get().writef("Root: Releasing GSI %u\n", gsi));
 				release_gsi(gsi);
-				CapRange(Hip::MAX_CPUS + gsi,1,Crd::OBJ_ALL).revoke(false);
+				CapRange(Hip::MAX_CPUS + gsi, 1, Crd::OBJ_ALL).revoke(false);
 				break;
 		}
 
 		uf << E_SUCCESS;
 		if(op == Gsi::ALLOC) {
 			uf << gsi;
-			uf.delegate(Hip::MAX_CPUS + gsi,0,UtcbFrame::FROM_HV);
+			uf.delegate(Hip::MAX_CPUS + gsi, 0, UtcbFrame::FROM_HV);
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}
@@ -195,24 +195,24 @@ void Hypervisor::portal_io(capsel_t) {
 		switch(op) {
 			case Ports::ALLOC:
 				LOG(Logging::RESOURCES,
-						Serial::get().writef("Root: Allocating ports %#x..%#x\n",base,base + count - 1));
-				allocate_ports(base,count);
+				    Serial::get().writef("Root: Allocating ports %#x..%#x\n", base, base + count - 1));
+				allocate_ports(base, count);
 				break;
 
 			case Ports::RELEASE:
 				LOG(Logging::RESOURCES,
-						Serial::get().writef("Root: Releasing ports %#x..%#x\n",base,base + count - 1));
-				release_ports(base,count);
-				CapRange(base,count,Crd::IO_ALL).revoke(false);
+				    Serial::get().writef("Root: Releasing ports %#x..%#x\n", base, base + count - 1));
+				release_ports(base, count);
+				CapRange(base, count, Crd::IO_ALL).revoke(false);
 				break;
 		}
 
 		if(op == Ports::ALLOC)
-			uf.delegate(CapRange(base,count,Crd::IO_ALL),UtcbFrame::FROM_HV);
+			uf.delegate(CapRange(base, count, Crd::IO_ALL), UtcbFrame::FROM_HV);
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}

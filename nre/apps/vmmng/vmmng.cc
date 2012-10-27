@@ -30,19 +30,19 @@
 
 using namespace nre;
 
-static const uint CUR_ROW_COLOR	= 0x70;
+static const uint CUR_ROW_COLOR = 0x70;
 
 static size_t vmidx = 0;
 static Connection conscon("console");
-static ConsoleSession cons(conscon,0,String("VMManager"));
+static ConsoleSession cons(conscon, 0, String("VMManager"));
 static SList<VMConfig> configs;
 static ChildManager cm;
-static Cycler<CPU::iterator> cpucyc(CPU::begin(),CPU::end());
+static Cycler<CPU::iterator> cpucyc(CPU::begin(), CPU::end());
 
 static void refresh_console() {
 	static UserSm sm;
 	ScopedLock<UserSm> guard(&sm);
-	ConsoleStream cs(cons,0);
+	ConsoleStream cs(cons, 0);
 	cons.clear(0);
 	cs << "Welcome to the interactive VM manager!\n\n";
 	cs << "VM configurations:\n";
@@ -62,8 +62,8 @@ static void refresh_console() {
 			uint8_t oldcol = cs.color();
 			if(vmidx == i)
 				cs.color(CUR_ROW_COLOR);
-			size_t virt,phys;
-			c->reglist().memusage(virt,phys);
+			size_t virt, phys;
+			c->reglist().memusage(virt, phys);
 			cs << "  [" << (i + 1) << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
 			cs << "K CFG:" << vm->cfg()->name();
 			while(cs.x() != 0)
@@ -79,14 +79,14 @@ static void input_thread(void*) {
 	while(1) {
 		Console::ReceivePacket *pk = cons.consumer().get();
 		switch(pk->keycode) {
-			case Keyboard::VK_1...Keyboard::VK_9: {
+			case Keyboard::VK_1 ... Keyboard::VK_9: {
 				if(pk->flags & Keyboard::RELEASE) {
 					size_t idx = pk->keycode - Keyboard::VK_1;
 					SList<VMConfig>::iterator it;
 					for(it = configs.begin(); it != configs.end() && idx-- > 0; ++it)
 						;
 					if(it != configs.end())
-						RunningVMList::get().add(cm,&*it,cpucyc.next()->log_id());
+						RunningVMList::get().add(cm, &*it, cpucyc.next()->log_id());
 				}
 			}
 			break;
@@ -155,15 +155,15 @@ int main() {
 	const Hip &hip = Hip::get();
 
 	for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
-		if(strstr(mem->cmdline(),".vmconfig")) {
-			VMConfig *cfg = new VMConfig(mem->addr,mem->size,mem->cmdline());
+		if(strstr(mem->cmdline(), ".vmconfig")) {
+			VMConfig *cfg = new VMConfig(mem->addr, mem->size, mem->cmdline());
 			configs.append(cfg);
 			Serial::get() << *cfg << "\n";
 		}
 	}
 
-	GlobalThread::create(input_thread,CPU::current().log_id(),String("vmmng-input"))->start();
-	GlobalThread::create(refresh_thread,CPU::current().log_id(),String("vmmng-refresh"))->start();
+	GlobalThread::create(input_thread, CPU::current().log_id(), String("vmmng-input"))->start();
+	GlobalThread::create(refresh_thread, CPU::current().log_id(), String("vmmng-refresh"))->start();
 
 	VMMngService *srv = VMMngService::create("vmmanager");
 	srv->start();

@@ -53,13 +53,13 @@ public:
 	 *
 	 * @param ds the dataspace
 	 * @param init whether the consumer should init the state. this should only be done by one
-	 * 	party and preferably by the first one. That is, if the client is the consumer it should
-	 * 	init it (because it will create the dataspace and share it to the service).
+	 *  party and preferably by the first one. That is, if the client is the consumer it should
+	 *  init it (because it will create the dataspace and share it to the service).
 	 */
-	explicit Consumer(DataSpace *ds,bool init = false)
+	explicit Consumer(DataSpace *ds, bool init = false)
 		: _ds(ds), _if(reinterpret_cast<Interface*>(ds->virt())),
 		  _max(Math::prev_pow2((ds->size() - sizeof(Interface)) / sizeof(T))),
-		  _sm(_ds->sel(),true), _stop(false) {
+		  _sm(_ds->sel(), true), _stop(false) {
 		if(init) {
 			_if->rpos = 0;
 			_if->wpos = 0;

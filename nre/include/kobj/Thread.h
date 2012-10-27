@@ -41,14 +41,14 @@ class Thread : public Ec, public SListItem {
 	friend class RCU;
 	friend class RCULock;
 
-	static const size_t TLS_SIZE	= 4;
+	static const size_t TLS_SIZE    = 4;
 
 public:
 	// the slot 0 is reserved for putting a ec-parameter in it
-	static const size_t TLS_PARAM	= 0;
+	static const size_t TLS_PARAM   = 0;
 	enum Flags {
-		HAS_OWN_STACK	= 1,
-		HAS_OWN_UTCB	= 2,
+		HAS_OWN_STACK   = 1,
+		HAS_OWN_UTCB    = 2,
 	};
 
 	/**
@@ -68,7 +68,8 @@ protected:
 	 * @param stack the stack address (0 = create one automatically)
 	 * @param uaddr the utcb address (0 = create one automatically)
 	 */
-	explicit Thread(cpu_t cpu,capsel_t evb,capsel_t cap = INVALID,uintptr_t stack = 0,uintptr_t uaddr = 0);
+	explicit Thread(cpu_t cpu, capsel_t evb, capsel_t cap = INVALID, uintptr_t stack = 0,
+	                uintptr_t uaddr = 0);
 	/**
 	 * The actual creation of the Thread.
 	 *
@@ -76,7 +77,7 @@ protected:
 	 * @param type the type of Thread
 	 * @param sp the stack-pointer
 	 */
-	void create(Pd *pd,Syscalls::ECType type,void *sp);
+	void create(Pd *pd, Syscalls::ECType type, void *sp);
 
 public:
 	/**
@@ -109,7 +110,7 @@ public:
 	 * @return the TLS index
 	 */
 	size_t create_tls() {
-		size_t next = Atomic::add(&_tls_idx,+1);
+		size_t next = Atomic::add(&_tls_idx, +1);
 		assert(next < TLS_SIZE);
 		return next;
 	}
@@ -127,7 +128,7 @@ public:
 	 * @param val the new value
 	 */
 	template<typename T>
-	void set_tls(size_t idx,T val) {
+	void set_tls(size_t idx, T val) {
 		assert(idx < TLS_SIZE);
 		_tls[idx] = reinterpret_cast<void*>(val);
 	}

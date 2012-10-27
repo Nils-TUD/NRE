@@ -37,7 +37,7 @@ public:
 	 * @param page the console-page to write to
 	 * @param echo whether to echo read characters
 	 */
-	explicit ConsoleStream(ConsoleSession &sess,uint page = 0,bool echo = true)
+	explicit ConsoleStream(ConsoleSession &sess, uint page = 0, bool echo = true)
 		: _sess(sess), _page(page), _pos(0), _color(0x0F), _echo(echo) {
 	}
 
@@ -82,7 +82,7 @@ public:
 	 * @param x the x-position
 	 * @param y the y-position
 	 */
-	void pos(uint x,uint y) {
+	void pos(uint x, uint y) {
 		_pos = y * Console::COLS + x;
 	}
 
@@ -99,7 +99,7 @@ public:
 	 * @param c the character
 	 */
 	virtual void write(char c) {
-		put((static_cast<ushort>(_color) << 8) | c,_pos);
+		put((static_cast<ushort>(_color) << 8) | c, _pos);
 	}
 
 	/**
@@ -108,9 +108,9 @@ public:
 	 * @param value the character+color to write
 	 * @param pos the position (will be updated)
 	 */
-	void put(ushort value,uint &pos) {
+	void put(ushort value, uint &pos) {
 		uintptr_t addr = _sess.screen().virt() + Console::TEXT_OFF + _page * Console::PAGE_SIZE;
-		put(value,reinterpret_cast<ushort*>(addr),pos);
+		put(value, reinterpret_cast<ushort*>(addr), pos);
 	}
 
 	/**
@@ -120,7 +120,7 @@ public:
 	 * @param base the base address of the console-page
 	 * @param pos the position (will be updated)
 	 */
-	void put(ushort value,ushort *base,uint &pos);
+	void put(ushort value, ushort *base, uint &pos);
 
 private:
 	ConsoleSession &_sess;

@@ -38,7 +38,7 @@ public:
 	 */
 	class RootDataSpace {
 	public:
-		RootDataSpace() : _desc(), _map(0,true), _unmap(0,true), _next() {
+		explicit RootDataSpace() : _desc(), _map(0, true), _unmap(0, true), _next() {
 		}
 		RootDataSpace(const nre::DataSpaceDesc &desc);
 		RootDataSpace(capsel_t);
@@ -60,7 +60,7 @@ public:
 		static void operator delete(void *ptr) throw();
 
 	private:
-		static void revoke_mem(uintptr_t addr,size_t size,bool self = false);
+		static void revoke_mem(uintptr_t addr, size_t size, bool self = false);
 
 		nre::DataSpaceDesc _desc;
 		nre::Sm _map;
@@ -75,8 +75,8 @@ public:
 	 * @param size the number of bytes to allocate
 	 * @param align the alignment (in bytes; has to be a power of 2)
 	 */
-	static uintptr_t alloc(size_t size,size_t align = 1) {
-		return _mem.alloc(size,align);
+	static uintptr_t alloc(size_t size, size_t align = 1) {
+		return _mem.alloc(size, align);
 	}
 	/**
 	 * Free's the given physical memory
@@ -84,18 +84,18 @@ public:
 	 * @param phys the address
 	 * @param size the number of bytes
 	 */
-	static void free(uintptr_t phys,size_t size) {
-		_mem.free(phys,size);
+	static void free(uintptr_t phys, size_t size) {
+		_mem.free(phys, size);
 	}
 
 	/**
 	 * Only for the startup: Add the given memory to the available list
 	 */
-	static void add(uintptr_t addr,size_t size);
+	static void add(uintptr_t addr, size_t size);
 	/**
 	 * Only for the startup: Remove the given memory from the available list
 	 */
-	static void remove(uintptr_t addr,size_t size);
+	static void remove(uintptr_t addr, size_t size);
 	/**
 	 * Only for the startup: Map all available memory. That is, use Hypervisor to delegate the
 	 * memory from the hypervisor Pd to our Pd.
@@ -128,7 +128,7 @@ public:
 	PORTAL static void portal_dataspace(capsel_t);
 
 private:
-	static bool can_map(uintptr_t phys,size_t size,uint &flags);
+	static bool can_map(uintptr_t phys, size_t size, uint &flags);
 
 	PhysicalMemory();
 
@@ -137,8 +137,8 @@ private:
 	static nre::DataSpaceManager<RootDataSpace> _dsmng;
 };
 
-static inline nre::OStream &operator<<(nre::OStream &os,const PhysicalMemory::RootDataSpace &ds) {
-	os.writef("RootDataSpace[sel=%#x, umsel=%#x]: ",ds.sel(),ds.unmapsel());
+static inline nre::OStream & operator<<(nre::OStream &os, const PhysicalMemory::RootDataSpace &ds) {
+	os.writef("RootDataSpace[sel=%#x, umsel=%#x]: ", ds.sel(), ds.unmapsel());
 	os << ds.desc();
 	return os;
 }

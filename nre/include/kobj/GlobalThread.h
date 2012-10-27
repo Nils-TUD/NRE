@@ -61,10 +61,10 @@ public:
 	 * @param name the name of the thread
 	 * @param utcb the utcb-address (0 = select it automatically)
 	 */
-	static GlobalThread *create(startup_func start,cpu_t cpu,const String &name,uintptr_t utcb = 0) {
+	static GlobalThread *create(startup_func start, cpu_t cpu, const String &name, uintptr_t utcb = 0) {
 		// note that we force a heap-allocation by this static create function, because the thread
 		// will delete itself when its done.
-		return new GlobalThread(start,cpu,name,Pd::current(),utcb);
+		return new GlobalThread(start, cpu, name, Pd::current(), utcb);
 	}
 
 	/**
@@ -77,10 +77,10 @@ public:
 	 * @param pd the protection-domain
 	 * @param utcb the utcb-address
 	 */
-	explicit GlobalThread(startup_func start,cpu_t cpu,const String &name,Pd *pd,uintptr_t utcb)
-			: Thread(cpu,Hip::get().service_caps() * cpu,INVALID,0,utcb), _sc(), _name(name) {
-		Thread::create(pd,Syscalls::EC_GLOBAL,ExecEnv::setup_stack(pd,this,start,
-				reinterpret_cast<uintptr_t>(ec_landing_spot),stack()));
+	explicit GlobalThread(startup_func start, cpu_t cpu, const String &name, Pd *pd, uintptr_t utcb)
+		: Thread(cpu, Hip::get().service_caps() * cpu, INVALID, 0, utcb), _sc(), _name(name) {
+		uintptr_t ret = reinterpret_cast<uintptr_t>(ec_landing_spot);
+		Thread::create(pd, Syscalls::EC_GLOBAL, ExecEnv::setup_stack(pd, this, start, ret, stack()));
 	}
 	virtual ~GlobalThread();
 
@@ -103,10 +103,10 @@ public:
 	 * @param qpd the qpd to use
 	 * @param pd the pd to start the thread in
 	 */
-	void start(Qpd qpd = Qpd(),Pd *pd = Pd::current());
+	void start(Qpd qpd = Qpd(), Pd *pd = Pd::current());
 
 private:
-	explicit GlobalThread(uintptr_t uaddr,capsel_t gt,capsel_t sc,cpu_t cpu,Pd *pd,uintptr_t stack);
+	explicit GlobalThread(uintptr_t uaddr, capsel_t gt, capsel_t sc, cpu_t cpu, Pd *pd, uintptr_t stack);
 
 	Sc *_sc;
 	const String _name;

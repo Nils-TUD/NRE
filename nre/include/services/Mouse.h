@@ -47,7 +47,7 @@ private:
  * Represents a session at the mouse service
  */
 class MouseSession : public ClientSession {
-	static const size_t DS_SIZE	= ExecEnv::PAGE_SIZE;
+	static const size_t DS_SIZE = ExecEnv::PAGE_SIZE;
 
 public:
 	/**
@@ -55,8 +55,9 @@ public:
 	 *
 	 * @param con the connection
 	 */
-	explicit MouseSession(Connection &con) : ClientSession(con),
-			_ds(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW), _consumer(&_ds,true) {
+	explicit MouseSession(Connection &con)
+		: ClientSession(con),
+		  _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _consumer(&_ds, true) {
 		share();
 	}
 

@@ -67,40 +67,40 @@ private:
 template<class T>
 class DListIterator {
 public:
-	explicit DListIterator(T *p = 0,T *n = 0) : _p(p), _n(n) {
+	explicit DListIterator(T *p = 0, T *n = 0) : _p(p), _n(n) {
 	}
 
-	T& operator *() const {
+	T & operator*() const {
 		return *_n;
 	}
-	T *operator ->() const {
-		return &operator *();
+	T *operator->() const {
+		return &operator*();
 	}
-	DListIterator<T>& operator --() {
+	DListIterator<T>& operator--() {
 		_n = _p;
 		if(_p)
 			_p = static_cast<T*>(_p->prev());
 		return *this;
 	}
-	DListIterator<T> operator --(int) {
+	DListIterator<T> operator--(int) {
 		DListIterator<T> tmp(*this);
 		operator--();
 		return tmp;
 	}
-	DListIterator<T>& operator ++() {
+	DListIterator<T>& operator++() {
 		_p = _n;
 		_n = static_cast<T*>(_n->next());
 		return *this;
 	}
-	DListIterator<T> operator ++(int) {
+	DListIterator<T> operator++(int) {
 		DListIterator<T> tmp(*this);
 		operator++();
 		return tmp;
 	}
-	bool operator ==(const DListIterator<T>& rhs) const {
+	bool operator==(const DListIterator<T>& rhs) const {
 		return _n == rhs._n;
 	}
-	bool operator !=(const DListIterator<T>& rhs) const {
+	bool operator!=(const DListIterator<T>& rhs) const {
 		return _n != rhs._n;
 	}
 
@@ -136,13 +136,13 @@ public:
 	 * @return beginning of list
 	 */
 	iterator begin() const {
-		return iterator(0,_head);
+		return iterator(0, _head);
 	}
 	/**
 	 * @return end of list
 	 */
 	iterator end() const {
-		return iterator(_tail,0);
+		return iterator(_tail, 0);
 	}
 
 	/**
@@ -160,7 +160,7 @@ public:
 		e->next(0);
 		_tail = e;
 		_len++;
-		return iterator(static_cast<T*>(e->prev()),e);
+		return iterator(static_cast<T*>(e->prev()), e);
 	}
 	/**
 	 * Removes the given item from the list. This works in constant time.

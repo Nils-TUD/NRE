@@ -46,7 +46,7 @@ public:
 
 	/**
 	 * @return the number of drives (note: if there are n drives, it does not mean that the drive
-	 * 		with numbers 0..n-1 are available)
+	 *      with numbers 0..n-1 are available)
 	 */
 	virtual size_t drive_count() const = 0;
 
@@ -56,7 +56,7 @@ public:
 	 * @param drive the drive number (has to be valid)
 	 * @param params where to store the parameters
 	 */
-	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const = 0;
+	virtual void get_params(size_t drive, nre::Storage::Parameter *params) const = 0;
 
 	/**
 	 * Flushes the disk cache
@@ -66,7 +66,7 @@ public:
 	 * @param tag the tag to use for the notify
 	 * @throws Exception if something goes wrong
 	 */
-	virtual void flush(size_t drive,producer_type *prod,tag_type tag) = 0;
+	virtual void flush(size_t drive, producer_type *prod, tag_type tag) = 0;
 
 	/**
 	 * Reads into <ds> from sector <sector> of drive <drive>
@@ -79,8 +79,8 @@ public:
 	 * @param dma the DMA descriptor list
 	 * @throws Exception if something goes wrong
 	 */
-	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma) = 0;
+	virtual void read(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                  sector_type sector, const dma_type &dma) = 0;
 
 	/**
 	 * Writes to sector <sector> of drive <drive> from <ds>
@@ -93,8 +93,8 @@ public:
 	 * @param dma the DMA descriptor list
 	 * @throws Exception if something goes wrong
 	 */
-	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma) = 0;
+	virtual void write(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                   sector_type sector, const dma_type &dma) = 0;
 
 protected:
 	uint _id;

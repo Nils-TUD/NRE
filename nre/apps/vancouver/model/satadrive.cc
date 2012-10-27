@@ -28,9 +28,9 @@ using namespace nre;
 //#define DEBUG
 
 #ifdef DEBUG
-#define LOG(fmt,...)	Serial::get().writef(fmt,## __VA_ARGS__)
+#    define LOG(fmt, ...)    Serial::get().writef(fmt, ## __VA_ARGS__)
 #else
-#define LOG(...)
+#    define LOG(...)
 #endif
 
 /**
@@ -72,36 +72,36 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 		d2h[4] = _dsf[6];
 		// make sure we never reuse this!
 		_dsf[6] = 0;
-		_peer->receive_fis(5,d2h);
+		_peer->receive_fis(5, d2h);
 	}
 
-	void send_pio_setup_fis(unsigned short length,bool irq = false) {
+	void send_pio_setup_fis(unsigned short length, bool irq = false) {
 		unsigned psf[5];
 
 		// move from BSY to DRQ
 		_status = (_status & ~0x80) | 0x8;
 
-		memset(psf,0,sizeof(psf));
+		memset(psf, 0, sizeof(psf));
 		psf[0] = _error << 24 | _status << 16 | (irq ? 0x4000 : 0) | 0x2000 | (_regs[0] & 0x0f00) | 0x5f;
 		psf[1] = _regs[1];
 		psf[2] = _regs[2];
 		psf[3] = _status << 24 | (_regs[3] & 0xffff);
 		psf[4] = length;
-		_peer->receive_fis(5,psf);
+		_peer->receive_fis(5, psf);
 	}
 
 	void send_dma_setup_fis(bool direction) {
 		unsigned dsf[7];
-		memset(dsf,0,sizeof(dsf));
-		dsf[0] = 0x800 /* interrupt */| (direction ? 0x200 : 0) | 0x41;
-		_peer->receive_fis(7,dsf);
+		memset(dsf, 0, sizeof(dsf));
+		dsf[0] = 0x800 /* interrupt */ | (direction ? 0x200 : 0) | 0x41;
+		_peer->receive_fis(7, dsf);
 	}
 
 	/**
 	 * We build the identify response in a buffer to allow to use push_data.
 	 */
 	void build_identify_buffer(unsigned short *identify) {
-		memset(identify,0,512);
+		memset(identify, 0, 512);
 		for(size_t i = 0; i < 20; i++)
 			identify[27 + i] = _params.name[2 * i] << 8 | _params.name[2 * i + 1];
 		identify[47] = 0x80ff;
@@ -119,7 +119,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 		identify[83] = 0x4000 | 1 << 10; // lba48
 		identify[86] = 1 << 10; // lba48 enabled
 		identify[88] = 0x203f; // ultra DMA5 enabled
-		memcpy(identify + 100,&_params.sectors,8);
+		memcpy(identify + 100, &_params.sectors, 8);
 		identify[0xff] = 0xa5;
 		unsigned char checksum = 0;
 		for(size_t i = 0; i < 512; i++)
@@ -132,22 +132,22 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	 *
 	 * Return the number of byte written.
 	 */
-	unsigned push_data(size_t length,void *data,bool &irq) {
+	unsigned push_data(size_t length, void *data, bool &irq) {
 		if(!_dsf[3])
 			return 0;
-		uintptr_t prdbase = union64(_dsf[2],_dsf[1]);
-		LOG("push data %x prdbase %lx _dsf %x %x %x\n",length,prdbase,_dsf[1],_dsf[2],_dsf[3]);
+		uintptr_t prdbase = union64(_dsf[2], _dsf[1]);
+		LOG("push data %x prdbase %lx _dsf %x %x %x\n", length, prdbase, _dsf[1], _dsf[2], _dsf[3]);
 		size_t prd = 0;
 		size_t offset = 0;
 		while(offset < length && prd < _dsf[3]) {
 			unsigned prdvalue[4];
-			copy_in(prdbase + prd * 16,prdvalue,16);
+			copy_in(prdbase + prd * 16, prdvalue, 16);
 
 			irq = irq || prdvalue[3] & 0x80000000;
 			size_t sublen = (prdvalue[3] & 0x3fffff) + 1;
 			if(sublen > length - offset)
 				sublen = length - offset;
-			copy_out(union64(prdvalue[1],prdvalue[0]),reinterpret_cast<char *>(data) + offset,sublen);
+			copy_out(union64(prdvalue[1], prdvalue[0]), reinterpret_cast<char *>(data) + offset, sublen);
 			offset += sublen;
 			prd++;
 		}
@@ -159,7 +159,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 	/**
 	 * Read or write sectors from/to disk.
 	 */
-	size_t readwrite_sectors(bool read,bool lba48_ext) {
+	size_t readwrite_sectors(bool read, bool lba48_ext) {
 		uint64_t sector;
 		size_t len;
 
@@ -178,7 +178,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 
 		if(!_dsf[3])
 			return 0;
-		uintptr_t prdbase = union64(_dsf[2],_dsf[1]);
+		uintptr_t prdbase = union64(_dsf[2], _dsf[1]);
 
 		assert(_dsf[6] < 32);
 		assert(_splits[_dsf[6]] == 0);
@@ -192,15 +192,16 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 
 			_dma.clear();
 			size_t dmacount = 0;
-			for(; prd < _dsf[3] && dmacount < Storage::MAX_DMA_DESCS && len > transfer; prd++,dmacount++) {
+			for(; prd < _dsf[3] && dmacount<Storage::MAX_DMA_DESCS && len> transfer; prd++,
+			    dmacount++) {
 				unsigned prdvalue[4];
-				copy_in(prdbase + prd * 16,prdvalue,16);
+				copy_in(prdbase + prd * 16, prdvalue, 16);
 
 				size_t sublen = ((prdvalue[3] & 0x3fffff) + 1) - lastoffset;
 				if(sublen > len - transfer)
 					sublen = len - transfer;
 
-				_dma.push(DMADesc(union64(prdvalue[1],prdvalue[0]) + lastoffset,sublen));
+				_dma.push(DMADesc(union64(prdvalue[1], prdvalue[0]) + lastoffset, sublen));
 				transfer += sublen;
 				lastoffset = 0;
 			}
@@ -233,9 +234,9 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 
 			_splits[_dsf[6]]++;
 
-			MessageDisk msg(read ? MessageDisk::DISK_READ : MessageDisk::DISK_WRITE,_hostdisk,
-					_dsf[6],sector,&_dma);
-			check1(1,!_bus_disk.send(msg),"DISK operation failed");
+			MessageDisk msg(read ? MessageDisk::DISK_READ : MessageDisk::DISK_WRITE, _hostdisk,
+			                _dsf[6], sector, &_dma);
+			check1(1, !_bus_disk.send(msg), "DISK operation failed");
 
 			sector += transfer >> 9;
 			assert(len >= transfer);
@@ -265,7 +266,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 					send_dma_setup_fis(true);
 				else
 					send_pio_setup_fis(512);
-				readwrite_sectors(true,lba48_command);
+				readwrite_sectors(true, lba48_command);
 				break;
 			case 0x34: // WRITE SECTOR EXT
 			case 0x35: // WRITE DMA EXT
@@ -278,7 +279,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 					send_dma_setup_fis(false);
 				else
 					send_pio_setup_fis(512);
-				readwrite_sectors(false,lba48_command);
+				readwrite_sectors(false, lba48_command);
 				break;
 			case 0x60: // READ  FPDMA QUEUED
 				read = true;
@@ -291,7 +292,7 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				_regs[0] = (_regs[0] & 0x00ffffff) | (feature << 24);
 				_regs[2] = (_regs[2] & 0x00ffffff) | (feature << 16) & 0xff000000;
 				send_dma_setup_fis(read);
-				readwrite_sectors(read,true);
+				readwrite_sectors(read, true);
 			}
 			break;
 			case 0xc6: // SET MULTIPLE
@@ -314,17 +315,17 @@ class SataDrive : public FisReceiver, public StaticReceiver<SataDrive> {
 				unsigned short identify[256];
 				build_identify_buffer(identify);
 				bool irq = false;
-				push_data(512,identify,irq);
+				push_data(512, identify, irq);
 				LOG("IDENTIFY transfered\n");
 				complete_command();
 			}
 			break;
 			case 0xef: // SET FEATURES
-				LOG("SET FEATURES %x sc %x\n",_regs[0] >> 24,_regs[3] & 0xff);
+				LOG("SET FEATURES %x sc %x\n", _regs[0] >> 24, _regs[3] & 0xff);
 				complete_command();
 				break;
 			default:
-				Serial::get().writef("Command %x is unsupported\n",_regs[0] >> 16);
+				Serial::get().writef("Command %x is unsupported\n", _regs[0] >> 16);
 				_error |= 4;
 				break;
 		}
@@ -339,19 +340,19 @@ public:
 		_status = 0x40; // DRDY
 		_error = 1;
 		_ctrl = _regs[3] >> 24;
-		memset(_splits,0,sizeof(_splits));
+		memset(_splits, 0, sizeof(_splits));
 		complete_command();
 	}
 
 	/**
 	 * Receive a FIS from the controller.
 	 */
-	void receive_fis(size_t fislen,unsigned *fis) {
-		LOG("receive_fis: %u %p %u\n",fislen,fis,fis[0]);
+	void receive_fis(size_t fislen, unsigned *fis) {
+		LOG("receive_fis: %u %p %u\n", fislen, fis, fis[0]);
 		if(fislen >= 2) {
 			switch(fis[0] & 0xff) {
 				case 0x27: // register FIS
-					assert(fislen ==5);
+					assert(fislen == 5);
 
 					// remain in reset asserted state when receiving a normal command
 					if((_ctrl & 0x4) && (_regs[0] & 0x8000)) {
@@ -360,7 +361,7 @@ public:
 					}
 
 					// copyin to our registers
-					memcpy(_regs,fis,sizeof(_regs));
+					memcpy(_regs, fis, sizeof(_regs));
 
 					if(_regs[0] & 0x8000)
 						execute_command();
@@ -377,7 +378,7 @@ public:
 					break;
 				case 0x41: // dma setup fis
 					assert(fislen == 7);
-					memcpy(_dsf,fis,sizeof(_dsf));
+					memcpy(_dsf, fis, sizeof(_dsf));
 					break;
 				default:
 					assert(!"Invalid H2D FIS!");
@@ -400,29 +401,31 @@ public:
 		return true;
 	}
 
-	SataDrive(DBus<MessageDisk> &bus_disk,DBus<MessageMemRegion> *bus_memregion,
-			DBus<MessageMem> *bus_mem,size_t hostdisk,Storage::Parameter params)
+	SataDrive(DBus<MessageDisk> &bus_disk, DBus<MessageMemRegion> *bus_memregion,
+	          DBus<MessageMem> *bus_mem, size_t hostdisk, Storage::Parameter params)
 		: _bus_memregion(bus_memregion), _bus_mem(bus_mem), _bus_disk(bus_disk),
 		  _hostdisk(hostdisk), _multiple(0), _regs(), _ctrl(0), _status(), _error(), _dsf(),
 		  _splits(), _params(params), _dma() {
 		Serial::get().writef("SATA disk %#x (%s) flags %#x sectors %Lu\n",
-				hostdisk,_params.name,_params.flags,_params.sectors);
+		                     hostdisk, _params.name, _params.flags, _params.sectors);
 	}
 };
 
-PARAM_HANDLER(drive,
-		"drive:sigma0drive,controller,port - put a drive to the given port of an ahci controller by using a drive from sigma0 as backend.",
-		"Example: 'drive:0,1,2' to put the first sigma0 drive on the third port of the second controller.") {
+PARAM_HANDLER(
+    drive,
+    "drive:sigma0drive,controller,port - put a drive to the given port of an ahci controller by using a drive from sigma0 as backend.",
+    "Example: 'drive:0,1,2' to put the first sigma0 drive on the third port of the second controller.")
+{
 	Storage::Parameter params;
 	size_t hostdisk = argv[0];
-	MessageDisk msg0(hostdisk,&params);
+	MessageDisk msg0(hostdisk, &params);
 	mb.bus_disk.send(msg0);
 
-	SataDrive *drive = new SataDrive(mb.bus_disk,&mb.bus_memregion,&mb.bus_mem,hostdisk,params);
-	mb.bus_diskcommit.add(drive,SataDrive::receive_static<MessageDiskCommit>);
+	SataDrive *drive = new SataDrive(mb.bus_disk, &mb.bus_memregion, &mb.bus_mem, hostdisk, params);
+	mb.bus_diskcommit.add(drive, SataDrive::receive_static<MessageDiskCommit> );
 
 	// XXX put on SATA bus
-	MessageAhciSetDrive msg(drive,argv[2]);
-	if(!mb.bus_ahcicontroller.send(msg,argv[1]))
-		Util::panic("AHCI controller #%ld does not allow to set drive #%lx\n",argv[1],argv[2]);
+	MessageAhciSetDrive msg(drive, argv[2]);
+	if(!mb.bus_ahcicontroller.send(msg, argv[1]))
+		Util::panic("AHCI controller #%ld does not allow to set drive #%lx\n", argv[1], argv[2]);
 }

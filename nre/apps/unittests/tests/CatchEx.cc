@@ -27,7 +27,7 @@ using namespace nre::test;
 static void test_catchex();
 
 const TestCase catchex = {
-	"Catch exception",test_catchex
+	"Catch exception", test_catchex
 };
 
 static const unsigned tries = 1000;
@@ -47,9 +47,9 @@ static void test_catchex() {
 		prof.stop();
 	}
 
-	WVPERF(prof.avg(),"cycles");
-	WVPASSEQ(sum,tries);
-	WVPRINTF("sum: %u",sum);
-	WVPRINTF("min: %Lu",prof.min());
-	WVPRINTF("max: %Lu",prof.max());
+	WVPERF(prof.avg(), "cycles");
+	WVPASSEQ(sum, tries);
+	WVPRINTF("sum: %u", sum);
+	WVPRINTF("min: %Lu", prof.min());
+	WVPRINTF("max: %Lu", prof.max());
 }

@@ -16,7 +16,7 @@
 
 #include <cstring>
 
-void* memcpy(void *dest,const void *src,size_t len) {
+void* memcpy(void *dest, const void *src, size_t len) {
 	uchar *bdest = (uchar*)dest;
 	uchar *bsrc = (uchar*)src;
 	// copy bytes for alignment
@@ -58,8 +58,8 @@ void* memcpy(void *dest,const void *src,size_t len) {
 	return dest;
 }
 
-void *memmove(void *dest,const void *src,size_t count) {
-	uchar *s,*d;
+void *memmove(void *dest, const void *src, size_t count) {
+	uchar *s, *d;
 	// nothing to do?
 	if((uchar*)dest == (uchar*)src || count == 0)
 		return dest;
@@ -79,12 +79,12 @@ void *memmove(void *dest,const void *src,size_t count) {
 	}
 	// moving backwards
 	else
-		memcpy(dest,src,count);
+		memcpy(dest, src, count);
 
 	return dest;
 }
 
-void *memset(void *addr,int value,size_t count) {
+void *memset(void *addr, int value, size_t count) {
 	uchar *baddr = (uchar*)addr;
 	// align it
 	while(count > 0 && (uintptr_t)baddr % sizeof(word_t)) {
@@ -114,7 +114,7 @@ size_t strlen(const char *src) {
 	return len;
 }
 
-int memcmp(const void *str1,const void *str2,size_t count) {
+int memcmp(const void *str1, const void *str2, size_t count) {
 	const uchar *s1 = (const uchar*)str1;
 	const uchar *s2 = (const uchar*)str2;
 	while(count-- > 0) {
@@ -124,8 +124,8 @@ int memcmp(const void *str1,const void *str2,size_t count) {
 	return 0;
 }
 
-int strcmp(const char *str1,const char *str2) {
-	char c1 = *str1,c2 = *str2;
+int strcmp(const char *str1, const char *str2) {
+	char c1 = *str1, c2 = *str2;
 	while(c1 && c2) {
 		// different?
 		if(c1 != c2) {
@@ -144,7 +144,7 @@ int strcmp(const char *str1,const char *str2) {
 	return 1;
 }
 
-int strncmp(const char *str1,const char *str2,size_t count) {
+int strncmp(const char *str1, const char *str2, size_t count) {
 	ssize_t rem = count;
 	while(*str1 && *str2 && rem-- > 0) {
 		if(*str1++ != *str2++)
@@ -157,7 +157,7 @@ int strncmp(const char *str1,const char *str2,size_t count) {
 	return -1;
 }
 
-char *strchr(const char *str,int ch) {
+char *strchr(const char *str, int ch) {
 	while(*str) {
 		if(*str++ == ch)
 			return (char*)(str - 1);
@@ -165,7 +165,7 @@ char *strchr(const char *str,int ch) {
 	return 0;
 }
 
-char *strstr(const char *str1,const char *str2) {
+char *strstr(const char *str1, const char *str2) {
 	char *res = 0;
 	char *sub;
 
@@ -190,9 +190,9 @@ char *strstr(const char *str1,const char *str2) {
 	return 0;
 }
 
-size_t strcspn(const char *s,const char *reject) {
+size_t strcspn(const char *s, const char *reject) {
 	size_t res = 0;
-	while(s[res] && !strchr(reject,s[res]))
+	while(s[res] && !strchr(reject, s[res]))
 		res++;
 	return res;
 }

@@ -24,11 +24,11 @@
 #include <Assert.h>
 
 class HostRTC {
-	static const uint PORT_BASE	= 0x70;
-	static const uint MS_TIMEOUT	= 2000; // milliseconds
+	static const uint PORT_BASE     = 0x70;
+	static const uint MS_TIMEOUT    = 2000; // milliseconds
 
 public:
-	explicit HostRTC() : _ports(PORT_BASE,2), _clock(1000) {
+	explicit HostRTC() : _ports(PORT_BASE, 2), _clock(1000) {
 	}
 
 	/**
@@ -91,13 +91,13 @@ public:
 		int year = data[9] + 100 * data[6];
 		if(year < 1970)
 			year += 100;
-		nre::DateInfo date(year,data[8],data[7],data[4],data[2],data[0]);
+		nre::DateInfo date(year, data[8], data[7], data[4], data[2], data[0]);
 		return nre::Date::mktime(&date) * nre::Timer::WALLCLOCK_FREQ;
 	}
 
 private:
 	uint8_t read(uint index) {
-		_ports.out<uint8_t>(index,0);
+		_ports.out<uint8_t>(index, 0);
 		return _ports.in<uint8_t>(1);
 	}
 

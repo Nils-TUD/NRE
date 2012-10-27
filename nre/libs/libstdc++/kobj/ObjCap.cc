@@ -26,7 +26,7 @@ ObjCap::~ObjCap() {
 		if(!(_sel & KEEP_CAP_BIT)) {
 			// the destructor shouldn't throw
 			try {
-				Syscalls::revoke(Crd(sel(),0,Crd::OBJ_ALL),true);
+				Syscalls::revoke(Crd(sel(), 0, Crd::OBJ_ALL), true);
 			}
 			catch(...) {
 				// ignore it

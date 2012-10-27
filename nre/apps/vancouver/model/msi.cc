@@ -28,13 +28,13 @@ using namespace nre;
  * State: testing
  * Features: LowestPrio: RoundRobin, 16bit dest
  */
-class Msi: public StaticReceiver<Msi> {
+class Msi : public StaticReceiver<Msi> {
 	DBus<MessageApic> & _bus_apic;
 	unsigned _lowest_rr;
 
 public:
 	bool receive(MessageMem &msg) {
-		if(!in_range(msg.phys,MessageMem::MSI_ADDRESS,1 << 20))
+		if(!in_range(msg.phys, MessageMem::MSI_ADDRESS, 1 << 20))
 			return false;
 
 		COUNTER_INC("MSI");
@@ -53,10 +53,10 @@ public:
 		// lowest prio mode?
 		if((msg.phys & MessageMem::MSI_RH) || (event & VCVCpu::EVENT_LOWEST)) {
 			// we send them round-robin as EVENT_FIXED
-			MessageApic msg1(icr & ~0x700,dst,0);
-			return _bus_apic.send_rr(msg1,_lowest_rr);
+			MessageApic msg1(icr & ~0x700, dst, 0);
+			return _bus_apic.send_rr(msg1, _lowest_rr);
 		}
-		MessageApic msg1(icr,dst,0);
+		MessageApic msg1(icr, dst, 0);
 		return _bus_apic.send(msg1);
 	}
 
@@ -65,6 +65,6 @@ public:
 };
 
 PARAM_HANDLER(msi,
-		"msi - provide MSI support by forwarding access to 0xfee00000 to the LocalAPICs.") {
-	mb.bus_mem.add(new Msi(mb.bus_apic),Msi::receive_static<MessageMem>);
+              "msi - provide MSI support by forwarding access to 0xfee00000 to the LocalAPICs.") {
+	mb.bus_mem.add(new Msi(mb.bus_apic), Msi::receive_static<MessageMem> );
 }

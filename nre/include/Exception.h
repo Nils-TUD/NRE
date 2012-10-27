@@ -34,72 +34,74 @@
  * So, by providing this macro we can keep different exception classes with little effort and can
  * switch easily to the constructor inheritance concept as soon as its available in gcc.
  */
-#define DEFINE_EXCONSTRS(className) \
-	explicit className(ErrorCode code = E_FAILURE,const char *msg = 0) throw() : Exception(code,msg) {	\
-	}																												\
-	explicit className(ErrorCode code,size_t bufsize,const char *fmt,...) throw() : Exception(code) {		\
-		va_list ap;																									\
-		va_start(ap,fmt);																							\
-		_msg.vformat(bufsize,fmt,ap);																				\
-		va_end(ap);																									\
-	}																												\
-	explicit className(ErrorCode code,const String &msg) throw() : Exception(code,msg) {					\
+#define DEFINE_EXCONSTRS(className)                                                                      \
+	explicit className(ErrorCode code = E_FAILURE, const char *msg = 0) throw() : Exception(code, msg) { \
+	}                                                                                                    \
+	explicit className(ErrorCode code, size_t bufsize, const char *fmt, ...) throw() : Exception(code) { \
+		va_list ap;                                                                                      \
+		va_start(ap, fmt);                                                                               \
+		_msg.vformat(bufsize, fmt, ap);                                                                  \
+		va_end(ap);                                                                                      \
+	}                                                                                                    \
+    explicit className(ErrorCode code, const String &msg) throw() : Exception(code, msg) {               \
 	}
 
 namespace std {
-	/**
-	 * Type of terminate-handlers
-	 */
-	typedef void (*terminate_handler)(void);
-	/**
-	 * Type of unexpected-handlers
-	 */
-	typedef void (*unexpected_handler)(void);
 
-	/**
-	 * Sets the terminate-handler
-	 *
-	 * @param pHandler the new one
-	 * @return the old one
-	 */
-	terminate_handler set_terminate(terminate_handler pHandler) throw ();
-	/**
-	 * Is called by the runtime if exception-handling must be aborted
-	 */
-	void terminate(void) NORETURN;
-	/**
-	 * Sets the unexpected-handler
-	 *
-	 * @param pHandler the new one
-	 * @return the old one
-	 */
-	unexpected_handler set_unexpected(unexpected_handler pHandler) throw ();
-	/**
-	 * Is called by the runtime if an exception is thrown which violates the functions exception
-	 * specification
-	 */
-	void unexpected(void) NORETURN;
-	/**
-	 * @return true if the caught exception violates the throw specification.
-	 */
-	bool uncaught_exception() throw ();
+/**
+ * Type of terminate-handlers
+ */
+typedef void (*terminate_handler)(void);
+/**
+ * Type of unexpected-handlers
+ */
+typedef void (*unexpected_handler)(void);
+
+/**
+ * Sets the terminate-handler
+ *
+ * @param pHandler the new one
+ * @return the old one
+ */
+terminate_handler set_terminate(terminate_handler pHandler) throw();
+/**
+ * Is called by the runtime if exception-handling must be aborted
+ */
+void terminate(void) NORETURN;
+/**
+ * Sets the unexpected-handler
+ *
+ * @param pHandler the new one
+ * @return the old one
+ */
+unexpected_handler set_unexpected(unexpected_handler pHandler) throw();
+/**
+ * Is called by the runtime if an exception is thrown which violates the functions exception
+ * specification
+ */
+void unexpected(void) NORETURN;
+/**
+ * @return true if the caught exception violates the throw specification.
+ */
+bool uncaught_exception() throw();
+
 }
 
 namespace nre {
 
 class Exception;
 class UtcbFrameRef;
-static inline OStream &operator<<(OStream &os,const Exception &e);
-UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
-UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
+static inline OStream &operator<<(OStream &os, const Exception &e);
+UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
+UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
 
 /**
  * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and
  * have optionally a message (string).
  */
 class Exception {
-	friend UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
-	friend 	UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
+	friend UtcbFrameRef & operator<<(UtcbFrameRef &uf, const Exception &e);
+	friend UtcbFrameRef & operator>>(UtcbFrameRef &uf, Exception &e);
 
 	static const size_t MAX_TRACE_DEPTH = 16;
 
@@ -113,7 +115,7 @@ public:
 	 * @param code the error-code
 	 * @param msg optionally, a message describing the error
 	 */
-	explicit Exception(ErrorCode code = E_FAILURE,const char *msg = 0) throw();
+	explicit Exception(ErrorCode code = E_FAILURE, const char *msg = 0) throw();
 
 	/**
 	 * Constructor with a formatted string
@@ -122,7 +124,7 @@ public:
 	 * @param bufsize the size of the buffer for string to create
 	 * @param msg a message describing the error
 	 */
-	explicit Exception(ErrorCode code,size_t bufsize,const char *fmt,...) throw();
+	explicit Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw();
 
 	/**
 	 * Constructor
@@ -130,7 +132,7 @@ public:
 	 * @param code the error-code
 	 * @param msg a message describing the error
 	 */
-	explicit Exception(ErrorCode code,const String &msg) throw();
+	explicit Exception(ErrorCode code, const String &msg) throw();
 
 	/**
 	 * Destructor
@@ -192,7 +194,7 @@ protected:
 	void write_backtrace(OStream &os) const {
 		os.writef("Backtrace:\n");
 		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
-			os.writef("\t%p\n",reinterpret_cast<void*>(*it));
+			os.writef("\t%p\n", reinterpret_cast<void*>(*it));
 	}
 
 	ErrorCode _code;
@@ -202,10 +204,10 @@ protected:
 	static const char *_msgs[];
 };
 
-UtcbFrameRef &operator<<(UtcbFrameRef &uf,const Exception &e);
-UtcbFrameRef &operator>>(UtcbFrameRef &uf,Exception &e);
+UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
+UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
 
-static inline OStream &operator<<(OStream &os,const Exception &e) {
+static inline OStream &operator<<(OStream &os, const Exception &e) {
 	e.write(os);
 	return os;
 }

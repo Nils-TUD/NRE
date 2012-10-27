@@ -18,19 +18,21 @@
 #include <RCU.h>
 
 namespace nre {
-	class Init {
-		Init() {
-			RCU::add(Thread::current());
-		}
-		static Init init;
-	};
 
-	uint32_t *RCU::_versions = 0;
-	size_t RCU::_versions_count = 0;
-	SList<Thread> RCU::_ecs;
-	RCUObject *RCU::_objs = 0;
-	RCULock RCU::_lock;
-	UserSm RCU::_sm INIT_PRIO_RCU;
-	UserSm RCU::_ecsm INIT_PRIO_RCU;
-	Init Init::init INIT_PRIO_RCU;
+class Init {
+	Init() {
+		RCU::add(Thread::current());
+	}
+	static Init init;
+};
+
+uint32_t *RCU::_versions = 0;
+size_t RCU::_versions_count = 0;
+SList<Thread> RCU::_ecs;
+RCUObject *RCU::_objs = 0;
+RCULock RCU::_lock;
+UserSm RCU::_sm INIT_PRIO_RCU;
+UserSm RCU::_ecsm INIT_PRIO_RCU;
+Init Init::init INIT_PRIO_RCU;
+
 }

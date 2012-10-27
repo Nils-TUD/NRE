@@ -22,7 +22,7 @@
 
 using namespace nre;
 
-int pthread_key_create(pthread_key_t* key,void (*)(void*)) {
+int pthread_key_create(pthread_key_t* key, void (*)(void*)) {
 	*key = Thread::current()->create_tls();
 	return 0;
 }
@@ -37,8 +37,8 @@ int pthread_cancel(pthread_t) {
 	return 0;
 }
 
-int pthread_once(pthread_once_t* control,void (*init)(void)) {
-	if(Atomic::swap(control,1,2))
+int pthread_once(pthread_once_t* control, void (*init)(void)) {
+	if(Atomic::swap(control, 1, 2))
 		(*init)();
 	return 0;
 }
@@ -47,12 +47,12 @@ void* pthread_getspecific(pthread_key_t key) {
 	return Thread::current()->get_tls<void*>(key);
 }
 
-int pthread_setspecific(pthread_key_t key,void* data) {
-	Thread::current()->set_tls<void*>(key,data);
+int pthread_setspecific(pthread_key_t key, void* data) {
+	Thread::current()->set_tls<void*>(key, data);
 	return 0;
 }
 
-int pthread_mutex_init(pthread_mutex_t* mutex,const pthread_mutexattr_t*) {
+int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t*) {
 	*mutex = 0;
 	return 0;
 }

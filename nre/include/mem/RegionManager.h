@@ -29,12 +29,12 @@ public:
 
 class OStream;
 class RegionManager;
-OStream &operator<<(OStream &os,const RegionManager &rm);
+OStream &operator<<(OStream &os, const RegionManager &rm);
 
 class RegionManager {
-	friend OStream &operator<<(OStream &os,const RegionManager &rm);
+	friend OStream & operator<<(OStream &os, const RegionManager &rm);
 
-	static const size_t MAX_REGIONS	= 128;
+	static const size_t MAX_REGIONS = 128;
 
 	struct Region {
 		uintptr_t addr;
@@ -61,11 +61,11 @@ public:
 		return s;
 	}
 
-	uintptr_t alloc(size_t size,size_t align = 1) {
-		Region *r = get(size,align);
+	uintptr_t alloc(size_t size, size_t align = 1) {
+		Region *r = get(size, align);
 		if(!r) {
-			throw RegionManagerException(E_CAPACITY,64,
-					"Unable to allocate %zu bytes aligned to %u",size,align);
+			throw RegionManagerException(E_CAPACITY, 64,
+			                             "Unable to allocate %zu bytes aligned to %u", size, align);
 		}
 		uintptr_t org = r->addr;
 		uintptr_t start = (r->addr + align - 1) & ~(align - 1);
@@ -83,22 +83,22 @@ public:
 		return start;
 	}
 
-	void alloc_region(uintptr_t addr,size_t size) {
-		Region *r = get(addr,size,true);
+	void alloc_region(uintptr_t addr, size_t size) {
+		Region *r = get(addr, size, true);
 		if(!r)
-			throw RegionManagerException(E_EXISTS,64,"Region %p..%p not found",addr,addr + size);
-		remove_from(r,addr,size);
+			throw RegionManagerException(E_EXISTS, 64, "Region %p..%p not found", addr, addr + size);
+		remove_from(r, addr, size);
 	}
 
-	void remove(uintptr_t addr,size_t size) {
+	void remove(uintptr_t addr, size_t size) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
-			if(_regs[i].size && Math::overlapped(addr,size,_regs[i].addr,_regs[i].size))
-				remove_from(_regs + i,addr,size);
+			if(_regs[i].size && Math::overlapped(addr, size, _regs[i].addr, _regs[i].size))
+				remove_from(_regs + i, addr, size);
 		}
 	}
 
-	void free(uintptr_t addr,size_t size) {
-		Region *p = 0,*n = 0;
+	void free(uintptr_t addr, size_t size) {
+		Region *p = 0, *n = 0;
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size > 0) {
 				if(_regs[i].addr + _regs[i].size == addr)
@@ -131,7 +131,7 @@ private:
 	RegionManager(const RegionManager&);
 	RegionManager& operator=(const RegionManager&);
 
-	Region *get(size_t size,size_t align) {
+	Region *get(size_t size, size_t align) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(_regs[i].size >= size) {
 				uintptr_t start = (_regs[i].addr + align - 1) & ~(align - 1);
@@ -141,7 +141,7 @@ private:
 		}
 		return 0;
 	}
-	Region *get(uintptr_t addr,size_t size,bool) {
+	Region *get(uintptr_t addr, size_t size, bool) {
 		for(size_t i = 0; i < MAX_REGIONS; ++i) {
 			if(addr >= _regs[i].addr && _regs[i].addr + _regs[i].size >= addr + size)
 				return _regs + i;
@@ -153,10 +153,10 @@ private:
 			if(_regs[i].size == 0)
 				return _regs + i;
 		}
-		throw RegionManagerException(E_CAPACITY,"No free regions");
+		throw RegionManagerException(E_CAPACITY, "No free regions");
 	}
 
-	void remove_from(Region *r,uintptr_t addr,size_t size) {
+	void remove_from(Region *r, uintptr_t addr, size_t size) {
 		// complete region should be removed?
 		if(addr <= r->addr && addr + size >= r->addr + r->size)
 			r->size = 0;

@@ -26,8 +26,8 @@ namespace nre {
  */
 class Syscalls {
 	enum {
-		FLAG0	= 1 << 4,
-		FLAG1	= 1 << 5,
+		FLAG0   = 1 << 4,
+		FLAG1   = 1 << 5,
 	};
 	enum {
 		IPC_CALL,
@@ -60,21 +60,21 @@ public:
 	 * Ec operations
 	 */
 	enum EcOp {
-		RECALL	= 0
+		RECALL  = 0
 	};
 	/**
 	 * Sm operations
 	 */
 	enum SmOp {
-		SM_UP	= 0,
+		SM_UP   = 0,
 		SM_DOWN = FLAG0,
-		SM_ZERO	= FLAG0 | FLAG1
+		SM_ZERO = FLAG0 | FLAG1
 	};
 	/**
 	 * Sc operations
 	 */
 	enum ScOp {
-		GETTIME	= 0
+		GETTIME = 0
 	};
 
 	/**
@@ -99,12 +99,12 @@ public:
 	 * @param dstpd the Pd in which the Ec should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_ec(capsel_t ec,void *utcb,void *sp,cpu_t cpu,unsigned event_base,
-			ECType type,capsel_t dstpd) {
-		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL),dstpd,
-		        reinterpret_cast<word_t>(utcb) | cpu,
-		        reinterpret_cast<word_t>(sp),
-		        event_base);
+	static inline void create_ec(capsel_t ec, void *utcb, void *sp, cpu_t cpu,
+	                             unsigned event_base, ECType type, capsel_t dstpd) {
+		SyscallABI::syscall(ec << 8 | (type == EC_LOCAL ? CREATE_EC : CREATE_EC_GLOBAL), dstpd,
+		                    reinterpret_cast<word_t>(utcb) | cpu,
+		                    reinterpret_cast<word_t>(sp),
+		                    event_base);
 	}
 
 	/**
@@ -116,8 +116,8 @@ public:
 	 * @param dstpd the Pd in which the Sc should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_sc(capsel_t sc,capsel_t ec,Qpd qpd,capsel_t dstpd) {
-		SyscallABI::syscall(sc << 8 | CREATE_SC,dstpd,ec,qpd.value());
+	static inline void create_sc(capsel_t sc, capsel_t ec, Qpd qpd, capsel_t dstpd) {
+		SyscallABI::syscall(sc << 8 | CREATE_SC, dstpd, ec, qpd.value());
 	}
 
 	/**
@@ -130,8 +130,8 @@ public:
 	 * @param dstpd the Pd in which the Sc should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_pt(capsel_t pt,capsel_t ec,uintptr_t addr,Mtd mtd,capsel_t dstpd) {
-		SyscallABI::syscall(pt << 8 | CREATE_PT,dstpd,ec,mtd.value(),addr);
+	static inline void create_pt(capsel_t pt, capsel_t ec, uintptr_t addr, Mtd mtd, capsel_t dstpd) {
+		SyscallABI::syscall(pt << 8 | CREATE_PT, dstpd, ec, mtd.value(), addr);
 	}
 
 	/**
@@ -142,8 +142,8 @@ public:
 	 * @param dstpd the Pd in which the Pd should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_pd(capsel_t pd,Crd pt_crd,capsel_t dstpd) {
-		SyscallABI::syscall(pd << 8 | CREATE_PD,dstpd,pt_crd.value());
+	static inline void create_pd(capsel_t pd, Crd pt_crd, capsel_t dstpd) {
+		SyscallABI::syscall(pd << 8 | CREATE_PD, dstpd, pt_crd.value());
 	}
 
 	/**
@@ -154,8 +154,8 @@ public:
 	 * @param dstpd the Pd in which the Pd should be created
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void create_sm(capsel_t sm,unsigned initial,capsel_t dstpd) {
-		SyscallABI::syscall(sm << 8 | CREATE_SM,dstpd,initial);
+	static inline void create_sm(capsel_t sm, unsigned initial, capsel_t dstpd) {
+		SyscallABI::syscall(sm << 8 | CREATE_SM, dstpd, initial);
 	}
 
 	/**
@@ -165,7 +165,7 @@ public:
 	 * @param op the operation (currently only RECALL)
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void ec_ctrl(capsel_t ec,EcOp op) {
+	static inline void ec_ctrl(capsel_t ec, EcOp op) {
 		SyscallABI::syscall(ec << 8 | EC_CTRL | op);
 	}
 
@@ -176,7 +176,7 @@ public:
 	 * @param op the operation (DOWN, ZERO or UP)
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void sm_ctrl(capsel_t sm,SmOp op) {
+	static inline void sm_ctrl(capsel_t sm, SmOp op) {
 		SyscallABI::syscall(sm << 8 | SM_CTRL | op);
 	}
 
@@ -188,8 +188,8 @@ public:
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
 	static inline timevalue_t sc_time(capsel_t sc) {
-		word_t out1,out2;
-		SyscallABI::syscall(sc << 8 | SC_CTRL | GETTIME,0,0,0,0,out1,out2);
+		word_t out1, out2;
+		SyscallABI::syscall(sc << 8 | SC_CTRL | GETTIME, 0, 0, 0, 0, out1, out2);
 		return (static_cast<timevalue_t>(out1) << 32) | out2;
 	}
 
@@ -200,15 +200,16 @@ public:
 	 * @param sm the GSI to assign
 	 * @param cpu the physical CPU id to which the GSI should be routed
 	 * @param pci_cfg_mem for GSIs delivered as MSI, this must refer to the memory-mapped PCI
-	 * 	configuration space of the device that generates the interrupt.
+	 *  configuration space of the device that generates the interrupt.
 	 * @param msi_address will be set to the address of the MSI
 	 * @param msi_value will be set to the value of the MSI
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void assign_gsi(capsel_t sm,cpu_t cpu,void *pci_cfg_mem = 0,
-			uint64_t *msi_address = 0,word_t *msi_value = 0) {
-		word_t out1,out2;
-		SyscallABI::syscall(sm << 8 | ASSIGN_GSI,reinterpret_cast<word_t>(pci_cfg_mem),cpu,0,0,out1,out2);
+	static inline void assign_gsi(capsel_t sm, cpu_t cpu, void *pci_cfg_mem = 0,
+	                              uint64_t *msi_address = 0, word_t *msi_value = 0) {
+		word_t out1, out2;
+		SyscallABI::syscall(sm << 8 | ASSIGN_GSI, reinterpret_cast<word_t>(pci_cfg_mem),
+		                    cpu, 0, 0, out1, out2);
 		if(msi_address)
 			*msi_address = out1;
 		if(msi_value)
@@ -222,8 +223,8 @@ public:
 	 * @param myself true if the caps should be revoked from yourself as well (not only from childs)
 	 * @throws SyscallException if the system-call failed (result != E_SUCCESS)
 	 */
-	static inline void revoke(Crd crd,bool myself) {
-		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE,crd.value());
+	static inline void revoke(Crd crd, bool myself) {
+		SyscallABI::syscall(myself ? REVOKE_MYSELF : REVOKE, crd.value());
 	}
 
 	/**
@@ -235,8 +236,8 @@ public:
 	 * @return the resulting Crd
 	 */
 	static inline Crd lookup(Crd crd) {
-		word_t out1,out2;
-		SyscallABI::syscall(LOOKUP,crd.value(),0,0,0,out1,out2);
+		word_t out1, out2;
+		SyscallABI::syscall(LOOKUP, crd.value(), 0, 0, 0, out1, out2);
 		return Crd(out1);
 	}
 

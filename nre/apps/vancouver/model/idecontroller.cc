@@ -16,18 +16,18 @@
  */
 
 #ifndef REGBASE
-#include "../bus/motherboard.h"
-#include "../bus/helper.h"
-#include "pci.h"
+#    include "../bus/motherboard.h"
+#    include "../bus/helper.h"
+#    include "pci.h"
 
 using namespace nre;
 
 //#define DEBUG
-#ifdef DEBUG
-#define LOG(fmt,...)	Serial::get().writef(fmt,## __VA_ARGS__)
-#else
-#define LOG(fmt,...)
-#endif
+#    ifdef DEBUG
+#        define LOG(fmt, ...)    Serial::get().writef(fmt, ## __VA_ARGS__)
+#    else
+#        define LOG(fmt, ...)
+#    endif
 
 /**
  * An IDE controller on a PCI card.
@@ -45,8 +45,8 @@ public:
 
 private:
 
-#define  REGBASE "idecontroller.cc"
-#include "reg.h"
+#    define  REGBASE "idecontroller.cc"
+#    include "reg.h"
 	DBus<MessageDisk> &_bus_disk;
 	DBus<MessageIrqLines> &_bus_irqlines;
 	unsigned char _irq;
@@ -56,11 +56,11 @@ private:
 	Storage::dma_type _dma;
 	union {
 		struct {
-			unsigned short _features,_count,_lbalow,_lbamid,_lbahigh,_drive;
+			unsigned short _features, _count, _lbalow, _lbamid, _lbahigh, _drive;
 		};
 		unsigned short _regs[6];
 	};
-	unsigned char _command,_error,_status,_control;
+	unsigned char _command, _error, _status, _control;
 	char *_buffer;
 	uintptr_t _baddr;
 	size_t _bufferoffset;
@@ -92,19 +92,19 @@ private:
 
 	void update_irq(bool assert) {
 		assert = assert && (~_control & 2);
-		LOG("update irq %x\n",assert);
-		MessageIrqLines msg(assert ? MessageIrqLines::ASSERT_IRQ : MessageIrqLines::DEASSERT_IRQ,_irq);
+		LOG("update irq %x\n", assert);
+		MessageIrqLines msg(assert ? MessageIrqLines::ASSERT_IRQ : MessageIrqLines::DEASSERT_IRQ, _irq);
 		_bus_irqlines.send(msg);
 	}
 
 	void build_identify_buffer(unsigned short *identify) {
-		memset(identify,0,512);
+		memset(identify, 0, 512);
 		identify[0] = 0x0040; // fixed disk
 		identify[1] = 16383; // maximum cyclinders
 		identify[6] = 63; // sectors per track
 		// heads
 		identify[3] = (_params.sectors > 255u * identify[1] * identify[6]) ? 255 :
-		                (static_cast<unsigned>(_params.sectors) / identify[1] * identify[6]);
+		              (static_cast<unsigned>(_params.sectors) / identify[1] * identify[6]);
 
 		identify[10] = 'S'; // SN
 		identify[23] = 'F'; // FW
@@ -119,7 +119,7 @@ private:
 		identify[57] = 512; // current sectors capacity
 
 		unsigned maxlba28 = (_params.sectors >> 28) ? 0x0fffffff : _params.sectors;
-		cpu_move<2>(identify + 60,&maxlba28);
+		cpu_move<2>(identify + 60, &maxlba28);
 		identify[65] = identify[66] = identify[67] = identify[68] = 120; // PIO timing
 		identify[80] = 0x7e; // major version number: up to ata-6
 		identify[83] = 0x4400; // LBA48 supported
@@ -128,7 +128,7 @@ private:
 		identify[86] = 0x4400; // LBA48 enabled
 		identify[87] = 0x4000; // shall be set
 		identify[93] = 0x6001; // hardware reset result
-		cpu_move<3>(identify + 100,&_params.sectors);
+		cpu_move<3>(identify + 100, &_params.sectors);
 		identify[0xff] = 0xa5;
 
 		unsigned char checksum = 0;
@@ -137,7 +137,7 @@ private:
 		identify[0xff] -= checksum << 8;
 	}
 
-	void do_read(bool initial,uint64_t sector) {
+	void do_read(bool initial, uint64_t sector) {
 		if(!initial and !_count) {
 			_status &= ~0x88; // no data anymore
 			return;
@@ -145,10 +145,10 @@ private:
 
 		_status = (_status & ~0x81) | 0x80;
 		_bufferoffset = 0;
-		memset(_buffer,0xff,512);
+		memset(_buffer, 0xff, 512);
 		_dma.clear();
-		_dma.push(DMADesc(_baddr,512));
-		MessageDisk msg(MessageDisk::DISK_READ,_disknr,0,sector,&_dma);
+		_dma.push(DMADesc(_baddr, 512));
+		MessageDisk msg(MessageDisk::DISK_READ, _disknr, 0, sector, &_dma);
 		if(!_bus_disk.send(msg)) {
 			_status = (_status & ~0x80) | 0x1;
 			_error |= 1 << 5; // device fault
@@ -169,10 +169,10 @@ private:
 		}
 		switch(_command) {
 			case 0x20: // READ_SECTOR
-				do_read(initial,get_sector(false));
+				do_read(initial, get_sector(false));
 				break;
 			case 0x24: // READ_SECTOR_EXT
-				do_read(initial,get_sector(true));
+				do_read(initial, get_sector(true));
 				break;
 			case 0xec: // IDENTIFY
 				if(!initial) {
@@ -196,7 +196,7 @@ private:
 				update_irq(true);
 				break;
 			case 0xef: // SET FEATURES
-				LOG("SET FEATURES %x sc %x\n",_features,_count);
+				LOG("SET FEATURES %x sc %x\n", _features, _count);
 				_status = _status & ~0x89;
 				update_irq(true);
 				break;
@@ -205,7 +205,7 @@ private:
 				update_irq(true);
 				break;
 			default:
-				Util::panic("unimplemented command %x\n",_command);
+				Util::panic("unimplemented command %x\n", _command);
 				break;
 		}
 	}
@@ -240,9 +240,9 @@ public:
 				case 0:
 					if(_bufferoffset >= 512)
 						return false;
-					cpu_move(&msg.value,_buffer + _bufferoffset,msg.type);
+					cpu_move(&msg.value, _buffer + _bufferoffset, msg.type);
 					if(!_bufferoffset) {
-						LOG("data[%d] = %04x\n",_bufferoffset,msg.value);
+						LOG("data[%d] = %04x\n", _bufferoffset, msg.value);
 					}
 					_bufferoffset += 1 << msg.type;
 					// reissue the command if work left
@@ -254,7 +254,8 @@ public:
 					break;
 				case 2 ... 6:
 					cpu_move<0>(&msg.value,
-							reinterpret_cast<unsigned char *>(_regs + port - 1) + ((_control & 0x80) >> 7));
+					            reinterpret_cast<unsigned char *>(_regs + port -
+					                                              1) + ((_control & 0x80) >> 7));
 					break;
 				case 7:
 					msg.value = _status;
@@ -265,14 +266,14 @@ public:
 					break;
 			}
 			if(port) {
-				LOG("in<%d>[%d] = %x\n",msg.type,port,msg.value);
+				LOG("in<%d>[%d] = %x\n", msg.type, port, msg.value);
 			}
 			return true;
 		}
 		// alternate status register
 		if(!((msg.port ^ PCI_BAR1) & PCI_BAR1_mask) and msg.type == MessageIOIn::TYPE_INB
-		        and ((msg.port & ~PCI_BAR1_mask) == 2)) {
-			LOG("alternate status %x\n",_status);
+		   and ((msg.port & ~PCI_BAR1_mask) == 2)) {
+			LOG("alternate status %x\n", _status);
 			msg.value = _status;
 			return true;
 		}
@@ -289,7 +290,7 @@ public:
 				case 0:
 					if(_bufferoffset >= 512)
 						return false;
-					cpu_move(_buffer + _bufferoffset,&msg.value,msg.type);
+					cpu_move(_buffer + _bufferoffset, &msg.value, msg.type);
 					_bufferoffset += 1 << msg.type;
 					return true;
 				case 1 ... 6:
@@ -304,78 +305,80 @@ public:
 					return true;
 				case 7:
 					_command = msg.value;
-					LOG("issue command %x\n",_command);
+					LOG("issue command %x\n", _command);
 					issue_command(true);
 					return true;
 			}
 		}
 		if(!((msg.port ^ PCI_BAR1) & PCI_BAR1_mask) and msg.type == MessageIOOut::TYPE_OUTB
-		        and ((msg.port & ~PCI_BAR1_mask) == 2)) {
+		   and ((msg.port & ~PCI_BAR1_mask) == 2)) {
 			// toggle reset?
 			if((_control & 4) && (~msg.value & 4))
 				reset_device();
 			_control = msg.value;
-			LOG("control %x\n",_control);
+			LOG("control %x\n", _control);
 			return true;
 		}
 		return false;
 	}
 
 	bool receive(MessagePciConfig &msg) {
-		return PciHelper::receive(msg,this,_bdf);
+		return PciHelper::receive(msg, this, _bdf);
 	}
 
-	IdeController(DBus<MessageDisk> &bus_disk,DBus<MessageIrqLines> &bus_irqlines,unsigned char irq,
-	        uint32_t bdf,size_t disknr,Storage::Parameter params,char *buffer,uintptr_t baddr) :
-			_bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr),
-			_params(params), _dma(), _command(), _error(), _status(), _control(), _buffer(buffer),
-			_baddr(baddr), _bufferoffset(0) {
+	IdeController(DBus<MessageDisk> &bus_disk, DBus<MessageIrqLines> &bus_irqlines, unsigned char irq,
+	              uint32_t bdf, size_t disknr, Storage::Parameter params, char *buffer, uintptr_t baddr)
+		: _bus_disk(bus_disk), _bus_irqlines(bus_irqlines), _irq(irq), _bdf(bdf), _disknr(disknr),
+		  _params(params), _dma(), _command(), _error(), _status(), _control(), _buffer(buffer),
+		  _baddr(baddr), _bufferoffset(0) {
 		PCI_reset();
 		reset_device();
-		Serial::get().writef("IDE controller (bdf %#x)\n",bdf);
-		Serial::get().writef("Attaching disk '%s' (%Lu sectors) to it\n",params.name,params.sectors);
+		Serial::get().writef("IDE controller (bdf %#x)\n", bdf);
+		Serial::get().writef("Attaching disk '%s' (%Lu sectors) to it\n", params.name, params.sectors);
 	}
 };
 
-PARAM_HANDLER(ide,
-		"ide:port0,port1,irq,bdf,disk - attach an IDE controller to a PCI bus.",
-		"Example: Use 'ide:0x1f0,0x3f6,14,0x38' to attach an IDE controller to 00:07.0 on legacy ports 0x1f0/0x3f6 with irq 14.",
-		"If no bdf is given, the first free one is searched.") {
+PARAM_HANDLER(
+    ide,
+    "ide:port0,port1,irq,bdf,disk - attach an IDE controller to a PCI bus.",
+    "Example: Use 'ide:0x1f0,0x3f6,14,0x38' to attach an IDE controller to 00:07.0 on legacy ports 0x1f0/0x3f6 with irq 14.",
+    "If no bdf is given, the first free one is searched.") {
 	Storage::Parameter params;
 	size_t hostdisk = argv[4];
-	MessageDisk msg0(hostdisk,&params);
+	MessageDisk msg0(hostdisk, &params);
 	mb.bus_disk.send(msg0);
 
 	MessageHostOp msg1(MessageHostOp::OP_ALLOC_FROM_GUEST,
-	        (size_t)IdeController::BUFFER_SIZE);
-	MessageHostOp msg2(MessageHostOp::OP_GUEST_MEM,0UL);
+	                   (size_t) IdeController::BUFFER_SIZE);
+	MessageHostOp msg2(MessageHostOp::OP_GUEST_MEM, 0UL);
 	if(!mb.bus_hostop.send(msg1) || !mb.bus_hostop.send(msg2))
-		Util::panic("%s failed to alloc %d from guest memory\n",__PRETTY_FUNCTION__,IdeController::BUFFER_SIZE);
+		Util::panic("%s failed to alloc %d from guest memory\n", __PRETTY_FUNCTION__,
+		            IdeController::BUFFER_SIZE);
 
-	uint32_t bdf = PciHelper::find_free_bdf(mb.bus_pcicfg,argv[3] == 0 ? ~0UL : argv[3]);
-	IdeController *dev = new IdeController(mb.bus_disk,mb.bus_irqlines,argv[2],bdf,hostdisk,
-	        params,msg2.ptr + msg1.phys,msg1.phys);
-	mb.bus_pcicfg.add(dev,IdeController::receive_static<MessagePciConfig>);
-	mb.bus_ioin.add(dev,IdeController::receive_static<MessageIOIn>);
-	mb.bus_ioout.add(dev,IdeController::receive_static<MessageIOOut>);
-	mb.bus_diskcommit.add(dev,IdeController::receive_static<MessageDiskCommit>);
+	uint32_t bdf = PciHelper::find_free_bdf(mb.bus_pcicfg, argv[3] == 0 ? ~0UL : argv[3]);
+	IdeController *dev = new IdeController(mb.bus_disk, mb.bus_irqlines, argv[2], bdf, hostdisk,
+	                                       params, msg2.ptr + msg1.phys, msg1.phys);
+	mb.bus_pcicfg.add(dev, IdeController::receive_static<MessagePciConfig> );
+	mb.bus_ioin.add(dev, IdeController::receive_static<MessageIOIn> );
+	mb.bus_ioout.add(dev, IdeController::receive_static<MessageIOOut> );
+	mb.bus_diskcommit.add(dev, IdeController::receive_static<MessageDiskCommit> );
 
 	// set default state; this is normally done by the BIOS
 	// set MMIO region and IRQ
-	dev->PCI_write(IdeController::PCI_BAR0_offset,argv[0]);
-	dev->PCI_write(IdeController::PCI_BAR1_offset,argv[1]);
-	dev->PCI_write(IdeController::PCI_INTR_offset,argv[2]);
+	dev->PCI_write(IdeController::PCI_BAR0_offset, argv[0]);
+	dev->PCI_write(IdeController::PCI_BAR1_offset, argv[1]);
+	dev->PCI_write(IdeController::PCI_INTR_offset, argv[2]);
 	// enable IRQ and IOPort access
-	dev->PCI_write(IdeController::PCI_CMD_STS_offset,0x401);
+	dev->PCI_write(IdeController::PCI_CMD_STS_offset, 0x401);
 }
 #else
 REGSET(PCI,
-		REG_RO(PCI_ID, 0x0, 0x275c8086)
-		REG_RW(PCI_CMD_STS, 0x1, 0x100000, 0x0401,)
-		REG_RO(PCI_RID_CC, 0x2, 0x01010102)
-		REG_RW(PCI_BAR0, 0x4, 1, 0x0000fff8,)
-		REG_RW(PCI_BAR1, 0x5, 1, 0x0000fffc,)
-		REG_RO(PCI_SS, 0xb, 0x275c8086)
-		REG_RO(PCI_CAP, 0xd, 0x00)
-		REG_RW(PCI_INTR, 0xf, 0x0100, 0xff,));
+       REG_RO(PCI_ID, 0x0, 0x275c8086)
+       REG_RW(PCI_CMD_STS, 0x1, 0x100000, 0x0401, )
+       REG_RO(PCI_RID_CC, 0x2, 0x01010102)
+       REG_RW(PCI_BAR0, 0x4, 1, 0x0000fff8, )
+       REG_RW(PCI_BAR1, 0x5, 1, 0x0000fffc, )
+       REG_RO(PCI_SS, 0xb, 0x275c8086)
+       REG_RO(PCI_CAP, 0xd, 0x00)
+       REG_RW(PCI_INTR, 0xf, 0x0100, 0xff, ));
 #endif

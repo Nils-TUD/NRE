@@ -46,7 +46,7 @@ void Timeouts::trigger() {
 	// trigger all timeouts that are due
 	size_t nr;
 	while((nr = _timeouts.trigger(now))) {
-		MessageTimeout msg(nr,_timeouts.timeout());
+		MessageTimeout msg(nr, _timeouts.timeout());
 		_timeouts.cancel(nr);
 		_mb.bus_timeout.send(msg);
 	}

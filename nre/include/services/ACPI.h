@@ -88,7 +88,7 @@ public:
 	 * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
 	 * @return the RSDT or 0 if not found
 	 */
-	ACPI::RSDT *find_table(const String &name,uint instance = 0) const {
+	ACPI::RSDT *find_table(const String &name, uint instance = 0) const {
 		UtcbFrame uf;
 		uf << ACPI::FIND_TABLE << name << instance;
 		pt().call(uf);
@@ -126,7 +126,7 @@ public:
 	 * @param parent_bdf the bus-device-function triple of the parent device (e.g. bridge)
 	 * @return the GSI
 	 */
-	uint get_gsi(PCIConfig::bdf_type bdf,uint8_t pin,PCIConfig::bdf_type parent_bdf) const {
+	uint get_gsi(PCIConfig::bdf_type bdf, uint8_t pin, PCIConfig::bdf_type parent_bdf) const {
 		UtcbFrame uf;
 		uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
 		pt().call(uf);

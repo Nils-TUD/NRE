@@ -56,9 +56,9 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 	 *   4. the periodic IRQ happens at (period/2, 3*period/2,) ...
 	 */
 	enum {
-		FREQ	= 32768,
-		tBUC	= 8,	//~244  usec
-		tUC		= 65,	//~1984 usec; VIA uses 1708usec - 56 instead...
+		FREQ    = 32768,
+		tBUC    = 8,    //~244  usec
+		tUC     = 65,   //~1984 usec; VIA uses 1708usec - 56 instead...
 	};
 
 	unsigned char convert_bcd(unsigned char value) {
@@ -128,7 +128,8 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 		if((_ram[0xb] & _ram[0xc]) & 0x70)
 			_ram[0xc] |= 0x80;
 		if((oldvalue ^ _ram[0xc]) & 0x80) {
-			MessageIrqLines msg((_ram[0xc] & 0x80) ? MessageIrq::ASSERT_NOTIFY : MessageIrq::DEASSERT_IRQ,_irq);
+			MessageIrqLines msg(
+			    (_ram[0xc] & 0x80) ? MessageIrq::ASSERT_NOTIFY : MessageIrq::DEASSERT_IRQ, _irq);
 			_bus_irqlines.send(msg);
 		}
 	}
@@ -153,7 +154,7 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 	 */
 	void update_ram(timevalue seconds) {
 		DateInfo tm;
-		Date::gmtime(seconds,&tm);
+		Date::gmtime(seconds, &tm);
 		_ram[0] = convert_bcd(tm.sec);
 		_ram[2] = convert_bcd(tm.min);
 		_ram[4] = convert_bcd(tm.hour);
@@ -188,8 +189,8 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 		 * subranges - the size of a subrange in the period where the alarm fires more often.
 		 * now       - the current time broken down to the period
 		 */
-		static const unsigned periods[8] = {86400,86400,86400,86400,3600,3600,60,1};
-		static const unsigned subranges[8] = {0,59,59 * 60,3599,0,59,0,0};
+		static const unsigned periods[8] = {86400, 86400, 86400, 86400, 3600, 3600, 60, 1};
+		static const unsigned subranges[8] = {0, 59, 59 * 60, 3599, 0, 59, 0, 0};
 		unsigned start = 0;
 		unsigned wildcards = 0;
 		unsigned p = 1;
@@ -210,7 +211,7 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 		seconds++;
 
 		// split the current time in multiple of periods (time) and the remainder (now)
-		unsigned now = Math::moddiv<timevalue>(seconds,period);
+		unsigned now = Math::moddiv<timevalue>(seconds, period);
 
 		// is the next alarm in the future?
 		if(now <= start)
@@ -248,7 +249,8 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 		unsigned periodic_tics = get_periodic_tics();
 
 		if(periodic_tics &&
-				((fnow - periodic_tics / 2) / periodic_tics) != ((flast - periodic_tics / 2) / periodic_tics)) {
+		   ((fnow - periodic_tics / 2) / periodic_tics) !=
+		   ((flast - periodic_tics / 2) / periodic_tics)) {
 			set_irqflags(_ram[0xc] | 0x40);
 		}
 		seconds /= FREQ;
@@ -268,11 +270,12 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 	/**
 	 * Reprogram the next timer.
 	 */
-	void update_timer(timevalue last_seconds,timevalue now) {
+	void update_timer(timevalue last_seconds, timevalue now) {
 		timevalue next = 0;
 		unsigned periodic_tics = get_periodic_tics();
 		if((_ram[0xb] & 0x40) && periodic_tics)
-			next = periodic_tics - (static_cast<unsigned>(now % FREQ) + periodic_tics / 2) % periodic_tics;
+			next = periodic_tics -
+			       (static_cast<unsigned>(now % FREQ) + periodic_tics / 2) % periodic_tics;
 		else if(_ram[0xb] & 0x10)
 			next = FREQ - now % FREQ;
 		else if(_ram[0xb] & 0x20) {
@@ -286,31 +289,31 @@ class Rtc146818 : public StaticReceiver<Rtc146818> {
 			if(divider < 0)
 				return;
 			if(divider >= 15)
-				next = _clock.source_time(next,FREQ >> (divider - 15));
+				next = _clock.source_time(next, FREQ >> (divider - 15));
 			else
-				next = _clock.source_time(next,FREQ << (15 - divider));
+				next = _clock.source_time(next, FREQ << (15 - divider));
 
-			MessageTimer msg(_timer,next);
+			MessageTimer msg(_timer, next);
 			_bus_timer.send(msg);
 		}
 	}
 
 public:
 	void reset(MessageTime &time) {
-		memset(_ram,0,sizeof(_ram));
+		memset(_ram, 0, sizeof(_ram));
 		_ram[0xa] = 0x26; // 32K base freq, periodic: 1kz
 		_ram[0xb] = 0x02; // 24h+BCD mode
 		_ram[0xd] = 0x80; // Valid RAM and Time
 
-		timevalue now = Math::muldiv128(time.wallclocktime - time.timestamp,FREQ,
-				MessageTime::FREQUENCY);
+		timevalue now = Math::muldiv128(time.wallclocktime - time.timestamp, FREQ,
+		                                MessageTime::FREQUENCY);
 		update_ram(now / FREQ);
 		set_irqflags(0);
 		_offset = _last = 0;
 	}
 
 	bool receive(MessageIOIn &msg) {
-		if(!in_range(msg.port,_iobase,8) || msg.type != MessageIOIn::TYPE_INB)
+		if(!in_range(msg.port, _iobase, 8) || msg.type != MessageIOIn::TYPE_INB)
 			return false;
 		timevalue now = get_counter();
 		unsigned mod = update_cycle(now);
@@ -332,7 +335,7 @@ public:
 					break;
 				case 0xc:
 					set_irqflags(0);
-					update_timer(get_ram_time(),now);
+					update_timer(get_ram_time(), now);
 					break;
 				default:
 					break;
@@ -345,7 +348,7 @@ public:
 	}
 
 	bool receive(MessageIOOut &msg) {
-		if(!in_range(msg.port,_iobase,8) || msg.type != MessageIOOut::TYPE_OUTB)
+		if(!in_range(msg.port, _iobase, 8) || msg.type != MessageIOOut::TYPE_OUTB)
 			return false;
 		if(msg.port & 1) {
 			timevalue now = get_counter();
@@ -356,7 +359,7 @@ public:
 					break;
 				case 0xa: {
 					bool toggled_reset = ((_ram[0xa] & 0x60) == 0x60)
-							&& ((msg.value & 0x60) != 0x60);
+					                     && ((msg.value & 0x60) != 0x60);
 					_ram[_index] = msg.value;
 					if(toggled_reset) {
 						// switch from reset to non-reset mode, the next update is a half second later...
@@ -373,13 +376,13 @@ public:
 					if((_ram[0xb] & 0x80) && (~msg.value & 0x80))
 						// skip missed updates, but do not reset the divider chain
 						_last = _clock.time(FREQ);
-					// Fallthrough
+				// Fallthrough
 				default:
 					_ram[_index] = msg.value;
 					break;
 			}
 			if(_index < 0xc)
-				update_timer(get_ram_time(),get_counter());
+				update_timer(get_ram_time(), get_counter());
 			if(_index == 0xb)
 				set_irqflags(_ram[0xc]);
 		}
@@ -391,7 +394,7 @@ public:
 	bool receive(MessageIrqNotify &msg) {
 		if(msg.baseirq != (_irq & ~7) || !(msg.mask & (1 << (_irq & 7))))
 			return false;
-		update_timer(get_ram_time(),get_counter());
+		update_timer(get_ram_time(), get_counter());
 		return true;
 	}
 
@@ -402,28 +405,28 @@ public:
 		return true;
 	}
 
-	Rtc146818(DBus<MessageTimer> &bus_timer,DBus<MessageIrqLines> &bus_irqlines,Clock &clock,
-			unsigned timer,unsigned short iobase,unsigned irq) :
-			_bus_timer(bus_timer), _bus_irqlines(bus_irqlines), _clock(clock), _timer(timer),
-			_iobase(iobase), _irq(irq), _index(), _ram(), _offset(), _last() {
+	Rtc146818(DBus<MessageTimer> &bus_timer, DBus<MessageIrqLines> &bus_irqlines, Clock &clock,
+	          unsigned timer, unsigned short iobase, unsigned irq)
+		: _bus_timer(bus_timer), _bus_irqlines(bus_irqlines), _clock(clock), _timer(timer),
+		  _iobase(iobase), _irq(irq), _index(), _ram(), _offset(), _last() {
 	}
 };
 
 PARAM_HANDLER(rtc,
-		"rtc:iobase,irq - Attach a realtime clock including its CMOS RAM.",
-		"Example: 'rtc:0x70,8'")
+              "rtc:iobase,irq - Attach a realtime clock including its CMOS RAM.",
+              "Example: 'rtc:0x70,8'")
 {
 	MessageTimer msg0;
 	if(!mb.bus_timer.send(msg0))
 		Util::panic("%s can't get a timer", __PRETTY_FUNCTION__);
 
-	Rtc146818 *rtc = new Rtc146818(mb.bus_timer, mb.bus_irqlines, mb.clock(), msg0.nr, argv[0],argv[1]);
+	Rtc146818 *rtc = new Rtc146818(mb.bus_timer, mb.bus_irqlines, mb.clock(), msg0.nr, argv[0], argv[1]);
 	MessageTime msg1;
 	if(!mb.bus_time.send(msg1))
 		Serial::get().writef("could not get wallclock time!\n");
 	rtc->reset(msg1);
-	mb.bus_ioin. add(rtc, Rtc146818::receive_static<MessageIOIn>);
-	mb.bus_ioout. add(rtc, Rtc146818::receive_static<MessageIOOut>);
-	mb.bus_timeout. add(rtc, Rtc146818::receive_static<MessageTimeout>);
-	mb.bus_irqnotify.add(rtc, Rtc146818::receive_static<MessageIrqNotify>);
+	mb.bus_ioin.add(rtc, Rtc146818::receive_static<MessageIOIn> );
+	mb.bus_ioout.add(rtc, Rtc146818::receive_static<MessageIOOut> );
+	mb.bus_timeout.add(rtc, Rtc146818::receive_static<MessageTimeout> );
+	mb.bus_irqnotify.add(rtc, Rtc146818::receive_static<MessageIrqNotify> );
 }

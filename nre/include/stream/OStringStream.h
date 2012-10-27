@@ -33,15 +33,15 @@ public:
 	 * @param max the size of <dst>
 	 * @param fmt the format
 	 */
-	static void format(char *dst,size_t max,const char *fmt,...) {
+	static void format(char *dst, size_t max, const char *fmt, ...) {
 		va_list ap;
-		va_start(ap,fmt);
-		vformat(dst,max,fmt,ap);
+		va_start(ap, fmt);
+		vformat(dst, max, fmt, ap);
 		va_end(ap);
 	}
-	static void vformat(char *dst,size_t max,const char *fmt,va_list ap) {
-		OStringStream os(dst,max);
-		os.vwritef(fmt,ap);
+	static void vformat(char *dst, size_t max, const char *fmt, va_list ap) {
+		OStringStream os(dst, max);
+		os.vwritef(fmt, ap);
 	}
 
 	/**
@@ -50,8 +50,8 @@ public:
 	 * @param dst the string
 	 * @param max the size of <dst>
 	 */
-	explicit OStringStream(char *dst,size_t max) : OStream(),
-			_dst(dst), _max(max), _pos() {
+	explicit OStringStream(char *dst, size_t max)
+		: OStream(), _dst(dst), _max(max), _pos() {
 	}
 
 	/**

@@ -31,7 +31,7 @@ char ConsoleStream::read() {
 	return c;
 }
 
-void ConsoleStream::put(ushort value,ushort *base,uint &pos) {
+void ConsoleStream::put(ushort value, ushort *base, uint &pos) {
 	bool visible = false;
 	switch(value & 0xff) {
 		// ignore '\0'
@@ -58,8 +58,8 @@ void ConsoleStream::put(ushort value,ushort *base,uint &pos) {
 
 	// scroll?
 	if(pos >= Console::COLS * Console::ROWS) {
-		memmove(base,base + Console::COLS,(Console::ROWS - 1) * Console::COLS * 2);
-		memset(base + (Console::ROWS - 1) * Console::COLS,0,Console::COLS * 2);
+		memmove(base, base + Console::COLS, (Console::ROWS - 1) * Console::COLS * 2);
+		memset(base + (Console::ROWS - 1) * Console::COLS, 0, Console::COLS * 2);
 		pos = Console::COLS * (Console::ROWS - 1);
 	}
 	if(visible)

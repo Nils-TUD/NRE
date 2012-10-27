@@ -24,13 +24,13 @@
 
 namespace nre {
 
-ServiceCPUHandler::ServiceCPUHandler(Service* s,capsel_t pt,cpu_t cpu)
-		: _s(s), _session_ec(LocalThread::create(cpu)), _service_ec(LocalThread::create(cpu)),
-		  _pt(_service_ec,pt,portal), _sm() {
-	_service_ec->set_tls<Service*>(Thread::TLS_PARAM,s);
+ServiceCPUHandler::ServiceCPUHandler(Service* s, capsel_t pt, cpu_t cpu)
+	: _s(s), _session_ec(LocalThread::create(cpu)), _service_ec(LocalThread::create(cpu)),
+	  _pt(_service_ec, pt, portal), _sm() {
+	_service_ec->set_tls<Service*>(Thread::TLS_PARAM, s);
 	UtcbFrameRef ecuf(_service_ec->utcb());
 	// for session-identification
-	ecuf.accept_translates(s->_caps,Service::MAX_SESSIONS_ORDER + CPU::order());
+	ecuf.accept_translates(s->_caps, Service::MAX_SESSIONS_ORDER + CPU::order());
 	ecuf.accept_delegates(0);
 }
 
@@ -46,7 +46,7 @@ void ServiceCPUHandler::portal(capsel_t) {
 				uf.finish_input();
 
 				ServiceSession *sess = s->new_session(cap);
-				uf.delegate(CapRange(sess->portal_caps(),1 << CPU::order(),Crd::OBJ_ALL));
+				uf.delegate(CapRange(sess->portal_caps(), 1 << CPU::order(), Crd::OBJ_ALL));
 				uf.accept_delegates();
 			}
 			break;
@@ -62,7 +62,7 @@ void ServiceCPUHandler::portal(capsel_t) {
 		uf << E_SUCCESS;
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}

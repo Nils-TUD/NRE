@@ -30,15 +30,15 @@ extern nre::UserSm globalsm;
 
 class Timeouts {
 	enum {
-		NO_TIMEOUT	= ~0ULL
+		NO_TIMEOUT  = ~0ULL
 	};
 
 public:
-	Timeouts(Motherboard &mb) : _mb(mb), _sm(), _timeouts(), _timercon("timer"),
-			_timer(_timercon), _last_to(NO_TIMEOUT) {
+	Timeouts(Motherboard &mb)
+		: _mb(mb), _sm(), _timeouts(), _timercon("timer"), _timer(_timercon), _last_to(NO_TIMEOUT) {
 		nre::GlobalThread *gt = nre::GlobalThread::create(
-				timer_thread,nre::CPU::current().log_id(),nre::String("vmm-timeouts"));
-		gt->set_tls<Timeouts*>(nre::Thread::TLS_PARAM,this);
+		    timer_thread, nre::CPU::current().log_id(), nre::String("vmm-timeouts"));
+		gt->set_tls<Timeouts*>(nre::Thread::TLS_PARAM, this);
 		gt->start();
 	}
 
@@ -47,14 +47,14 @@ public:
 		return _timeouts.alloc();
 	}
 
-	void request(size_t nr,timevalue_t to) {
+	void request(size_t nr, timevalue_t to) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		_timeouts.request(nr,to);
+		_timeouts.request(nr, to);
 		program();
 	}
 
-	void time(timevalue_t &uptime,timevalue_t &unixtime) {
-		_timer.get_time(uptime,unixtime);
+	void time(timevalue_t &uptime, timevalue_t &unixtime) {
+		_timer.get_time(uptime, unixtime);
 	}
 
 private:
@@ -64,7 +64,7 @@ private:
 
 	Motherboard &_mb;
 	nre::UserSm _sm;
-	nre::TimeoutList<32,void> _timeouts;
+	nre::TimeoutList<32, void> _timeouts;
 	nre::Connection _timercon;
 	nre::TimerSession _timer;
 	timevalue_t _last_to;

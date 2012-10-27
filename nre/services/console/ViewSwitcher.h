@@ -28,10 +28,10 @@ class ConsoleService;
 class ConsoleSessionData;
 
 class ViewSwitcher {
-	static const size_t DS_SIZE		= nre::ExecEnv::PAGE_SIZE * Screen::PAGES;
-	static const uint COLOR			= 0x1F;
-	static const uint SWITCH_TIME		= 1000;	// ms
-	static const uint REFRESH_DELAY	= 25;	// ms
+	static const size_t DS_SIZE       = nre::ExecEnv::PAGE_SIZE * Screen::PAGES;
+	static const uint COLOR           = 0x1F;
+	static const uint SWITCH_TIME     = 1000; // ms
+	static const uint REFRESH_DELAY   = 25;   // ms
 
 	struct SwitchCommand {
 		size_t oldsessid;
@@ -45,7 +45,7 @@ public:
 		_ec->start();
 	}
 
-	void switch_to(ConsoleSessionData *from,ConsoleSessionData *to);
+	void switch_to(ConsoleSessionData *from, ConsoleSessionData *to);
 
 private:
 	static void switch_thread(void*);

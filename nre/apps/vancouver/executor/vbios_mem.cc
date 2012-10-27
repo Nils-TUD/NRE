@@ -33,9 +33,9 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 	 * Return the size of guest physical memory.
 	 */
 	size_t memsize() {
-		MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM,0UL);
+		MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM, 0UL);
 		if(!_bus_hostop.send(msg1))
-			Util::panic("%s can't get physical memory size",__PRETTY_FUNCTION__);
+			Util::panic("%s can't get physical memory size", __PRETTY_FUNCTION__);
 		return msg1.len;
 	}
 
@@ -51,11 +51,11 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 			case 0x2400: // disable A20
 			case 0x2401: // enable  A20
 			{
-				MessageLegacy msg1(MessageLegacy::GATE_A20,cpu->al);
+				MessageLegacy msg1(MessageLegacy::GATE_A20, cpu->al);
 				if(_mb.bus_legacy.send(msg1))
 					cpu->ax = 0;
 				else
-					error(msg,0x24);
+					error(msg, 0x24);
 			}
 			break;
 			case 0xc201: // reset mouse
@@ -96,7 +96,7 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 					}
 
 					if(mmap.type) {
-						copy_out(cpu->es.base + cpu->di,&mmap,20);
+						copy_out(cpu->es.base + cpu->di, &mmap, 20);
 						cpu->eax = cpu->edx;
 						cpu->ecx = 20;
 						cpu->edx = 0;
@@ -118,10 +118,10 @@ class VirtualBiosMem : public StaticReceiver<VirtualBiosMem>, public BiosCommon 
 			case 0xc100 ... 0xc1ff: // get ebda
 			case 0xe801: // get memsize
 			case 0xe980: // get intel speedstep information
-				unsupported:
+			unsupported:
 				// unsupported
 				DEBUG(cpu);
-				error(msg,0x86);
+				error(msg, 0x86);
 				break;
 			default:
 				DEBUG(cpu);
@@ -145,7 +145,7 @@ public:
 			case 0x15:
 				return handle_int15(msg);
 			case 0x17: // printer
-				error(msg,msg.cpu->ah);
+				error(msg, msg.cpu->ah);
 				return true;
 			default:
 				return false;
@@ -157,6 +157,6 @@ public:
 };
 
 PARAM_HANDLER(vbios_mem,
-		"vbios_mem - provide memory related virtual BIOS functions.") {
-	mb.bus_bios.add(new VirtualBiosMem(mb),VirtualBiosMem::receive_static<MessageBios>);
+              "vbios_mem - provide memory related virtual BIOS functions.") {
+	mb.bus_bios.add(new VirtualBiosMem(mb), VirtualBiosMem::receive_static<MessageBios> );
 }

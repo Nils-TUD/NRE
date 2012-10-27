@@ -38,7 +38,7 @@ Sc::~Sc() {
 void Sc::start(const String &name) {
 	UtcbFrame uf;
 	ScopedCapSels sc;
-	uf.delegation_window(Crd(sc.get(),0,Crd::OBJ_ALL));
+	uf.delegation_window(Crd(sc.get(), 0, Crd::OBJ_ALL));
 	uf << START << name << _ec->cpu() << _qpd;
 	uf.delegate(_ec->sel());
 	// in this case we should assign the selector before it has been successfully created

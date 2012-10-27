@@ -26,7 +26,7 @@ using namespace nre::test;
 static void test_threads();
 
 const TestCase threads = {
-	"Threads",test_threads,
+	"Threads", test_threads,
 };
 static const size_t TEST_COUNT = 50;
 
@@ -38,13 +38,13 @@ static void test_threads() {
 	AvgProfiler prof(TEST_COUNT);
 	for(size_t i = 0; i < TEST_COUNT; ++i) {
 		prof.start();
-		threads[i] = GlobalThread::create(dummy,CPU::current().log_id(),String(""));
+		threads[i] = GlobalThread::create(dummy, CPU::current().log_id(), String(""));
 		prof.stop();
 	}
 
-	WVPERF(prof.avg(),"cycles for thread creation");
-	WVPRINTF("min: %Lu",prof.min());
-	WVPRINTF("max: %Lu",prof.max());
+	WVPERF(prof.avg(), "cycles for thread creation");
+	WVPRINTF("min: %Lu", prof.min());
+	WVPRINTF("max: %Lu", prof.max());
 
 	for(size_t i = 0; i < TEST_COUNT; ++i)
 		delete threads[i];

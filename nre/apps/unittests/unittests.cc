@@ -64,7 +64,7 @@ const TestCase testcases[] = {
 
 int main() {
 	for(size_t i = 0; i < ARRAY_SIZE(testcases); ++i) {
-		Serial::get().writef("Testing %s...\n",testcases[i].name);
+		Serial::get().writef("Testing %s...\n", testcases[i].name);
 		try {
 			testcases[i].func();
 		}

@@ -111,7 +111,7 @@ public:
 	 */
 	void insert(node_t *node) {
 		// we want to insert it by priority, so find the first node that has <= priority
-		node_t **q,*p;
+		node_t **q, *p;
 		for(p = _root, q = &_root; p && p->_prio < _prio; p = *q) {
 			if(node->_key < p->_key)
 				q = &p->_left;
@@ -122,7 +122,7 @@ public:
 		*q = node;
 		// fibonacci hashing to spread the priorities very even in the 32-bit room
 		node->_prio = _prio;
-		_prio += 0x9e3779b9;	// floor(2^32 / phi), with phi = golden ratio
+		_prio += 0x9e3779b9;    // floor(2^32 / phi), with phi = golden ratio
 
 		// At this point we want to split the binary search tree p into two parts based on the
 		// given key, forming the left and right subtrees of the new node q. The effect will be
@@ -157,14 +157,14 @@ public:
 			else
 				p = &(*p)->_right;
 		}
-		remove_from(p,node);
+		remove_from(p, node);
 	}
 
 private:
 	Treap(const Treap&);
 	Treap& operator=(const Treap&);
 
-	void remove_from(node_t **p,node_t *node) {
+	void remove_from(node_t **p, node_t *node) {
 		// two childs
 		if(node->_left && node->_right) {
 			// rotate with left
@@ -173,7 +173,7 @@ private:
 				node->_left = t->_right;
 				t->_right = node;
 				*p = t;
-				remove_from(&t->_right,node);
+				remove_from(&t->_right, node);
 			}
 			// rotate with right
 			else {
@@ -181,7 +181,7 @@ private:
 				node->_right = t->_left;
 				t->_left = node;
 				*p = t;
-				remove_from(&t->_left,node);
+				remove_from(&t->_left, node);
 			}
 		}
 		// one child: replace us with our child

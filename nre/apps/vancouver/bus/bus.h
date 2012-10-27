@@ -27,7 +27,7 @@ class Device {
 	const char *_debug_name;
 public:
 	void debug_dump() {
-		nre::Serial::get().writef("\t%s\n",_debug_name);
+		nre::Serial::get().writef("\t%s\n", _debug_name);
 	}
 	Device(const char *debug_name) : _debug_name(debug_name) {
 	}
@@ -37,10 +37,10 @@ public:
  * This template converts from static receive to member functions.
  */
 template<typename Y>
-class StaticReceiver: public Device {
+class StaticReceiver : public Device {
 public:
 	template<class M>
-	static bool receive_static(Device *o,M& msg) {
+	static bool receive_static(Device *o, M& msg) {
 		return static_cast<Y*>(o)->receive(msg);
 	}
 	StaticReceiver() : Device(__PRETTY_FUNCTION__) {
@@ -52,7 +52,7 @@ public:
  */
 template<class M>
 class DBus {
-	typedef bool (*ReceiveFunction)(Device *,M&);
+	typedef bool (*ReceiveFunction)(Device *, M&);
 	struct Entry {
 		Device *_dev;
 		ReceiveFunction _func;
@@ -72,7 +72,7 @@ class DBus {
 	void set_size(size_t new_size) {
 		Entry *n = new Entry[new_size];
 		if(_list) {
-			memcpy(n,_list,_list_count * sizeof(*_list));
+			memcpy(n, _list, _list_count * sizeof(*_list));
 			delete[] _list;
 		}
 		_list = n;
@@ -80,7 +80,7 @@ class DBus {
 	}
 
 public:
-	void add(Device *dev,ReceiveFunction func) {
+	void add(Device *dev, ReceiveFunction func) {
 		if(_list_count >= _list_size)
 			set_size(_list_size > 0 ? _list_size * 2 : 1);
 		_list[_list_count]._dev = dev;
@@ -91,11 +91,11 @@ public:
 	/**
 	 * Send message LIFO.
 	 */
-	bool send(M &msg,bool earlyout = false) {
+	bool send(M &msg, bool earlyout = false) {
 		_debug_counter++;
 		bool res = false;
-		for(size_t i = _list_count; i-- && !(earlyout && res);)
-			res |= _list[i]._func(_list[i]._dev,msg);
+		for(size_t i = _list_count; i-- && !(earlyout && res); )
+			res |= _list[i]._func(_list[i]._dev, msg);
 		return res;
 	}
 
@@ -106,7 +106,7 @@ public:
 		_debug_counter++;
 		bool res = false;
 		for(size_t i = 0; i < _list_count; i++)
-			res |= _list[i]._func(_list[i]._dev,msg);
+			res |= _list[i]._func(_list[i]._dev, msg);
 		return 0;
 	}
 
@@ -114,10 +114,10 @@ public:
 	 * Send message first hit round robin and return the number of the
 	 * next one that accepted the message.
 	 */
-	bool send_rr(M &msg,unsigned &start) {
+	bool send_rr(M &msg, unsigned &start) {
 		_debug_counter++;
 		for(size_t i = 0; i < _list_count; i++) {
-			if(_list[i]._func(_list[(i + start) % _list_count]._dev,msg)) {
+			if(_list[i]._func(_list[(i + start) % _list_count]._dev, msg)) {
 				start = (i + start + 1) % _list_count;
 				return true;
 			}
@@ -136,9 +136,9 @@ public:
 	 * Debugging output.
 	 */
 	void debug_dump() {
-		nre::Serial::get().writef("%s: Bus used %ld times.",__PRETTY_FUNCTION__,_debug_counter);
+		nre::Serial::get().writef("%s: Bus used %ld times.", __PRETTY_FUNCTION__, _debug_counter);
 		for(size_t i = 0; i < _list_count; i++) {
-			nre::Serial::get().writef("\n%2d:\t",i);
+			nre::Serial::get().writef("\n%2d:\t", i);
 			_list[i]._dev->debug_dump();
 		}
 		nre::Serial::get().writef("\n");

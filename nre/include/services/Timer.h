@@ -30,7 +30,7 @@ namespace nre {
  */
 class Timer {
 public:
-	static const uint WALLCLOCK_FREQ	= 1000000;
+	static const uint WALLCLOCK_FREQ    = 1000000;
 
 	/**
 	 * The available commands
@@ -65,7 +65,7 @@ public:
 		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
 			delete _sms[cpu];
 		delete[] _sms;
-		CapSelSpace::get().free(_caps,1 << CPU::order());
+		CapSelSpace::get().free(_caps, 1 << CPU::order());
 	}
 
 	/**
@@ -116,7 +116,7 @@ public:
 	 * @param uptime the time since systemstart in microseconds (Timer::WALLCLOCK_FREQ)
 	 * @param unixts the current unix timestamp in microseconds (Timer::WALLCLOCK_FREQ)
 	 */
-	void get_time(timevalue_t &uptime,timevalue_t &unixts) {
+	void get_time(timevalue_t &uptime, timevalue_t &unixts) {
 		UtcbFrame uf;
 		uf << Timer::GET_TIME;
 		pt().call(uf);
@@ -127,15 +127,15 @@ public:
 private:
 	void get_sms() {
 		UtcbFrame uf;
-		ScopedCapSels caps(1 << CPU::order(),1 << CPU::order());
-		uf.delegation_window(Crd(caps.get(),CPU::order(),Crd::OBJ_ALL));
+		ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+		uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
 		uf << Timer::GET_SMS;
 		pt().call(uf);
 		uf.check_reply();
 		_caps = caps.release();
-		_sms = new Sm*[CPU::count()];
+		_sms = new Sm *[CPU::count()];
 		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			_sms[it->log_id()] = new Sm(_caps + it->log_id(),true);
+			_sms[it->log_id()] = new Sm(_caps + it->log_id(), true);
 	}
 
 	capsel_t _caps;

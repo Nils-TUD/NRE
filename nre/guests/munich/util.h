@@ -18,17 +18,17 @@
 
 
 #ifndef NDEBUG
-#define assert(X) {if (!(X)) { out_string("\nAssertion failed: '" #X  "'\n\n"); __exit(0xbadbbbad);}}
+#    define assert(X) {if(!(X)) { out_string("\nAssertion failed: '" # X  "'\n\n"); __exit(0xbadbbbad); }}
 #else
-#define assert(X)
+#    define assert(X)
 #endif
 
 
 /**
  * we want inlined stringops
  */
-#define memcpy(x,y,z) __builtin_memcpy(x,y,z)
-#define memset(x,y,z) __builtin_memset(x,y,z)
+#define memcpy(x, y, z) __builtin_memcpy(x, y, z)
+#define memset(x, y, z) __builtin_memset(x, y, z)
 #define strlen(x)     __builtin_strlen(x)
 
 #ifndef NDEBUG
@@ -36,47 +36,47 @@
 /**
  * A fatal error happens if value is true.
  */
-#define ERROR(result, value, msg)				\
-  {								\
-    if (value)							\
-      {								\
-	out_string(msg);					\
-	__exit(result);						\
-      }								\
-  }
+#    define ERROR(result, value, msg)               \
+	{                             \
+		if(value)                          \
+		{                             \
+			out_string(msg);                    \
+			__exit(result);                     \
+		}                             \
+	}
 
 #else
 
-#define ERROR(result, value, msg)				\
-  {								\
-    if (value)							\
-      __exit(result);						\
-  }
+#    define ERROR(result, value, msg)               \
+	{                             \
+		if(value)                          \
+			__exit(result);                       \
+	}
 #endif
 
 /**
  * Returns result and prints the msg, if value is true.
  */
-#define CHECK3(result, value, msg)			\
-  {							\
-    if (value)						\
-      {							\
-	out_info(msg);					\
-	return result;					\
-      }							\
-  }
+#define CHECK3(result, value, msg)          \
+	{                         \
+		if(value)                      \
+		{                         \
+			out_info(msg);                  \
+			return result;                  \
+		}                         \
+	}
 
 /**
  * Returns result and prints the msg and hex, if value is true.
  */
-#define CHECK4(result, value, msg, hex)			\
-  {							\
-    if (value)						\
-      {							\
-	out_description(msg, hex);			\
-	return result;					\
-      }							\
-  }
+#define CHECK4(result, value, msg, hex)         \
+	{                         \
+		if(value)                      \
+		{                         \
+			out_description(msg, hex);          \
+			return result;                  \
+		}                         \
+	}
 
 
 
@@ -103,7 +103,7 @@ unsigned long strtoul (char const *, char const **, int);
  * Helper functions.
  */
 void wait(int ms);
-void __exit(unsigned status) __attribute__((noreturn));
+void __exit(unsigned status) __attribute__ ((noreturn));
 int check_cpuid(void);
 int enable_svm(void);
 void serial_init(void);

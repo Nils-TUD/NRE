@@ -43,7 +43,7 @@ public:
 	 * @param count the number of ports
 	 * @throws Exception if failed (e.g. ports already allocated)
 	 */
-	explicit Ports(port_t base,uint count) : _base(base), _count(count) {
+	explicit Ports(port_t base, uint count) : _base(base), _count(count) {
 		alloc();
 	}
 	/**
@@ -87,7 +87,7 @@ public:
 	 * @param offset the offset within the port-range
 	 */
 	template<typename T>
-	inline void out(T val,port_t offset = 0) {
+	inline void out(T val, port_t offset = 0) {
 		assert(offset < _count);
 		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
 	}
@@ -96,7 +96,7 @@ private:
 	void alloc() {
 		UtcbFrame uf;
 		ScopedCapSels cap;
-		uf.delegation_window(Crd(_base,Math::next_pow2_shift(_count),Crd::IO_ALL));
+		uf.delegation_window(Crd(_base, Math::next_pow2_shift(_count), Crd::IO_ALL));
 		uf << ALLOC << _base << _count;
 		CPU::current().io_pt().call(uf);
 		uf.check_reply();

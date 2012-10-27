@@ -38,7 +38,7 @@ public:
 	 *
 	 * @param pt the capability-selector for the portal
 	 */
-	explicit Pt(capsel_t pt) : ObjCap(pt,KEEP_CAP_BIT | KEEP_SEL_BIT) {
+	explicit Pt(capsel_t pt) : ObjCap(pt, KEEP_CAP_BIT | KEEP_SEL_BIT) {
 	}
 
 	/**
@@ -49,10 +49,12 @@ public:
 	 * @param pt the capability selector to use
 	 * @param func the portal function
 	 * @param mtd the message-transfer descriptor to describe what information should the
-	 * 	kernel pass to the portal
+	 *  kernel pass to the portal
 	 */
-	explicit Pt(LocalThread *ec,capsel_t pt,portal_func func,Mtd mtd = Mtd()) : ObjCap(pt,KEEP_SEL_BIT) {
-		Syscalls::create_pt(pt,ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
+	explicit Pt(LocalThread *ec, capsel_t pt, portal_func func, Mtd mtd = Mtd())
+		: ObjCap(pt, KEEP_SEL_BIT) {
+		Syscalls::create_pt(pt, ec->sel(), reinterpret_cast<uintptr_t>(func), mtd,
+		                    Pd::current()->sel());
 	}
 
 	/**
@@ -61,11 +63,12 @@ public:
 	 * @param ec the LocalThread to bind the portal to
 	 * @param func the portal function
 	 * @param mtd the message-transfer descriptor to describe what information should the
-	 * 	kernel pass to the portal
+	 *  kernel pass to the portal
 	 */
-	explicit Pt(LocalThread *ec,portal_func func,Mtd mtd = Mtd()) : ObjCap() {
+	explicit Pt(LocalThread *ec, portal_func func, Mtd mtd = Mtd()) : ObjCap() {
 		ScopedCapSels pt;
-		Syscalls::create_pt(pt.get(),ec->sel(),reinterpret_cast<uintptr_t>(func),mtd,Pd::current()->sel());
+		Syscalls::create_pt(pt.get(), ec->sel(), reinterpret_cast<uintptr_t>(func), mtd,
+		                    Pd::current()->sel());
 		sel(pt.release());
 	}
 

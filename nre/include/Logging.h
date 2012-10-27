@@ -26,13 +26,13 @@
  * The nice thing is that the compiler is able to completely eliminate this code, if the log-level
  * is disabled.
  */
-#define LOG(lvl,expr) 	\
-	do { \
-		if(nre::Logging::level & (lvl)) { \
-			nre::ScopedLock<nre::UserSm> guard(&nre::Logging::sm); \
-			expr; \
-		} \
-	} \
+#define LOG(lvl, expr)                                              \
+	do {                                                            \
+		if(nre::Logging::level & (lvl)) {                           \
+			nre::ScopedLock<nre::UserSm> guard(&nre::Logging::sm);  \
+			expr;                                                   \
+		}                                                           \
+	}                                                               \
 	while(0);
 
 namespace nre {
@@ -43,37 +43,37 @@ namespace nre {
 class Logging {
 public:
 	enum Level {
-		CHILD_CREATE	= 1 << 0,
-		CHILD_KILL		= 1 << 1,
-		PFS				= 1 << 2,
-		PFS_DETAIL		= 1 << 3,
-		CPUS			= 1 << 4,
-		MEM_MAP			= 1 << 5,
-		RESOURCES		= 1 << 6,
-		DATASPACES		= 1 << 7,
-		SERVICES		= 1 << 8,
-		ACPI			= 1 << 9,
-		PCICFG			= 1 << 10,
-		TIMER			= 1 << 11,
-		TIMER_DETAIL	= 1 << 12,
-		REBOOT			= 1 << 13,
-		KEYBOARD		= 1 << 14,
-		ADMISSION		= 1 << 15,
-		EXCEPTIONS		= 1 << 16,
-		PLATFORM		= 1 << 17,
-		PCI				= 1 << 18,
-		STORAGE			= 1 << 19,
-		STORAGE_DETAIL	= 1 << 20,
-		CONSOLE			= 1 << 21,
+		CHILD_CREATE    = 1 << 0,
+		CHILD_KILL      = 1 << 1,
+		PFS             = 1 << 2,
+		PFS_DETAIL      = 1 << 3,
+		CPUS            = 1 << 4,
+		MEM_MAP         = 1 << 5,
+		RESOURCES       = 1 << 6,
+		DATASPACES      = 1 << 7,
+		SERVICES        = 1 << 8,
+		ACPI            = 1 << 9,
+		PCICFG          = 1 << 10,
+		TIMER           = 1 << 11,
+		TIMER_DETAIL    = 1 << 12,
+		REBOOT          = 1 << 13,
+		KEYBOARD        = 1 << 14,
+		ADMISSION       = 1 << 15,
+		EXCEPTIONS      = 1 << 16,
+		PLATFORM        = 1 << 17,
+		PCI             = 1 << 18,
+		STORAGE         = 1 << 19,
+		STORAGE_DETAIL  = 1 << 20,
+		CONSOLE         = 1 << 21,
 	};
 
 	static UserSm sm;
 	static const int level = 0 |
 #ifndef NDEBUG
-		CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI |
-		REBOOT | TIMER | KEYBOARD | STORAGE
+	    CHILD_CREATE | MEM_MAP | CPUS | PLATFORM | CHILD_KILL | ACPI |
+	    REBOOT | TIMER | KEYBOARD | STORAGE
 #else
-		CHILD_KILL | MEM_MAP | PLATFORM | KEYBOARD | TIMER | STORAGE
+	    CHILD_KILL | MEM_MAP | PLATFORM | KEYBOARD | TIMER | STORAGE
 #endif
 	;
 

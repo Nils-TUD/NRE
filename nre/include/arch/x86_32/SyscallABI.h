@@ -37,7 +37,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(word_t w0,word_t w1) {
+	static inline void syscall(word_t w0, word_t w1) {
 		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
@@ -51,7 +51,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(word_t w0,word_t w1,word_t w2) {
+	static inline void syscall(word_t w0, word_t w1, word_t w2) {
 		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
@@ -65,7 +65,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3) {
+	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3) {
 		word_t dummy;
 		asm volatile (
 			"mov %%esp, %%ecx;"
@@ -79,7 +79,7 @@ public:
 		handle_result(w0);
 	}
 
-	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3,word_t w4) {
+	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4) {
 		word_t dummy;
 		asm volatile (
 			"push %%ebp;"
@@ -90,13 +90,14 @@ public:
 			"1: ;"
 			"pop %%ebp;"
 			: "+a" (w0), "=c" (dummy), "=d" (dummy)
-			: "D" (w1), "S" (w2), "b"(w3), "ir" (w4)
+			: "D" (w1), "S" (w2), "b" (w3), "ir" (w4)
 			: "memory"
 		);
 		handle_result(w0);
 	}
 
-	static inline void syscall(word_t w0,word_t w1,word_t w2,word_t w3,word_t w4,word_t &out1,word_t &out2) {
+	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4, word_t &out1,
+	                           word_t &out2) {
 		word_t dummy;
 		asm volatile (
 			"push %%ebp;"
@@ -107,7 +108,7 @@ public:
 			"1: ;"
 			"pop %%ebp;"
 			: "+a" (w0), "=c" (dummy), "=d" (dummy), "+D" (w1), "+S" (w2)
-			: "b"(w3), "ir" (w4)
+			: "b" (w3), "ir" (w4)
 			: "memory"
 		);
 		handle_result(w0);

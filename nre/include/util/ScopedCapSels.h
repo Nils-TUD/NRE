@@ -33,15 +33,15 @@ public:
 	 * @param count the number of cap selectors
 	 * @param align the alignment
 	 */
-	explicit ScopedCapSels(uint count = 1,uint align = 1)
-		: _cap(CapSelSpace::get().allocate(count,align)), _count(count), _owned(true) {
+	explicit ScopedCapSels(uint count = 1, uint align = 1)
+		: _cap(CapSelSpace::get().allocate(count, align)), _count(count), _owned(true) {
 	}
 	/**
 	 * Destructor. Free's the cap selectors, as soon as you haven't called release().
 	 */
 	~ScopedCapSels() {
 		if(_owned)
-			CapSelSpace::get().free(_cap,_count);
+			CapSelSpace::get().free(_cap, _count);
 	}
 
 	/**

@@ -32,7 +32,7 @@ class ConsoleService : public nre::Service {
 public:
 	typedef nre::DList<ConsoleSessionData>::iterator iterator;
 
-	ConsoleService(const char *name,uint modifier);
+	ConsoleService(const char *name, uint modifier);
 
 	ConsoleSessionData *active() {
 		if(_concyc[_console] == 0)
@@ -58,9 +58,9 @@ public:
 	bool handle_keyevent(const nre::Keyboard::Packet &pk);
 
 private:
-	virtual nre::ServiceSession *create_session(size_t id,capsel_t cap,capsel_t caps,
-			nre::Pt::portal_func func);
-	void create_dummy(uint page,const nre::String &title);
+	virtual nre::ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
+	                                            nre::Pt::portal_func func);
+	void create_dummy(uint page, const nre::String &title);
 	void switch_to(size_t console);
 
 	nre::Connection _rbcon;

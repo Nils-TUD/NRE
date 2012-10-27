@@ -44,8 +44,8 @@ public:
 		uint16_t last : 1;
 	} PACKED;
 
-	explicit HostIDECtrl(uint id,uint irq,nre::Ports::port_t portbase,
-			nre::Ports::port_t bmportbase,uint bmportcount,bool dma = true);
+	explicit HostIDECtrl(uint id, uint irq, nre::Ports::port_t portbase, nre::Ports::port_t bmportbase,
+	                     uint bmportcount, bool dma = true);
 	virtual ~HostIDECtrl() {
 		delete _bm;
 	}
@@ -57,12 +57,12 @@ public:
 		return idx(drive) < ARRAY_SIZE(_devs) && _devs[idx(drive)];
 	}
 
-	virtual void get_params(size_t drive,nre::Storage::Parameter *params) const;
-	virtual void flush(size_t drive,producer_type *prod,tag_type tag);
-	virtual void read(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma);
-	virtual void write(size_t drive,producer_type *prod,tag_type tag,const nre::DataSpace &ds,
-			sector_type sector,const dma_type &dma);
+	virtual void get_params(size_t drive, nre::Storage::Parameter *params) const;
+	virtual void flush(size_t drive, producer_type *prod, tag_type tag);
+	virtual void read(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                  sector_type sector, const dma_type &dma);
+	virtual void write(size_t drive, producer_type *prod, tag_type tag, const nre::DataSpace &ds,
+	                   sector_type sector, const dma_type &dma);
 
 	/**
 	 * @return whether DMA should and can be used
@@ -91,7 +91,7 @@ public:
 	 * Stores that we're waiting for the result of a transfer. You should do that before actually
 	 * starting the transfer.
 	 */
-	void start_transfer(producer_type *prod,tag_type tag,bool dma) {
+	void start_transfer(producer_type *prod, tag_type tag, bool dma) {
 		_tag.prod = prod;
 		_tag.tag = tag;
 		_tag.dma = dma;
@@ -119,7 +119,7 @@ public:
 	 *
 	 * @return 0 on success, -1 if timeout has been reached, other: value of the error-register
 	 */
-	int wait_until(timevalue_t timeout,uint8_t set,uint8_t unset);
+	int wait_until(timevalue_t timeout, uint8_t set, uint8_t unset);
 
 	/**
 	 * Checks whether <res> is OK and throws exceptions with corresponding messages if not
@@ -128,7 +128,7 @@ public:
 	 * @param res the result from reading the status register
 	 * @param name the name of the operation to display
 	 */
-	void handle_status(uint device,int res,const char *name);
+	void handle_status(uint device, int res, const char *name);
 
 	/**
 	 * @return pointer to the PRDT (virtual)
@@ -153,11 +153,11 @@ public:
 	/**
 	 * Writes <value> to the bus-master-register <reg> of the given controller
 	 */
-	void outbmrb(uint16_t reg,uint8_t value) {
-		_bm->out<uint8_t>(value,reg);
+	void outbmrb(uint16_t reg, uint8_t value) {
+		_bm->out<uint8_t>(value, reg);
 	}
-	void outbmrl(uint16_t reg,uint32_t value) {
-		_bm->out<uint32_t>(value,reg);
+	void outbmrl(uint16_t reg, uint32_t value) {
+		_bm->out<uint32_t>(value, reg);
 	}
 
 	/**
@@ -169,7 +169,7 @@ public:
 	/**
 	 * Reads <count> words from the controller-register <reg> into <buf>
 	 */
-	void inwords(uint16_t reg,uint16_t *buf,size_t count) {
+	void inwords(uint16_t reg, uint16_t *buf, size_t count) {
 		size_t i;
 		for(i = 0; i < count; i++)
 			buf[i] = _ctrl.in<uint16_t>(reg);
@@ -178,8 +178,8 @@ public:
 	/**
 	 * Writes <value> to the controller-register <reg>
 	 */
-	void outb(uint16_t reg,uint8_t value) {
-		_ctrl.out<uint8_t>(value,reg);
+	void outb(uint16_t reg, uint8_t value) {
+		_ctrl.out<uint8_t>(value, reg);
 	}
 	/**
 	 * Writes <value> to the control-register
@@ -190,10 +190,10 @@ public:
 	/**
 	 * Writes <count> words from <buf> to the controller-register <reg>
 	 */
-	void outwords(uint16_t reg,const uint16_t *buf,size_t count) {
+	void outwords(uint16_t reg, const uint16_t *buf, size_t count) {
 		size_t i;
 		for(i = 0; i < count; i++)
-			_ctrl.out<uint16_t>(buf[i],reg);
+			_ctrl.out<uint16_t>(buf[i], reg);
 	}
 
 private:
@@ -202,25 +202,26 @@ private:
 	}
 	bool is_bus_responding();
 	HostATADevice *detect_drive(uint id);
-	HostATADevice *identify(uint id,uint cmd);
+	HostATADevice *identify(uint id, uint cmd);
 
 	static void gsi_thread(void *) {
 		HostIDECtrl *ctrl = nre::Thread::current()->get_tls<HostIDECtrl*>(nre::Thread::TLS_PARAM);
 		while(1) {
 			ctrl->_gsi->down();
 
-			LOG(nre::Logging::STORAGE_DETAIL,nre::Serial::get() << "Got GSI " << ctrl->_gsi->gsi() << "\n");
+			LOG(nre::Logging::STORAGE_DETAIL,
+			    nre::Serial::get() << "Got GSI " << ctrl->_gsi->gsi() << "\n");
 			uint status = 0;
 			if(ctrl->_tag.dma) {
-				int res = ctrl->wait_until(DMA_TRANSFER_TIMEOUT,0,CMD_ST_BUSY | CMD_ST_DRQ);
+				int res = ctrl->wait_until(DMA_TRANSFER_TIMEOUT, 0, CMD_ST_BUSY | CMD_ST_DRQ);
 				if(res != 0)
 					status = 1;
 
 				ctrl->inbmrb(BMR_REG_STATUS);
-				ctrl->outbmrb(BMR_REG_COMMAND,0);
+				ctrl->outbmrb(BMR_REG_COMMAND, 0);
 			}
 			if(ctrl->_tag.prod)
-				ctrl->_tag.prod->produce(nre::Storage::Packet(ctrl->_tag.tag,status));
+				ctrl->_tag.prod->produce(nre::Storage::Packet(ctrl->_tag.tag, status));
 			ctrl->_ready.up();
 			ctrl->_in_progress = false;
 			// just in case we receive another interrupt

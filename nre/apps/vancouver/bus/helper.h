@@ -19,22 +19,23 @@
 
 #include <stream/Serial.h>
 
-#define union64(HIGH, LOW)			(static_cast<uint64_t>(HIGH) << 32 | (LOW))
+#define union64(HIGH, LOW)          (static_cast<uint64_t>(HIGH) << 32 | (LOW))
 
 enum {
-	INJ_IRQWIN = 0x1000, INJ_NMIWIN = 0x0000, // XXX missing
+	INJ_IRQWIN = 0x1000,
+	INJ_NMIWIN = 0x0000, // XXX missing
 	INJ_WIN = INJ_IRQWIN | INJ_NMIWIN
 };
 
 /**
  * Check whether some address is in a range.
  */
-static inline bool in_range(uintptr_t address,uintptr_t base,size_t size) {
+static inline bool in_range(uintptr_t address, uintptr_t base, size_t size) {
 	return (base <= address) && (address <= base + size - 1);
 }
 
 template<unsigned operand_size>
-static inline void cpu_move(void *tmp_dst,void *tmp_src) {
+static inline void cpu_move(void *tmp_dst, void *tmp_src) {
 	// XXX aliasing!
 	if(operand_size == 0)
 		*reinterpret_cast<uint8_t*>(tmp_dst) = *reinterpret_cast<uint8_t*>(tmp_src);
@@ -48,16 +49,16 @@ static inline void cpu_move(void *tmp_dst,void *tmp_src) {
 /**
  * Transfer bytes from src to dst.
  */
-static inline void cpu_move(void * tmp_dst,void *tmp_src,unsigned order) {
+static inline void cpu_move(void * tmp_dst, void *tmp_src, unsigned order) {
 	switch(order) {
 		case 0:
-			cpu_move<0>(tmp_dst,tmp_src);
+			cpu_move<0>(tmp_dst, tmp_src);
 			break;
 		case 1:
-			cpu_move<1>(tmp_dst,tmp_src);
+			cpu_move<1>(tmp_dst, tmp_src);
 			break;
 		case 2:
-			cpu_move<2>(tmp_dst,tmp_src);
+			cpu_move<2>(tmp_dst, tmp_src);
 			break;
 		default:
 			asm volatile ("ud2a");

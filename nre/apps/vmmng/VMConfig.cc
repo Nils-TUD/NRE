@@ -32,33 +32,33 @@ void VMConfig::find_mods(size_t len) {
 		}
 		if(space == 0)
 			space = pos;
-		_mods.append(new Module(lines,space,pos));
+		_mods.append(new Module(lines, space, pos));
 		lines += pos + 1;
 	}
 }
 
-Child::id_type VMConfig::start(ChildManager &cm,size_t console,cpu_t cpu) {
+Child::id_type VMConfig::start(ChildManager &cm, size_t console, cpu_t cpu) {
 	static char args[MAX_ARGS_LEN];
 	SList<Module>::iterator first = _mods.begin();
-	OStringStream os(args,sizeof(args));
+	OStringStream os(args, sizeof(args));
 	os << first->args() << " console:" << console << " constitle:" << _name;
 
-	VMChildConfig cfg(_mods,String(args),cpu);
+	VMChildConfig cfg(_mods, String(args), cpu);
 	Hip::mem_iterator mod = get_module(first->name());
-	DataSpace ds(mod->size,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::R,mod->addr);
-	return cm.load(ds.virt(),mod->size,cfg);
+	DataSpace ds(mod->size, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::R, mod->addr);
+	return cm.load(ds.virt(), mod->size, cfg);
 }
 
 Hip::mem_iterator VMConfig::get_module(const String &name) {
 	const Hip &hip = Hip::get();
 	for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
-		if(strcmp(mem->cmdline(),name.str()) == 0)
+		if(strcmp(mem->cmdline(), name.str()) == 0)
 			return mem;
 	}
-	throw Exception(E_NOT_FOUND,64,"Unable to find module '%s'",name.str());
+	throw Exception(E_NOT_FOUND, 64, "Unable to find module '%s'", name.str());
 }
 
-OStream &operator<<(OStream &os,const VMConfig &cfg) {
+OStream & operator<<(OStream &os, const VMConfig &cfg) {
 	os << "VMConfig[" << cfg.name() << "]:\n";
 	for(SList<VMConfig::Module>::iterator it = cfg._mods.begin(); it != cfg._mods.end(); ++it)
 		os << "  name='" << it->name() << "' args='" << it->args() << "'\n";

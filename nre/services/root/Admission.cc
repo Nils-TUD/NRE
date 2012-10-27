@@ -33,10 +33,10 @@ void Admission::init() {
 	// add idle Scs
 	for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
 		char name[32];
-		OStringStream stream(name,sizeof(name));
+		OStringStream stream(name, sizeof(name));
 		stream << "CPU" << it->log_id() << "-idle";
 		capsel_t sc = Hypervisor::request_idle_sc(it->phys_id());
-		add_sc(new SchedEntity(String(name),it->log_id(),sc));
+		add_sc(new SchedEntity(String(name), it->log_id(), sc));
 	}
 }
 
@@ -48,16 +48,16 @@ void Admission::portal_sc(capsel_t) {
 
 		switch(cmd) {
 			case Sc::CREATE: {
-				uintptr_t stackaddr = 0,utcbaddr = 0;
-				bool stack,utcb;
+				uintptr_t stackaddr = 0, utcbaddr = 0;
+				bool stack, utcb;
 				uf >> stack >> utcb;
 				uf.finish_input();
 
 				// TODO we might leak resources here if something fails
 				if(stack) {
 					uintptr_t phys = PhysicalMemory::alloc(ExecEnv::STACK_SIZE);
-					stackaddr = VirtualMemory::alloc(ExecEnv::STACK_SIZE,ExecEnv::STACK_SIZE);
-					Hypervisor::map_mem(phys,stackaddr,ExecEnv::STACK_SIZE);
+					stackaddr = VirtualMemory::alloc(ExecEnv::STACK_SIZE, ExecEnv::STACK_SIZE);
+					Hypervisor::map_mem(phys, stackaddr, ExecEnv::STACK_SIZE);
 				}
 				if(utcb)
 					utcbaddr = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
@@ -80,9 +80,9 @@ void Admission::portal_sc(capsel_t) {
 
 				ScopedCapSels sc;
 				LOG(Logging::ADMISSION,
-						Serial::get().writef("Root: Creating sc '%s' on cpu %u\n",name.str(),cpu));
-				Syscalls::create_sc(sc.get(),ec,qpd,Pd::current()->sel());
-				add_sc(new SchedEntity(name,cpu,sc.get()));
+				    Serial::get().writef("Root: Creating sc '%s' on cpu %u\n", name.str(), cpu));
+				Syscalls::create_sc(sc.get(), ec, qpd, Pd::current()->sel());
+				add_sc(new SchedEntity(name, cpu, sc.get()));
 
 				uf.accept_delegates();
 				uf.delegate(sc.release());
@@ -95,8 +95,8 @@ void Admission::portal_sc(capsel_t) {
 				uf.finish_input();
 
 				SchedEntity *se = remove_sc(sc);
-				LOG(Logging::ADMISSION,Serial::get().writef("Root: Destroying sc '%s' on cpu %u\n",
-							se->name().str(),se->cpu()));
+				LOG(Logging::ADMISSION, Serial::get().writef("Root: Destroying sc '%s' on cpu %u\n",
+				                                             se->name().str(), se->cpu()));
 				delete se;
 				uf << E_SUCCESS;
 			}
@@ -104,7 +104,7 @@ void Admission::portal_sc(capsel_t) {
 		}
 	}
 	catch(const Exception& e) {
-		Syscalls::revoke(uf.delegation_window(),true);
+		Syscalls::revoke(uf.delegation_window(), true);
 		uf.clear();
 		uf << e;
 	}

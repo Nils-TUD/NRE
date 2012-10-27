@@ -31,10 +31,10 @@ public:
 /**
  * Keeping track of the timeouts.
  */
-template<unsigned ENTRIES,typename DATA>
+template<unsigned ENTRIES, typename DATA>
 class TimeoutList {
 	class TimeoutEntry {
-		friend class TimeoutList<ENTRIES,DATA>;
+		friend class TimeoutList<ENTRIES, DATA>;
 		TimeoutEntry *_next;
 		TimeoutEntry *_prev;
 		timevalue_t _timeout;
@@ -64,13 +64,13 @@ public:
 			_entries[i]._free = false;
 			return i;
 		}
-		throw TimeoutListException(E_CAPACITY,"No free timeout slots");
+		throw TimeoutListException(E_CAPACITY, "No free timeout slots");
 	}
 
 	/**
 	 * Dealloc a timeout object.
 	 */
-	bool dealloc(size_t nr,bool withcancel = false) {
+	bool dealloc(size_t nr, bool withcancel = false) {
 		assert(nr >= 1 && nr <= ENTRIES - 1);
 		if(_entries[nr]._free)
 			return false;
@@ -101,7 +101,7 @@ public:
 	/**
 	 * Request a new timeout.
 	 */
-	bool request(size_t nr,timevalue_t to) {
+	bool request(size_t nr, timevalue_t to) {
 		assert(nr >= 1 && nr <= ENTRIES - 1);
 		timevalue_t old = timeout();
 		TimeoutEntry *current = _entries + nr;
@@ -125,7 +125,7 @@ public:
 	/**
 	 * Get the head of the queue.
 	 */
-	size_t trigger(timevalue_t now,DATA **data = 0) {
+	size_t trigger(timevalue_t now, DATA **data = 0) {
 		if(now >= timeout()) {
 			size_t i = _entries[0]._next - _entries;
 			if(data)

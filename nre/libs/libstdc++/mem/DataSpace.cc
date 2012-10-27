@@ -27,11 +27,11 @@
 
 namespace nre {
 
-void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
+void DataSpace::create(DataSpaceDesc &desc, capsel_t *sel, capsel_t *unmapsel) {
 	UtcbFrame uf;
 	// prepare for receiving map and unmap-cap
-	ScopedCapSels caps(2,2);
-	uf.delegation_window(Crd(caps.get(),1,Crd::OBJ_ALL));
+	ScopedCapSels caps(2, 2);
+	uf.delegation_window(Crd(caps.get(), 1, Crd::OBJ_ALL));
 	uf << CREATE << desc;
 	CPU::current().ds_pt().call(uf);
 
@@ -46,7 +46,7 @@ void DataSpace::create(DataSpaceDesc &desc,capsel_t *sel,capsel_t *unmapsel) {
 
 void DataSpace::create() {
 	assert(_sel == ObjCap::INVALID && _unmapsel == ObjCap::INVALID);
-	create(_desc,&_sel,&_unmapsel);
+	create(_desc, &_sel, &_unmapsel);
 	// if its locked memory, make sure that it is mapped for us
 	if(_desc.type() == DataSpaceDesc::LOCKED)
 		touch();
@@ -70,7 +70,7 @@ void DataSpace::join() {
 
 	// prepare for receiving unmap-cap
 	ScopedCapSels umcap;
-	uf.delegation_window(Crd(umcap.get(),0,Crd::OBJ_ALL));
+	uf.delegation_window(Crd(umcap.get(), 0, Crd::OBJ_ALL));
 	uf.translate(_sel);
 	uf << JOIN;
 	CPU::current().ds_pt().call(uf);
@@ -94,7 +94,7 @@ void DataSpace::destroy() {
 		// revoke the memory in this case. but the parent might try to reuse the addresses in our
 		// address space
 		CapRange(_desc.virt() >> ExecEnv::PAGE_SHIFT,
-				_desc.size() >> ExecEnv::PAGE_SHIFT,Crd::MEM_ALL).revoke(true);
+		         _desc.size() >> ExecEnv::PAGE_SHIFT, Crd::MEM_ALL).revoke(true);
 	}
 
 	uf.translate(_unmapsel);

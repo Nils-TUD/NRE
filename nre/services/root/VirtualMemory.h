@@ -26,8 +26,8 @@
  * to RAM_END is used for RAM. This is mapped at the beginning and never unmapped.
  */
 class VirtualMemory {
-	static const uintptr_t RAM_BEGIN	= ARCH_REGIONS_END;
-	static const uintptr_t RAM_END		= ARCH_KERNEL_START;
+	static const uintptr_t RAM_BEGIN    = ARCH_REGIONS_END;
+	static const uintptr_t RAM_END      = ARCH_KERNEL_START;
 
 public:
 	/**
@@ -37,8 +37,8 @@ public:
 	 * @param size the size (might be adjusted)
 	 * @return the virtual address
 	 */
-	static uintptr_t alloc_ram(uintptr_t phys,size_t &size) {
-		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
+	static uintptr_t alloc_ram(uintptr_t phys, size_t &size) {
+		size = nre::Math::round_up<size_t>(size, nre::ExecEnv::PAGE_SIZE);
 		if(RAM_BEGIN + phys >= RAM_END)
 			return 0;
 		if(RAM_BEGIN + phys + size > RAM_END)
@@ -67,20 +67,20 @@ public:
 	/**
 	 * Allocates <size> bytes from the free virtual memory
 	 */
-	static uintptr_t alloc(size_t size,size_t align = 1) {
+	static uintptr_t alloc(size_t size, size_t align = 1) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
-		uintptr_t addr = _regs.alloc(size,align);
+		size = nre::Math::round_up<size_t>(size, nre::ExecEnv::PAGE_SIZE);
+		uintptr_t addr = _regs.alloc(size, align);
 		_used += size;
 		return addr;
 	}
 	/**
 	 * Free the <size> bytes @ <addr>
 	 */
-	static void free(uintptr_t addr,size_t size) {
+	static void free(uintptr_t addr, size_t size) {
 		nre::ScopedLock<nre::UserSm> guard(&_sm);
-		size = nre::Math::round_up<size_t>(size,nre::ExecEnv::PAGE_SIZE);
-		_regs.free(addr,size);
+		size = nre::Math::round_up<size_t>(size, nre::ExecEnv::PAGE_SIZE);
+		_regs.free(addr, size);
 		_used -= size;
 	}
 

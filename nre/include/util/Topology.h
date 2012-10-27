@@ -44,16 +44,16 @@ public:
 	 * @param begin the beginning of the CPUs
 	 * @param end the end of the CPUs
 	 * @param n
-	 * 	IN: Number of Hip_cpu descriptors
-	 * 	OUT: Number of CPUs in mappings
+	 *  IN: Number of Hip_cpu descriptors
+	 *  OUT: Number of CPUs in mappings
 	 * @param parts
-	 * 	IN: Desired parts
-	 * 	OUT: Actual parts (<= n)
+	 *  IN: Desired parts
+	 *  OUT: Actual parts (<= n)
 	 * @param part_cpu Part -> responsible CPU mapping
 	 * @param cpu_cpu CPU -> responsible CPU mapping
 	 */
-	static void divide(const CPU::iterator begin,const CPU::iterator end,size_t &n,size_t &parts,
-			cpu_t part_cpu[],cpu_t cpu_cpu[]) {
+	static void divide(const CPU::iterator begin, const CPU::iterator end, size_t &n, size_t &parts,
+	                   cpu_t part_cpu[], cpu_t cpu_cpu[]) {
 		// Copy CPU descriptors into consecutive list.
 		SortCPU local[n];
 		size_t i = 0;
@@ -66,8 +66,8 @@ public:
 		if(i < parts)
 			parts = i;
 		n = i;
-		
-		Quicksort<SortCPU>::sort(cmp_cpus,local,n);
+
+		Quicksort<SortCPU>::sort(cmp_cpus, local, n);
 
 		// Divide list into parts. Update mappings.
 		uint cpus_per_part = n / parts;
@@ -86,7 +86,7 @@ public:
 	}
 
 private:
-	static bool cmp_cpus(const SortCPU &a,const SortCPU &b) {
+	static bool cmp_cpus(const SortCPU &a, const SortCPU &b) {
 		uint a_v = (a.package << 16) | (a.core << 8) | (a.thread);
 		uint b_v = (b.package << 16) | (b.core << 8) | (b.thread);
 		return (a_v <= b_v);

@@ -23,20 +23,20 @@
 using namespace nre;
 using namespace nre::test;
 
-static const size_t DS_SIZE	= ExecEnv::PAGE_SIZE;
-static const size_t MAP_COUNT	= 10000;
+static const size_t DS_SIZE     = ExecEnv::PAGE_SIZE;
+static const size_t MAP_COUNT   = 10000;
 
 static void test_ds();
 
 const TestCase dstest = {
-	"DataSpace performance",test_ds
+	"DataSpace performance", test_ds
 };
 static uint64_t alloc_times[MAP_COUNT];
 static uint64_t delete_times[MAP_COUNT];
 
 static void test_ds() {
-	DataSpaceDesc *desc1,*desc2,*desc3;
-	uint64_t tic,tac,heap_alloc,heap_delete;
+	DataSpaceDesc *desc1, *desc2, *desc3;
+	uint64_t tic, tac, heap_alloc, heap_delete;
 
 	// measure malloc time
 	{
@@ -61,7 +61,7 @@ static void test_ds() {
 	Profiler prof;
 	for(size_t i = 0; i < MAP_COUNT; ++i) {
 		tic = Util::tsc();
-		DataSpace *ds = new DataSpace(DS_SIZE,DataSpaceDesc::ANONYMOUS,DataSpaceDesc::RW);
+		DataSpace *ds = new DataSpace(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW);
 		tac = Util::tsc();
 		alloc_times[i] = tac - tic - prof.rdtsc() - heap_alloc;
 
@@ -80,8 +80,8 @@ static void test_ds() {
 
 	alloc_avg = alloc_avg / MAP_COUNT;
 	delete_avg = delete_avg / MAP_COUNT;
-	WVPERF(heap_alloc,"cycles");
-	WVPERF(heap_delete,"cycles");
-	WVPERF(alloc_avg,"cycles");
-	WVPERF(delete_avg,"cycles");
+	WVPERF(heap_alloc, "cycles");
+	WVPERF(heap_delete, "cycles");
+	WVPERF(alloc_avg, "cycles");
+	WVPERF(delete_avg, "cycles");
 }

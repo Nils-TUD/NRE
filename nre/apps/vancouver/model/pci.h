@@ -20,13 +20,13 @@
 
 class PciHelper {
 public:
-	static uint32_t find_free_bdf(DBus<MessagePciConfig> &bus_pcicfg,uint32_t bdf) {
+	static uint32_t find_free_bdf(DBus<MessagePciConfig> &bus_pcicfg, uint32_t bdf) {
 		if(bdf == ~0u) {
 			for(unsigned bus = 0; bus < 256; bus++) {
 				for(unsigned device = 1; device < 32; device++) {
 					bdf = (bus << 8) | (device << 3);
-					MessagePciConfig msg(bdf,0);
-					bus_pcicfg.send(msg,false);
+					MessagePciConfig msg(bdf, 0);
+					bus_pcicfg.send(msg, false);
 					if(msg.value == ~0u)
 						return bdf;
 				}
@@ -40,13 +40,13 @@ public:
 	 * register functions.
 	 */
 	template<typename Y>
-	static bool receive(MessagePciConfig &msg,Y *obj,uint32_t bdf) {
+	static bool receive(MessagePciConfig &msg, Y *obj, uint32_t bdf) {
 		if(msg.bdf != bdf)
 			return false;
 
 		if(msg.type == MessagePciConfig::TYPE_WRITE)
-			return obj->PCI_write(msg.dword,msg.value);
+			return obj->PCI_write(msg.dword, msg.value);
 		msg.value = 0;
-		return obj->PCI_read(msg.dword,msg.value);
+		return obj->PCI_read(msg.dword, msg.value);
 	}
 };

@@ -39,11 +39,11 @@ class VirtualBiosTime : public StaticReceiver<VirtualBiosTime>, public BiosCommo
 		// midnight?
 		if(ticks >= 0x001800B0) {
 			ticks = 0;
-			write_bda(0x70,read_bda(0x70) + 1,1);
+			write_bda(0x70, read_bda(0x70) + 1, 1);
 		}
-		write_bda(0x6c,ticks,4);
+		write_bda(0x6c, ticks, 4);
 
-		return jmp_int(msg,0x1c);
+		return jmp_int(msg, 0x1c);
 	}
 
 	/**
@@ -62,8 +62,8 @@ class VirtualBiosTime : public StaticReceiver<VirtualBiosTime>, public BiosCommo
 				break;
 			}
 			case 0x01: // set system time
-				write_bda(0x6c,static_cast<unsigned>(msg.cpu->cx) << 16 | msg.cpu->dx,4);
-				write_bda(0x70,0,1);
+				write_bda(0x6c, static_cast<unsigned>(msg.cpu->cx) << 16 | msg.cpu->dx, 4);
+				write_bda(0x70, 0, 1);
 				break;
 			case 0x02: // realtime clock
 			{
@@ -105,6 +105,6 @@ public:
 };
 
 PARAM_HANDLER(vbios_time,
-		"vbios_time - provide time related virtual BIOS functions.") {
-	mb.bus_bios.add(new VirtualBiosTime(mb),VirtualBiosTime::receive_static<MessageBios>);
+              "vbios_time - provide time related virtual BIOS functions.") {
+	mb.bus_bios.add(new VirtualBiosTime(mb), VirtualBiosTime::receive_static<MessageBios> );
 }

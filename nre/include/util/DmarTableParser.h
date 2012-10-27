@@ -37,7 +37,7 @@ public:
 
 	class DeviceScope {
 	public:
-		explicit DeviceScope(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit DeviceScope(const char *base, size_t size_left) : _base(base), _size_left(size_left) {
 			//printf("%p len = %u (%u), type = %u\n", base, _elem->length, size_left, _elem->type);
 		}
 
@@ -63,7 +63,7 @@ public:
 		DeviceScope next() {
 			assert(has_next());
 			assert(_elem->length > 0);
-			return DeviceScope(_base + _elem->length,_size_left - _elem->length);
+			return DeviceScope(_base + _elem->length, _size_left - _elem->length);
 		}
 
 	private:
@@ -83,7 +83,7 @@ public:
 
 	class Dhrd {
 	public:
-		explicit Dhrd(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit Dhrd(const char *base, size_t size_left) : _base(base), _size_left(size_left) {
 		}
 
 		uint8_t flags() const {
@@ -101,7 +101,7 @@ public:
 		}
 
 		DeviceScope get_scope() {
-			return DeviceScope(_elem->scope,_size_left - (_elem->scope - _base));
+			return DeviceScope(_elem->scope, _size_left - (_elem->scope - _base));
 		}
 
 	private:
@@ -112,7 +112,6 @@ public:
 				uint8_t _res;
 				uint16_t segment;
 				uint64_t base;
-
 				char scope[];
 			}*_elem;
 		};
@@ -121,7 +120,7 @@ public:
 
 	class Element {
 	public:
-		explicit Element(const char *base,size_t size_left) : _base(base), _size_left(size_left) {
+		explicit Element(const char *base, size_t size_left) : _base(base), _size_left(size_left) {
 		}
 
 		Type type() const {
@@ -134,12 +133,12 @@ public:
 		Element next() {
 			assert(has_next());
 			assert(_elem->length > 0);
-			return Element(_base + _elem->length,_size_left - _elem->length);
+			return Element(_base + _elem->length, _size_left - _elem->length);
 		}
 
 		Dhrd get_dhrd() {
 			assert(_elem->type == DHRD);
-			return Dhrd(_base + 4,_elem->length - 4);
+			return Dhrd(_base + 4, _elem->length - 4);
 		}
 
 	private:
@@ -154,7 +153,7 @@ public:
 	};
 
 	Element get_element() {
-		return Element(_base + 48,_header->length - 48);
+		return Element(_base + 48, _header->length - 48);
 	}
 
 	explicit DmarTableParser(const char *base) : _base(base) {

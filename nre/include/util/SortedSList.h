@@ -27,7 +27,7 @@ template<class T>
 class SortedSList {
 public:
 	typedef typename SList<T>::iterator iterator;
-	typedef bool (*cmp_func)(const T &a,const T &b);
+	typedef bool (*cmp_func)(const T &a, const T &b);
 
 	/**
 	 * Constructor. Creates an empty list.
@@ -73,9 +73,9 @@ public:
 	iterator insert(T *e) {
 		T *p = 0;
 		iterator it;
-		for(it = begin(); it != end() && _isless(*it,*e); ++it)
+		for(it = begin(); it != end() && _isless(*it, *e); ++it)
 			p = &*it;
-		return _list.insert(p,e);
+		return _list.insert(p, e);
 	}
 	/**
 	 * Removes the given item from the list. This works in linear time.

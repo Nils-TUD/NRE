@@ -67,8 +67,8 @@ private:
 	 * @param sel the selector
 	 * @param pd the protection domain
 	 */
-	explicit Sc(GlobalThread *gt,capsel_t sel,Pd *pd)
-		: ObjCap(sel,ObjCap::KEEP_SEL_BIT | ObjCap::KEEP_CAP_BIT), _ec(gt), _qpd(), _pd(pd) {
+	explicit Sc(GlobalThread *gt, capsel_t sel, Pd *pd)
+		: ObjCap(sel, ObjCap::KEEP_SEL_BIT | ObjCap::KEEP_CAP_BIT), _ec(gt), _qpd(), _pd(pd) {
 	}
 	/**
 	 * Creates a new Sc that is bound to the given GlobalThread. Note that it does NOT start it. Please
@@ -78,7 +78,8 @@ private:
 	 * @param qpd the quantum-priority descriptor for the Sc
 	 * @param pd the pd to create it in
 	 */
-	explicit Sc(GlobalThread *ec,Qpd qpd,Pd *pd = Pd::current()) : ObjCap(), _ec(ec), _qpd(qpd), _pd(pd) {
+	explicit Sc(GlobalThread *ec, Qpd qpd, Pd *pd = Pd::current())
+		: ObjCap(), _ec(ec), _qpd(qpd), _pd(pd) {
 		// don't create the Sc here, because then we have no chance to store the created object
 		// somewhere to make it accessible for the just started Thread
 	}
@@ -89,7 +90,8 @@ private:
 	 * @param vcpu the VCPU to bind it to
 	 * @param qpd the quantum-priority descriptor for the Sc
 	 */
-	explicit Sc(VCpu *vcpu,Qpd qpd) : ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
+	explicit Sc(VCpu *vcpu, Qpd qpd)
+		: ObjCap(), _ec(vcpu), _qpd(qpd), _pd(Pd::current()) {
 	}
 	/**
 	 * Destructor. Stops the associated thread.

@@ -18,8 +18,8 @@
 
 namespace nre {
 
-uint Random::_randa = 1103515245;
-uint Random::_randc = 12345;
-uint Random::_last = 0;
+uint Random::_randa  = 1103515245;
+uint Random::_randc  = 12345;
+uint Random::_last   = 0;
 
 }

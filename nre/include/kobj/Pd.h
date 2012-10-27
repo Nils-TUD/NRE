@@ -50,7 +50,7 @@ public:
 	 * @param crd the capabilities to pass to the new Pd
 	 * @param pd the protection-domain to create the new Pd in
 	 */
-	explicit Pd(Crd crd = Crd(0),Pd *pd = Pd::current());
+	explicit Pd(Crd crd = Crd(0), Pd *pd = Pd::current());
 
 private:
 	Pd(const Pd&);

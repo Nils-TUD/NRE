@@ -22,35 +22,36 @@ DBus<MessageMem> *_bus_mem;
 /**
  * Fast copy/inout version that only copies to mem-regions but not registers.
  */
-bool copy_inout(uintptr_t address,void *ptr,size_t count,bool read) {
+bool copy_inout(uintptr_t address, void *ptr, size_t count, bool read) {
 	MessageMemRegion msg(address >> 12);
-	if(!_bus_memregion->send(msg) || !msg.ptr || ((address + count) > ((msg.start_page + msg.count) << 12)))
+	if(!_bus_memregion->send(msg) || !msg.ptr ||
+	   ((address + count) > ((msg.start_page + msg.count) << 12)))
 		return false;
 	if(read)
-		memcpy(ptr,msg.ptr + (address - (msg.start_page << 12)),count);
+		memcpy(ptr, msg.ptr + (address - (msg.start_page << 12)), count);
 	else
-		memcpy(msg.ptr + (address - (msg.start_page << 12)),ptr,count);
+		memcpy(msg.ptr + (address - (msg.start_page << 12)), ptr, count);
 	return true;
 }
 
 /**
  * Copy from buffer to the guest.
  */
-bool copy_out(uintptr_t address,void *ptr,size_t count) {
-	if(copy_inout(address,ptr,count,false))
+bool copy_out(uintptr_t address, void *ptr, size_t count) {
+	if(copy_inout(address, ptr, count, false))
 		return true;
 	char *p = reinterpret_cast<char *>(ptr);
 	if(address & 3) {
 		unsigned value;
-		MessageMem msg(true,address & ~3,&value);
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(true, address & ~3, &value);
+		if(!_bus_mem->send(msg, true))
 			return false;
 		size_t l = 4 - (address & 3);
 		if(l > count)
 			l = count;
-		memcpy(reinterpret_cast<char *>(&value) + (address & 3),p,l);
+		memcpy(reinterpret_cast<char *>(&value) + (address & 3), p, l);
 		msg.read = false;
-		if(!_bus_mem->send(msg,true))
+		if(!_bus_mem->send(msg, true))
 			return false;
 		p += l;
 		address += l;
@@ -58,8 +59,8 @@ bool copy_out(uintptr_t address,void *ptr,size_t count) {
 	}
 	assert(!(address & 3));
 	while(count >= 4) {
-		MessageMem msg(false,address,reinterpret_cast<unsigned *>(p));
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(false, address, reinterpret_cast<unsigned *>(p));
+		if(!_bus_mem->send(msg, true))
 			return false;
 		address += 4;
 		p += 4;
@@ -67,12 +68,12 @@ bool copy_out(uintptr_t address,void *ptr,size_t count) {
 	}
 	if(count) {
 		unsigned value;
-		MessageMem msg(true,address,&value);
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(true, address, &value);
+		if(!_bus_mem->send(msg, true))
 			return false;
-		memcpy(&value,p,count);
+		memcpy(&value, p, count);
 		msg.read = false;
-		if(!_bus_mem->send(msg,true))
+		if(!_bus_mem->send(msg, true))
 			return false;
 	}
 	return true;
@@ -81,28 +82,28 @@ bool copy_out(uintptr_t address,void *ptr,size_t count) {
 /**
  * Copy from the guest to a buffer.
  */
-bool copy_in(uintptr_t address,void *ptr,size_t count) {
-	if(copy_inout(address,ptr,count,true))
+bool copy_in(uintptr_t address, void *ptr, size_t count) {
+	if(copy_inout(address, ptr, count, true))
 		return true;
 	char *p = reinterpret_cast<char *>(ptr);
 	if(address & 3) {
 		unsigned value;
-		MessageMem msg(true,address & ~3,&value);
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(true, address & ~3, &value);
+		if(!_bus_mem->send(msg, true))
 			return false;
 		value >>= 8 * (address & 3);
 		size_t l = 4 - (address & 3);
 		if(l > count)
 			l = count;
-		memcpy(p,&value,l);
+		memcpy(p, &value, l);
 		p += l;
 		address += l;
 		count -= l;
 	}
 	assert(!(address & 3));
 	while(count >= 4) {
-		MessageMem msg(true,address,reinterpret_cast<unsigned *>(p));
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(true, address, reinterpret_cast<unsigned *>(p));
+		if(!_bus_mem->send(msg, true))
 			return false;
 		address += 4;
 		p += 4;
@@ -110,10 +111,10 @@ bool copy_in(uintptr_t address,void *ptr,size_t count) {
 	}
 	if(count) {
 		unsigned value;
-		MessageMem msg(true,address,&value);
-		if(!_bus_mem->send(msg,true))
+		MessageMem msg(true, address, &value);
+		if(!_bus_mem->send(msg, true))
 			return false;
-		memcpy(p,&value,count);
+		memcpy(p, &value, count);
 	}
 	return true;
 }

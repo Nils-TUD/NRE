@@ -31,22 +31,22 @@ class Log : public nre::BaseSerial {
 	friend class BufferedLog;
 
 	enum {
-		COM1	= 0x3F8,
-		COM2	= 0x2E8,
-		COM3	= 0x2F8,
-		COM4	= 0x3E8
+		COM1    = 0x3F8,
+		COM2    = 0x2E8,
+		COM3    = 0x2F8,
+		COM4    = 0x3E8
 	};
 	enum {
-		DLR_LO	= 0,
-		DLR_HI	= 1,
-		IER		= 1,	// interrupt enable register
-		FCR		= 2,	// FIFO control register
-		LCR		= 3,	// line control register
-		MCR		= 4,	// modem control register
+		DLR_LO  = 0,
+		DLR_HI  = 1,
+		IER     = 1,    // interrupt enable register
+		FCR     = 2,    // FIFO control register
+		LCR     = 3,    // line control register
+		MCR     = 4,    // modem control register
 	};
 
-	static const uint PORT_BASE		= COM1;
-	static const uint ROOT_SESS		= 0;
+	static const uint PORT_BASE     = COM1;
+	static const uint ROOT_SESS     = 0;
 
 public:
 	/**
@@ -63,7 +63,7 @@ public:
 private:
 	explicit Log();
 
-	void write(uint sessid,const char *line,size_t len);
+	void write(uint sessid, const char *line, size_t len);
 
 	virtual void write(char c) {
 		if(c == '\0')
@@ -73,7 +73,7 @@ private:
 			write('\r');
 		while((_ports.in<uint8_t>(5) & 0x20) == 0)
 			;
-		_ports.out<uint8_t>(c,0);
+		_ports.out<uint8_t>(c, 0);
 	}
 
 	// note that we use a portal here instead of shared-memory because dataspace sharing doesn't
@@ -106,7 +106,7 @@ class BufferedLog : public nre::BaseSerial {
 			return;
 
 		if(_bufpos == sizeof(_buf) || c == '\n') {
-			Log::get().write(Log::ROOT_SESS,_buf,_bufpos);
+			Log::get().write(Log::ROOT_SESS, _buf, _bufpos);
 			_bufpos = 0;
 		}
 		if(c != '\n')

@@ -21,14 +21,13 @@
 
 namespace nre {
 
-GlobalThread GlobalThread::_cur INIT_PRIO_GEC (
-	_startup_info.utcb,CapSelSpace::INIT_EC,CapSelSpace::INIT_SC,_startup_info.cpu,
-	&Pd::_cur,_startup_info.stack
-);
+GlobalThread GlobalThread::_cur INIT_PRIO_GEC(_startup_info.utcb, CapSelSpace::INIT_EC,
+                                              CapSelSpace::INIT_SC, _startup_info.cpu,
+                                              &Pd::_cur, _startup_info.stack);
 
-GlobalThread::GlobalThread(uintptr_t uaddr,capsel_t gt,capsel_t sc,cpu_t cpu,Pd *pd,uintptr_t stack)
-		: Thread(Hip::get().cpu_phys_to_log(cpu),0,gt,stack,uaddr), _sc(new Sc(this,sc,pd)),
-		  _name("main") {
+GlobalThread::GlobalThread(uintptr_t uaddr, capsel_t gt, capsel_t sc, cpu_t cpu, Pd *pd, uintptr_t stack)
+	: Thread(Hip::get().cpu_phys_to_log(cpu), 0, gt, stack, uaddr), _sc(new Sc(this, sc, pd)),
+	  _name("main") {
 	ExecEnv::set_current_thread(this);
 	ExecEnv::set_current_pd(pd);
 }
@@ -37,9 +36,9 @@ GlobalThread::~GlobalThread() {
 	delete _sc;
 }
 
-void GlobalThread::start(Qpd qpd,Pd *pd) {
+void GlobalThread::start(Qpd qpd, Pd *pd) {
 	assert(_sc == 0);
-	_sc = new Sc(this,qpd,pd);
+	_sc = new Sc(this, qpd, pd);
 	_sc->start(_name);
 }
 

@@ -78,7 +78,7 @@ private:
 	 * Read the data register.
 	 */
 	void read_data(unsigned &value) {
-		if(in_range(_index,0x10,0x10 + PINS * 2)) {
+		if(in_range(_index, 0x10, 0x10 + PINS * 2)) {
 			value = _redir[_index - 0x10];
 			if(_ds[(_index - 0x10) / 2])
 				value |= 1 << 12;
@@ -95,7 +95,7 @@ private:
 	 * Write to the data register.
 	 */
 	void write_data(unsigned value) {
-		if(in_range(_index,0x10,0x3f)) {
+		if(in_range(_index, 0x10, 0x3f)) {
 			unsigned mask = (_index & 1) ? 0xffff0000 : 0x1afff;
 			_redir[_index - 0x10] = value & mask;
 			unsigned pin = (_index - 0x10) / 2;
@@ -106,7 +106,7 @@ private:
 			// unmasked - retrigger and/or notify
 			if(~_redir[pin * 2] & 0x10000) {
 				if(_ds[pin])
-					pin_assert(pin,MessageIrq::ASSERT_NOTIFY);
+					pin_assert(pin, MessageIrq::ASSERT_NOTIFY);
 				else {
 					// unmasked an edge triggered IRQ? -> notify
 					_notify[pin] = true;
@@ -125,7 +125,7 @@ private:
 		if(_notify[pin]) {
 			_notify[pin] = false;
 			unsigned gsi = reverse_routing(pin);
-			MessageIrqNotify msg(gsi & ~7,1 << (gsi & 7));
+			MessageIrqNotify msg(gsi & ~7, 1 << (gsi & 7));
 			_mb.bus_irqnotify.send(msg);
 		}
 	}
@@ -133,7 +133,7 @@ private:
 	/**
 	 * Assert a pin on this IO/APIC.
 	 */
-	bool pin_assert(unsigned pin,MessageIrq::Type type) {
+	bool pin_assert(unsigned pin, MessageIrq::Type type) {
 		if(pin >= PINS)
 			return false;
 		if(type == MessageIrq::DEASSERT_IRQ)
@@ -161,7 +161,7 @@ private:
 				if(_rirr[pin])
 					value |= 1 << 14;
 
-				MessageMem mem(false,phys,&value);
+				MessageMem mem(false, phys, &value);
 				_mb.bus_mem.send(mem);
 				if(!level)
 					notify(pin);
@@ -205,7 +205,7 @@ private:
 public:
 	bool receive(MessageMem &msg) {
 		// all IOApics should get the broadcast EOI from the LAPIC
-		if(!in_range(msg.phys,_base,0x100) && msg.phys != MessageApic::IOAPIC_EOI)
+		if(!in_range(msg.phys, _base, 0x100) && msg.phys != MessageApic::IOAPIC_EOI)
 			return false;
 
 		switch(msg.phys & 0xff) {
@@ -224,7 +224,7 @@ public:
 			case OFFSET_PAR:
 				if(msg.read)
 					break;
-				pin_assert(*msg.ptr,MessageIrq::ASSERT_IRQ);
+				pin_assert(*msg.ptr, MessageIrq::ASSERT_IRQ);
 				return true;
 			case OFFSET_EOI:
 				if(msg.read)
@@ -236,19 +236,19 @@ public:
 	}
 
 	bool receive(MessageIrq &msg) {
-		if(!in_range(msg.line,_gsibase,PINS))
+		if(!in_range(msg.line, _gsibase, PINS))
 			return false;
 		COUNTER_INC("GSI");
-		pin_assert(irq_routing(msg.line),msg.type);
+		pin_assert(irq_routing(msg.line), msg.type);
 		return true;
 	}
 
 	bool receive(MessageLegacy &msg) {
 		if(!_gsibase) {
 			if(msg.type == MessageLegacy::INTR)
-				return pin_assert(EXTINT_PIN,MessageIrq::ASSERT_IRQ);
+				return pin_assert(EXTINT_PIN, MessageIrq::ASSERT_IRQ);
 			if(msg.type == MessageLegacy::NMI)
-				return pin_assert(NMI_PIN,MessageIrq::ASSERT_IRQ);
+				return pin_assert(NMI_PIN, MessageIrq::ASSERT_IRQ);
 		}
 		if(msg.type == MessageLegacy::RESET) {
 			reset();
@@ -258,39 +258,41 @@ public:
 	}
 
 	void discovery() {
-		size_t length = discovery_length("APIC",44);
+		size_t length = discovery_length("APIC", 44);
 		if(!_gsibase) {
 			// override IRQ 0->2
-			discovery_write_dw("APIC",length + 0,0x00000a02,4);
-			discovery_write_dw("APIC",length + 4,2,4);
-			discovery_write_dw("APIC",length + 8,0,2);
+			discovery_write_dw("APIC", length + 0, 0x00000a02, 4);
+			discovery_write_dw("APIC", length + 4, 2, 4);
+			discovery_write_dw("APIC", length + 8, 0, 2);
 			// NMI connection is edge high
-			discovery_write_dw("APIC",length + 10,0x0803,4);
-			discovery_write_dw("APIC",length + 14,NMI_PIN,4);
+			discovery_write_dw("APIC", length + 10, 0x0803, 4);
+			discovery_write_dw("APIC", length + 14, NMI_PIN, 4);
 			length += 18;
 		}
 
 		// the I/O APIC structure
-		discovery_write_dw("APIC",length + 0,0x0c01,4);
-		discovery_write_dw("APIC",length + 4,_base,4);
-		discovery_write_dw("APIC",length + 8,_gsibase,4);
+		discovery_write_dw("APIC", length + 0, 0x0c01, 4);
+		discovery_write_dw("APIC", length + 4, _base, 4);
+		discovery_write_dw("APIC", length + 8, _gsibase, 4);
 	}
 
-	IOApic(Motherboard &mb,uintptr_t base,unsigned gsibase)
-			: _mb(mb), _base(base), _gsibase(gsibase), _index(), _id(), _redir(), _rirr(), _ds(),
-			  _notify() {
+	IOApic(Motherboard &mb, uintptr_t base, unsigned gsibase)
+		: _mb(mb), _base(base), _gsibase(gsibase), _index(), _id(), _redir(), _rirr(), _ds(),
+		  _notify() {
 		reset();
-		_mb.bus_mem.add(this,receive_static<MessageMem>);
-		_mb.bus_irqlines.add(this,receive_static<MessageIrqLines>);
-		_mb.bus_legacy.add(this,receive_static<MessageLegacy>);
-		_mb.bus_discovery.add(this,discover);
+		_mb.bus_mem.add(this, receive_static<MessageMem> );
+		_mb.bus_irqlines.add(this, receive_static<MessageIrqLines> );
+		_mb.bus_legacy.add(this, receive_static<MessageLegacy> );
+		_mb.bus_discovery.add(this, discover);
 	}
 };
 
-PARAM_HANDLER(ioapic,
-		"ioapic - create an ioapic.",
-		"The GSIs are automatically distributed, so that the first IOAPIC gets GSI0-23, the next 24-47...") {
+PARAM_HANDLER(
+    ioapic,
+    "ioapic - create an ioapic.",
+    "The GSIs are automatically distributed, so that the first IOAPIC gets GSI0-23, the next 24-47...")
+{
 	static unsigned ioapic_count;
-	new IOApic(mb,IOApic::IOAPIC_BASE + 0x1000 * ioapic_count,IOApic::PINS * ioapic_count);
+	new IOApic(mb, IOApic::IOAPIC_BASE + 0x1000 * ioapic_count, IOApic::PINS * ioapic_count);
 	ioapic_count++;
 }

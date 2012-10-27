@@ -26,7 +26,7 @@ namespace nre {
  * if we're at the end or beginning, continue at the opposite side.
  * Note that you can specify a custom lock-policy to choose whether it should be thread-safe or not.
  */
-template<class It,class LockPolicy = LockPolicyNone>
+template<class It, class LockPolicy = LockPolicyNone>
 class BaseCycler : public LockPolicy {
 public:
 	/**
@@ -35,7 +35,7 @@ public:
 	 * @param begin the iterator-beginning
 	 * @param end the iterator-end
 	 */
-	BaseCycler(It begin,It end) : LockPolicy(), _begin(begin), _end(end), _it(begin) {
+	BaseCycler(It begin, It end) : LockPolicy(), _begin(begin), _end(end), _it(begin) {
 	}
 
 	/**
@@ -46,7 +46,7 @@ public:
 	 * @param item the current item to set
 	 * @param end the new end
 	 */
-	void reset(It begin,It item,It end) {
+	void reset(It begin, It item, It end) {
 		this->lock();
 		_begin = begin;
 		_it = item;
@@ -78,8 +78,8 @@ protected:
  * here, because Cycler inherits from two classes that share the same base-class. This way, we have
  * a lot of flexibility.
  */
-template<class It,class LockPolicy = LockPolicyNone>
-class ForwardCycler : public virtual BaseCycler<It,LockPolicy> {
+template<class It, class LockPolicy = LockPolicyNone>
+class ForwardCycler : public virtual BaseCycler<It, LockPolicy> {
 public:
 	/**
 	 * Constructor
@@ -87,7 +87,7 @@ public:
 	 * @param begin the iterator-beginning
 	 * @param end the iterator-end
 	 */
-	ForwardCycler(It begin,It end) : BaseCycler<It,LockPolicy>(begin,end) {
+	ForwardCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
 	}
 
 	/**
@@ -110,8 +110,8 @@ public:
 /**
  * A backwards-cycler for iterators that can only move backwards.
  */
-template<class It,class LockPolicy = LockPolicyNone>
-class BackwardsCycler : public virtual BaseCycler<It,LockPolicy> {
+template<class It, class LockPolicy = LockPolicyNone>
+class BackwardsCycler : public virtual BaseCycler<It, LockPolicy> {
 public:
 	/**
 	 * Constructor
@@ -119,7 +119,7 @@ public:
 	 * @param begin the iterator-beginning
 	 * @param end the iterator-end
 	 */
-	BackwardsCycler(It begin,It end) : BaseCycler<It,LockPolicy>(begin,end) {
+	BackwardsCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
 	}
 
 	/**
@@ -142,8 +142,8 @@ public:
 /**
  * A cycler for iterators that can move forward and backwards.
  */
-template<class It,class LockPolicy = LockPolicyNone>
-class Cycler : public ForwardCycler<It,LockPolicy>, public BackwardsCycler<It,LockPolicy> {
+template<class It, class LockPolicy = LockPolicyNone>
+class Cycler : public ForwardCycler<It, LockPolicy>, public BackwardsCycler<It, LockPolicy> {
 public:
 	/**
 	 * Constructor
@@ -151,9 +151,9 @@ public:
 	 * @param begin the iterator-beginning
 	 * @param end the iterator-end
 	 */
-	Cycler(It begin,It end) : BaseCycler<It,LockPolicy>(begin,end),
-		ForwardCycler<It,LockPolicy>(begin,end),
-		BackwardsCycler<It,LockPolicy>(begin,end) {
+	Cycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end),
+		                       ForwardCycler<It, LockPolicy>(begin, end),
+		                       BackwardsCycler<It, LockPolicy>(begin, end) {
 	}
 };
 

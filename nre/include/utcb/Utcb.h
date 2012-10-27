@@ -19,7 +19,7 @@
 #include <utcb/UtcbHead.h>
 
 #if USE_UTCB_STACKING
-#include <utcb/UtcbStack.h>
+#    include <utcb/UtcbStack.h>
 #else
-#include <utcb/UtcbCopy.h>
+#    include <utcb/UtcbCopy.h>
 #endif

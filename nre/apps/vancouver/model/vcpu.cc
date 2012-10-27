@@ -17,20 +17,20 @@
  */
 
 #ifndef REGBASE
-#include <util/Atomic.h>
-#include <util/Util.h>
+#    include <util/Atomic.h>
+#    include <util/Util.h>
 
-#include "../bus/motherboard.h"
-#include "../bus/discovery.h"
-#include "../bus/helper.h"
-#include "../bus/vcpu.h"
-#include "../executor/bios.h"
+#    include "../bus/motherboard.h"
+#    include "../bus/discovery.h"
+#    include "../bus/helper.h"
+#    include "../bus/vcpu.h"
+#    include "../executor/bios.h"
 
 using namespace nre;
 
 class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
-#define REGBASE "vcpu.cc"
-#include "reg.h"
+#    define REGBASE "vcpu.cc"
+#    include "reg.h"
 
 	uintptr_t _hostop_id;
 	Motherboard &_mb;
@@ -42,11 +42,11 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 	unsigned char debugioin[8192];
 	unsigned char debugioout[8192];
 
-	void dprintf(const char *format,...) {
-		Serial::get().writef("[%2d] ",CPUID_EDXb);
+	void dprintf(const char *format, ...) {
+		Serial::get().writef("[%2d] ", CPUID_EDXb);
 		va_list ap;
-		va_start(ap,format);
-		Serial::get().vwritef(format,ap);
+		va_start(ap, format);
+		Serial::get().vwritef(format, ap);
 		va_end(ap);
 	}
 
@@ -69,19 +69,19 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 			}
 		}
 		unsigned val;
-		if(!CPUID_read(reg | 0,val))
+		if(!CPUID_read(reg | 0, val))
 			msg.cpu->eax = 0;
 		else
 			msg.cpu->eax = val;
-		if(!CPUID_read(reg | 1,val))
+		if(!CPUID_read(reg | 1, val))
 			msg.cpu->ebx = 0;
 		else
 			msg.cpu->ebx = val;
-		if(!CPUID_read(reg | 2,val))
+		if(!CPUID_read(reg | 2, val))
 			msg.cpu->ecx = 0;
 		else
 			msg.cpu->ecx = val;
-		if(!CPUID_read(reg | 3,val))
+		if(!CPUID_read(reg | 3, val))
 			msg.cpu->edx = 0;
 		else
 			msg.cpu->edx = val;
@@ -105,7 +105,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 				msg.cpu->edx_eax((&msg.cpu->sysenter_cs)[msg.cpu->ecx - 0x174]);
 				break;
 			case 0x8b: // microcode
-				// MTRRs
+			// MTRRs
 			case 0xfe:
 			case 0x250:
 			case 0x258:
@@ -115,7 +115,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 				msg.cpu->edx_eax(0);
 				break;
 			default:
-				dprintf("unsupported rdmsr %x at %x\n",msg.cpu->ecx,msg.cpu->eip);
+				dprintf("unsupported rdmsr %x at %x\n", msg.cpu->ecx, msg.cpu->eip);
 				GP0(msg);
 				break;
 		}
@@ -135,14 +135,14 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 				msg.mtr_out |= Mtd::SYSENTER;
 				break;
 			default:
-				dprintf("unsupported wrmsr %x <-(%x:%x) at %x\n",cpu->ecx,cpu->edx,cpu->eax,
-						cpu->eip);
+				dprintf("unsupported wrmsr %x <-(%x:%x) at %x\n", cpu->ecx, cpu->edx, cpu->eax,
+				        cpu->eip);
 				GP0(msg);
 				break;
 		}
 	}
 
-	void handle_cpu_init(CpuMessage &msg,bool reset) {
+	void handle_cpu_init(CpuMessage &msg, bool reset) {
 		CpuState *cpu = msg.cpu;
 
 		// http://www.sandpile.org/ia32/initial.htm
@@ -163,17 +163,17 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 		cpu->ld.ar = 0x1000;
 		cpu->tr.ar = 0x8b;
 		cpu->ss.limit = cpu->ds.limit = cpu->es.limit = cpu->fs.limit = cpu->gs.limit =
-				cpu->cs.limit;
+		                                                                    cpu->cs.limit;
 		cpu->tr.limit = cpu->ld.limit = cpu->gd.limit = cpu->id.limit = 0xffff;
 		/*cpu->dr6      = 0xffff0ff0;*/
 		// cpu->_dr = {0, 0, 0, 0};
 		cpu->dr7 = 0x400;
 		msg.mtr_out |= Mtd::ALL;
 		if(reset) {
-			Serial::get().writef("reset CPU from %x mtr_in %x\n",msg.type,msg.mtr_in);
+			Serial::get().writef("reset CPU from %x mtr_in %x\n", msg.type, msg.mtr_in);
 
-			memset(debugioin,0,sizeof(debugioin));
-			memset(debugioout,0,sizeof(debugioout));
+			memset(debugioin, 0, sizeof(debugioin));
+			memset(debugioout, 0, sizeof(debugioout));
 			// XXX reset TSC
 			// XXX floating point
 			// XXX MXCSR
@@ -183,7 +183,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 
 		// send LAPIC init
 		LapicEvent msg2(reset ? LapicEvent::RESET : LapicEvent::INIT);
-		bus_lapic.send(msg2,true);
+		bus_lapic.send(msg2, true);
 	}
 
 	/**
@@ -203,24 +203,24 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 			return;
 		if(old_event & (EVENT_DEBUG | EVENT_HOST)) {
 			if(old_event & EVENT_DEBUG)
-				dprintf("state %x event %8x eip %8x eax %x ebx %x edx %x esi %x\n",cpu->actv_state,
-						old_event,cpu->eip,cpu->eax,cpu->ebx,cpu->edx,cpu->esi);
+				dprintf("state %x event %8x eip %8x eax %x ebx %x edx %x esi %x\n", cpu->actv_state,
+				        old_event, cpu->eip, cpu->eax, cpu->ebx, cpu->edx, cpu->esi);
 			else if(cpu->actv_state == 1)
-				cpu->actv_state = 0; //if cpu is in hlt wake it up
-			Atomic::bit_and<volatile unsigned>(&_event,~(old_event & (EVENT_DEBUG | EVENT_HOST)));
+				cpu->actv_state = 0;  //if cpu is in hlt wake it up
+			Atomic::bit_and<volatile unsigned>(&_event, ~(old_event & (EVENT_DEBUG | EVENT_HOST)));
 			return;
 		}
 
 		if(old_event & EVENT_RESET) {
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_RESET);
-			handle_cpu_init(msg,true);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_RESET);
+			handle_cpu_init(msg, true);
 			// fall through as we could have got an INIT or SIPI already
 		}
 
 		// INIT
 		if(old_event & EVENT_INIT) {
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_INIT);
-			handle_cpu_init(msg,false);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_INIT);
+			handle_cpu_init(msg, false);
 			cpu->actv_state = 3;
 			// fall through as we could have got an SIPI already
 		}
@@ -232,7 +232,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 			cpu->cs.base = cpu->cs.sel << 4;
 			cpu->actv_state = 0;
 			msg.mtr_out |= Mtd::CS_SS;
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_SIPI);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_SIPI);
 			return;
 		}
 
@@ -243,7 +243,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 		// SMI
 		if((old_event & EVENT_SMI) && (~cpu->intr_state & 4)) {
 			dprintf("SMI received\n");
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_SMI);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_SMI);
 			cpu->actv_state = 0;
 			// fall trough
 		}
@@ -256,10 +256,10 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 
 		// NMI
 		if((old_event & EVENT_NMI) && (~cpu->intr_state & 8) && !(cpu->intr_state & 3)) {
-			Serial::get().writef("inject NMI %x\n",old_event);
+			Serial::get().writef("inject NMI %x\n", old_event);
 			cpu->inj_info = 0x80000202;
 			cpu->actv_state = 0;
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_NMI);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_NMI);
 			return;
 		}
 
@@ -270,13 +270,13 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 		LapicEvent msg2(LapicEvent::INTA);
 		if(old_event & EVENT_EXTINT) {
 			// EXTINT IRQ via MSI or IPI: INTA directly from the PIC
-			Atomic::bit_and<volatile unsigned>(&_event,~VCVCpu::EVENT_EXTINT);
+			Atomic::bit_and<volatile unsigned>(&_event, ~VCVCpu::EVENT_EXTINT);
 			receive(msg2);
 		}
 		else if(old_event & EVENT_INTR) {
 			// interrupt from the APIC or directly via INTR line - INTA via LAPIC
 			// do not clear EVENT_INTR here, as the PIC or the LAPIC will do this for us
-			bus_lapic.send(msg2,true);
+			bus_lapic.send(msg2, true);
 		}
 		else
 			return;
@@ -286,10 +286,10 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 	}
 
 	void handle_ioin(CpuMessage &msg) {
-		MessageIOIn msg2(MessageIOIn::Type(msg.io_order),msg.port);
+		MessageIOIn msg2(MessageIOIn::Type(msg.io_order), msg.port);
 		bool res = _mb.bus_ioin.send(msg2);
 
-		cpu_move(msg.dst,&msg2.value,msg.io_order);
+		cpu_move(msg.dst, &msg2.value, msg.io_order);
 		msg.mtr_out |= Mtd::GPR_ACDB;
 
 		if(!res && (~debugioin[msg.port >> 3] & (1 << (msg.port & 7)))) {
@@ -301,8 +301,8 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 	}
 
 	void handle_ioout(CpuMessage &msg) {
-		MessageIOOut msg2(MessageIOOut::Type(msg.io_order),msg.port,0);
-		cpu_move(&msg2.value,msg.dst,msg.io_order);
+		MessageIOOut msg2(MessageIOOut::Type(msg.io_order), msg.port, 0);
+		cpu_move(&msg2.value, msg.dst, msg.io_order);
 
 		bool res = _mb.bus_ioout.send(msg2);
 		if(!res && (~debugioout[msg.port >> 3] & (1 << (msg.port & 7)))) {
@@ -321,7 +321,7 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 		COUNTER_INC("EVENT");
 
 		if(value & DEASS_INTR)
-			Atomic::bit_and<volatile unsigned>(&_event,~EVENT_INTR);
+			Atomic::bit_and<volatile unsigned>(&_event, ~EVENT_INTR);
 		if(!((~_event & value) & (EVENT_MASK | EVENT_DEBUG | EVENT_HOST)))
 			return;
 
@@ -335,14 +335,14 @@ class VirtualCpu : public VCVCpu, public StaticReceiver<VirtualCpu> {
 			 * for a SIPI. If it fails, somebody else was faster and we do
 			 * not wakeup the client.
 			 */
-			if(Atomic::cmpxchg4b(&_sipi,0,value))
+			if(Atomic::cmpxchg4b(&_sipi, 0, value))
 				return;
 		}
 
 		Atomic::bit_or<volatile unsigned>(&_event,
-				STATE_WAKEUP | (value & (EVENT_MASK | EVENT_DEBUG | EVENT_HOST)));
+		                                  STATE_WAKEUP | (value & (EVENT_MASK | EVENT_DEBUG | EVENT_HOST)));
 
-		MessageHostOp msg(MessageHostOp::OP_VCPU_RELEASE,_hostop_id,_event & STATE_BLOCK);
+		MessageHostOp msg(MessageHostOp::OP_VCPU_RELEASE, _hostop_id, _event & STATE_BLOCK);
 		_mb.bus_hostop.send(msg);
 	}
 
@@ -351,10 +351,10 @@ public:
 	 * Forward MEM requests to the motherboard.
 	 */
 	bool receive(MessageMem &msg) {
-		return _mb.bus_mem.send(msg,true);
+		return _mb.bus_mem.send(msg, true);
 	}
 	bool receive(MessageMemRegion &msg) {
-		return _mb.bus_memregion.send(msg,true);
+		return _mb.bus_memregion.send(msg, true);
 	}
 
 	bool receive(CpuEvent &msg) {
@@ -390,7 +390,7 @@ public:
 	 */
 	bool receive(LapicEvent &msg) {
 		if(msg.type == LapicEvent::INTA) {
-			MessageLegacy msg2(MessageLegacy::INTA,msg.value);
+			MessageLegacy msg2(MessageLegacy::INTA, msg.value);
 			if(_mb.bus_legacy.send(msg2))
 				msg.value = msg2.value;
 			return true;
@@ -401,7 +401,7 @@ public:
 	bool receive(CpuMessage &msg) {
 		// TSC drift compensation
 		if(msg.type != CpuMessage::TYPE_CPUID_WRITE && (msg.mtr_in & Mtd::TSC)
-				&& (~msg.mtr_out & Mtd::TSC)) {
+		   && (~msg.mtr_out & Mtd::TSC)) {
 			COUNTER_INC("tsc adoption");
 			msg.cpu->tsc_off = _reset_tsc_off - msg.cpu->tsc_off;
 			msg.mtr_out |= Mtd::TSC;
@@ -413,8 +413,8 @@ public:
 			case CpuMessage::TYPE_CPUID_WRITE: {
 				unsigned reg = (msg.nr << 4) | msg.reg | (msg.nr & 0x80000000);
 				unsigned old;
-				if(CPUID_read(reg,old) && CPUID_write(reg,(old & msg.mask) | msg.value)) {
-					CPUID_read(reg,old);
+				if(CPUID_read(reg, old) && CPUID_write(reg, (old & msg.mask) | msg.value)) {
+					CPUID_read(reg, old);
 					return true;
 				}
 				return false;
@@ -468,17 +468,17 @@ public:
 
 		// handle IRQ injection
 		for(prioritize_events(msg); msg.cpu->actv_state & 0x3; prioritize_events(msg)) {
-			MessageHostOp msg2(MessageHostOp::OP_VCPU_BLOCK,_hostop_id);
-			Atomic::bit_or<volatile unsigned>(&_event,STATE_BLOCK);
+			MessageHostOp msg2(MessageHostOp::OP_VCPU_BLOCK, _hostop_id);
+			Atomic::bit_or<volatile unsigned>(&_event, STATE_BLOCK);
 			if(~_event & STATE_WAKEUP)
 				_mb.bus_hostop.send(msg2);
-			Atomic::bit_and<volatile unsigned>(&_event,~(STATE_BLOCK | STATE_WAKEUP));
+			Atomic::bit_and<volatile unsigned>(&_event, ~(STATE_BLOCK | STATE_WAKEUP));
 		}
 		return true;
 	}
 
-	VirtualCpu(VCVCpu *_last,Motherboard &mb) : VCVCpu(_last), _hostop_id(), _mb(mb), _reset_tsc_off(),
-			_event(0), _sipi(~0u), debugioin(), debugioout() {
+	VirtualCpu(VCVCpu *_last, Motherboard &mb) : VCVCpu(_last), _hostop_id(), _mb(mb), _reset_tsc_off(),
+		                                         _event(0), _sipi(~0u), debugioin(), debugioout() {
 		MessageHostOp msg(this);
 		if(!mb.bus_hostop.send(msg))
 			Util::panic("could not create VCpu backend.");
@@ -486,44 +486,44 @@ public:
 		_reset_tsc_off = -Util::tsc();
 
 		// add to the busses
-		executor.add(this,VirtualCpu::receive_static<CpuMessage>);
-		bus_event.add(this,VirtualCpu::receive_static<CpuEvent>);
-		mem.add(this,VirtualCpu::receive_static<MessageMem>);
-		memregion.add(this,VirtualCpu::receive_static<MessageMemRegion>);
-		mb.bus_legacy.add(this,VirtualCpu::receive_static<MessageLegacy>);
-		bus_lapic.add(this,VirtualCpu::receive_static<LapicEvent>);
+		executor.add(this, VirtualCpu::receive_static<CpuMessage> );
+		bus_event.add(this, VirtualCpu::receive_static<CpuEvent> );
+		mem.add(this, VirtualCpu::receive_static<MessageMem> );
+		memregion.add(this, VirtualCpu::receive_static<MessageMemRegion> );
+		mb.bus_legacy.add(this, VirtualCpu::receive_static<MessageLegacy> );
+		bus_lapic.add(this, VirtualCpu::receive_static<LapicEvent> );
 
 		CPUID_reset();
 	}
 };
 
 PARAM_HANDLER(vcpu,
-		"vcpu - create a new VCPU") {
-	mb.last_vcpu = new VirtualCpu(mb.last_vcpu,mb);
+              "vcpu - create a new VCPU") {
+	mb.last_vcpu = new VirtualCpu(mb.last_vcpu, mb);
 }
 #else
 REGSET(CPUID,
-		REG_RW(CPUID_EAX0, 0x00, 2, ~0u,)
-		REG_RW(CPUID_EBX0, 0x01, 0, ~0u,)
-		REG_RW(CPUID_ECX0, 0x02, 0, ~0u,)
-		REG_RW(CPUID_EDX0, 0x03, 0, ~0u,)
-		REG_RW(CPUID_EAX1, 0x10, 0x673, ~0u,)
-		REG_RW(CPUID_EBX1, 0x11, 0, ~0u,)
-		REG_RW(CPUID_ECX1, 0x12, 0, ~0u,)
-		REG_RW(CPUID_EDX1, 0x13, 0, ~0u,)
-		REG_RW(CPUID_EDXb, 0xb3, 0, ~0u,)
-		REG_RW(CPUID_EAX80, 0x80000000, 0x80000004, ~0u,)
-		REG_RW(CPUID_ECX81, 0x80000012, 0x100000, ~0u,)
-		REG_RW(CPUID_EAX82, 0x80000020, 0, ~0u,)
-		REG_RW(CPUID_EBX82, 0x80000021, 0, ~0u,)
-		REG_RW(CPUID_ECX82, 0x80000022, 0, ~0u,)
-		REG_RW(CPUID_EDX82, 0x80000023, 0, ~0u,)
-		REG_RW(CPUID_EAX83, 0x80000030, 0, ~0u,)
-		REG_RW(CPUID_EBX83, 0x80000031, 0, ~0u,)
-		REG_RW(CPUID_ECX83, 0x80000032, 0, ~0u,)
-		REG_RW(CPUID_EDX83, 0x80000033, 0, ~0u,)
-		REG_RW(CPUID_EAX84, 0x80000040, 0, ~0u,)
-		REG_RW(CPUID_EBX84, 0x80000041, 0, ~0u,)
-		REG_RW(CPUID_ECX84, 0x80000042, 0, ~0u,)
-		REG_RW(CPUID_EDX84, 0x80000043, 0, ~0u,))
+       REG_RW(CPUID_EAX0, 0x00, 2, ~0u, )
+       REG_RW(CPUID_EBX0, 0x01, 0, ~0u, )
+       REG_RW(CPUID_ECX0, 0x02, 0, ~0u, )
+       REG_RW(CPUID_EDX0, 0x03, 0, ~0u, )
+       REG_RW(CPUID_EAX1, 0x10, 0x673, ~0u, )
+       REG_RW(CPUID_EBX1, 0x11, 0, ~0u, )
+       REG_RW(CPUID_ECX1, 0x12, 0, ~0u, )
+       REG_RW(CPUID_EDX1, 0x13, 0, ~0u, )
+       REG_RW(CPUID_EDXb, 0xb3, 0, ~0u, )
+       REG_RW(CPUID_EAX80, 0x80000000, 0x80000004, ~0u, )
+       REG_RW(CPUID_ECX81, 0x80000012, 0x100000, ~0u, )
+       REG_RW(CPUID_EAX82, 0x80000020, 0, ~0u, )
+       REG_RW(CPUID_EBX82, 0x80000021, 0, ~0u, )
+       REG_RW(CPUID_ECX82, 0x80000022, 0, ~0u, )
+       REG_RW(CPUID_EDX82, 0x80000023, 0, ~0u, )
+       REG_RW(CPUID_EAX83, 0x80000030, 0, ~0u, )
+       REG_RW(CPUID_EBX83, 0x80000031, 0, ~0u, )
+       REG_RW(CPUID_ECX83, 0x80000032, 0, ~0u, )
+       REG_RW(CPUID_EDX83, 0x80000033, 0, ~0u, )
+       REG_RW(CPUID_EAX84, 0x80000040, 0, ~0u, )
+       REG_RW(CPUID_EBX84, 0x80000041, 0, ~0u, )
+       REG_RW(CPUID_ECX84, 0x80000042, 0, ~0u, )
+       REG_RW(CPUID_EDX84, 0x80000043, 0, ~0u, ))
 #endif

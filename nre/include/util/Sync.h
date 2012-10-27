@@ -36,19 +36,19 @@ public:
 	 * stores after this call.
 	 */
 	static inline void memory_fence() {
-		asm volatile("mfence" : : : "memory");
+		asm volatile ("mfence" : : : "memory");
 	}
 	/**
 	 * Ensures that all loads before this call are globally visible before all loads after this call.
 	 */
 	static inline void load_fence() {
-		asm volatile("lfence" : : : "memory");
+		asm volatile ("lfence" : : : "memory");
 	}
 	/**
 	 * Ensures that all stores before this call are globally visible before all stores after this call.
 	 */
 	static inline void store_fence() {
-		asm volatile("sfence" : : : "memory");
+		asm volatile ("sfence" : : : "memory");
 	}
 
 private:

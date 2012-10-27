@@ -38,7 +38,7 @@ public:
 	 * @param pt the portal-selector
 	 * @param cpu the CPU to run on
 	 */
-	explicit ServiceCPUHandler(Service* s,capsel_t pt,cpu_t cpu);
+	explicit ServiceCPUHandler(Service* s, capsel_t pt, cpu_t cpu);
 
 	/**
 	 * @return the CPU

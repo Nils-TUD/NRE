@@ -32,8 +32,8 @@ public:
 	typedef const HipMem* mem_iterator;
 	typedef const HipCPU* cpu_iterator;
 
-	static const size_t MAX_CPUS	= 64;	// has to be a power of 2
-	static const size_t MAX_GSIS	= 128;
+	static const size_t MAX_CPUS    = 64;   // has to be a power of 2
+	static const size_t MAX_GSIS    = 128;
 
 	/**
 	 * @return the Hip
@@ -43,24 +43,24 @@ public:
 	}
 
 protected:
-	uint32_t signature;		// HIP signature
-	uint16_t checksum;		// HIP checksum
-	uint16_t length;		// HIP length
-	uint16_t cpu_offs;		// Offset of first CPU descriptor
+	uint32_t signature;     // HIP signature
+	uint16_t checksum;      // HIP checksum
+	uint16_t length;        // HIP length
+	uint16_t cpu_offs;      // Offset of first CPU descriptor
 	uint16_t cpu_size;
-	uint16_t mem_offs;		// Offset of first MEM descriptor
+	uint16_t mem_offs;      // Offset of first MEM descriptor
 	uint16_t mem_size;
-	uint32_t api_flg;		// API feature flags
+	uint32_t api_flg;       // API feature flags
 public:
-	uint32_t api_ver;		// API version
-	uint32_t cfg_cap;		// Number of CAPs (SEL)
-	uint32_t cfg_exc;		// Number of Exception portals (EXC)
-	uint32_t cfg_vm;		// Number of VM portals (VMI)
-	uint32_t cfg_gsi;		// Number of GSIs
-	uint32_t cfg_page;		// PAGE sizes
-	uint32_t cfg_utcb;		// UTCB sizes
-	uint32_t freq_tsc;		// TSC freq in khz
-	uint32_t freq_bus;		// BUS freq in khz
+	uint32_t api_ver;       // API version
+	uint32_t cfg_cap;       // Number of CAPs (SEL)
+	uint32_t cfg_exc;       // Number of Exception portals (EXC)
+	uint32_t cfg_vm;        // Number of VM portals (VMI)
+	uint32_t cfg_gsi;       // Number of GSIs
+	uint32_t cfg_page;      // PAGE sizes
+	uint32_t cfg_utcb;      // UTCB sizes
+	uint32_t freq_tsc;      // TSC freq in khz
+	uint32_t freq_bus;      // BUS freq in khz
 
 	/**
 	 * @return true if the checksum of the Hip is valid
@@ -147,8 +147,8 @@ protected:
 	uint16_t calc_checksum() const {
 		uint16_t sum = 0;
 		for(const uint16_t *ptr = reinterpret_cast<const uint16_t*>(this);
-				ptr < reinterpret_cast<const uint16_t*>(this) + length / 2;
-				sum = static_cast<uint16_t>(sum - *ptr++))
+		    ptr < reinterpret_cast<const uint16_t*>(this) + length / 2;
+		    sum = static_cast<uint16_t>(sum - *ptr++))
 			;
 		return sum;
 	}
@@ -187,9 +187,9 @@ public:
 class HipMem {
 public:
 	enum Type {
-		AVAILABLE	= 1,
-		HYPERVISOR	= -1,
-		MB_MODULE	= -2
+		AVAILABLE   = 1,
+		HYPERVISOR  = -1,
+		MB_MODULE   = -2
 	};
 
 	uint64_t addr;

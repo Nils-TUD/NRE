@@ -61,13 +61,13 @@ void Child::release_regs() {
 	for(ChildMemory::iterator it = _regs.begin(); it != _regs.end(); ++it) {
 		DataSpaceDesc desc = it->desc();
 		if(it->cap() != ObjCap::INVALID && desc.type() != DataSpaceDesc::VIRTUAL)
-			_cm->_dsm.release(desc,it->cap());
+			_cm->_dsm.release(desc, it->cap());
 	}
 }
 
-OStream &operator<<(OStream &os,const Child &c) {
+OStream & operator<<(OStream &os, const Child &c) {
 	os << "Child[cmdline='" << c.cmdline() << "' cpu=" << c._ec->cpu();
-	os << " entry=" << Format<uintptr_t>("%p",c.entry()) << "]:\n";
+	os << " entry=" << Format<uintptr_t>("%p", c.entry()) << "]:\n";
 	os << "\tScs:\n";
 	for(SList<Child::SchedEntity>::iterator it = c.scs().begin(); it != c.scs().end(); ++it)
 		os << "\t\t" << it->name() << " on CPU " << CPU::get(it->cpu()).phys_id() << "\n";

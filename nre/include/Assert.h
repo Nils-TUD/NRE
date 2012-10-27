@@ -32,7 +32,7 @@ public:
 	 * @param file the filename
 	 * @param line the line number
 	 */
-	explicit AssertException(const char *expr,const char *file,int line) throw()
+	explicit AssertException(const char *expr, const char *file, int line) throw()
 		: Exception(E_ASSERT), _expr(expr), _file(file), _line(line) {
 	}
 	virtual ~AssertException() throw() {
@@ -72,12 +72,15 @@ private:
 
 #ifndef NDEBUG
 
-#	define assert(cond) do { if(!(cond)) { \
-			throw nre::AssertException(#cond,__FILE__,__LINE__); \
-		} } while(0);
+#    define assert(cond)                                                    \
+	do {                                                                    \
+		if(!(cond)) {                                                       \
+			throw nre::AssertException(# cond, __FILE__, __LINE__);         \
+		}                                                                   \
+	} while(0);
 
 #else
 
-#	define assert(cond)
+#    define assert(cond)
 
 #endif

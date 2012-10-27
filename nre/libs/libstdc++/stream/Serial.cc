@@ -46,7 +46,7 @@ void Serial::write(char c) {
 		return;
 
 	if(_bufpos == sizeof(_buf) || c == '\n') {
-		_sess->write(String(_buf,_bufpos));
+		_sess->write(String(_buf, _bufpos));
 		_bufpos = 0;
 	}
 	if(c != '\n')
