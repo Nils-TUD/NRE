@@ -28,41 +28,41 @@ namespace nre {
  */
 class CPUSet {
 public:
-	/**
-	 * The initial settings
-	 */
-	enum Preset {
-		NONE,
-		ALL
-	};
+    /**
+     * The initial settings
+     */
+    enum Preset {
+        NONE,
+        ALL
+    };
 
-	/**
-	 * Constructor. Preinitializes the set to <preset>
-	 *
-	 * @param preset the CPUs to enable at the beginning (ALL by default)
-	 */
-	explicit CPUSet(Preset preset = ALL) : _cpus() {
-		if(preset == ALL)
-			_cpus.set_all();
-	}
+    /**
+     * Constructor. Preinitializes the set to <preset>
+     *
+     * @param preset the CPUs to enable at the beginning (ALL by default)
+     */
+    explicit CPUSet(Preset preset = ALL) : _cpus() {
+        if(preset == ALL)
+            _cpus.set_all();
+    }
 
-	/**
-	 * @return the CPUs in form of a bitfield
-	 */
-	const BitField<Hip::MAX_CPUS> &get() const {
-		return _cpus;
-	}
-	/**
-	 * Sets the given CPU
-	 *
-	 * @param cpu the CPU
-	 */
-	void set(cpu_t cpu) {
-		_cpus.set(cpu);
-	}
+    /**
+     * @return the CPUs in form of a bitfield
+     */
+    const BitField<Hip::MAX_CPUS> &get() const {
+        return _cpus;
+    }
+    /**
+     * Sets the given CPU
+     *
+     * @param cpu the CPU
+     */
+    void set(cpu_t cpu) {
+        _cpus.set(cpu);
+    }
 
 private:
-	BitField<Hip::MAX_CPUS> _cpus;
+    BitField<Hip::MAX_CPUS> _cpus;
 };
 
 }

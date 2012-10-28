@@ -25,28 +25,28 @@ namespace nre {
 template<class T>
 class ScopedLock {
 public:
-	/**
-	 * Constructor. Acquires the lock.
-	 *
-	 * @param lock the pointer to the lock-object
-	 */
-	explicit ScopedLock(T *lock)
-		: _lock(lock) {
-		_lock->down();
-	}
+    /**
+     * Constructor. Acquires the lock.
+     *
+     * @param lock the pointer to the lock-object
+     */
+    explicit ScopedLock(T *lock)
+        : _lock(lock) {
+        _lock->down();
+    }
 
-	/**
-	 * Destructor. Releases the lock
-	 */
-	~ScopedLock() {
-		_lock->up();
-	}
+    /**
+     * Destructor. Releases the lock
+     */
+    ~ScopedLock() {
+        _lock->up();
+    }
 
 private:
-	ScopedLock(const ScopedLock&);
-	ScopedLock& operator=(const ScopedLock&);
+    ScopedLock(const ScopedLock&);
+    ScopedLock& operator=(const ScopedLock&);
 
-	T *_lock;
+    T *_lock;
 };
 
 }

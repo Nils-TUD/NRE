@@ -24,36 +24,36 @@ using namespace nre;
 
 template<class T>
 static void try_reboot(const char *name) {
-	try {
-		T method;
-		method.reboot();
-	}
-	catch(const Exception &e) {
-		Serial::get() << "Reboot via " << name << " failed: " << e.msg() << "\n";
-	}
+    try {
+        T method;
+        method.reboot();
+    }
+    catch(const Exception &e) {
+        Serial::get() << "Reboot via " << name << " failed: " << e.msg() << "\n";
+    }
 }
 
 PORTAL static void portal_reboot(capsel_t) {
-	UtcbFrameRef uf;
+    UtcbFrameRef uf;
 
-	// first try acpi, which should work on most systems
-	try_reboot<HostRebootACPI>("ACPI");
+    // first try acpi, which should work on most systems
+    try_reboot<HostRebootACPI>("ACPI");
 
-	// if we're still here, try pci reset
-	try_reboot<HostRebootPCIReset>("PCIReset");
+    // if we're still here, try pci reset
+    try_reboot<HostRebootPCIReset>("PCIReset");
 
-	// try System Control Port A
-	try_reboot<HostRebootSysCtrlPortA>("SysCtrlPortA");
+    // try System Control Port A
+    try_reboot<HostRebootSysCtrlPortA>("SysCtrlPortA");
 
-	// finally try keyboard
-	try_reboot<HostRebootKeyboard>("Keyboard");
+    // finally try keyboard
+    try_reboot<HostRebootKeyboard>("Keyboard");
 
-	// hopefully not reached
-	uf << E_FAILURE;
+    // hopefully not reached
+    uf << E_FAILURE;
 }
 
 int main() {
-	Service *srv = new Service("reboot", CPUSet(CPUSet::ALL), portal_reboot);
-	srv->start();
-	return 0;
+    Service *srv = new Service("reboot", CPUSet(CPUSet::ALL), portal_reboot);
+    srv->start();
+    return 0;
 }

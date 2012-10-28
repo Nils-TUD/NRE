@@ -41,26 +41,26 @@ OStream &operator<<(OStream &os, const UtcbFrameRef &frm);
  * capability delegation and translation. This class is not supposed to be used directly.
  */
 class UtcbHead {
-	friend class UtcbFrame;
-	friend class UtcbFrameRef;
-	friend OStream & operator<<(OStream &os, const Utcb &utcb);
-	friend OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
+    friend class UtcbFrame;
+    friend class UtcbFrameRef;
+    friend OStream & operator<<(OStream &os, const Utcb &utcb);
+    friend OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
 
 protected:
 #if USE_UTCB_KERNEL_EXT
-	uint16_t top;           // offset of the current frame from the top in words
-	uint16_t bottom;        // offset of the current frame from the bottom in words
+    uint16_t top;           // offset of the current frame from the top in words
+    uint16_t bottom;        // offset of the current frame from the bottom in words
 #endif
-	union {
-		struct {
-			uint16_t untyped;
-			uint16_t typed;
-		};
-		word_t mtr;
-	};
-	word_t crd_translate;
-	word_t crd;
-	word_t reserved;
+    union {
+        struct {
+            uint16_t untyped;
+            uint16_t typed;
+        };
+        word_t mtr;
+    };
+    word_t crd_translate;
+    word_t crd;
+    word_t reserved;
 };
 
 }

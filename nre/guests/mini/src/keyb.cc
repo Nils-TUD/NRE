@@ -18,77 +18,77 @@
 #include "video.h"
 
 bool Keyb::wait_status(uint8_t mask, uint8_t value) {
-	uint8_t status;
-	do
-		status = Ports::in<uint8_t>(PORT_CTRL);
-	while((status & mask) != value);
-	return (status & mask) == value;
+    uint8_t status;
+    do
+        status = Ports::in<uint8_t>(PORT_CTRL);
+    while((status & mask) != value);
+    return (status & mask) == value;
 }
 bool Keyb::wait_ack() {
-	uint8_t status;
-	while(1) {
-		status = Ports::in<uint8_t>(PORT_CTRL);
-		if((status & STATUS_DATA_AVAIL) && Ports::in<uint8_t>(PORT_DATA) == ACK)
-			return true;
-	}
-	return false;
+    uint8_t status;
+    while(1) {
+        status = Ports::in<uint8_t>(PORT_CTRL);
+        if((status & STATUS_DATA_AVAIL) && Ports::in<uint8_t>(PORT_DATA) == ACK)
+            return true;
+    }
+    return false;
 }
 
 bool Keyb::wait_output_full() {
-	return wait_status(STATUS_DATA_AVAIL, STATUS_DATA_AVAIL);
+    return wait_status(STATUS_DATA_AVAIL, STATUS_DATA_AVAIL);
 }
 bool Keyb::wait_input_empty() {
-	return wait_status(STATUS_BUSY, 0);
+    return wait_status(STATUS_BUSY, 0);
 }
 
 bool Keyb::read_cmd(uint8_t cmd, uint8_t &value) {
-	if(!wait_input_empty())
-		return false;
-	Ports::out<uint8_t>(PORT_CTRL, cmd);
-	if(!wait_output_full())
-		return false;
-	value = Ports::in<uint8_t>(PORT_DATA);
-	return true;
+    if(!wait_input_empty())
+        return false;
+    Ports::out<uint8_t>(PORT_CTRL, cmd);
+    if(!wait_output_full())
+        return false;
+    value = Ports::in<uint8_t>(PORT_DATA);
+    return true;
 }
 bool Keyb::write_cmd(uint8_t cmd, uint8_t value) {
-	if(!wait_input_empty())
-		return false;
-	Ports::out<uint8_t>(PORT_CTRL, cmd);
-	if(!wait_input_empty())
-		return false;
-	Ports::out<uint8_t>(PORT_DATA, value);
-	return true;
+    if(!wait_input_empty())
+        return false;
+    Ports::out<uint8_t>(PORT_CTRL, cmd);
+    if(!wait_input_empty())
+        return false;
+    Ports::out<uint8_t>(PORT_DATA, value);
+    return true;
 }
 
 bool Keyb::enable_device() {
-	if(!wait_input_empty())
-		return false;
-	Ports::out<uint8_t>(PORT_CTRL, KBC_CMD_ENABLE_KEYBOARD);
-	if(!wait_input_empty())
-		return false;
-	return true;
+    if(!wait_input_empty())
+        return false;
+    Ports::out<uint8_t>(PORT_CTRL, KBC_CMD_ENABLE_KEYBOARD);
+    if(!wait_input_empty())
+        return false;
+    return true;
 }
 
 void Keyb::init() {
-	// clear keyboard buffer
-	while(Ports::in<uint8_t>(PORT_CTRL) & STATUS_DATA_AVAIL)
-		Ports::in<uint8_t>(PORT_DATA);
+    // clear keyboard buffer
+    while(Ports::in<uint8_t>(PORT_CTRL) & STATUS_DATA_AVAIL)
+        Ports::in<uint8_t>(PORT_DATA);
 
-	uint8_t cmdbyte = 0;
-	if(!read_cmd(KBC_CMD_READ_STATUS, cmdbyte))
-		Video::puts("kb init failed\n");
+    uint8_t cmdbyte = 0;
+    if(!read_cmd(KBC_CMD_READ_STATUS, cmdbyte))
+        Video::puts("kb init failed\n");
 
-	// enable irqs
-	cmdbyte &= ~KBC_CMDBYTE_TRANSPSAUX;
-	if(!write_cmd(KBC_CMD_SET_STATUS, cmdbyte | KBC_CMDBYTE_IRQ1 | KBC_CMDBYTE_IRQ2) ||
-	   !read_cmd(KBC_CMD_READ_STATUS, cmdbyte)) {
-		Video::puts("kb init failed\n");
-	}
+    // enable irqs
+    cmdbyte &= ~KBC_CMDBYTE_TRANSPSAUX;
+    if(!write_cmd(KBC_CMD_SET_STATUS, cmdbyte | KBC_CMDBYTE_IRQ1 | KBC_CMDBYTE_IRQ2) ||
+       !read_cmd(KBC_CMD_READ_STATUS, cmdbyte)) {
+        Video::puts("kb init failed\n");
+    }
 
-	if(!enable_device())
-		Video::puts("kb init failed\n");
+    if(!enable_device())
+        Video::puts("kb init failed\n");
 
-	// read available scancodes
-	while(read())
-		;
+    // read available scancodes
+    while(read())
+        ;
 }

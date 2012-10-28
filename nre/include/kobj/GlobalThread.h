@@ -48,69 +48,69 @@ class Sc;
  * yourself.
  */
 class GlobalThread : public Thread {
-	friend void ::_post_init();
+    friend void ::_post_init();
 
 public:
-	typedef ExecEnv::startup_func startup_func;
+    typedef ExecEnv::startup_func startup_func;
 
-	/**
-	 * Creates a new GlobalThread in the current Pd that starts at <start> on CPU <cpu>.
-	 *
-	 * @param start the entry-point of the Thread
-	 * @param cpu the logical CPU id to bind the Thread to
-	 * @param name the name of the thread
-	 * @param utcb the utcb-address (0 = select it automatically)
-	 */
-	static GlobalThread *create(startup_func start, cpu_t cpu, const String &name, uintptr_t utcb = 0) {
-		// note that we force a heap-allocation by this static create function, because the thread
-		// will delete itself when its done.
-		return new GlobalThread(start, cpu, name, Pd::current(), utcb);
-	}
+    /**
+     * Creates a new GlobalThread in the current Pd that starts at <start> on CPU <cpu>.
+     *
+     * @param start the entry-point of the Thread
+     * @param cpu the logical CPU id to bind the Thread to
+     * @param name the name of the thread
+     * @param utcb the utcb-address (0 = select it automatically)
+     */
+    static GlobalThread *create(startup_func start, cpu_t cpu, const String &name, uintptr_t utcb = 0) {
+        // note that we force a heap-allocation by this static create function, because the thread
+        // will delete itself when its done.
+        return new GlobalThread(start, cpu, name, Pd::current(), utcb);
+    }
 
-	/**
-	 * Creates a new GlobalThread that runs in a different protection domain. Thus, you have to
-	 * create and free this object.
-	 *
-	 * @param start the entry-point of the Thread
-	 * @param cpu the CPU to bind the Thread to
-	 * @param name the name of the thread (only used for display-purposes)
-	 * @param pd the protection-domain
-	 * @param utcb the utcb-address
-	 */
-	explicit GlobalThread(startup_func start, cpu_t cpu, const String &name, Pd *pd, uintptr_t utcb)
-		: Thread(cpu, Hip::get().service_caps() * cpu, INVALID, 0, utcb), _sc(), _name(name) {
-		uintptr_t ret = reinterpret_cast<uintptr_t>(ec_landing_spot);
-		Thread::create(pd, Syscalls::EC_GLOBAL, ExecEnv::setup_stack(pd, this, start, ret, stack()));
-	}
-	virtual ~GlobalThread();
+    /**
+     * Creates a new GlobalThread that runs in a different protection domain. Thus, you have to
+     * create and free this object.
+     *
+     * @param start the entry-point of the Thread
+     * @param cpu the CPU to bind the Thread to
+     * @param name the name of the thread (only used for display-purposes)
+     * @param pd the protection-domain
+     * @param utcb the utcb-address
+     */
+    explicit GlobalThread(startup_func start, cpu_t cpu, const String &name, Pd *pd, uintptr_t utcb)
+        : Thread(cpu, Hip::get().service_caps() * cpu, INVALID, 0, utcb), _sc(), _name(name) {
+        uintptr_t ret = reinterpret_cast<uintptr_t>(ec_landing_spot);
+        Thread::create(pd, Syscalls::EC_GLOBAL, ExecEnv::setup_stack(pd, this, start, ret, stack()));
+    }
+    virtual ~GlobalThread();
 
-	/**
-	 * @return the scheduling context this thread is bound to (0 if start() hasn't been called yet)
-	 */
-	Sc *sc() const {
-		return _sc;
-	}
-	/**
-	 * @return the name of this thread
-	 */
-	const String &name() const {
-		return _name;
-	}
+    /**
+     * @return the scheduling context this thread is bound to (0 if start() hasn't been called yet)
+     */
+    Sc *sc() const {
+        return _sc;
+    }
+    /**
+     * @return the name of this thread
+     */
+    const String &name() const {
+        return _name;
+    }
 
-	/**
-	 * Starts this thread with given quantum-priority-descriptor
-	 *
-	 * @param qpd the qpd to use
-	 * @param pd the pd to start the thread in
-	 */
-	void start(Qpd qpd = Qpd(), Pd *pd = Pd::current());
+    /**
+     * Starts this thread with given quantum-priority-descriptor
+     *
+     * @param qpd the qpd to use
+     * @param pd the pd to start the thread in
+     */
+    void start(Qpd qpd = Qpd(), Pd *pd = Pd::current());
 
 private:
-	explicit GlobalThread(uintptr_t uaddr, capsel_t gt, capsel_t sc, cpu_t cpu, Pd *pd, uintptr_t stack);
+    explicit GlobalThread(uintptr_t uaddr, capsel_t gt, capsel_t sc, cpu_t cpu, Pd *pd, uintptr_t stack);
 
-	Sc *_sc;
-	const String _name;
-	static GlobalThread _cur;
+    Sc *_sc;
+    const String _name;
+    static GlobalThread _cur;
 };
 
 }

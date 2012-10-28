@@ -35,27 +35,27 @@ static void *pool[2];
 StartupInfo _startup_info;
 
 static void verbose_terminate() {
-	try {
-		throw;
-	}
-	catch(const Exception& e) {
-		Serial::get() << e;
-	}
-	catch(...) {
-		Serial::get() << "Uncatched, unknown exception\n";
-	}
-	abort();
+    try {
+        throw;
+    }
+    catch(const Exception& e) {
+        Serial::get() << e;
+    }
+    catch(...) {
+        Serial::get() << "Uncatched, unknown exception\n";
+    }
+    abort();
 }
 
 void _post_init() {
-	std::set_terminate(verbose_terminate);
-	_startup_info.done = true;
+    std::set_terminate(verbose_terminate);
+    _startup_info.done = true;
 
-	// force the linker to include the Pd, GlobalThread and pthread object-files
-	// TODO is there a better way?
-	pool[0] = &Pd::_cur;
-	pool[1] = &GlobalThread::_cur;
-	// FIXME why do we have to force the linker to include the pthread object-file? the libsupc++
-	// calls functions of it, so it should be included automatically, right?
-	pthread_cancel(0);
+    // force the linker to include the Pd, GlobalThread and pthread object-files
+    // TODO is there a better way?
+    pool[0] = &Pd::_cur;
+    pool[1] = &GlobalThread::_cur;
+    // FIXME why do we have to force the linker to include the pthread object-file? the libsupc++
+    // calls functions of it, so it should be included automatically, right?
+    pthread_cancel(0);
 }

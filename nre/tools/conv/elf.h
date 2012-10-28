@@ -1,6 +1,6 @@
 /* This file defines standard ELF types, structures, and macros.
    Copyright (C) 1995-2003,2004,2005,2006,2007,2008
-	Free Software Foundation, Inc.
+    Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -65,8 +65,8 @@ typedef Elf64_Half Elf64_Versym;
 typedef struct
 {
   union {
-	  unsigned char	chars[EI_NIDENT];	/* Magic number and other info */
-	  unsigned long dword;
+      unsigned char	chars[EI_NIDENT];	/* Magic number and other info */
+      unsigned long dword;
   } e_ident;
   Elf32_Half	e_type;			/* Object file type */
   Elf32_Half	e_machine;		/* Architecture */
@@ -134,7 +134,7 @@ typedef struct
 #define ELFDATANUM	3
 
 #define EI_VERSION	6		/* File version byte index */
-					/* Value must be EV_CURRENT */
+                    /* Value must be EV_CURRENT */
 
 #define EI_OSABI	7		/* OS ABI identification */
 #define ELFOSABI_NONE		0	/* UNIX System V ABI */
@@ -299,9 +299,9 @@ typedef struct
 #define SHN_LORESERVE	0xff00		/* Start of reserved indices */
 #define SHN_LOPROC	0xff00		/* Start of processor-specific */
 #define SHN_BEFORE	0xff00		/* Order section before all others
-					   (Solaris).  */
+                       (Solaris).  */
 #define SHN_AFTER	0xff01		/* Order section after all others
-					   (Solaris).  */
+                       (Solaris).  */
 #define SHN_HIPROC	0xff1f		/* End of processor-specific */
 #define SHN_LOOS	0xff20		/* Start of OS-specific */
 #define SHN_HIOS	0xff3f		/* End of OS-specific */
@@ -359,15 +359,15 @@ typedef struct
 #define SHF_INFO_LINK	     (1 << 6)	/* `sh_info' contains SHT index */
 #define SHF_LINK_ORDER	     (1 << 7)	/* Preserve order after combining */
 #define SHF_OS_NONCONFORMING (1 << 8)	/* Non-standard OS specific handling
-					   required */
+                       required */
 #define SHF_GROUP	     (1 << 9)	/* Section is member of a group.  */
 #define SHF_TLS		     (1 << 10)	/* Section hold thread-local data.  */
 #define SHF_MASKOS	     0x0ff00000	/* OS-specific.  */
 #define SHF_MASKPROC	     0xf0000000	/* Processor-specific */
 #define SHF_ORDERED	     (1 << 30)	/* Special ordering requirement
-					   (Solaris).  */
+                       (Solaris).  */
 #define SHF_EXCLUDE	     (1 << 31)	/* Section is excluded unless
-					   referenced or allocated (Solaris).*/
+                       referenced or allocated (Solaris).*/
 
 /* Section group handling.  */
 #define GRP_COMDAT	0x1		/* Mark group as COMDAT.  */
@@ -419,7 +419,7 @@ typedef struct
 #define SYMINFO_FLG_PASSTHRU	0x0002	/* Pass-thru symbol for translator */
 #define SYMINFO_FLG_COPY	0x0004	/* Symbol is a copy-reloc */
 #define SYMINFO_FLG_LAZYLOAD	0x0008	/* Symbol bound to object to be lazy
-					   loaded */
+                       loaded */
 /* Syminfo version values.  */
 #define SYMINFO_NONE		0
 #define SYMINFO_CURRENT		1
@@ -693,7 +693,7 @@ typedef struct
 #define DT_MOVESZ	0x6ffffdfb
 #define DT_FEATURE_1	0x6ffffdfc	/* Feature selection (DTF_*).  */
 #define DT_POSFLAG_1	0x6ffffdfd	/* Flags for DT_* entries, effecting
-					   the following DT_* entry.  */
+                       the following DT_* entry.  */
 #define DT_SYMINSZ	0x6ffffdfe	/* Size of syminfo table (in bytes) */
 #define DT_SYMINENT	0x6ffffdff	/* Entry size of syminfo */
 #define DT_VALRNGHI	0x6ffffdff
@@ -731,10 +731,10 @@ typedef struct
 /* These were chosen by Sun.  */
 #define DT_FLAGS_1	0x6ffffffb	/* State flags, see DF_1_* below.  */
 #define	DT_VERDEF	0x6ffffffc	/* Address of version definition
-					   table */
+                       table */
 #define	DT_VERDEFNUM	0x6ffffffd	/* Number of version definitions */
 #define	DT_VERNEED	0x6ffffffe	/* Address of table with needed
-					   versions */
+                       versions */
 #define	DT_VERNEEDNUM	0x6fffffff	/* Number of needed versions */
 #define DT_VERSIONTAGIDX(tag)	(DT_VERNEEDNUM - (tag))	/* Reverse order! */
 #define DT_VERSIONTAGNUM 16
@@ -780,7 +780,7 @@ typedef struct
 /* Flags in the DT_POSFLAG_1 entry effecting only the next DT_* entry.  */
 #define DF_P1_LAZYLOAD	0x00000001	/* Lazyload following object.  */
 #define DF_P1_GROUPPERM	0x00000002	/* Symbols from next object are not
-					   generally available.  */
+                       generally available.  */
 
 /* Version definition sections.  */
 
@@ -793,7 +793,7 @@ typedef struct
   Elf32_Word	vd_hash;		/* Version name hash value */
   Elf32_Word	vd_aux;			/* Offset in bytes to verdaux array */
   Elf32_Word	vd_next;		/* Offset in bytes to next verdef
-					   entry */
+                       entry */
 } Elf32_Verdef;
 
 typedef struct
@@ -805,7 +805,7 @@ typedef struct
   Elf64_Word	vd_hash;		/* Version name hash value */
   Elf64_Word	vd_aux;			/* Offset in bytes to verdaux array */
   Elf64_Word	vd_next;		/* Offset in bytes to next verdef
-					   entry */
+                       entry */
 } Elf64_Verdef;
 
 
@@ -830,14 +830,14 @@ typedef struct
 {
   Elf32_Word	vda_name;		/* Version or dependency names */
   Elf32_Word	vda_next;		/* Offset in bytes to next verdaux
-					   entry */
+                       entry */
 } Elf32_Verdaux;
 
 typedef struct
 {
   Elf64_Word	vda_name;		/* Version or dependency names */
   Elf64_Word	vda_next;		/* Offset in bytes to next verdaux
-					   entry */
+                       entry */
 } Elf64_Verdaux;
 
 
@@ -848,10 +848,10 @@ typedef struct
   Elf32_Half	vn_version;		/* Version of structure */
   Elf32_Half	vn_cnt;			/* Number of associated aux entries */
   Elf32_Word	vn_file;		/* Offset of filename for this
-					   dependency */
+                       dependency */
   Elf32_Word	vn_aux;			/* Offset in bytes to vernaux array */
   Elf32_Word	vn_next;		/* Offset in bytes to next verneed
-					   entry */
+                       entry */
 } Elf32_Verneed;
 
 typedef struct
@@ -859,10 +859,10 @@ typedef struct
   Elf64_Half	vn_version;		/* Version of structure */
   Elf64_Half	vn_cnt;			/* Number of associated aux entries */
   Elf64_Word	vn_file;		/* Offset of filename for this
-					   dependency */
+                       dependency */
   Elf64_Word	vn_aux;			/* Offset in bytes to vernaux array */
   Elf64_Word	vn_next;		/* Offset in bytes to next verneed
-					   entry */
+                       entry */
 } Elf64_Verneed;
 
 
@@ -880,7 +880,7 @@ typedef struct
   Elf32_Half	vna_other;		/* Unused */
   Elf32_Word	vna_name;		/* Dependency name string offset */
   Elf32_Word	vna_next;		/* Offset in bytes to next vernaux
-					   entry */
+                       entry */
 } Elf32_Vernaux;
 
 typedef struct
@@ -890,7 +890,7 @@ typedef struct
   Elf64_Half	vna_other;		/* Unused */
   Elf64_Word	vna_name;		/* Dependency name string offset */
   Elf64_Word	vna_next;		/* Offset in bytes to next vernaux
-					   entry */
+                       entry */
 } Elf64_Vernaux;
 
 
@@ -914,8 +914,8 @@ typedef struct
     {
       unsigned int a_val;		/* Integer value */
       /* We use to have pointer elements added here.  We cannot do that,
-	 though, since it does not work when using 32-bit definitions
-	 on 64-bit platforms and vice versa.  */
+     though, since it does not work when using 32-bit definitions
+     on 64-bit platforms and vice versa.  */
     } a_un;
 } Elf32_auxv_t;
 
@@ -926,8 +926,8 @@ typedef struct
     {
       unsigned long a_val;		/* Integer value */
       /* We use to have pointer elements added here.  We cannot do that,
-	 though, since it does not work when using 32-bit definitions
-	 on 64-bit platforms and vice versa.  */
+     though, since it does not work when using 32-bit definitions
+     on 64-bit platforms and vice versa.  */
     } a_un;
 } Elf64_auxv_t;
 
@@ -953,7 +953,7 @@ typedef struct
 /* Some more special a_type values describing the hardware.  */
 #define AT_PLATFORM	15		/* String identifying platform.  */
 #define AT_HWCAP	16		/* Machine dependent hints about
-					   processor capabilities.  */
+                       processor capabilities.  */
 
 /* This entry gives some information about the FPU initialization
    performed by the kernel.  */
@@ -1125,37 +1125,37 @@ typedef struct
 #define R_386_32PLT	   11
 #define R_386_TLS_TPOFF	   14		/* Offset in static TLS block */
 #define R_386_TLS_IE	   15		/* Address of GOT entry for static TLS
-					   block offset */
+                       block offset */
 #define R_386_TLS_GOTIE	   16		/* GOT entry for static TLS block
-					   offset */
+                       offset */
 #define R_386_TLS_LE	   17		/* Offset relative to static TLS
-					   block */
+                       block */
 #define R_386_TLS_GD	   18		/* Direct 32 bit for GNU version of
-					   general dynamic thread local data */
+                       general dynamic thread local data */
 #define R_386_TLS_LDM	   19		/* Direct 32 bit for GNU version of
-					   local dynamic thread local data
-					   in LE code */
+                       local dynamic thread local data
+                       in LE code */
 #define R_386_16	   20
 #define R_386_PC16	   21
 #define R_386_8		   22
 #define R_386_PC8	   23
 #define R_386_TLS_GD_32	   24		/* Direct 32 bit for general dynamic
-					   thread local data */
+                       thread local data */
 #define R_386_TLS_GD_PUSH  25		/* Tag for pushl in GD TLS code */
 #define R_386_TLS_GD_CALL  26		/* Relocation for call to
-					   __tls_get_addr() */
+                       __tls_get_addr() */
 #define R_386_TLS_GD_POP   27		/* Tag for popl in GD TLS code */
 #define R_386_TLS_LDM_32   28		/* Direct 32 bit for local dynamic
-					   thread local data in LE code */
+                       thread local data in LE code */
 #define R_386_TLS_LDM_PUSH 29		/* Tag for pushl in LDM TLS code */
 #define R_386_TLS_LDM_CALL 30		/* Relocation for call to
-					   __tls_get_addr() in LDM code */
+                       __tls_get_addr() in LDM code */
 #define R_386_TLS_LDM_POP  31		/* Tag for popl in LDM TLS code */
 #define R_386_TLS_LDO_32   32		/* Offset relative to TLS block */
 #define R_386_TLS_IE_32	   33		/* GOT entry for negated static TLS
-					   block offset */
+                       block offset */
 #define R_386_TLS_LE_32	   34		/* Negated offset relative to static
-					   TLS block */
+                       TLS block */
 #define R_386_TLS_DTPMOD32 35		/* ID of module containing symbol */
 #define R_386_TLS_DTPOFF32 36		/* Offset in TLS block */
 #define R_386_TLS_TPOFF32  37		/* Negated offset in static TLS block */
@@ -1421,10 +1421,10 @@ typedef struct
 typedef struct
 {
   unsigned char kind;		/* Determines interpretation of the
-				   variable part of descriptor.  */
+                   variable part of descriptor.  */
   unsigned char size;		/* Size of descriptor, including header.  */
   Elf32_Section section;	/* Section header index of section affected,
-				   0 for global options.  */
+                   0 for global options.  */
   Elf32_Word info;		/* Kind-specific information.  */
 } Elf_Options;
 
@@ -1566,21 +1566,21 @@ typedef struct
 #define DT_MIPS_RLD_MAP	     0x70000016	/* Address of run time loader map.  */
 #define DT_MIPS_DELTA_CLASS  0x70000017	/* Delta C++ class definition.  */
 #define DT_MIPS_DELTA_CLASS_NO    0x70000018 /* Number of entries in
-						DT_MIPS_DELTA_CLASS.  */
+                        DT_MIPS_DELTA_CLASS.  */
 #define DT_MIPS_DELTA_INSTANCE    0x70000019 /* Delta C++ class instances.  */
 #define DT_MIPS_DELTA_INSTANCE_NO 0x7000001a /* Number of entries in
-						DT_MIPS_DELTA_INSTANCE.  */
+                        DT_MIPS_DELTA_INSTANCE.  */
 #define DT_MIPS_DELTA_RELOC  0x7000001b /* Delta relocations.  */
 #define DT_MIPS_DELTA_RELOC_NO 0x7000001c /* Number of entries in
-					     DT_MIPS_DELTA_RELOC.  */
+                         DT_MIPS_DELTA_RELOC.  */
 #define DT_MIPS_DELTA_SYM    0x7000001d /* Delta symbols that Delta
-					   relocations refer to.  */
+                       relocations refer to.  */
 #define DT_MIPS_DELTA_SYM_NO 0x7000001e /* Number of entries in
-					   DT_MIPS_DELTA_SYM.  */
+                       DT_MIPS_DELTA_SYM.  */
 #define DT_MIPS_DELTA_CLASSSYM 0x70000020 /* Delta symbols that hold the
-					     class declaration.  */
+                         class declaration.  */
 #define DT_MIPS_DELTA_CLASSSYM_NO 0x70000021 /* Number of entries in
-						DT_MIPS_DELTA_CLASSSYM.  */
+                        DT_MIPS_DELTA_CLASSSYM.  */
 #define DT_MIPS_CXX_FLAGS    0x70000022 /* Flags indicating for C++ flavor.  */
 #define DT_MIPS_PIXIE_INIT   0x70000023
 #define DT_MIPS_SYMBOL_LIB   0x70000024
@@ -1593,9 +1593,9 @@ typedef struct
 #define DT_MIPS_DYNSTR_ALIGN 0x7000002b
 #define DT_MIPS_INTERFACE_SIZE 0x7000002c /* Size of the .interface section. */
 #define DT_MIPS_RLD_TEXT_RESOLVE_ADDR 0x7000002d /* Address of rld_text_rsolve
-						    function stored in GOT.  */
+                            function stored in GOT.  */
 #define DT_MIPS_PERF_SUFFIX  0x7000002e /* Default suffix of dso to be added
-					   by rld on dlopen() calls.  */
+                       by rld on dlopen() calls.  */
 #define DT_MIPS_COMPACT_SIZE 0x7000002f /* (O32)Size of compact rel section. */
 #define DT_MIPS_GP_VALUE     0x70000030 /* GP value for aux GOTs.  */
 #define DT_MIPS_AUX_DYNAMIC  0x70000031 /* Address of aux .dynamic.  */
@@ -1665,7 +1665,7 @@ typedef Elf32_Addr Elf32_Conflict;
 #define EF_PARISC_LSB		0x00040000 /* Program expects little endian. */
 #define EF_PARISC_WIDE		0x00080000 /* Program expects wide mode.  */
 #define EF_PARISC_NO_KABP	0x00100000 /* No kernel assisted branch
-					      prediction.  */
+                          prediction.  */
 #define EF_PARISC_LAZYSWAP	0x00400000 /* Allow lazy swapping.  */
 #define EF_PARISC_ARCH		0x0000ffff /* Architecture version.  */
 
@@ -1678,7 +1678,7 @@ typedef Elf32_Addr Elf32_Conflict;
 /* Additional section indeces.  */
 
 #define SHN_PARISC_ANSI_COMMON	0xff00	   /* Section for tenatively declared
-					      symbols in ANSI C.  */
+                          symbols in ANSI C.  */
 #define SHN_PARISC_HUGE_COMMON	0xff01	   /* Common blocks in huge model.  */
 
 /* Legal values for sh_type field of Elf32_Shdr.  */
@@ -1926,7 +1926,7 @@ typedef Elf32_Addr Elf32_Conflict;
 /* Cygnus local bits below */
 #define EF_PPC_RELOCATABLE	0x00010000	/* PowerPC -mrelocatable flag*/
 #define EF_PPC_RELOCATABLE_LIB	0x00008000	/* PowerPC -mrelocatable-lib
-						   flag */
+                           flag */
 
 /* PowerPC relocations defined by the ABIs */
 #define R_PPC_NONE		0
@@ -2194,11 +2194,11 @@ typedef Elf32_Addr Elf32_Conflict;
 /* ARM-specific values for sh_flags */
 #define SHF_ARM_ENTRYSECT  0x10000000   /* Section contains an entry point */
 #define SHF_ARM_COMDEF     0x80000000   /* Section may be multiply defined
-					   in the input to a link step */
+                       in the input to a link step */
 
 /* ARM-specific program header flags */
 #define PF_ARM_SB          0x10000000   /* Segment contains the location
-					   addressed by the static base */
+                       addressed by the static base */
 
 /* Processor specific values for the Phdr p_type field.  */
 #define PT_ARM_EXIDX	0x70000001	/* .ARM.exidx segment */
@@ -2244,15 +2244,15 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_ARM_THM_PC11		102	/* thumb unconditional branch */
 #define R_ARM_THM_PC9		103	/* thumb conditional branch */
 #define R_ARM_TLS_GD32		104	/* PC-rel 32 bit for global dynamic
-					   thread local data */
+                       thread local data */
 #define R_ARM_TLS_LDM32		105	/* PC-rel 32 bit for local dynamic
-					   thread local data */
+                       thread local data */
 #define R_ARM_TLS_LDO32		106	/* 32 bit offset relative to TLS
-					   block */
+                       block */
 #define R_ARM_TLS_IE32		107	/* PC-rel 32 bit for GOT entry of
-					   static TLS block offset */
+                       static TLS block offset */
 #define R_ARM_TLS_LE32		108	/* 32 bit offset relative to static
-					   TLS block */
+                       TLS block */
 #define R_ARM_RXPC25		249
 #define R_ARM_RSBREL32		250
 #define R_ARM_THM_RPC22		251
@@ -2459,46 +2459,46 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_390_PLTOFF64		36	/* 16 bit offset from GOT to PLT. */
 #define R_390_TLS_LOAD		37	/* Tag for load insn in TLS code.  */
 #define R_390_TLS_GDCALL	38	/* Tag for function call in general
-					   dynamic TLS code. */
+                       dynamic TLS code. */
 #define R_390_TLS_LDCALL	39	/* Tag for function call in local
-					   dynamic TLS code. */
+                       dynamic TLS code. */
 #define R_390_TLS_GD32		40	/* Direct 32 bit for general dynamic
-					   thread local data.  */
+                       thread local data.  */
 #define R_390_TLS_GD64		41	/* Direct 64 bit for general dynamic
-					  thread local data.  */
+                      thread local data.  */
 #define R_390_TLS_GOTIE12	42	/* 12 bit GOT offset for static TLS
-					   block offset.  */
+                       block offset.  */
 #define R_390_TLS_GOTIE32	43	/* 32 bit GOT offset for static TLS
-					   block offset.  */
+                       block offset.  */
 #define R_390_TLS_GOTIE64	44	/* 64 bit GOT offset for static TLS
-					   block offset. */
+                       block offset. */
 #define R_390_TLS_LDM32		45	/* Direct 32 bit for local dynamic
-					   thread local data in LE code.  */
+                       thread local data in LE code.  */
 #define R_390_TLS_LDM64		46	/* Direct 64 bit for local dynamic
-					   thread local data in LE code.  */
+                       thread local data in LE code.  */
 #define R_390_TLS_IE32		47	/* 32 bit address of GOT entry for
-					   negated static TLS block offset.  */
+                       negated static TLS block offset.  */
 #define R_390_TLS_IE64		48	/* 64 bit address of GOT entry for
-					   negated static TLS block offset.  */
+                       negated static TLS block offset.  */
 #define R_390_TLS_IEENT		49	/* 32 bit rel. offset to GOT entry for
-					   negated static TLS block offset.  */
+                       negated static TLS block offset.  */
 #define R_390_TLS_LE32		50	/* 32 bit negated offset relative to
-					   static TLS block.  */
+                       static TLS block.  */
 #define R_390_TLS_LE64		51	/* 64 bit negated offset relative to
-					   static TLS block.  */
+                       static TLS block.  */
 #define R_390_TLS_LDO32		52	/* 32 bit offset relative to TLS
-					   block.  */
+                       block.  */
 #define R_390_TLS_LDO64		53	/* 64 bit offset relative to TLS
-					   block.  */
+                       block.  */
 #define R_390_TLS_DTPMOD	54	/* ID of module containing symbol.  */
 #define R_390_TLS_DTPOFF	55	/* Offset in TLS block.	 */
 #define R_390_TLS_TPOFF		56	/* Negated offset in static TLS
-					   block.  */
+                       block.  */
 #define R_390_20		57	/* Direct 20 bit.  */
 #define R_390_GOT20		58	/* 20 bit GOT offset.  */
 #define R_390_GOTPLT20		59	/* 20 bit offset to jump slot.  */
 #define R_390_TLS_GOTIE20	60	/* 20 bit GOT offset for static TLS
-					   block offset.  */
+                       block offset.  */
 /* Keep this the last entry.  */
 #define R_390_NUM		61
 
@@ -2539,7 +2539,7 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_X86_64_JUMP_SLOT	7	/* Create PLT entry */
 #define R_X86_64_RELATIVE	8	/* Adjust by program base */
 #define R_X86_64_GOTPCREL	9	/* 32 bit signed PC relative
-					   offset to GOT */
+                       offset to GOT */
 #define R_X86_64_32		10	/* Direct 32 bit zero extended */
 #define R_X86_64_32S		11	/* Direct 32 bit sign extended */
 #define R_X86_64_16		12	/* Direct 16 bit zero extended */
@@ -2550,12 +2550,12 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_X86_64_DTPOFF64	17	/* Offset in module's TLS block */
 #define R_X86_64_TPOFF64	18	/* Offset in initial TLS block */
 #define R_X86_64_TLSGD		19	/* 32 bit signed PC relative offset
-					   to two GOT entries for GD symbol */
+                       to two GOT entries for GD symbol */
 #define R_X86_64_TLSLD		20	/* 32 bit signed PC relative offset
-					   to two GOT entries for LD symbol */
+                       to two GOT entries for LD symbol */
 #define R_X86_64_DTPOFF32	21	/* Offset in TLS block */
 #define R_X86_64_GOTTPOFF	22	/* 32 bit signed PC relative offset
-					   to GOT entry for IE symbol */
+                       to GOT entry for IE symbol */
 #define R_X86_64_TPOFF32	23	/* Offset in initial TLS block */
 
 #define R_X86_64_NUM		24
@@ -2628,20 +2628,20 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_M32R_GOTOFF		54	/* 24 bit offset to GOT */
 #define R_M32R_GOTPC24		55	/* 24 bit PC relative offset to GOT */
 #define R_M32R_GOT16_HI_ULO	56	/* High 16 bit GOT entry with unsigned
-					   low */
+                       low */
 #define R_M32R_GOT16_HI_SLO	57	/* High 16 bit GOT entry with signed
-					   low */
+                       low */
 #define R_M32R_GOT16_LO		58	/* Low 16 bit GOT entry */
 #define R_M32R_GOTPC_HI_ULO	59	/* High 16 bit PC relative offset to
-					   GOT with unsigned low */
+                       GOT with unsigned low */
 #define R_M32R_GOTPC_HI_SLO	60	/* High 16 bit PC relative offset to
-					   GOT with signed low */
+                       GOT with signed low */
 #define R_M32R_GOTPC_LO		61	/* Low 16 bit PC relative offset to
-					   GOT */
+                       GOT */
 #define R_M32R_GOTOFF_HI_ULO	62	/* High 16 bit offset to GOT
-					   with unsigned low */
+                       with unsigned low */
 #define R_M32R_GOTOFF_HI_SLO	63	/* High 16 bit offset to GOT
-					   with signed low */
+                       with signed low */
 #define R_M32R_GOTOFF_LO	64	/* Low 16 bit offset to GOT */
 #define R_M32R_NUM		256	/* Keep this the last entry. */
 

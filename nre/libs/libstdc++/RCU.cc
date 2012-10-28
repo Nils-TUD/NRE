@@ -20,10 +20,10 @@
 namespace nre {
 
 class Init {
-	Init() {
-		RCU::add(Thread::current());
-	}
-	static Init init;
+    Init() {
+        RCU::add(Thread::current());
+    }
+    static Init init;
 };
 
 uint32_t *RCU::_versions = 0;

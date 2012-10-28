@@ -41,12 +41,12 @@ class Utcb;
 class Hip;
 
 struct StartupInfo {
-	Hip *hip;
-	uintptr_t utcb;
-	uintptr_t stack;
-	word_t cpu;
-	word_t done;
-	word_t child;
+    Hip *hip;
+    uintptr_t utcb;
+    uintptr_t stack;
+    word_t cpu;
+    word_t done;
+    word_t child;
 };
 
 }

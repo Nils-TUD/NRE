@@ -12,7 +12,6 @@
  * COPYING file for details.
  */
 
-
 #ifndef _BOOT_LINUX_H_
 #define _BOOT_LINUX_H_
 

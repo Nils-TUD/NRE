@@ -24,53 +24,53 @@ using namespace nre::test;
 static void test_sortedslist();
 
 const TestCase sortedslisttest = {
-	"Sorted singly linked list", test_sortedslist
+    "Sorted singly linked list", test_sortedslist
 };
 
 struct ListItem : public SListItem {
-	ListItem(int v) : SListItem(), val(v) {
-	}
-	int val;
+    ListItem(int v) : SListItem(), val(v) {
+    }
+    int val;
 };
 
 static bool isless(const ListItem &a, const ListItem &b) {
-	return a.val < b.val;
+    return a.val < b.val;
 }
 
 static void test_sortedslist() {
-	ListItem e1(10), e2(1), e3(-5), e4(8), e5(12);
-	SortedSList<ListItem>::iterator it;
-	SortedSList<ListItem> l(isless);
-	WVPASSEQ(l.length(), static_cast<size_t>(0));
-	WVPASS(l.begin() == l.end());
+    ListItem e1(10), e2(1), e3(-5), e4(8), e5(12);
+    SortedSList<ListItem>::iterator it;
+    SortedSList<ListItem> l(isless);
+    WVPASSEQ(l.length(), static_cast<size_t>(0));
+    WVPASS(l.begin() == l.end());
 
-	l.insert(&e1);
-	l.insert(&e2);
-	l.insert(&e3);
-	l.insert(&e4);
-	l.insert(&e5);
-	WVPASSEQ(l.length(), static_cast<size_t>(5));
-	it = l.begin();
-	WVPASS(&*it == &e3);
-	++it;
-	WVPASS(&*it == &e2);
-	++it;
-	WVPASS(&*it == &e4);
-	++it;
-	WVPASS(&*it == &e1);
-	++it;
-	WVPASS(&*it == &e5);
-	++it;
-	WVPASS(it == l.end());
+    l.insert(&e1);
+    l.insert(&e2);
+    l.insert(&e3);
+    l.insert(&e4);
+    l.insert(&e5);
+    WVPASSEQ(l.length(), static_cast<size_t>(5));
+    it = l.begin();
+    WVPASS(&*it == &e3);
+    ++it;
+    WVPASS(&*it == &e2);
+    ++it;
+    WVPASS(&*it == &e4);
+    ++it;
+    WVPASS(&*it == &e1);
+    ++it;
+    WVPASS(&*it == &e5);
+    ++it;
+    WVPASS(it == l.end());
 
-	l.remove(&e2);
-	l.remove(&e1);
-	l.remove(&e5);
-	WVPASSEQ(l.length(), static_cast<size_t>(2));
-	it = l.begin();
-	WVPASS(&*it == &e3);
-	++it;
-	WVPASS(&*it == &e4);
-	++it;
-	WVPASS(it == l.end());
+    l.remove(&e2);
+    l.remove(&e1);
+    l.remove(&e5);
+    WVPASSEQ(l.length(), static_cast<size_t>(2));
+    it = l.begin();
+    WVPASS(&*it == &e3);
+    ++it;
+    WVPASS(&*it == &e4);
+    ++it;
+    WVPASS(it == l.end());
 }

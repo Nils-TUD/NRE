@@ -28,25 +28,25 @@ namespace nre {
  */
 class LogSession : public PtClientSession {
 public:
-	/**
-	 * Creates a new session with given connection
-	 *
-	 * @param con the connection
-	 */
-	explicit LogSession(Connection &con) : PtClientSession(con) {
-	}
+    /**
+     * Creates a new session with given connection
+     *
+     * @param con the connection
+     */
+    explicit LogSession(Connection &con) : PtClientSession(con) {
+    }
 
-	/**
-	 * Writes the given line to the log service. Note that the line should be short enough to fit
-	 * into the Utcb!
-	 *
-	 * @param line the line
-	 */
-	void write(const String &line) {
-		UtcbFrame uf;
-		uf << line;
-		pt().call(uf);
-	}
+    /**
+     * Writes the given line to the log service. Note that the line should be short enough to fit
+     * into the Utcb!
+     *
+     * @param line the line
+     */
+    void write(const String &line) {
+        UtcbFrame uf;
+        uf << line;
+        pt().call(uf);
+    }
 };
 
 }

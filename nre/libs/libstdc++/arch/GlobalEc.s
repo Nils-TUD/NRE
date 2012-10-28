@@ -19,6 +19,6 @@
 # called by a return of a global Thread.
 .global ec_landing_spot
 ec_landing_spot:
-	call	thread_exit
+    call    thread_exit
 	# just to be sure
-	1:		jmp 1b
+    1:      jmp 1b

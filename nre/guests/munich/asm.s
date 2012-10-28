@@ -12,62 +12,61 @@
  * COPYING file for details.
  */
 
-
 .macro	FUNCTION name
-	.section .text.\name
-	.globl \name
-	\name:
+    .section .text.\name
+    .globl \name
+    \name:
 .endm
 
 FUNCTION __mbheader
-	.align  4, 0x90
-	.long   0x1BADB002              /* magic */
-	.long   0x00000000              /* feature flags */
-	.long   0 - 0x1BADB002
+    .align  4, 0x90
+    .long   0x1BADB002              /* magic */
+    .long   0x00000000              /* feature flags */
+    .long   0 - 0x1BADB002
 
 FUNCTION __start
-	leal    _stack,%esp
-	xchg    %eax,%edx
-	xchg    %ebx,%eax
-	pushl	%eax
-	pushl   $__exit
-	jmp     __main
-
+    leal    _stack,%esp
+    xchg    %eax,%edx
+    xchg    %ebx,%eax
+    pushl   %eax
+    pushl   $__exit
+    jmp     __main
 
 FUNCTION reboot
-	mov	$0x4, %al
-	outb	%al, $0x60
-	mov	$0xFE, %al
-	outb	%al, $0x64
-	lidt    dummy_idt_desc
-	ud2
-       .bss
+    mov     $0x4, %al
+    outb    %al, $0x60
+    mov     $0xFE, %al
+    outb    %al, $0x64
+    lidt    dummy_idt_desc
+    ud2
+
+   .bss
 dummy_idt_desc:
 	.space 8
 
 /* the gdt to load after skinit */
 FUNCTION gdt
-	.global pgdt_desc
-	.align(8)
+    .global pgdt_desc
+    .align(8)
 pgdt_desc:
-	.word end_gdt - gdt - 1
-	.long gdt
-	.word 0
+    .word end_gdt - gdt - 1
+    .long gdt
+    .word 0
 _gdt_cs:
-	.word 0xffff
-	.word 0x0
-	.word 0x9b00
-	.word 0x00cf
+    .word 0xffff
+    .word 0x0
+    .word 0x9b00
+    .word 0x00cf
 _gdt_ds:
-	.word 0xffff
-	.word 0x0
-	.word 0x9300
-	.word 0x00cf
+    .word 0xffff
+    .word 0x0
+    .word 0x9300
+    .word 0x00cf
 end_gdt:
 
 	/* our stack */
-	.globl  _stack
-	.bss
+    .globl  _stack
+    .bss
 _stack_end:
-	.space  512
+    .space  512
 _stack:

@@ -23,18 +23,18 @@ namespace nre {
  */
 class LockPolicyNone {
 public:
-	explicit LockPolicyNone() {
-	}
-	virtual ~LockPolicyNone() {
-	}
-	void lock() {
-	}
-	void unlock() {
-	}
+    explicit LockPolicyNone() {
+    }
+    virtual ~LockPolicyNone() {
+    }
+    void lock() {
+    }
+    void unlock() {
+    }
 
 private:
-	LockPolicyNone(const LockPolicyNone&);
-	LockPolicyNone& operator=(const LockPolicyNone&);
+    LockPolicyNone(const LockPolicyNone&);
+    LockPolicyNone& operator=(const LockPolicyNone&);
 };
 
 /**
@@ -43,23 +43,23 @@ private:
 template<class T>
 class LockPolicyDefault {
 public:
-	explicit LockPolicyDefault() : _l() {
-	}
-	virtual ~LockPolicyDefault() {
-	}
-	void lock() {
-		_l.down();
-	}
-	void unlock() {
-		_l.up();
-	}
+    explicit LockPolicyDefault() : _l() {
+    }
+    virtual ~LockPolicyDefault() {
+    }
+    void lock() {
+        _l.down();
+    }
+    void unlock() {
+        _l.up();
+    }
 
 private:
-	LockPolicyDefault(const LockPolicyDefault<T>&);
-	LockPolicyDefault<T>& operator=(const LockPolicyDefault<T>&);
+    LockPolicyDefault(const LockPolicyDefault<T>&);
+    LockPolicyDefault<T>& operator=(const LockPolicyDefault<T>&);
 
 private:
-	T _l;
+    T _l;
 };
 
 }

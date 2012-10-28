@@ -22,14 +22,14 @@ using namespace nre;
 EXTERN_C void __cxa_finalize(void *d);
 
 void abort() {
-	ExecEnv::exit(ExecEnv::EXIT_FAILURE);
+    ExecEnv::exit(ExecEnv::EXIT_FAILURE);
 }
 
 void thread_exit() {
-	ExecEnv::thread_exit();
+    ExecEnv::thread_exit();
 }
 
 void exit(int code) {
-	__cxa_finalize(0);
-	ExecEnv::exit(code);
+    __cxa_finalize(0);
+    ExecEnv::exit(code);
 }

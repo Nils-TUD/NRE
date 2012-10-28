@@ -33,72 +33,72 @@ static Connection conscon("console");
 static ConsoleSession cons(conscon, 0, String("SysInfo"));
 static size_t page = 0;
 static SysInfoPage *pages[] = {
-	new ScInfoPage(cons, sysinfo),
-	new PdInfoPage(cons, sysinfo)
+    new ScInfoPage(cons, sysinfo),
+    new PdInfoPage(cons, sysinfo)
 };
 
 static void input_thread(void*) {
-	while(1) {
-		bool changed = false, update = false;
-		Console::ReceivePacket *pk = cons.consumer().get();
-		if(!(pk->flags & Keyboard::RELEASE)) {
-			switch(pk->keycode) {
-				case Keyboard::VK_UP:
-					if(pages[page]->top() > 0) {
-						pages[page]->top(pages[page]->top() - 1);
-						changed = true;
-					}
-					break;
-				case Keyboard::VK_DOWN:
-					pages[page]->top(pages[page]->top() + 1);
-					changed = true;
-					break;
-				case Keyboard::VK_PGUP:
-					if(pages[page]->top() >= SysInfoPage::ROWS)
-						pages[page]->top(pages[page]->top() - SysInfoPage::ROWS);
-					else
-						pages[page]->top(0);
-					changed = true;
-					break;
-				case Keyboard::VK_PGDOWN:
-					pages[page]->top(pages[page]->top() + SysInfoPage::ROWS);
-					changed = true;
-					break;
-				case Keyboard::VK_LEFT:
-					page = (page - 1) % ARRAY_SIZE(pages);
-					changed = update = true;
-					break;
-				case Keyboard::VK_RIGHT:
-					page = (page + 1) % ARRAY_SIZE(pages);
-					changed = update = true;
-					break;
-			}
-		}
-		cons.consumer().next();
-		if(changed)
-			pages[page]->refresh_console(update);
-	}
+    while(1) {
+        bool changed = false, update = false;
+        Console::ReceivePacket *pk = cons.consumer().get();
+        if(!(pk->flags & Keyboard::RELEASE)) {
+            switch(pk->keycode) {
+                case Keyboard::VK_UP:
+                    if(pages[page]->top() > 0) {
+                        pages[page]->top(pages[page]->top() - 1);
+                        changed = true;
+                    }
+                    break;
+                case Keyboard::VK_DOWN:
+                    pages[page]->top(pages[page]->top() + 1);
+                    changed = true;
+                    break;
+                case Keyboard::VK_PGUP:
+                    if(pages[page]->top() >= SysInfoPage::ROWS)
+                        pages[page]->top(pages[page]->top() - SysInfoPage::ROWS);
+                    else
+                        pages[page]->top(0);
+                    changed = true;
+                    break;
+                case Keyboard::VK_PGDOWN:
+                    pages[page]->top(pages[page]->top() + SysInfoPage::ROWS);
+                    changed = true;
+                    break;
+                case Keyboard::VK_LEFT:
+                    page = (page - 1) % ARRAY_SIZE(pages);
+                    changed = update = true;
+                    break;
+                case Keyboard::VK_RIGHT:
+                    page = (page + 1) % ARRAY_SIZE(pages);
+                    changed = update = true;
+                    break;
+            }
+        }
+        cons.consumer().next();
+        if(changed)
+            pages[page]->refresh_console(update);
+    }
 }
 
 static void refresh_thread() {
-	TimerSession timer(timercon);
-	Clock clock(1000);
-	while(1) {
-		timevalue_t next = clock.source_time(1000);
-		pages[page]->refresh_console(true);
+    TimerSession timer(timercon);
+    Clock clock(1000);
+    while(1) {
+        timevalue_t next = clock.source_time(1000);
+        pages[page]->refresh_console(true);
 
-		// wait a second
-		timer.wait_until(next);
-	}
+        // wait a second
+        timer.wait_until(next);
+    }
 }
 
 int main() {
-	// disable cursor
-	Console::Register regs = cons.get_regs();
-	regs.cursor_style = 0x2000;
-	cons.set_regs(regs);
+    // disable cursor
+    Console::Register regs = cons.get_regs();
+    regs.cursor_style = 0x2000;
+    cons.set_regs(regs);
 
-	GlobalThread::create(input_thread, CPU::current().log_id(), String("sysinfo-input"))->start();
-	refresh_thread();
-	return 0;
+    GlobalThread::create(input_thread, CPU::current().log_id(), String("sysinfo-input"))->start();
+    refresh_thread();
+    return 0;
 }

@@ -35,165 +35,165 @@ class CPUInit;
  * appears. The logical id is assigned from 0..(n-1).
  */
 class CPU {
-	friend class CPUInit;
-	friend class SListIterator<CPU>;
+    friend class CPUInit;
+    friend class SListIterator<CPU>;
 
 public:
-	typedef SListIterator<CPU> iterator;
+    typedef SListIterator<CPU> iterator;
 
-	/**
-	 * @return the current CPU, i.e. the CPU you're running on
-	 */
-	static CPU &current() {
-		return get(Thread::current()->cpu());
-	}
-	/**
-	 * @param log_id the logical CPU id
-	 * @return the CPU with given id
-	 */
-	static CPU &get(cpu_t log_id) {
-		assert(log_id < Hip::MAX_CPUS);
-		return _cpus[log_id];
-	}
+    /**
+     * @return the current CPU, i.e. the CPU you're running on
+     */
+    static CPU &current() {
+        return get(Thread::current()->cpu());
+    }
+    /**
+     * @param log_id the logical CPU id
+     * @return the CPU with given id
+     */
+    static CPU &get(cpu_t log_id) {
+        assert(log_id < Hip::MAX_CPUS);
+        return _cpus[log_id];
+    }
 
-	/**
-	 * @return the number of online CPUs
-	 */
-	static size_t count() {
-		return _count;
-	}
-	/**
-	 * @return the next order of online CPUs, i.e. Math::next_pow2_shift(count())
-	 */
-	static uint order() {
-		return _order;
-	}
+    /**
+     * @return the number of online CPUs
+     */
+    static size_t count() {
+        return _count;
+    }
+    /**
+     * @return the next order of online CPUs, i.e. Math::next_pow2_shift(count())
+     */
+    static uint order() {
+        return _order;
+    }
 
-	/**
-	 * @return iterator beginning of the list of online CPUs. They are always sorted by logical id.
-	 */
-	static iterator begin() {
-		return SListIterator<CPU>(_online);
-	}
-	/**
-	 * @return iterator end of the list of online CPUs
-	 */
-	static iterator end() {
-		return SListIterator<CPU>();
-	}
+    /**
+     * @return iterator beginning of the list of online CPUs. They are always sorted by logical id.
+     */
+    static iterator begin() {
+        return SListIterator<CPU>(_online);
+    }
+    /**
+     * @return iterator end of the list of online CPUs
+     */
+    static iterator end() {
+        return SListIterator<CPU>();
+    }
 
-	/**
-	 * @return flags of this CPU
-	 */
-	uint8_t flags() const {
-		return _flags;
-	}
-	/**
-	 * @return the thread of this CPU (hyperthread)
-	 */
-	uint8_t thread() const {
-		return _thread;
-	}
-	/**
-	 * @return the core of this CPU
-	 */
-	uint8_t core() const {
-		return _core;
-	}
-	/**
-	 * @return the package of this CPU
-	 */
-	uint8_t package() const {
-		return _package;
-	}
+    /**
+     * @return flags of this CPU
+     */
+    uint8_t flags() const {
+        return _flags;
+    }
+    /**
+     * @return the thread of this CPU (hyperthread)
+     */
+    uint8_t thread() const {
+        return _thread;
+    }
+    /**
+     * @return the core of this CPU
+     */
+    uint8_t core() const {
+        return _core;
+    }
+    /**
+     * @return the package of this CPU
+     */
+    uint8_t package() const {
+        return _package;
+    }
 
-	/**
-	 * @return the physical CPU id
-	 */
-	cpu_t phys_id() const {
-		return _logtophys[_id];
-	}
-	/**
-	 * @return the logical CPU id
-	 */
-	cpu_t log_id() const {
-		return _id;
-	}
+    /**
+     * @return the physical CPU id
+     */
+    cpu_t phys_id() const {
+        return _logtophys[_id];
+    }
+    /**
+     * @return the logical CPU id
+     */
+    cpu_t log_id() const {
+        return _id;
+    }
 
-	/**
-	 * The dataspace portal
-	 */
-	Pt &ds_pt() {
-		return *_ds_pt;
-	}
-	void ds_pt(Pt *pt) {
-		_ds_pt = pt;
-	}
-	/**
-	 * The I/O portal
-	 */
-	Pt &io_pt() {
-		return *_io_pt;
-	}
-	void io_pt(Pt *pt) {
-		_io_pt = pt;
-	}
-	/**
-	 * The GSI portal
-	 */
-	Pt &gsi_pt() {
-		return *_gsi_pt;
-	}
-	void gsi_pt(Pt *pt) {
-		_gsi_pt = pt;
-	}
-	/**
-	 * The service portal
-	 */
-	Pt &srv_pt() {
-		return *_srv_pt;
-	}
-	void srv_pt(Pt *pt) {
-		_srv_pt = pt;
-	}
-	/**
-	 * The Sc portal
-	 */
-	Pt &sc_pt() {
-		return *_sc_pt;
-	}
-	void sc_pt(Pt *pt) {
-		_sc_pt = pt;
-	}
+    /**
+     * The dataspace portal
+     */
+    Pt &ds_pt() {
+        return *_ds_pt;
+    }
+    void ds_pt(Pt *pt) {
+        _ds_pt = pt;
+    }
+    /**
+     * The I/O portal
+     */
+    Pt &io_pt() {
+        return *_io_pt;
+    }
+    void io_pt(Pt *pt) {
+        _io_pt = pt;
+    }
+    /**
+     * The GSI portal
+     */
+    Pt &gsi_pt() {
+        return *_gsi_pt;
+    }
+    void gsi_pt(Pt *pt) {
+        _gsi_pt = pt;
+    }
+    /**
+     * The service portal
+     */
+    Pt &srv_pt() {
+        return *_srv_pt;
+    }
+    void srv_pt(Pt *pt) {
+        _srv_pt = pt;
+    }
+    /**
+     * The Sc portal
+     */
+    Pt &sc_pt() {
+        return *_sc_pt;
+    }
+    void sc_pt(Pt *pt) {
+        _sc_pt = pt;
+    }
 
 private:
-	CPU()
-		: _id(), _next(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
-		  _gsi_pt(), _srv_pt(), _sc_pt() {
-	}
-	CPU(const CPU&);
-	CPU& operator=(const CPU&);
+    CPU()
+        : _id(), _next(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
+          _gsi_pt(), _srv_pt(), _sc_pt() {
+    }
+    CPU(const CPU&);
+    CPU& operator=(const CPU&);
 
-	CPU *next() {
-		return _next;
-	}
+    CPU *next() {
+        return _next;
+    }
 
-	cpu_t _id;
-	CPU *_next;
-	uint8_t _flags;
-	uint8_t _thread;
-	uint8_t _core;
-	uint8_t _package;
-	Pt *_ds_pt;
-	Pt *_io_pt;
-	Pt *_gsi_pt;
-	Pt *_srv_pt;
-	Pt *_sc_pt;
-	static size_t _count;
-	static uint _order;
-	static CPU *_online;
-	static CPU _cpus[Hip::MAX_CPUS];
-	static cpu_t _logtophys[Hip::MAX_CPUS];
+    cpu_t _id;
+    CPU *_next;
+    uint8_t _flags;
+    uint8_t _thread;
+    uint8_t _core;
+    uint8_t _package;
+    Pt *_ds_pt;
+    Pt *_io_pt;
+    Pt *_gsi_pt;
+    Pt *_srv_pt;
+    Pt *_sc_pt;
+    static size_t _count;
+    static uint _order;
+    static CPU *_online;
+    static CPU _cpus[Hip::MAX_CPUS];
+    static cpu_t _logtophys[Hip::MAX_CPUS];
 };
 
 }

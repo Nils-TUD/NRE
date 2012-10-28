@@ -22,39 +22,39 @@
 namespace nre {
 
 Sc::~Sc() {
-	if(sel() != INVALID) {
-		try {
-			UtcbFrame uf;
-			uf << STOP;
-			uf.translate(sel());
-			CPU::current().sc_pt().call(uf);
-		}
-		catch(...) {
-			// the destructor shouldn't throw
-		}
-	}
+    if(sel() != INVALID) {
+        try {
+            UtcbFrame uf;
+            uf << STOP;
+            uf.translate(sel());
+            CPU::current().sc_pt().call(uf);
+        }
+        catch(...) {
+            // the destructor shouldn't throw
+        }
+    }
 }
 
 void Sc::start(const String &name) {
-	UtcbFrame uf;
-	ScopedCapSels sc;
-	uf.delegation_window(Crd(sc.get(), 0, Crd::OBJ_ALL));
-	uf << START << name << _ec->cpu() << _qpd;
-	uf.delegate(_ec->sel());
-	// in this case we should assign the selector before it has been successfully created
-	// because the Sc starts immediatly. therefore, it should be completely initialized before
-	// its started.
-	try {
-		sel(sc.get());
-		CPU::current().sc_pt().call(uf);
-		uf.check_reply();
-		uf >> _qpd;
-		sc.release();
-	}
-	catch(...) {
-		sel(INVALID);
-		throw;
-	}
+    UtcbFrame uf;
+    ScopedCapSels sc;
+    uf.delegation_window(Crd(sc.get(), 0, Crd::OBJ_ALL));
+    uf << START << name << _ec->cpu() << _qpd;
+    uf.delegate(_ec->sel());
+    // in this case we should assign the selector before it has been successfully created
+    // because the Sc starts immediatly. therefore, it should be completely initialized before
+    // its started.
+    try {
+        sel(sc.get());
+        CPU::current().sc_pt().call(uf);
+        uf.check_reply();
+        uf >> _qpd;
+        sc.release();
+    }
+    catch(...) {
+        sel(INVALID);
+        throw;
+    }
 }
 
 }

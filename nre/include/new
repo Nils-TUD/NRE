@@ -22,8 +22,8 @@
  * Placement new
  */
 inline void *operator new(size_t, void* ptr) throw() {
-	return ptr;
+    return ptr;
 }
 inline void *operator new[](size_t, void *ptr) throw() {
-	return ptr;
+    return ptr;
 }

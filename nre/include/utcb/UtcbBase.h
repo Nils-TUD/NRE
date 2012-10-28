@@ -32,33 +32,33 @@ OStream &operator<<(OStream &os, const UtcbFrameRef &frm);
  * The base class for the two variants of the UTCB that exist currently.
  */
 class UtcbBase : public UtcbHead {
-	friend class UtcbFrameRef;
-	friend class UtcbFrame;
-	friend OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
+    friend class UtcbFrameRef;
+    friend class UtcbFrame;
+    friend OStream & operator<<(OStream &os, const UtcbFrameRef &frm);
 
 public:
-	static const size_t SIZE        = ExecEnv::PAGE_SIZE;
+    static const size_t SIZE        = ExecEnv::PAGE_SIZE;
 
 protected:
-	static const size_t WORDS       = SIZE / sizeof(word_t);
+    static const size_t WORDS       = SIZE / sizeof(word_t);
 
-	word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
+    word_t msg[(SIZE - sizeof(UtcbHead)) / sizeof(word_t)];
 
-	// no construction and copying
-	UtcbBase();
-	~UtcbBase();
-	UtcbBase(const UtcbBase&);
-	UtcbBase& operator=(const UtcbBase&);
+    // no construction and copying
+    UtcbBase();
+    ~UtcbBase();
+    UtcbBase(const UtcbBase&);
+    UtcbBase& operator=(const UtcbBase&);
 
 public:
-	/**
-	 * Resets the UTCB, i.e. clears the typed and untyped items and resets the receive windows
-	 */
-	void reset() {
-		mtr = 0;
-		crd = 0;
-		crd_translate = 0;
-	}
+    /**
+     * Resets the UTCB, i.e. clears the typed and untyped items and resets the receive windows
+     */
+    void reset() {
+        mtr = 0;
+        crd = 0;
+        crd_translate = 0;
+    }
 };
 
 }

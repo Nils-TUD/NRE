@@ -29,14 +29,14 @@
  * { Logging::printf("example parameter function called!\n"); }
  */
 #define PARAM_HANDLER(NAME, ...) \
-	const char * __parameter_##NAME##_strings[] asm ( \
-		"__parameter_" #NAME "_strings"	\
-	) = { #NAME, ##__VA_ARGS__, 0};	\
-	asm volatile ( \
-		".section .param; "ASM_WORD_TYPE" __parameter_" #NAME "_function, __parameter_" #NAME "_strings; .previous;" \
-	); \
-	EXTERN_C void __parameter_##NAME##_function(Motherboard &mb,unsigned long *argv, \
-		const char *args, size_t args_len)
+    const char * __parameter_##NAME##_strings[] asm ( \
+        "__parameter_" #NAME "_strings"	\
+    ) = { #NAME, ##__VA_ARGS__, 0};	\
+    asm volatile ( \
+        ".section .param; "ASM_WORD_TYPE" __parameter_" #NAME "_function, __parameter_" #NAME "_strings; .previous;" \
+    ); \
+    EXTERN_C void __parameter_##NAME##_function(Motherboard &mb,unsigned long *argv, \
+        const char *args, size_t args_len)
 
 /* Defined in linker script: */
 extern uintptr_t __param_table_start, __param_table_end;

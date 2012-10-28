@@ -31,68 +31,68 @@ namespace nre {
  */
 class ClientSession {
 public:
-	enum Command {
-		OPEN,
-		CLOSE
-	};
+    enum Command {
+        OPEN,
+        CLOSE
+    };
 
-	/**
-	 * Opens the session at the service specified by the given connection
-	 *
-	 * @param con the connection to the service
-	 * @throws Exception if the session-creation failed
-	 */
-	explicit ClientSession(Connection &con) : _caps(open(con)), _con(con) {
-	}
-	/**
-	 * Closes the session again
-	 */
-	virtual ~ClientSession() {
-		close();
-		CapSelSpace::get().free(_caps, 1 << CPU::order());
-	}
+    /**
+     * Opens the session at the service specified by the given connection
+     *
+     * @param con the connection to the service
+     * @throws Exception if the session-creation failed
+     */
+    explicit ClientSession(Connection &con) : _caps(open(con)), _con(con) {
+    }
+    /**
+     * Closes the session again
+     */
+    virtual ~ClientSession() {
+        close();
+        CapSelSpace::get().free(_caps, 1 << CPU::order());
+    }
 
-	/**
-	 * @return the connection
-	 */
-	Connection &con() {
-		return _con;
-	}
-	/**
-	 * @return the base of the capabilities received to communicate with the service
-	 */
-	capsel_t caps() const {
-		return _caps;
-	}
+    /**
+     * @return the connection
+     */
+    Connection &con() {
+        return _con;
+    }
+    /**
+     * @return the base of the capabilities received to communicate with the service
+     */
+    capsel_t caps() const {
+        return _caps;
+    }
 
 private:
-	capsel_t open(Connection &con) {
-		UtcbFrame uf;
-		ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
-		uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
-		// we delegate our pd-cap because it will be revoked if we get killed. of course, the service
-		// can't validate that easily whether its our pd-cap. later, this doesn't matter because
-		// NOVA will revoke all caps of this Pd. until that is implemented, we use something that
-		// is explicitly revoked by the parent.
-		uf.delegate(Pd::current()->sel());
-		uf << OPEN;
-		con.pt(CPU::current().log_id())->call(uf);
-		uf.check_reply();
-		return caps.release();
-	}
+    capsel_t open(Connection &con) {
+        UtcbFrame uf;
+        ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+        uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
+        // we delegate our pd-cap because it will be revoked if we get killed. of course, the service
+        // can't validate that easily whether its our pd-cap. later, this doesn't matter because
+        // NOVA will revoke all caps of this Pd. until that is implemented, we use something that
+        // is explicitly revoked by the parent.
+        uf.delegate(Pd::current()->sel());
+        uf << OPEN;
+        con.pt(CPU::current().log_id())->call(uf);
+        uf.check_reply();
+        return caps.release();
+    }
 
-	void close() {
-		UtcbFrame uf;
-		uf.translate(_caps + CPU::current().log_id());
-		uf << CLOSE;
-		_con.pt(CPU::current().log_id())->call(uf);
-	}
+    void close() {
+        UtcbFrame uf;
+        uf.translate(_caps + CPU::current().log_id());
+        uf << CLOSE;
+        _con.pt(CPU::current().log_id())->call(uf);
+    }
 
-	ClientSession(const ClientSession&);
-	ClientSession& operator=(const ClientSession&);
+    ClientSession(const ClientSession&);
+    ClientSession& operator=(const ClientSession&);
 
-	capsel_t _caps;
-	Connection &_con;
+    capsel_t _caps;
+    Connection &_con;
 };
 
 }

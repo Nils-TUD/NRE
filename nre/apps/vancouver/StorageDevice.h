@@ -25,50 +25,50 @@
 
 class StorageDevice {
 public:
-	explicit StorageDevice(DBus<MessageDiskCommit> &bus, nre::DataSpace &guestmem,
-	                       nre::Connection &con, size_t no)
-		: _no(no), _bus(bus), _con(con), _sess(_con, guestmem, no) {
-		char buffer[32];
-		nre::OStringStream os(buffer, sizeof(buffer));
-		os << "vmm-storage-" << no;
-		nre::GlobalThread *gt = nre::GlobalThread::create(
-		    thread, nre::CPU::current().log_id(), nre::String(buffer));
-		gt->set_tls<StorageDevice*>(nre::Thread::TLS_PARAM, this);
-		gt->start();
-	}
+    explicit StorageDevice(DBus<MessageDiskCommit> &bus, nre::DataSpace &guestmem,
+                           nre::Connection &con, size_t no)
+        : _no(no), _bus(bus), _con(con), _sess(_con, guestmem, no) {
+        char buffer[32];
+        nre::OStringStream os(buffer, sizeof(buffer));
+        os << "vmm-storage-" << no;
+        nre::GlobalThread *gt = nre::GlobalThread::create(
+            thread, nre::CPU::current().log_id(), nre::String(buffer));
+        gt->set_tls<StorageDevice*>(nre::Thread::TLS_PARAM, this);
+        gt->start();
+    }
 
-	void get_params(nre::Storage::Parameter *params) {
-		*params = _sess.get_params();
-	}
-	void read(nre::Storage::tag_type tag, nre::Storage::sector_type sector,
-	          const nre::Storage::dma_type *dma) {
-		_sess.read(tag, sector, *dma);
-	}
-	void write(nre::Storage::tag_type tag, nre::Storage::sector_type sector,
-	           const nre::Storage::dma_type *dma) {
-		_sess.write(tag, sector, *dma);
-	}
-	void flush_cache(nre::Storage::tag_type tag) {
-		_sess.flush(tag);
-	}
+    void get_params(nre::Storage::Parameter *params) {
+        *params = _sess.get_params();
+    }
+    void read(nre::Storage::tag_type tag, nre::Storage::sector_type sector,
+              const nre::Storage::dma_type *dma) {
+        _sess.read(tag, sector, *dma);
+    }
+    void write(nre::Storage::tag_type tag, nre::Storage::sector_type sector,
+               const nre::Storage::dma_type *dma) {
+        _sess.write(tag, sector, *dma);
+    }
+    void flush_cache(nre::Storage::tag_type tag) {
+        _sess.flush(tag);
+    }
 
 private:
-	static void thread(void*) {
-		StorageDevice *sd = nre::Thread::current()->get_tls<StorageDevice*>(nre::Thread::TLS_PARAM);
-		while(1) {
-			nre::Storage::Packet *pk = sd->_sess.consumer().get();
-			// the status isn't used anyway
-			{
-				nre::ScopedLock<nre::UserSm> guard(&globalsm);
-				MessageDiskCommit msg(sd->_no, pk->tag, MessageDisk::DISK_OK);
-				sd->_bus.send(msg);
-			}
-			sd->_sess.consumer().next();
-		}
-	}
+    static void thread(void*) {
+        StorageDevice *sd = nre::Thread::current()->get_tls<StorageDevice*>(nre::Thread::TLS_PARAM);
+        while(1) {
+            nre::Storage::Packet *pk = sd->_sess.consumer().get();
+            // the status isn't used anyway
+            {
+                nre::ScopedLock<nre::UserSm> guard(&globalsm);
+                MessageDiskCommit msg(sd->_no, pk->tag, MessageDisk::DISK_OK);
+                sd->_bus.send(msg);
+            }
+            sd->_sess.consumer().next();
+        }
+    }
 
-	size_t _no;
-	DBus<MessageDiskCommit> &_bus;
-	nre::Connection &_con;
-	nre::StorageSession _sess;
+    size_t _no;
+    DBus<MessageDiskCommit> &_bus;
+    nre::Connection &_con;
+    nre::StorageSession _sess;
 };

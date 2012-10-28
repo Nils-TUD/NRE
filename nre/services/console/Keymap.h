@@ -20,24 +20,24 @@
 #include <services/Keyboard.h>
 
 class Keymap {
-	struct KeymapEntry {
-		char def;
-		char shift;
-		char alt;
-	};
+    struct KeymapEntry {
+        char def;
+        char shift;
+        char alt;
+    };
 
 public:
-	static char translate(const nre::Keyboard::Packet &in) {
-		KeymapEntry *km = keymap + in.keycode;
-		if(in.flags & (nre::Keyboard::LSHIFT | nre::Keyboard::RSHIFT))
-			return km->shift;
-		if(in.flags & (nre::Keyboard::LALT | nre::Keyboard::RALT))
-			return km->alt;
-		return km->def;
-	}
+    static char translate(const nre::Keyboard::Packet &in) {
+        KeymapEntry *km = keymap + in.keycode;
+        if(in.flags & (nre::Keyboard::LSHIFT | nre::Keyboard::RSHIFT))
+            return km->shift;
+        if(in.flags & (nre::Keyboard::LALT | nre::Keyboard::RALT))
+            return km->alt;
+        return km->def;
+    }
 
 private:
-	Keymap();
+    Keymap();
 
-	static KeymapEntry keymap[];
+    static KeymapEntry keymap[];
 };

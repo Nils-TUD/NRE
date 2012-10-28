@@ -27,49 +27,49 @@ namespace nre {
  */
 class ScopedCapSels {
 public:
-	/**
-	 * Constructor. Allocates <count> capability selectors, aligned by <align>.
-	 *
-	 * @param count the number of cap selectors
-	 * @param align the alignment
-	 */
-	explicit ScopedCapSels(uint count = 1, uint align = 1)
-		: _cap(CapSelSpace::get().allocate(count, align)), _count(count), _owned(true) {
-	}
-	/**
-	 * Destructor. Free's the cap selectors, as soon as you haven't called release().
-	 */
-	~ScopedCapSels() {
-		if(_owned)
-			CapSelSpace::get().free(_cap, _count);
-	}
+    /**
+     * Constructor. Allocates <count> capability selectors, aligned by <align>.
+     *
+     * @param count the number of cap selectors
+     * @param align the alignment
+     */
+    explicit ScopedCapSels(uint count = 1, uint align = 1)
+        : _cap(CapSelSpace::get().allocate(count, align)), _count(count), _owned(true) {
+    }
+    /**
+     * Destructor. Free's the cap selectors, as soon as you haven't called release().
+     */
+    ~ScopedCapSels() {
+        if(_owned)
+            CapSelSpace::get().free(_cap, _count);
+    }
 
-	/**
-	 * @return the beginning of the allocated selector range
-	 */
-	capsel_t get() const {
-		return _cap;
-	}
+    /**
+     * @return the beginning of the allocated selector range
+     */
+    capsel_t get() const {
+        return _cap;
+    }
 
-	/**
-	 * Specifies that the capability selectors are in use now and should not be free'd when
-	 * destructing this object
-	 *
-	 * @return the beginning of the allocated selector range
-	 */
-	capsel_t release() {
-		_owned = false;
-		return _cap;
-	}
-
-private:
-	ScopedCapSels(const ScopedCapSels&);
-	ScopedCapSels& operator=(const ScopedCapSels&);
+    /**
+     * Specifies that the capability selectors are in use now and should not be free'd when
+     * destructing this object
+     *
+     * @return the beginning of the allocated selector range
+     */
+    capsel_t release() {
+        _owned = false;
+        return _cap;
+    }
 
 private:
-	capsel_t _cap;
-	uint _count;
-	bool _owned;
+    ScopedCapSels(const ScopedCapSels&);
+    ScopedCapSels& operator=(const ScopedCapSels&);
+
+private:
+    capsel_t _cap;
+    uint _count;
+    bool _owned;
 };
 
 }

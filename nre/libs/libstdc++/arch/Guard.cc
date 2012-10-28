@@ -31,31 +31,31 @@ namespace __cxxabiv1 {
 typedef uint64_t guard_t;
 
 static inline int trylock(guard_t *l) {
-	int res = 0;
-	asm volatile (
-	    // res = 0 (gcc assumes that we assign it within the inline-assembly and ignores res = 0 above)
-	    "xor	%0,%0;"
-	    // try to exchange lock with 0x100 (keep first byte 0)
-	    "mov	$0x100,%%" EXPAND(REG(cx)) ";"
-	    "xor	%%" EXPAND(REG(ax)) ",%%" EXPAND(REG(ax)) ";"
-	    "lock	cmpxchg %%" EXPAND(REG(cx)) ",(%1);"
-	    // if it succeeded, the zero-flag is set
-	    "jnz	1f;"
-	    // in this case we report success
-	    "mov	$1,%0;"
-	    "1:;"
-		: "=S" (res) : "D" (l) : EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
-	);
-	if(!res) {
-		// wait until the first one has completely initialized the static object
-		while(*(volatile char*)l != 1)
-			asm volatile ("pause");
-	}
-	return res;
+    int res = 0;
+    asm volatile (
+        // res = 0 (gcc assumes that we assign it within the inline-assembly and ignores res = 0 above)
+        "xor	%0,%0;"
+        // try to exchange lock with 0x100 (keep first byte 0)
+        "mov	$0x100,%%" EXPAND(REG(cx)) ";"
+        "xor	%%" EXPAND(REG(ax)) ",%%" EXPAND(REG(ax)) ";"
+        "lock	cmpxchg %%" EXPAND(REG(cx)) ",(%1);"
+        // if it succeeded, the zero-flag is set
+        "jnz	1f;"
+        // in this case we report success
+        "mov	$1,%0;"
+        "1:;"
+        : "=S" (res) : "D" (l) : EXPAND(REG(ax)), EXPAND(REG(cx)), "cc", "memory"
+    );
+    if(!res) {
+        // wait until the first one has completely initialized the static object
+        while(*(volatile char*)l != 1)
+            asm volatile ("pause");
+    }
+    return res;
 }
 static inline void unlock(guard_t *l) {
-	// unlock it and mark it initialized
-	*(char*)l = 1;
+    // unlock it and mark it initialized
+    *(char*)l = 1;
 }
 
 EXTERN_C int __cxa_guard_acquire(guard_t *);
@@ -63,11 +63,11 @@ EXTERN_C void __cxa_guard_release(guard_t *);
 EXTERN_C void __cxa_guard_abort(guard_t *);
 
 int __cxa_guard_acquire(guard_t *g) {
-	return trylock(g);
+    return trylock(g);
 }
 
 void __cxa_guard_release(guard_t *g) {
-	unlock(g);
+    unlock(g);
 }
 
 void __cxa_guard_abort(guard_t *) {

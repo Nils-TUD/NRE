@@ -30,22 +30,22 @@ namespace nre {
  */
 class RebootSession : public PtClientSession {
 public:
-	/**
-	 * Creates a new session with given connection
-	 *
-	 * @param con the connection
-	 */
-	explicit RebootSession(Connection &con) : PtClientSession(con) {
-	}
+    /**
+     * Creates a new session with given connection
+     *
+     * @param con the connection
+     */
+    explicit RebootSession(Connection &con) : PtClientSession(con) {
+    }
 
-	/**
-	 * Tries to reboot the PC with various methods
-	 */
-	void reboot() {
-		UtcbFrame uf;
-		pt().call(uf);
-		uf.check_reply();
-	}
+    /**
+     * Tries to reboot the PC with various methods
+     */
+    void reboot() {
+        UtcbFrame uf;
+        pt().call(uf);
+        uf.check_reply();
+    }
 };
 
 }

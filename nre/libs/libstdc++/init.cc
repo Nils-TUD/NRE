@@ -23,9 +23,9 @@ typedef void (*fRegFrameInfo)(void *callback);
 typedef void (*fConstr)(void);
 
 struct GlobalObj {
-	void (*f)(void*);
-	void *p;
-	void *d;
+    void (*f)(void*);
+    void *p;
+    void *d;
 };
 
 /**
@@ -42,17 +42,17 @@ static size_t exitFuncCount = 0;
 static GlobalObj exitFuncs[MAX_EXIT_FUNCS];
 
 int __cxa_atexit(void (*f)(void *), void *p, void *d) {
-	if(exitFuncCount >= MAX_EXIT_FUNCS)
-		return -1;
+    if(exitFuncCount >= MAX_EXIT_FUNCS)
+        return -1;
 
-	exitFuncs[exitFuncCount].f = f;
-	exitFuncs[exitFuncCount].p = p;
-	exitFuncs[exitFuncCount].d = d;
-	exitFuncCount++;
-	return 0;
+    exitFuncs[exitFuncCount].f = f;
+    exitFuncs[exitFuncCount].p = p;
+    exitFuncs[exitFuncCount].d = d;
+    exitFuncCount++;
+    return 0;
 }
 
 void __cxa_finalize(void *) {
-	for(ssize_t i = exitFuncCount - 1; i >= 0; i--)
-		exitFuncs[i].f(exitFuncs[i].p);
+    for(ssize_t i = exitFuncCount - 1; i >= 0; i--)
+        exitFuncs[i].f(exitFuncs[i].p);
 }

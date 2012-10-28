@@ -30,46 +30,46 @@ class ConsoleSessionData;
 
 class ConsoleService : public nre::Service {
 public:
-	typedef nre::DList<ConsoleSessionData>::iterator iterator;
+    typedef nre::DList<ConsoleSessionData>::iterator iterator;
 
-	ConsoleService(const char *name, uint modifier);
+    ConsoleService(const char *name, uint modifier);
 
-	ConsoleSessionData *active() {
-		if(_concyc[_console] == 0)
-			return 0;
-		iterator it = _concyc[_console]->current();
-		return it != _cons[_console]->end() ? &*it : 0;
-	}
+    ConsoleSessionData *active() {
+        if(_concyc[_console] == 0)
+            return 0;
+        iterator it = _concyc[_console]->current();
+        return it != _cons[_console]->end() ? &*it : 0;
+    }
 
-	void remove(ConsoleSessionData *sess);
-	void up();
-	void down();
-	void left();
-	void left_unlocked();
-	void right();
+    void remove(ConsoleSessionData *sess);
+    void up();
+    void down();
+    void left();
+    void left_unlocked();
+    void right();
 
-	ViewSwitcher &switcher() {
-		return _switcher;
-	}
-	Screen *screen() {
-		return _screen;
-	}
-	void session_ready(ConsoleSessionData *sess);
-	bool handle_keyevent(const nre::Keyboard::Packet &pk);
+    ViewSwitcher &switcher() {
+        return _switcher;
+    }
+    Screen *screen() {
+        return _screen;
+    }
+    void session_ready(ConsoleSessionData *sess);
+    bool handle_keyevent(const nre::Keyboard::Packet &pk);
 
 private:
-	virtual nre::ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
-	                                            nre::Pt::portal_func func);
-	void create_dummy(uint page, const nre::String &title);
-	void switch_to(size_t console);
+    virtual nre::ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
+                                                nre::Pt::portal_func func);
+    void create_dummy(uint page, const nre::String &title);
+    void switch_to(size_t console);
 
-	nre::Connection _rbcon;
-	nre::RebootSession _reboot;
-	Screen *_screen;
-	size_t _console;
-	nre::DList<ConsoleSessionData> *_cons[nre::Console::SUBCONS];
-	nre::Cycler<iterator> *_concyc[nre::Console::SUBCONS];
-	nre::UserSm _sm;
-	ViewSwitcher _switcher;
-	uint _modifier;
+    nre::Connection _rbcon;
+    nre::RebootSession _reboot;
+    Screen *_screen;
+    size_t _console;
+    nre::DList<ConsoleSessionData> *_cons[nre::Console::SUBCONS];
+    nre::Cycler<iterator> *_concyc[nre::Console::SUBCONS];
+    nre::UserSm _sm;
+    ViewSwitcher _switcher;
+    uint _modifier;
 };

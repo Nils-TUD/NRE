@@ -21,21 +21,21 @@ using namespace nre;
 VMMngService *VMMngService::_inst = 0;
 
 void VMMngService::portal(capsel_t pid) {
-	nre::ScopedLock<nre::RCULock> guard(&nre::RCU::lock());
-	nre::UtcbFrameRef uf;
-	VMMngServiceSession *sess = _inst->get_session<VMMngServiceSession>(pid);
-	try {
-		capsel_t ds = uf.get_delegated(0).offset();
-		capsel_t pd = uf.get_translated(0).offset();
-		uf.finish_input();
+    nre::ScopedLock<nre::RCULock> guard(&nre::RCU::lock());
+    nre::UtcbFrameRef uf;
+    VMMngServiceSession *sess = _inst->get_session<VMMngServiceSession>(pid);
+    try {
+        capsel_t ds = uf.get_delegated(0).offset();
+        capsel_t pd = uf.get_translated(0).offset();
+        uf.finish_input();
 
-		sess->init(new nre::DataSpace(ds), pd);
-		uf.accept_delegates();
-		uf << nre::E_SUCCESS;
-	}
-	catch(const nre::Exception &e) {
-		nre::Syscalls::revoke(uf.delegation_window(), true);
-		uf.clear();
-		uf << e;
-	}
+        sess->init(new nre::DataSpace(ds), pd);
+        uf.accept_delegates();
+        uf << nre::E_SUCCESS;
+    }
+    catch(const nre::Exception &e) {
+        nre::Syscalls::revoke(uf.delegation_window(), true);
+        uf.clear();
+        uf << e;
+    }
 }

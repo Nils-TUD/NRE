@@ -17,8 +17,8 @@
 # A fast reply to our client, called by a return to a portal function.
 .global portal_reply_landing_spot
 portal_reply_landing_spot:
-	# the return added 8 to %rsp
-	sub		$8, %rsp
-	# w0: NOVA_IPC_REPLY
-	mov		$1, %rdi
-	syscall
+    # the return added 8 to %rsp
+    sub     $8, %rsp
+    # w0: NOVA_IPC_REPLY
+    mov     $1, %rdi
+    syscall

@@ -22,13 +22,13 @@ namespace nre {
 
 class SyscallException : public Exception {
 public:
-	DEFINE_EXCONSTRS(SyscallException)
+    DEFINE_EXCONSTRS(SyscallException)
 
-	virtual OStream& operator<<(OStream& os) const {
-		os << "Systemcall failed: " << name() << "(" << code() << ")\n";
-		write_backtrace(os);
-		return os;
-	}
+    virtual OStream& operator<<(OStream& os) const {
+        os << "Systemcall failed: " << name() << "(" << code() << ")\n";
+        write_backtrace(os);
+        return os;
+    }
 };
 
 }

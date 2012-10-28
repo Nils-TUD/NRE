@@ -24,105 +24,105 @@ namespace nre {
 
 class SyscallABI {
 public:
-	static inline void syscall(word_t w0) {
-		asm volatile (
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			: "+a" (w0)
-			:
-			: "ecx", "edx", "memory"
-		);
-		handle_result(w0);
-	}
+    static inline void syscall(word_t w0) {
+        asm volatile (
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            : "+a" (w0)
+            :
+            : "ecx", "edx", "memory"
+        );
+        handle_result(w0);
+    }
 
-	static inline void syscall(word_t w0, word_t w1) {
-		word_t dummy;
-		asm volatile (
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			: "+a" (w0), "=c" (dummy), "=d" (dummy)
-			: "D" (w1)
-			: "memory"
-		);
-		handle_result(w0);
-	}
+    static inline void syscall(word_t w0, word_t w1) {
+        word_t dummy;
+        asm volatile (
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            : "+a" (w0), "=c" (dummy), "=d" (dummy)
+            : "D" (w1)
+            : "memory"
+        );
+        handle_result(w0);
+    }
 
-	static inline void syscall(word_t w0, word_t w1, word_t w2) {
-		word_t dummy;
-		asm volatile (
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			: "+a" (w0), "=c" (dummy), "=d" (dummy)
-			: "D" (w1), "S" (w2)
-			: "memory"
-		);
-		handle_result(w0);
-	}
+    static inline void syscall(word_t w0, word_t w1, word_t w2) {
+        word_t dummy;
+        asm volatile (
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            : "+a" (w0), "=c" (dummy), "=d" (dummy)
+            : "D" (w1), "S" (w2)
+            : "memory"
+        );
+        handle_result(w0);
+    }
 
-	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3) {
-		word_t dummy;
-		asm volatile (
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			: "+a" (w0), "=c" (dummy), "=d" (dummy)
-			: "D" (w1), "S" (w2), "b" (w3)
-			: "memory"
-		);
-		handle_result(w0);
-	}
+    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3) {
+        word_t dummy;
+        asm volatile (
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            : "+a" (w0), "=c" (dummy), "=d" (dummy)
+            : "D" (w1), "S" (w2), "b" (w3)
+            : "memory"
+        );
+        handle_result(w0);
+    }
 
-	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4) {
-		word_t dummy;
-		asm volatile (
-			"push %%ebp;"
-			"mov %6, %%ebp;"
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			"pop %%ebp;"
-			: "+a" (w0), "=c" (dummy), "=d" (dummy)
-			: "D" (w1), "S" (w2), "b" (w3), "ir" (w4)
-			: "memory"
-		);
-		handle_result(w0);
-	}
+    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4) {
+        word_t dummy;
+        asm volatile (
+            "push %%ebp;"
+            "mov %6, %%ebp;"
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            "pop %%ebp;"
+            : "+a" (w0), "=c" (dummy), "=d" (dummy)
+            : "D" (w1), "S" (w2), "b" (w3), "ir" (w4)
+            : "memory"
+        );
+        handle_result(w0);
+    }
 
-	static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4, word_t &out1,
-	                           word_t &out2) {
-		word_t dummy;
-		asm volatile (
-			"push %%ebp;"
-			"mov %6, %%ebp;"
-			"mov %%esp, %%ecx;"
-			"mov $1f, %%edx;"
-			"sysenter;"
-			"1: ;"
-			"pop %%ebp;"
-			: "+a" (w0), "=c" (dummy), "=d" (dummy), "+D" (w1), "+S" (w2)
-			: "b" (w3), "ir" (w4)
-			: "memory"
-		);
-		handle_result(w0);
-		out1 = w1;
-		out2 = w2;
-	}
+    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4, word_t &out1,
+                               word_t &out2) {
+        word_t dummy;
+        asm volatile (
+            "push %%ebp;"
+            "mov %6, %%ebp;"
+            "mov %%esp, %%ecx;"
+            "mov $1f, %%edx;"
+            "sysenter;"
+            "1: ;"
+            "pop %%ebp;"
+            : "+a" (w0), "=c" (dummy), "=d" (dummy), "+D" (w1), "+S" (w2)
+            : "b" (w3), "ir" (w4)
+            : "memory"
+        );
+        handle_result(w0);
+        out1 = w1;
+        out2 = w2;
+    }
 
 private:
-	SyscallABI();
+    SyscallABI();
 
-	static inline void handle_result(uint8_t res) {
-		if(EXPECT_FALSE(res != E_SUCCESS))
-			throw SyscallException(static_cast<ErrorCode>(res));
-	}
+    static inline void handle_result(uint8_t res) {
+        if(EXPECT_FALSE(res != E_SUCCESS))
+            throw SyscallException(static_cast<ErrorCode>(res));
+    }
 };
 
 }

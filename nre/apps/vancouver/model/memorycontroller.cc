@@ -24,52 +24,52 @@
 using namespace nre;
 
 class MemoryController : public StaticReceiver<MemoryController> {
-	char *_physmem;
-	uintptr_t _start;
-	uintptr_t _end;
+    char *_physmem;
+    uintptr_t _start;
+    uintptr_t _end;
 
 public:
-	/****************************************************/
-	/* Physmem access                                   */
-	/****************************************************/
-	bool receive(MessageMem &msg) {
-		if((msg.phys < _start) || (msg.phys >= (_end - 4)))
-			return false;
+    /****************************************************/
+    /* Physmem access                                   */
+    /****************************************************/
+    bool receive(MessageMem &msg) {
+        if((msg.phys < _start) || (msg.phys >= (_end - 4)))
+            return false;
 
-		unsigned *ptr = reinterpret_cast<unsigned *>(_physmem + msg.phys);
-		if(msg.read)
-			*msg.ptr = *ptr;
-		else
-			*ptr = *msg.ptr;
-		return true;
-	}
+        unsigned *ptr = reinterpret_cast<unsigned *>(_physmem + msg.phys);
+        if(msg.read)
+            *msg.ptr = *ptr;
+        else
+            *ptr = *msg.ptr;
+        return true;
+    }
 
-	bool receive(MessageMemRegion &msg) {
-		if((msg.page < (_start >> 12)) || (msg.page >= (_end >> 12)))
-			return false;
-		msg.start_page = _start >> 12;
-		msg.count = (_end - _start) >> 12;
-		msg.ptr = _physmem + _start;
-		return true;
-	}
+    bool receive(MessageMemRegion &msg) {
+        if((msg.page < (_start >> 12)) || (msg.page >= (_end >> 12)))
+            return false;
+        msg.start_page = _start >> 12;
+        msg.count = (_end - _start) >> 12;
+        msg.ptr = _physmem + _start;
+        return true;
+    }
 
-	MemoryController(char *physmem, uintptr_t start, uintptr_t end)
-		: _physmem(physmem), _start(start), _end(end) {
-	}
+    MemoryController(char *physmem, uintptr_t start, uintptr_t end)
+        : _physmem(physmem), _start(start), _end(end) {
+    }
 };
 
 PARAM_HANDLER(mem,
               "mem:start=0:end=~0 - create a memory controller that handles physical memory accesses.",
               "Example: 'mem:0,0xa0000' for the first 640k region",
               "Example: 'mem:0x100000' for all the memory above 1M") {
-	MessageHostOp msg(MessageHostOp::OP_GUEST_MEM, 0UL);
-	if(!mb.bus_hostop.send(msg))
-		Util::panic("%s failed to get physical memory\n", __PRETTY_FUNCTION__);
-	uintptr_t start = ~argv[0] ? argv[0] : 0;
-	uintptr_t end = argv[1] > msg.len ? msg.len : argv[1];
-	Serial::get().writef("physmem: %lx %p [%lx, %lx]\n", msg.value, msg.ptr, start, end);
-	MemoryController *dev = new MemoryController(msg.ptr, start, end);
-	// physmem access
-	mb.bus_mem.add(dev, MemoryController::receive_static<MessageMem> );
-	mb.bus_memregion.add(dev, MemoryController::receive_static<MessageMemRegion> );
+    MessageHostOp msg(MessageHostOp::OP_GUEST_MEM, 0UL);
+    if(!mb.bus_hostop.send(msg))
+        Util::panic("%s failed to get physical memory\n", __PRETTY_FUNCTION__);
+    uintptr_t start = ~argv[0] ? argv[0] : 0;
+    uintptr_t end = argv[1] > msg.len ? msg.len : argv[1];
+    Serial::get().writef("physmem: %lx %p [%lx, %lx]\n", msg.value, msg.ptr, start, end);
+    MemoryController *dev = new MemoryController(msg.ptr, start, end);
+    // physmem access
+    mb.bus_mem.add(dev, MemoryController::receive_static<MessageMem> );
+    mb.bus_memregion.add(dev, MemoryController::receive_static<MessageMemRegion> );
 }

@@ -24,37 +24,37 @@
 #include "Controller.h"
 
 class ControllerMng {
-	enum {
-		CLASS_STORAGE_CTRL      = 0x1,
-		SUBCLASS_IDE            = 0x1,
-		SUBCLASS_SATA           = 0x6,
-	};
+    enum {
+        CLASS_STORAGE_CTRL      = 0x1,
+        SUBCLASS_IDE            = 0x1,
+        SUBCLASS_SATA           = 0x6,
+    };
 
 public:
-	explicit ControllerMng(bool idedma)
-		: _idedma(idedma), _pcicfgcon("pcicfg"), _pcicfg(_pcicfgcon), _acpicon("acpi"),
-		  _acpi(_acpicon), _pci(_pcicfg, &_acpi), _count(0), _ctrls() {
-		find_ahci_controller();
-		find_ide_controller();
-	}
+    explicit ControllerMng(bool idedma)
+        : _idedma(idedma), _pcicfgcon("pcicfg"), _pcicfg(_pcicfgcon), _acpicon("acpi"),
+          _acpi(_acpicon), _pci(_pcicfg, &_acpi), _count(0), _ctrls() {
+        find_ahci_controller();
+        find_ide_controller();
+    }
 
-	bool exists(size_t ctrl) const {
-		return ctrl < nre::Storage::MAX_CONTROLLER && _ctrls[ctrl] != 0;
-	}
-	Controller *get(size_t ctrl) const {
-		return _ctrls[ctrl];
-	}
+    bool exists(size_t ctrl) const {
+        return ctrl < nre::Storage::MAX_CONTROLLER && _ctrls[ctrl] != 0;
+    }
+    Controller *get(size_t ctrl) const {
+        return _ctrls[ctrl];
+    }
 
 private:
-	void find_ahci_controller();
-	void find_ide_controller();
+    void find_ahci_controller();
+    void find_ide_controller();
 
-	bool _idedma;
-	nre::Connection _pcicfgcon;
-	nre::PCIConfigSession _pcicfg;
-	nre::Connection _acpicon;
-	nre::ACPISession _acpi;
-	nre::PCI _pci;
-	size_t _count;
-	Controller *_ctrls[nre::Storage::MAX_CONTROLLER];
+    bool _idedma;
+    nre::Connection _pcicfgcon;
+    nre::PCIConfigSession _pcicfg;
+    nre::Connection _acpicon;
+    nre::ACPISession _acpi;
+    nre::PCI _pci;
+    size_t _count;
+    Controller *_ctrls[nre::Storage::MAX_CONTROLLER];
 };

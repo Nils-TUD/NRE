@@ -29,53 +29,53 @@ BufferedLog BufferedLog::_inst INIT_PRIO_SERIAL;
 Log Log::_inst INIT_PRIO_SERIAL;
 Service *Log::_srv;
 const char *Log::_colors[] = {
-	"31", "32", "33", "34", "35", "36"
+    "31", "32", "33", "34", "35", "36"
 };
 
 BufferedLog::BufferedLog() : BaseSerial(), _bufpos(0), _buf() {
-	BaseSerial::_inst = this;
+    BaseSerial::_inst = this;
 }
 
 Log::Log() : BaseSerial(), _ports(PORT_BASE, 6), _sm(1) {
-	_ports.out<uint8_t>(0x80, LCR);          // Enable DLAB (set baud rate divisor)
-	_ports.out<uint8_t>(0x01, DLR_LO);       // Set divisor to 1 (lo byte) 115200 baud
-	_ports.out<uint8_t>(0x00, DLR_HI);       //                  (hi byte)
-	_ports.out<uint8_t>(0x03, LCR);          // 8 bits, no parity, one stop bit
-	_ports.out<uint8_t>(0, IER);             // disable interrupts
-	_ports.out<uint8_t>(7, FCR);
-	_ports.out<uint8_t>(3, MCR);
+    _ports.out<uint8_t>(0x80, LCR);          // Enable DLAB (set baud rate divisor)
+    _ports.out<uint8_t>(0x01, DLR_LO);       // Set divisor to 1 (lo byte) 115200 baud
+    _ports.out<uint8_t>(0x00, DLR_HI);       //                  (hi byte)
+    _ports.out<uint8_t>(0x03, LCR);          // 8 bits, no parity, one stop bit
+    _ports.out<uint8_t>(0, IER);             // disable interrupts
+    _ports.out<uint8_t>(7, FCR);
+    _ports.out<uint8_t>(3, MCR);
 }
 
 void Log::start() {
-	_srv = new Service("log", CPUSet(CPUSet::ALL), portal);
-	_srv->start();
+    _srv = new Service("log", CPUSet(CPUSet::ALL), portal);
+    _srv->start();
 }
 
 void Log::write(uint sessid, const char *line, size_t len) {
-	ScopedLock<UserSm> guard(&_sm);
-	*this << "\e[0;" << _colors[sessid % ARRAY_SIZE(_colors)] << "m[" << sessid << "] ";
-	for(size_t i = 0; i < len; ++i) {
-		char c = line[i];
-		if(c != '\n')
-			*this << c;
-	}
-	*this << "\e[0m\n";
+    ScopedLock<UserSm> guard(&_sm);
+    *this << "\e[0;" << _colors[sessid % ARRAY_SIZE(_colors)] << "m[" << sessid << "] ";
+    for(size_t i = 0; i < len; ++i) {
+        char c = line[i];
+        if(c != '\n')
+            *this << c;
+    }
+    *this << "\e[0m\n";
 }
 
 void Log::portal(capsel_t pid) {
-	ScopedLock<RCULock> guard(&RCU::lock());
-	ServiceSession *sess = _srv->get_session<ServiceSession>(pid);
-	UtcbFrameRef uf;
-	try {
-		String line;
-		uf >> line;
-		uf.finish_input();
+    ScopedLock<RCULock> guard(&RCU::lock());
+    ServiceSession *sess = _srv->get_session<ServiceSession>(pid);
+    UtcbFrameRef uf;
+    try {
+        String line;
+        uf >> line;
+        uf.finish_input();
 
-		Log::get().write(sess->id() + 1, line.str(), line.length());
-		uf << E_SUCCESS;
-	}
-	catch(const Exception &e) {
-		uf.clear();
-		uf << e;
-	}
+        Log::get().write(sess->id() + 1, line.str(), line.length());
+        uf << E_SUCCESS;
+    }
+    catch(const Exception &e) {
+        uf.clear();
+        uf << e;
+    }
 }

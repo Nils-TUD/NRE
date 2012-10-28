@@ -29,94 +29,94 @@ namespace nre {
  */
 class Ports {
 public:
-	typedef uint port_t;
+    typedef uint port_t;
 
-	enum Op {
-		ALLOC,
-		RELEASE
-	};
+    enum Op {
+        ALLOC,
+        RELEASE
+    };
 
-	/**
-	 * Allocates the given port range from the parent.
-	 *
-	 * @param base the beginning of the port range
-	 * @param count the number of ports
-	 * @throws Exception if failed (e.g. ports already allocated)
-	 */
-	explicit Ports(port_t base, uint count) : _base(base), _count(count) {
-		alloc();
-	}
-	/**
-	 * Releases the ports again
-	 */
-	~Ports() {
-		release();
-	}
+    /**
+     * Allocates the given port range from the parent.
+     *
+     * @param base the beginning of the port range
+     * @param count the number of ports
+     * @throws Exception if failed (e.g. ports already allocated)
+     */
+    explicit Ports(port_t base, uint count) : _base(base), _count(count) {
+        alloc();
+    }
+    /**
+     * Releases the ports again
+     */
+    ~Ports() {
+        release();
+    }
 
-	/**
-	 * @return the base of the port-range
-	 */
-	port_t base() const {
-		return _base;
-	}
-	/**
-	 * @return the number of ports
-	 */
-	uint count() const {
-		return _count;
-	}
+    /**
+     * @return the base of the port-range
+     */
+    port_t base() const {
+        return _base;
+    }
+    /**
+     * @return the number of ports
+     */
+    uint count() const {
+        return _count;
+    }
 
-	/**
-	 * Reads a value from port base()+<offset>.
-	 *
-	 * @param offset the offset within the port-range
-	 * @return the value
-	 */
-	template<typename T>
-	inline T in(port_t offset = 0) {
-		assert(offset < _count);
-		T val;
-		asm volatile ("in %w1, %0" : "=a" (val) : "Nd" (_base + offset));
-		return val;
-	}
+    /**
+     * Reads a value from port base()+<offset>.
+     *
+     * @param offset the offset within the port-range
+     * @return the value
+     */
+    template<typename T>
+    inline T in(port_t offset = 0) {
+        assert(offset < _count);
+        T val;
+        asm volatile ("in %w1, %0" : "=a" (val) : "Nd" (_base + offset));
+        return val;
+    }
 
-	/**
-	 * Writes <val> to port base()+<offset>
-	 *
-	 * @param val the value to write
-	 * @param offset the offset within the port-range
-	 */
-	template<typename T>
-	inline void out(T val, port_t offset = 0) {
-		assert(offset < _count);
-		asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
-	}
+    /**
+     * Writes <val> to port base()+<offset>
+     *
+     * @param val the value to write
+     * @param offset the offset within the port-range
+     */
+    template<typename T>
+    inline void out(T val, port_t offset = 0) {
+        assert(offset < _count);
+        asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
+    }
 
 private:
-	void alloc() {
-		UtcbFrame uf;
-		ScopedCapSels cap;
-		uf.delegation_window(Crd(_base, Math::next_pow2_shift(_count), Crd::IO_ALL));
-		uf << ALLOC << _base << _count;
-		CPU::current().io_pt().call(uf);
-		uf.check_reply();
-	}
-	void release() {
-		try {
-			UtcbFrame uf;
-			uf << RELEASE << _base << _count;
-			CPU::current().io_pt().call(uf);
-		}
-		catch(...) {
-			// ignore
-		}
-	}
+    void alloc() {
+        UtcbFrame uf;
+        ScopedCapSels cap;
+        uf.delegation_window(Crd(_base, Math::next_pow2_shift(_count), Crd::IO_ALL));
+        uf << ALLOC << _base << _count;
+        CPU::current().io_pt().call(uf);
+        uf.check_reply();
+    }
+    void release() {
+        try {
+            UtcbFrame uf;
+            uf << RELEASE << _base << _count;
+            CPU::current().io_pt().call(uf);
+        }
+        catch(...) {
+            // ignore
+        }
+    }
 
-	Ports(const Ports&);
-	Ports& operator=(const Ports&);
+    Ports(const Ports&);
+    Ports& operator=(const Ports&);
 
-	port_t _base;
-	uint _count;
+    port_t _base;
+    uint _count;
 };
 
 }

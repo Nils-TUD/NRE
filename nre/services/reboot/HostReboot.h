@@ -27,45 +27,45 @@
 
 class HostRebootKeyboard : public HostRebootMethod {
 public:
-	explicit HostRebootKeyboard();
-	virtual void reboot();
+    explicit HostRebootKeyboard();
+    virtual void reboot();
 
 private:
-	nre::Connection _con;
-	nre::KeyboardSession _sess;
+    nre::Connection _con;
+    nre::KeyboardSession _sess;
 };
 
 class HostRebootSysCtrlPortA : public HostRebootMethod {
 public:
-	explicit HostRebootSysCtrlPortA();
-	virtual void reboot();
+    explicit HostRebootSysCtrlPortA();
+    virtual void reboot();
 
 private:
-	nre::Ports _port;
+    nre::Ports _port;
 };
 
 class HostRebootPCIReset : public HostRebootMethod {
 public:
-	explicit HostRebootPCIReset();
-	virtual void reboot();
+    explicit HostRebootPCIReset();
+    virtual void reboot();
 
 private:
-	nre::Connection _con;
-	nre::PCIConfigSession _sess;
+    nre::Connection _con;
+    nre::PCIConfigSession _sess;
 };
 
 class HostRebootACPI : public HostRebootMethod {
 public:
-	explicit HostRebootACPI();
-	virtual ~HostRebootACPI();
-	virtual void reboot();
+    explicit HostRebootACPI();
+    virtual ~HostRebootACPI();
+    virtual void reboot();
 
 private:
-	uint8_t _method;
-	uint8_t _value;
-	uint64_t _addr;
-	nre::Connection _con;
-	nre::ACPISession _sess;
-	nre::Ports *_ports;
-	nre::DataSpace *_ds;
+    uint8_t _method;
+    uint8_t _value;
+    uint64_t _addr;
+    nre::Connection _con;
+    nre::ACPISession _sess;
+    nre::Ports *_ports;
+    nre::DataSpace *_ds;
 };

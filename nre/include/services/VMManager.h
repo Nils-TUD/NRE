@@ -27,15 +27,15 @@ namespace nre {
  */
 class VMManager {
 public:
-	enum Command {
-		RESET,
-		TERMINATE,
-		KILL,
-	};
+    enum Command {
+        RESET,
+        TERMINATE,
+        KILL,
+    };
 
-	struct Packet {
-		Command cmd;
-	};
+    struct Packet {
+        Command cmd;
+    };
 };
 
 /**
@@ -44,39 +44,39 @@ public:
  * for requests.
  */
 class VMManagerSession : public ClientSession {
-	static const size_t DS_SIZE = ExecEnv::PAGE_SIZE;
+    static const size_t DS_SIZE = ExecEnv::PAGE_SIZE;
 
 public:
-	/**
-	 * Creates a new session with given connection
-	 *
-	 * @param con the connection
-	 */
-	explicit VMManagerSession(Connection &con)
-		: ClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
-		  _consumer(&_ds, true) {
-		create();
-	}
+    /**
+     * Creates a new session with given connection
+     *
+     * @param con the connection
+     */
+    explicit VMManagerSession(Connection &con)
+        : ClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
+          _consumer(&_ds, true) {
+        create();
+    }
 
-	/**
-	 * @return the consumer to receive commands from the vmmanager
-	 */
-	Consumer<VMManager::Packet> &consumer() {
-		return _consumer;
-	}
+    /**
+     * @return the consumer to receive commands from the vmmanager
+     */
+    Consumer<VMManager::Packet> &consumer() {
+        return _consumer;
+    }
 
 private:
-	void create() {
-		UtcbFrame uf;
-		uf.delegate(_ds.sel());
-		uf.translate(Pd::current()->sel());
-		Pt pt(caps() + CPU::current().log_id());
-		pt.call(uf);
-		uf.check_reply();
-	}
+    void create() {
+        UtcbFrame uf;
+        uf.delegate(_ds.sel());
+        uf.translate(Pd::current()->sel());
+        Pt pt(caps() + CPU::current().log_id());
+        pt.call(uf);
+        uf.check_reply();
+    }
 
-	DataSpace _ds;
-	Consumer<VMManager::Packet> _consumer;
+    DataSpace _ds;
+    Consumer<VMManager::Packet> _consumer;
 };
 
 }

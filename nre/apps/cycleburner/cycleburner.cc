@@ -39,191 +39,191 @@ static int8_t sinlut[SIN_LUTSIZE];
 static uint8_t sqrtlut[SQRT_LUTSIZE >> SQRT_PRESHIFT];
 
 static void gen_sinlut(void) {
-	for(int i = 0; i < SIN_LUTSIZE / 2; i++) {
-		float sinval = fsin(M_PI * 2 * static_cast<float>(i) / SIN_LUTSIZE);
-		sinlut[i] = static_cast<int8_t>(sinval * 127);
-		sinlut[i + SIN_LUTSIZE / 2] = -sinlut[i];
-	}
+    for(int i = 0; i < SIN_LUTSIZE / 2; i++) {
+        float sinval = fsin(M_PI * 2 * static_cast<float>(i) / SIN_LUTSIZE);
+        sinlut[i] = static_cast<int8_t>(sinval * 127);
+        sinlut[i + SIN_LUTSIZE / 2] = -sinlut[i];
+    }
 }
 
 static void gen_sqrtlut(void) {
-	for(int i = 0; i < (SQRT_LUTSIZE >> SQRT_PRESHIFT); i++) {
-		float sqrtval = fsqrt(i << SQRT_PRESHIFT);
-		sqrtlut[i] = sqrtval;
-	}
+    for(int i = 0; i < (SQRT_LUTSIZE >> SQRT_PRESHIFT); i++) {
+        float sqrtval = fsqrt(i << SQRT_PRESHIFT);
+        sqrtlut[i] = sqrtval;
+    }
 }
 
 static int16_t lsin(uint8_t v) {
-	return sinlut[v];
+    return sinlut[v];
 }
 static int16_t lcos(uint8_t v) {
-	return lsin(64 - v);
+    return lsin(64 - v);
 }
 static uint8_t lsqrt(uint16_t v) {
-	return sqrtlut[v >> SQRT_PRESHIFT];
+    return sqrtlut[v >> SQRT_PRESHIFT];
 }
 static int16_t sqr(int16_t x) {
-	return x * x;
+    return x * x;
 }
 
 static uint8_t distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
-	return lsqrt(sqr(x1 - x2) + sqr(y1 - y2));
+    return lsqrt(sqr(x1 - x2) + sqr(y1 - y2));
 }
 
 template<unsigned ROW, unsigned COL>
 class TextBuffer {
 private:
-	uint16_t _buffer[ROW * COL];
+    uint16_t _buffer[ROW * COL];
 public:
-	uint16_t &character(unsigned row, unsigned col) {
-		return _buffer[row * COL + col];
-	}
+    uint16_t &character(unsigned row, unsigned col) {
+        return _buffer[row * COL + col];
+    }
 
-	void blt_from(TextBuffer<ROW, COL> *target) {
-		memcpy(_buffer, target->_buffer, sizeof(_buffer));
-	}
+    void blt_from(TextBuffer<ROW, COL> *target) {
+        memcpy(_buffer, target->_buffer, sizeof(_buffer));
+    }
 
-	void blt_to(uint16_t *target) {
-		memcpy(target, _buffer, sizeof(_buffer));
-	}
+    void blt_to(uint16_t *target) {
+        memcpy(target, _buffer, sizeof(_buffer));
+    }
 
-	void put_text(unsigned row, unsigned col, uint8_t attr, const char *str, int len = -1) {
-		while((len-- != 0) && *str != 0) {
-			if(*str != ' ')
-				character(row, col) = *str | (attr << 8);
-			col++;
-			str++;
-		}
-	}
+    void put_text(unsigned row, unsigned col, uint8_t attr, const char *str, int len = -1) {
+        while((len-- != 0) && *str != 0) {
+            if(*str != ' ')
+                character(row, col) = *str | (attr << 8);
+            col++;
+            str++;
+        }
+    }
 
-	TextBuffer() {
-		memset(_buffer, 0, sizeof(_buffer));
-	}
+    TextBuffer() {
+        memset(_buffer, 0, sizeof(_buffer));
+    }
 };
 
 template<unsigned ROW, unsigned COL>
 class TextAnimator : public TextBuffer<ROW, COL> {
 public:
-	virtual void render(timevalue_t now) = 0;
+    virtual void render(timevalue_t now) = 0;
 };
 
 template<unsigned ROW, unsigned COL>
 class PlasmaAnimator : public TextAnimator<ROW, COL> {
-	void plasma_put(unsigned row, unsigned col, int8_t color) {
-		int icol = (static_cast<int>(color) + 128) >> 4;
-		uint16_t coltab[8] = {' ' | 0x0000, ' ' | 0x0000, ':' | 0x0200, ':' | 0x0A00, 'o' | 0x0200, 'O'
-			                  | 0x0200, 'O' | 0x0A00, 'Q' | 0x0A00};
-		uint16_t attr = coltab[(icol <= 8) ? (8 - icol) : (icol - 8)];
-		if(icol <= 8)
-			attr = (attr & 0x8FF) | 0x0100;
+    void plasma_put(unsigned row, unsigned col, int8_t color) {
+        int icol = (static_cast<int>(color) + 128) >> 4;
+        uint16_t coltab[8] = {' ' | 0x0000, ' ' | 0x0000, ':' | 0x0200, ':' | 0x0A00, 'o' | 0x0200, 'O'
+                              | 0x0200, 'O' | 0x0A00, 'Q' | 0x0A00};
+        uint16_t attr = coltab[(icol <= 8) ? (8 - icol) : (icol - 8)];
+        if(icol <= 8)
+            attr = (attr & 0x8FF) | 0x0100;
 
-		this->character(row, col) = attr;
-	}
+        this->character(row, col) = attr;
+    }
 
 public:
-	void render(timevalue_t now) {
-		unsigned t = now >> 25;
+    void render(timevalue_t now) {
+        unsigned t = now >> 25;
 
-		// Double ROW to correct aspect ratio.
-		for(unsigned rc = 0; rc < ROW * 2; rc += 2) {
-			for(unsigned cc = 0; cc < COL; cc++) {
-				int8_t v1 = lsin(distance(rc, cc, ROW * 2 / 2, COL / 2) * 2 + 2 * t);
-				int8_t v2 = lsin(distance(rc, cc, (lsin(t >> 5) / 2 + 60), (lcos(t >> 5) / 2 + 60)));
+        // Double ROW to correct aspect ratio.
+        for(unsigned rc = 0; rc < ROW * 2; rc += 2) {
+            for(unsigned cc = 0; cc < COL; cc++) {
+                int8_t v1 = lsin(distance(rc, cc, ROW * 2 / 2, COL / 2) * 2 + 2 * t);
+                int8_t v2 = lsin(distance(rc, cc, (lsin(t >> 5) / 2 + 60), (lcos(t >> 5) / 2 + 60)));
 
-				int8_t v3 = lsin(distance(rc, cc, (lsin(-t * 3) / 2 + 64), (lcos(-t * 3) / 2 + 64)));
+                int8_t v3 = lsin(distance(rc, cc, (lsin(-t * 3) / 2 + 64), (lcos(-t * 3) / 2 + 64)));
 
-				plasma_put(rc / 2, cc, (v1 + v2 + v3) / 3);
-			}
-		}
+                plasma_put(rc / 2, cc, (v1 + v2 + v3) / 3);
+            }
+        }
 
-		this->character(ROW - 1, 0) = (this->character(ROW - 1, 0) & 0xFF00) | 'J';
-		this->character(ROW - 1, 1) = (this->character(ROW - 1, 0) & 0xFF00) | 'S';
-	}
+        this->character(ROW - 1, 0) = (this->character(ROW - 1, 0) & 0xFF00) | 'J';
+        this->character(ROW - 1, 1) = (this->character(ROW - 1, 0) & 0xFF00) | 'S';
+    }
 };
 
 template<unsigned ROW, unsigned COL>
 class QuoteAnimator : public TextAnimator<ROW, COL> {
-	TextAnimator<ROW, COL> *_background;
-	bool _start_init;
-	timevalue_t _start;
+    TextAnimator<ROW, COL> *_background;
+    bool _start_init;
+    timevalue_t _start;
 
 public:
-	void render(timevalue_t now) {
-		const uint16_t text_bg_attr = 0x0800;
+    void render(timevalue_t now) {
+        const uint16_t text_bg_attr = 0x0800;
 
-		_background->render(now);
-		this->blt_from(_background);
+        _background->render(now);
+        this->blt_from(_background);
 
-		if(!_start_init) {
-			_start = now - (400 << 22);
-			_start_init = true;
-		}
+        if(!_start_init) {
+            _start = now - (400 << 22);
+            _start_init = true;
+        }
 
-		unsigned t = (static_cast<unsigned>((now - _start) >> 22)) % 10000;
-		unsigned cycle = (static_cast<unsigned>((now - _start) >> 22)) / 10000;
+        unsigned t = (static_cast<unsigned>((now - _start) >> 22)) % 10000;
+        unsigned cycle = (static_cast<unsigned>((now - _start) >> 22)) / 10000;
 
-		if(t < 800) {
-			// 0-799: Bar in
-			for(unsigned rc = 0; rc < ROW; rc++) {
-				for(unsigned cc = 0; cc < COL; cc++) {
-					if((cc <= t / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc, cc);
-						ch = (ch & 0xFF) | text_bg_attr;
-					}
-				}
-			}
-		}
-		else if(t < 5000) {
-			// 800-1290 Empty bar
-			for(unsigned rc = 0; rc < ROW; rc++) {
-				for(unsigned cc = 0; cc < COL; cc++) {
-					if((rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc, cc);
-						ch = (ch & 0xFF) | text_bg_attr;
-					}
-				}
-			}
-			// 1300-4999
-			const char *msg[] = {
-				// A collection of nice Perlisms.
-				"Simplicity does not precede complexity, but follows it.",
-				"If your computer speaks English, it was probably made in Japan.",
-				"To understand a program you must become both the machine and the program.",
-				"If a listener nods his head when you're explaining your program, wake him up.",
-				// Alan Kay quotes
-				"Perspective is worth 80 IQ points.",
-				"A successful technology creates problems that only it can solve.",
-				"Simple things should be simple. Complex things should be possible.",
-				// "If you don't fail at least 90 percent of the time, you're not aiming high enough." // XXX Too long
-				// Kent Pitman
-			};
-			unsigned msg_no = sizeof(msg) / sizeof(*msg);
-			const char *cur_msg = msg[cycle % msg_no];
-			unsigned msg_len = strlen(cur_msg);
+        if(t < 800) {
+            // 0-799: Bar in
+            for(unsigned rc = 0; rc < ROW; rc++) {
+                for(unsigned cc = 0; cc < COL; cc++) {
+                    if((cc <= t / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
+                        uint16_t &ch = this->character(rc, cc);
+                        ch = (ch & 0xFF) | text_bg_attr;
+                    }
+                }
+            }
+        }
+        else if(t < 5000) {
+            // 800-1290 Empty bar
+            for(unsigned rc = 0; rc < ROW; rc++) {
+                for(unsigned cc = 0; cc < COL; cc++) {
+                    if((rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
+                        uint16_t &ch = this->character(rc, cc);
+                        ch = (ch & 0xFF) | text_bg_attr;
+                    }
+                }
+            }
+            // 1300-4999
+            const char *msg[] = {
+                // A collection of nice Perlisms.
+                "Simplicity does not precede complexity, but follows it.",
+                "If your computer speaks English, it was probably made in Japan.",
+                "To understand a program you must become both the machine and the program.",
+                "If a listener nods his head when you're explaining your program, wake him up.",
+                // Alan Kay quotes
+                "Perspective is worth 80 IQ points.",
+                "A successful technology creates problems that only it can solve.",
+                "Simple things should be simple. Complex things should be possible.",
+                // "If you don't fail at least 90 percent of the time, you're not aiming high enough." // XXX Too long
+                // Kent Pitman
+            };
+            unsigned msg_no = sizeof(msg) / sizeof(*msg);
+            const char *cur_msg = msg[cycle % msg_no];
+            unsigned msg_len = strlen(cur_msg);
 
-			if((t >= 1300) && (t < 4500)) {
-				this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x0F, cur_msg, (t - 1300) / 10);
-			}
-			if((t >= 4500) && (t < 4600)) {
-				this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x07, cur_msg, (t - 1300) / 10);
-			}
-		}
-		else {
-			// Bar out
-			for(unsigned rc = 0; rc < ROW; rc++) {
-				for(unsigned cc = 0; cc < COL; cc++) {
-					if((cc >= (t - 5000) / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
-						uint16_t &ch = this->character(rc, cc);
-						ch = (ch & 0xFF) | text_bg_attr;
-					}
-				}
-			}
-		}
-	}
+            if((t >= 1300) && (t < 4500)) {
+                this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x0F, cur_msg, (t - 1300) / 10);
+            }
+            if((t >= 4500) && (t < 4600)) {
+                this->put_text(ROW / 2, COL / 2 - msg_len / 2 - 1, 0x07, cur_msg, (t - 1300) / 10);
+            }
+        }
+        else {
+            // Bar out
+            for(unsigned rc = 0; rc < ROW; rc++) {
+                for(unsigned cc = 0; cc < COL; cc++) {
+                    if((cc >= (t - 5000) / 10) && (rc > (ROW / 2 - 2)) && (rc < (ROW / 2 + 2))) {
+                        uint16_t &ch = this->character(rc, cc);
+                        ch = (ch & 0xFF) | text_bg_attr;
+                    }
+                }
+            }
+        }
+    }
 
-	QuoteAnimator(TextAnimator<ROW, COL> *background)
-		: _background(background), _start_init(false) {
-	}
+    QuoteAnimator(TextAnimator<ROW, COL> *background)
+        : _background(background), _start_init(false) {
+    }
 };
 
 static const char *intro_text[] = {
@@ -231,101 +231,101 @@ static const char *intro_text[] = {
 };
 
 static uint32_t random() {
-	// Linear Congruential Generator
-	static uint32_t a = 1664525;
-	static uint32_t c = 1013904223;
-	static uint32_t x = 1;
-	x = a * x + c;
-	return x;
+    // Linear Congruential Generator
+    static uint32_t a = 1664525;
+    static uint32_t c = 1013904223;
+    static uint32_t x = 1;
+    x = a * x + c;
+    return x;
 }
 
 class IntroAnimator : public TextAnimator<25, 80> {
-	bool _start_init;
-	timevalue_t _start;
-	bool _done;
+    bool _start_init;
+    timevalue_t _start;
+    bool _done;
 public:
-	bool done() const {
-		return _done;
-	}
+    bool done() const {
+        return _done;
+    }
 
-	void render(timevalue_t now) {
-		unsigned ROW = 25;
-		unsigned COL = 80;
+    void render(timevalue_t now) {
+        unsigned ROW = 25;
+        unsigned COL = 80;
 
-		if(!_start_init) {
-			_start = now;
-			_start_init = true;
+        if(!_start_init) {
+            _start = now;
+            _start_init = true;
 
-			for(unsigned rc = 0; rc < ROW; rc++) {
-				for(unsigned cc = 0; cc < COL; cc++) {
-					uint32_t r = random() % (127 - 32) + 32;
-					character(rc, cc) = r | 0x0800;
-				}
-			}
-		}
-		else {
-			for(unsigned rc = 0; rc < ROW; rc++) {
-				for(unsigned cc = 0; cc < COL; cc++) {
-					unsigned target;
-					uint16_t &chara = character(rc, cc);
+            for(unsigned rc = 0; rc < ROW; rc++) {
+                for(unsigned cc = 0; cc < COL; cc++) {
+                    uint32_t r = random() % (127 - 32) + 32;
+                    character(rc, cc) = r | 0x0800;
+                }
+            }
+        }
+        else {
+            for(unsigned rc = 0; rc < ROW; rc++) {
+                for(unsigned cc = 0; cc < COL; cc++) {
+                    unsigned target;
+                    uint16_t &chara = character(rc, cc);
 
-					unsigned start_row = (ROW - sizeof(intro_text) / sizeof(*intro_text)) / 2;
-					if((rc >= start_row)
-					   && (rc - start_row < sizeof(intro_text) / sizeof(*intro_text))
-					   && (cc < strlen(intro_text[rc - start_row]))) {
-						target = intro_text[rc - start_row][cc];
-					}
-					else {
-						target = ' ';
-					}
+                    unsigned start_row = (ROW - sizeof(intro_text) / sizeof(*intro_text)) / 2;
+                    if((rc >= start_row)
+                       && (rc - start_row < sizeof(intro_text) / sizeof(*intro_text))
+                       && (cc < strlen(intro_text[rc - start_row]))) {
+                        target = intro_text[rc - start_row][cc];
+                    }
+                    else {
+                        target = ' ';
+                    }
 
-					if((chara & 0xFF) == target) {
-						chara = (chara & 0xFF) | 0x0F00;
-						continue;
-					}
+                    if((chara & 0xFF) == target) {
+                        chara = (chara & 0xFF) | 0x0F00;
+                        continue;
+                    }
 
-					chara++;
-					if((chara & 0xFF) > 127)
-						chara = 0x0700 | 32;
-				}
-			}
-		}
-	}
+                    chara++;
+                    if((chara & 0xFF) > 127)
+                        chara = 0x0700 | 32;
+                }
+            }
+        }
+    }
 
-	IntroAnimator() : _start_init(false), _done(false) {
-	}
+    IntroAnimator() : _start_init(false), _done(false) {
+    }
 };
 
 int main() {
-	Connection timercon("timer");
-	TimerSession timer(timercon);
-	Connection conscon("console");
-	ConsoleSession console(conscon, 1, String("CycleBurner"));
+    Connection timercon("timer");
+    TimerSession timer(timercon);
+    Connection conscon("console");
+    ConsoleSession console(conscon, 1, String("CycleBurner"));
 
-	gen_sinlut();
-	gen_sqrtlut();
+    gen_sinlut();
+    gen_sqrtlut();
 
-	Clock clock(1000);
-	IntroAnimator *ia = new IntroAnimator();
-	PlasmaAnimator<25, 80> *pa = new PlasmaAnimator<25, 80>();
-	QuoteAnimator<25, 80> *qa = new QuoteAnimator<25, 80>(pa);
+    Clock clock(1000);
+    IntroAnimator *ia = new IntroAnimator();
+    PlasmaAnimator<25, 80> *pa = new PlasmaAnimator<25, 80>();
+    QuoteAnimator<25, 80> *qa = new QuoteAnimator<25, 80>(pa);
 
-	uint16_t *screen = reinterpret_cast<uint16_t*>(console.screen().virt() + Console::TEXT_OFF);
-	timevalue_t starttime = clock.dest_time();
-	while(1) {
-		timevalue_t now = clock.dest_time();
+    uint16_t *screen = reinterpret_cast<uint16_t*>(console.screen().virt() + Console::TEXT_OFF);
+    timevalue_t starttime = clock.dest_time();
+    while(1) {
+        timevalue_t now = clock.dest_time();
 
-		if(now - starttime < INTRO_TIME) {
-			ia->render(clock.source_time());
-			ia->blt_to(screen);
-		}
-		else {
-			qa->render(clock.source_time());
-			qa->blt_to(screen);
-		}
+        if(now - starttime < INTRO_TIME) {
+            ia->render(clock.source_time());
+            ia->blt_to(screen);
+        }
+        else {
+            qa->render(clock.source_time());
+            qa->blt_to(screen);
+        }
 
-		// Wait
-		timer.wait_until(clock.source_time(WAIT_TIME));
-	}
-	return 0;
+        // Wait
+        timer.wait_until(clock.source_time(WAIT_TIME));
+    }
+    return 0;
 }

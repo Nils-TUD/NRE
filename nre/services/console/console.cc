@@ -25,33 +25,33 @@ using namespace nre;
 static ConsoleService *srv;
 
 static void input_thread(void*) {
-	Connection con("keyboard");
-	KeyboardSession kb(con);
-	for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
-		if(!srv->handle_keyevent(*pk)) {
-			ScopedLock<RCULock> guard(&RCU::lock());
-			ConsoleSessionData *sess = srv->active();
-			if(sess && sess->prod()) {
-				Console::ReceivePacket rpk;
-				rpk.flags = pk->flags;
-				rpk.scancode = pk->scancode;
-				rpk.keycode = pk->keycode;
-				rpk.character = Keymap::translate(*pk);
-				sess->prod()->produce(rpk);
-			}
-		}
-	}
+    Connection con("keyboard");
+    KeyboardSession kb(con);
+    for(Keyboard::Packet *pk; (pk = kb.consumer().get()) != 0; kb.consumer().next()) {
+        if(!srv->handle_keyevent(*pk)) {
+            ScopedLock<RCULock> guard(&RCU::lock());
+            ConsoleSessionData *sess = srv->active();
+            if(sess && sess->prod()) {
+                Console::ReceivePacket rpk;
+                rpk.flags = pk->flags;
+                rpk.scancode = pk->scancode;
+                rpk.keycode = pk->keycode;
+                rpk.character = Keymap::translate(*pk);
+                sess->prod()->produce(rpk);
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
-	uint modifier = Keyboard::LCTRL;
-	for(int i = 1; i < argc; ++i) {
-		if(strncmp(argv[i], "modifier=", 9) == 0)
-			modifier = 1 << IStringStream::read_from<uint>(argv[i] + 9, strlen(argv[i] + 9));
-	}
+    uint modifier = Keyboard::LCTRL;
+    for(int i = 1; i < argc; ++i) {
+        if(strncmp(argv[i], "modifier=", 9) == 0)
+            modifier = 1 << IStringStream::read_from<uint>(argv[i] + 9, strlen(argv[i] + 9));
+    }
 
-	srv = new ConsoleService("console", modifier);
-	GlobalThread::create(input_thread, CPU::current().log_id(), String("console-input"))->start();
-	srv->start();
-	return 0;
+    srv = new ConsoleService("console", modifier);
+    GlobalThread::create(input_thread, CPU::current().log_id(), String("console-input"))->start();
+    srv->start();
+    return 0;
 }

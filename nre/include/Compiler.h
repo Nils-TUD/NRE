@@ -33,11 +33,11 @@
 #    define STATIC_ASSERT(X)     _STATIC_ASSERT (X, __LINE__)
 #else
 #    define STATIC_ASSERT(X)                                                  \
-	({                                                                        \
-		extern int __attribute__((error("static assert failed: '" # X "'")))  \
-		check();                                                              \
-		((X) ? 0 : check());                                                  \
-	})
+    ({                                                                        \
+        extern int __attribute__((error("static assert failed: '" # X "'")))  \
+        check();                                                              \
+        ((X) ? 0 : check());                                                  \
+    })
 #endif
 
 #ifdef __cplusplus

@@ -27,29 +27,29 @@ namespace nre {
  */
 class Random {
 public:
-	/**
-	 * Inits the random number generator with given seed
-	 *
-	 * @param seed the seed
-	 */
-	static void init(uint seed) {
-		_last = seed;
-	}
+    /**
+     * Inits the random number generator with given seed
+     *
+     * @param seed the seed
+     */
+    static void init(uint seed) {
+        _last = seed;
+    }
 
-	/**
-	 * @return the next random number
-	 */
-	static int get() {
-		_last = _randa * _last + _randc;
-		return (_last / 65536) % 32768;
-	}
+    /**
+     * @return the next random number
+     */
+    static int get() {
+        _last = _randa * _last + _randc;
+        return (_last / 65536) % 32768;
+    }
 
 private:
-	Random();
+    Random();
 
-	static uint _randa;
-	static uint _randc;
-	static uint _last;
+    static uint _randa;
+    static uint _randc;
+    static uint _last;
 };
 
 }

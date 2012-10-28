@@ -19,9 +19,9 @@
 #include "util.h"
 
 void PIT::init() {
-	/* change timer divisor */
-	uint freq = FREQ / 200;
-	Ports::out<uint8_t>(CTRL, CTRL_CHAN0 | CTRL_RWLOHI | CTRL_MODE2 | CTRL_CNTBIN16);
-	Ports::out<uint8_t>(CHAN0DIV, freq & 0xFF);
-	Ports::out<uint8_t>(CHAN0DIV, freq >> 8);
+    /* change timer divisor */
+    uint freq = FREQ / 200;
+    Ports::out<uint8_t>(CTRL, CTRL_CHAN0 | CTRL_RWLOHI | CTRL_MODE2 | CTRL_CNTBIN16);
+    Ports::out<uint8_t>(CHAN0DIV, freq & 0xFF);
+    Ports::out<uint8_t>(CHAN0DIV, freq >> 8);
 }

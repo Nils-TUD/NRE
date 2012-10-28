@@ -24,41 +24,41 @@
 using namespace nre;
 
 void Timeouts::timer_thread(void*) {
-	Timeouts *to = Thread::current()->get_tls<Timeouts*>(Thread::TLS_PARAM);
-	Sm &sm = to->_timer.sm(CPU::current().log_id());
-	while(1) {
-		sm.down();
-		COUNTER_INC("timer");
-		to->trigger();
-	}
+    Timeouts *to = Thread::current()->get_tls<Timeouts*>(Thread::TLS_PARAM);
+    Sm &sm = to->_timer.sm(CPU::current().log_id());
+    while(1) {
+        sm.down();
+        COUNTER_INC("timer");
+        to->trigger();
+    }
 }
 
 void Timeouts::trigger() {
-	ScopedLock<UserSm> guard(&globalsm);
-	// TODO it can't be correct to not grab _sm here, because we might access stuff from
-	// different threads here. but if we grab it here, we deadlock ourself because the devices
-	// on the bus might call e.g. alloc().
-	timevalue_t now = _mb.clock().source_time();
-	// Force time reprogramming. Otherwise, we might not reprogram a
-	// timer, if the timeout event reached us too early.
-	_last_to = NO_TIMEOUT;
+    ScopedLock<UserSm> guard(&globalsm);
+    // TODO it can't be correct to not grab _sm here, because we might access stuff from
+    // different threads here. but if we grab it here, we deadlock ourself because the devices
+    // on the bus might call e.g. alloc().
+    timevalue_t now = _mb.clock().source_time();
+    // Force time reprogramming. Otherwise, we might not reprogram a
+    // timer, if the timeout event reached us too early.
+    _last_to = NO_TIMEOUT;
 
-	// trigger all timeouts that are due
-	size_t nr;
-	while((nr = _timeouts.trigger(now))) {
-		MessageTimeout msg(nr, _timeouts.timeout());
-		_timeouts.cancel(nr);
-		_mb.bus_timeout.send(msg);
-	}
-	program();
+    // trigger all timeouts that are due
+    size_t nr;
+    while((nr = _timeouts.trigger(now))) {
+        MessageTimeout msg(nr, _timeouts.timeout());
+        _timeouts.cancel(nr);
+        _mb.bus_timeout.send(msg);
+    }
+    program();
 }
 
 void Timeouts::program() {
-	if(_timeouts.timeout() != NO_TIMEOUT) {
-		timevalue next_to = _timeouts.timeout();
-		if(next_to != _last_to) {
-			_last_to = next_to;
-			_timer.program(next_to);
-		}
-	}
+    if(_timeouts.timeout() != NO_TIMEOUT) {
+        timevalue next_to = _timeouts.timeout();
+        if(next_to != _last_to) {
+            _last_to = next_to;
+            _timer.program(next_to);
+        }
+    }
 }

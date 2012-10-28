@@ -25,73 +25,73 @@ namespace nre {
  */
 class ObjCap {
 public:
-	static const capsel_t INVALID   = 0x3FFFFFFF;
+    static const capsel_t INVALID   = 0x3FFFFFFF;
 
 protected:
-	enum {
-		// whether we don't want to free the selector
-		KEEP_SEL_BIT    = 1 << (sizeof(capsel_t) * 8 - 1),
-		// whether we don't want to free the capability
-		KEEP_CAP_BIT    = 1 << (sizeof(capsel_t) * 8 - 2),
-		KEEP_BITS       = KEEP_SEL_BIT | KEEP_CAP_BIT
-	};
+    enum {
+        // whether we don't want to free the selector
+        KEEP_SEL_BIT    = 1 << (sizeof(capsel_t) * 8 - 1),
+        // whether we don't want to free the capability
+        KEEP_CAP_BIT    = 1 << (sizeof(capsel_t) * 8 - 2),
+        KEEP_BITS       = KEEP_SEL_BIT | KEEP_CAP_BIT
+    };
 
-	/**
-	 * Constructor for a new capability with given selector. Does not actually create the cap. This
-	 * will be done in subclasses.
-	 *
-	 * @param sel the selector
-	 * @param flags control whether the selector and/or the capability should be free'd
-	 *  during destruction
-	 */
-	explicit ObjCap(capsel_t sel = INVALID, uint flags = 0) : _sel(sel | flags) {
-	}
+    /**
+     * Constructor for a new capability with given selector. Does not actually create the cap. This
+     * will be done in subclasses.
+     *
+     * @param sel the selector
+     * @param flags control whether the selector and/or the capability should be free'd
+     *  during destruction
+     */
+    explicit ObjCap(capsel_t sel = INVALID, uint flags = 0) : _sel(sel | flags) {
+    }
 
 public:
-	/**
-	 * Destructor. Depending on the flags, it free's the selector and/or the capability (revoke).
-	 */
-	virtual ~ObjCap();
+    /**
+     * Destructor. Depending on the flags, it free's the selector and/or the capability (revoke).
+     */
+    virtual ~ObjCap();
 
-	/**
-	 * @return the selector for this capability
-	 */
-	capsel_t sel() const {
-		return _sel & ~KEEP_BITS;
-	}
+    /**
+     * @return the selector for this capability
+     */
+    capsel_t sel() const {
+        return _sel & ~KEEP_BITS;
+    }
 
 protected:
-	/**
-	 * Sets the selector but keeps the flags
-	 *
-	 * @param sel the new selector
-	 */
-	void sel(capsel_t sel) {
-		_sel = (_sel & KEEP_BITS) | sel;
-	}
-	/**
-	 * Sets the flags but keeps the selector
-	 *
-	 * @param flags the new flags
-	 */
-	void set_flags(uint flags) {
-		_sel = (_sel & ~KEEP_BITS) | flags;
-	}
+    /**
+     * Sets the selector but keeps the flags
+     *
+     * @param sel the new selector
+     */
+    void sel(capsel_t sel) {
+        _sel = (_sel & KEEP_BITS) | sel;
+    }
+    /**
+     * Sets the flags but keeps the selector
+     *
+     * @param flags the new flags
+     */
+    void set_flags(uint flags) {
+        _sel = (_sel & ~KEEP_BITS) | flags;
+    }
 
 private:
-	// object-caps are non-copyable, because I think there are very few usecases and often it
-	// causes problems:
-	// - how to clone a Sm? we can't clone the current state of it, i.e. its value. so it would be
-	//   a partial clone, which is strange.
-	// - for many object-caps we don't know all properties to be able to really clone it. thus, we would
-	//   have to store all of them, which causes more memory-overhead and is probably rarely used.
-	// - what about "fixed" portals, i.e. exception-portals for example? creating another portal
-	//   for the same cap-selector won't work. using a different selector doesn't make any sense.
-	//   the same is true for interrupt-semaphores
-	ObjCap(const ObjCap&);
-	ObjCap& operator=(const ObjCap&);
+    // object-caps are non-copyable, because I think there are very few usecases and often it
+    // causes problems:
+    // - how to clone a Sm? we can't clone the current state of it, i.e. its value. so it would be
+    //   a partial clone, which is strange.
+    // - for many object-caps we don't know all properties to be able to really clone it. thus, we would
+    //   have to store all of them, which causes more memory-overhead and is probably rarely used.
+    // - what about "fixed" portals, i.e. exception-portals for example? creating another portal
+    //   for the same cap-selector won't work. using a different selector doesn't make any sense.
+    //   the same is true for interrupt-semaphores
+    ObjCap(const ObjCap&);
+    ObjCap& operator=(const ObjCap&);
 
-	capsel_t _sel;
+    capsel_t _sel;
 };
 
 }

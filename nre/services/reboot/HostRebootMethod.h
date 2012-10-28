@@ -18,10 +18,10 @@
 
 class HostRebootMethod {
 public:
-	explicit HostRebootMethod() {
-	}
-	virtual ~HostRebootMethod() {
-	}
+    explicit HostRebootMethod() {
+    }
+    virtual ~HostRebootMethod() {
+    }
 
-	virtual void reboot() = 0;
+    virtual void reboot() = 0;
 };

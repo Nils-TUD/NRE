@@ -26,31 +26,31 @@ BaseSerial *BaseSerial::_inst = 0;
 Serial::Init Serial::Init::init INIT_PRIO_SERIAL;
 
 Serial::Init::Init() {
-	// only the child uses this class. since root offers the log-service in itself, it uses a
-	// different sub-class.
-	if(_startup_info.child)
-		BaseSerial::_inst = new Serial();
+    // only the child uses this class. since root offers the log-service in itself, it uses a
+    // different sub-class.
+    if(_startup_info.child)
+        BaseSerial::_inst = new Serial();
 }
 
 Serial::Serial()
-	: BaseSerial(), _con(new Connection("log")), _sess(new LogSession(*_con)), _bufpos(0), _buf() {
+    : BaseSerial(), _con(new Connection("log")), _sess(new LogSession(*_con)), _bufpos(0), _buf() {
 }
 
 Serial::~Serial() {
-	delete _sess;
-	delete _con;
+    delete _sess;
+    delete _con;
 }
 
 void Serial::write(char c) {
-	if(c == '\0')
-		return;
+    if(c == '\0')
+        return;
 
-	if(_bufpos == sizeof(_buf) || c == '\n') {
-		_sess->write(String(_buf, _bufpos));
-		_bufpos = 0;
-	}
-	if(c != '\n')
-		_buf[_bufpos++] = c;
+    if(_bufpos == sizeof(_buf) || c == '\n') {
+        _sess->write(String(_buf, _bufpos));
+        _bufpos = 0;
+    }
+    if(c != '\n')
+        _buf[_bufpos++] = c;
 }
 
 }

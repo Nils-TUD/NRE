@@ -25,47 +25,47 @@ namespace nre {
  */
 class AssertException : public Exception {
 public:
-	/**
-	 * Constructor
-	 *
-	 * @param expr the expression
-	 * @param file the filename
-	 * @param line the line number
-	 */
-	explicit AssertException(const char *expr, const char *file, int line) throw()
-		: Exception(E_ASSERT), _expr(expr), _file(file), _line(line) {
-	}
-	virtual ~AssertException() throw() {
-	}
+    /**
+     * Constructor
+     *
+     * @param expr the expression
+     * @param file the filename
+     * @param line the line number
+     */
+    explicit AssertException(const char *expr, const char *file, int line) throw()
+        : Exception(E_ASSERT), _expr(expr), _file(file), _line(line) {
+    }
+    virtual ~AssertException() throw() {
+    }
 
-	/**
-	 * @return the expression that has been asserted
-	 */
-	const char *expr() const throw() {
-		return _expr;
-	}
-	/**
-	 * @return the file in which the assert occurred
-	 */
-	const char *file() const throw() {
-		return _file;
-	}
-	/**
-	 * @return the line in which the assert occurred
-	 */
-	int line() const throw() {
-		return _line;
-	}
+    /**
+     * @return the expression that has been asserted
+     */
+    const char *expr() const throw() {
+        return _expr;
+    }
+    /**
+     * @return the file in which the assert occurred
+     */
+    const char *file() const throw() {
+        return _file;
+    }
+    /**
+     * @return the line in which the assert occurred
+     */
+    int line() const throw() {
+        return _line;
+    }
 
-	virtual void write(OStream &os) const {
-		os << "Assert '" << expr() << "' failed in " << file() << ", line " << line() << "\n";
-		write_backtrace(os);
-	}
+    virtual void write(OStream &os) const {
+        os << "Assert '" << expr() << "' failed in " << file() << ", line " << line() << "\n";
+        write_backtrace(os);
+    }
 
 private:
-	const char *_expr;
-	const char *_file;
-	int _line;
+    const char *_expr;
+    const char *_file;
+    int _line;
 };
 
 }
@@ -73,11 +73,11 @@ private:
 #ifndef NDEBUG
 
 #    define assert(cond)                                                    \
-	do {                                                                    \
-		if(!(cond)) {                                                       \
-			throw nre::AssertException(# cond, __FILE__, __LINE__);         \
-		}                                                                   \
-	} while(0);
+    do {                                                                    \
+        if(!(cond)) {                                                       \
+            throw nre::AssertException(# cond, __FILE__, __LINE__);         \
+        }                                                                   \
+    } while(0);
 
 #else
 

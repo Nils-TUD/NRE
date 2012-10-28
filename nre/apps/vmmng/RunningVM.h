@@ -25,36 +25,36 @@
 
 class RunningVM : public nre::SListItem {
 public:
-	explicit RunningVM(VMConfig *cfg, nre::Child::id_type id, capsel_t pd)
-		: nre::SListItem(), _cfg(cfg), _id(id), _pd(pd), _prod() {
-	}
+    explicit RunningVM(VMConfig *cfg, nre::Child::id_type id, capsel_t pd)
+        : nre::SListItem(), _cfg(cfg), _id(id), _pd(pd), _prod() {
+    }
 
-	const VMConfig *cfg() const {
-		return _cfg;
-	}
-	nre::Child::id_type id() const {
-		return _id;
-	}
-	capsel_t pd() const {
-		return _pd;
-	}
+    const VMConfig *cfg() const {
+        return _cfg;
+    }
+    nre::Child::id_type id() const {
+        return _id;
+    }
+    capsel_t pd() const {
+        return _pd;
+    }
 
-	bool initialized() const {
-		return _prod != 0;
-	}
-	void set_producer(nre::Producer<nre::VMManager::Packet> *prod) {
-		_prod = prod;
-	}
-	void execute(nre::VMManager::Command cmd) {
-		assert(_prod);
-		nre::VMManager::Packet pk;
-		pk.cmd = cmd;
-		_prod->produce(pk);
-	}
+    bool initialized() const {
+        return _prod != 0;
+    }
+    void set_producer(nre::Producer<nre::VMManager::Packet> *prod) {
+        _prod = prod;
+    }
+    void execute(nre::VMManager::Command cmd) {
+        assert(_prod);
+        nre::VMManager::Packet pk;
+        pk.cmd = cmd;
+        _prod->produce(pk);
+    }
 
 private:
-	VMConfig *_cfg;
-	nre::Child::id_type _id;
-	capsel_t _pd;
-	nre::Producer<nre::VMManager::Packet> *_prod;
+    VMConfig *_cfg;
+    nre::Child::id_type _id;
+    capsel_t _pd;
+    nre::Producer<nre::VMManager::Packet> *_prod;
 };

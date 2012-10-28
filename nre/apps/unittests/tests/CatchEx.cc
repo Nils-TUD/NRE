@@ -27,29 +27,29 @@ using namespace nre::test;
 static void test_catchex();
 
 const TestCase catchex = {
-	"Catch exception", test_catchex
+    "Catch exception", test_catchex
 };
 
 static const unsigned tries = 1000;
 
 static void test_catchex() {
-	unsigned sum = 0;
-	AvgProfiler prof(tries);
-	UtcbFrame uf;
-	for(unsigned i = 0; i < tries; i++) {
-		prof.start();
-		try {
-			throw Exception(E_CAPACITY);
-		}
-		catch(const Exception& e) {
-			sum++;
-		}
-		prof.stop();
-	}
+    unsigned sum = 0;
+    AvgProfiler prof(tries);
+    UtcbFrame uf;
+    for(unsigned i = 0; i < tries; i++) {
+        prof.start();
+        try {
+            throw Exception(E_CAPACITY);
+        }
+        catch(const Exception& e) {
+            sum++;
+        }
+        prof.stop();
+    }
 
-	WVPERF(prof.avg(), "cycles");
-	WVPASSEQ(sum, tries);
-	WVPRINTF("sum: %u", sum);
-	WVPRINTF("min: %Lu", prof.min());
-	WVPRINTF("max: %Lu", prof.max());
+    WVPERF(prof.avg(), "cycles");
+    WVPASSEQ(sum, tries);
+    WVPRINTF("sum: %u", sum);
+    WVPRINTF("min: %Lu", prof.min());
+    WVPRINTF("max: %Lu", prof.max());
 }

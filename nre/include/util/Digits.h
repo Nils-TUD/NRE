@@ -25,43 +25,43 @@ namespace nre {
  */
 class Digits {
 public:
-	/**
-	 * @param n the unsigned number
-	 * @param base the base to use for digit-counting
-	 * @return the number of digits the number has when represented in base <base>
-	 */
-	template<typename T>
-	static uint count_unsigned(T n, uint base) {
-		uint width = 1;
-		while(n >= base) {
-			n /= base;
-			width++;
-		}
-		return width;
-	}
+    /**
+     * @param n the unsigned number
+     * @param base the base to use for digit-counting
+     * @return the number of digits the number has when represented in base <base>
+     */
+    template<typename T>
+    static uint count_unsigned(T n, uint base) {
+        uint width = 1;
+        while(n >= base) {
+            n /= base;
+            width++;
+        }
+        return width;
+    }
 
-	/**
-	 * @param n the signed number
-	 * @param base the base to use for digit-counting
-	 * @return the number of digits the number has when represented in base <base>
-	 */
-	template<typename T>
-	static uint count_signed(T n, uint base) {
-		// we have at least one char
-		uint width = 1;
-		if(n < 0) {
-			width++;
-			n = -n;
-		}
-		while(n >= base) {
-			n /= base;
-			width++;
-		}
-		return width;
-	}
+    /**
+     * @param n the signed number
+     * @param base the base to use for digit-counting
+     * @return the number of digits the number has when represented in base <base>
+     */
+    template<typename T>
+    static uint count_signed(T n, uint base) {
+        // we have at least one char
+        uint width = 1;
+        if(n < 0) {
+            width++;
+            n = -n;
+        }
+        while(n >= base) {
+            n /= base;
+            width++;
+        }
+        return width;
+    }
 
 private:
-	Digits();
+    Digits();
 };
 
 }

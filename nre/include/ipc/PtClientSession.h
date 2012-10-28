@@ -26,35 +26,35 @@ namespace nre {
  */
 class PtClientSession : public ClientSession {
 public:
-	/**
-	 * Creates the session and creates portal-instances on all CPUs the service is available
-	 *
-	 * @param con the connection
-	 */
-	explicit PtClientSession(Connection &con) : ClientSession(con), _pts(new Pt *[CPU::count()]) {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			_pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
-	}
-	/**
-	 * Destroys this session
-	 */
-	virtual ~PtClientSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _pts[cpu];
-		delete[] _pts;
-	}
+    /**
+     * Creates the session and creates portal-instances on all CPUs the service is available
+     *
+     * @param con the connection
+     */
+    explicit PtClientSession(Connection &con) : ClientSession(con), _pts(new Pt *[CPU::count()]) {
+        for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+            _pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+    }
+    /**
+     * Destroys this session
+     */
+    virtual ~PtClientSession() {
+        for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+            delete _pts[cpu];
+        delete[] _pts;
+    }
 
-	/**
-	 * @param cpu the logical cpu id (the current by default)
-	 * @return the portal for the given cpu
-	 */
-	Pt &pt(cpu_t cpu = CPU::current().log_id()) const {
-		assert(_pts[cpu] != 0);
-		return *_pts[cpu];
-	}
+    /**
+     * @param cpu the logical cpu id (the current by default)
+     * @return the portal for the given cpu
+     */
+    Pt &pt(cpu_t cpu = CPU::current().log_id()) const {
+        assert(_pts[cpu] != 0);
+        return *_pts[cpu];
+    }
 
 private:
-	Pt **_pts;
+    Pt **_pts;
 };
 
 }

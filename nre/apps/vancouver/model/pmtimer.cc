@@ -31,39 +31,39 @@ using namespace nre;
  */
 class PmTimer : public DiscoveryHelper<PmTimer>, public StaticReceiver<PmTimer> {
 public:
-	Motherboard &_mb;
+    Motherboard &_mb;
 
 private:
-	unsigned _iobase;
-	enum {
-		FREQ = 3579545
-	};
+    unsigned _iobase;
+    enum {
+        FREQ = 3579545
+    };
 
 public:
-	bool receive(MessageIOIn &msg) {
-		if(msg.port != _iobase || msg.type != MessageIOIn::TYPE_INL)
-			return false;
-		msg.value = _mb.clock().time(FREQ);
-		return true;
-	}
+    bool receive(MessageIOIn &msg) {
+        if(msg.port != _iobase || msg.type != MessageIOIn::TYPE_INL)
+            return false;
+        msg.value = _mb.clock().time(FREQ);
+        return true;
+    }
 
-	void discovery() {
-		// write our iobase to the FADT
-		discovery_write_dw("FACP", 76, _iobase, 4);
-		discovery_write_dw("FACP", 91, 4, 1);
-		discovery_write_dw("FACP", 208, 0x04000401, 4);
-		discovery_write_dw("FACP", 212, _iobase, 4);
-		discovery_write_dw("FACP", 216, 0, 4);
-	}
+    void discovery() {
+        // write our iobase to the FADT
+        discovery_write_dw("FACP", 76, _iobase, 4);
+        discovery_write_dw("FACP", 91, 4, 1);
+        discovery_write_dw("FACP", 208, 0x04000401, 4);
+        discovery_write_dw("FACP", 212, _iobase, 4);
+        discovery_write_dw("FACP", 216, 0, 4);
+    }
 
-	PmTimer(Motherboard &mb, unsigned iobase) : _mb(mb), _iobase(iobase) {
-		_mb.bus_ioin.add(this, receive_static<MessageIOIn> );
-		_mb.bus_discovery.add(this, discover);
-	}
+    PmTimer(Motherboard &mb, unsigned iobase) : _mb(mb), _iobase(iobase) {
+        _mb.bus_ioin.add(this, receive_static<MessageIOIn> );
+        _mb.bus_discovery.add(this, discover);
+    }
 };
 
 PARAM_HANDLER(pmtimer,
               "pmtimer:ioport - provide an PMTimer at the given ioport.",
               "Example: 'pmtimer:0x8000'.") {
-	new PmTimer(mb, argv[0]);
+    new PmTimer(mb, argv[0]);
 }

@@ -5,8 +5,8 @@ import os.path
 
 # make a link to imgs to prevent a copy
 if os.path.isdir(Dir('#dist/imgs').abspath):
-	env.Command(
-		Dir(env['BUILDDIR'] + '/dist/imgs'),
-		'#dist/imgs',
-		'ln -sf `readlink -f $SOURCE` $TARGET'
-	)
+    env.Command(
+        Dir(env['BUILDDIR'] + '/dist/imgs'),
+        '#dist/imgs',
+        'ln -sf `readlink -f $SOURCE` $TARGET'
+    )

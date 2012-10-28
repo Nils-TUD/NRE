@@ -30,19 +30,19 @@ namespace nre {
  */
 class Timer {
 public:
-	static const uint WALLCLOCK_FREQ    = 1000000;
+    static const uint WALLCLOCK_FREQ    = 1000000;
 
-	/**
-	 * The available commands
-	 */
-	enum Command {
-		GET_SMS,
-		PROG_TIMER,
-		GET_TIME
-	};
+    /**
+     * The available commands
+     */
+    enum Command {
+        GET_SMS,
+        PROG_TIMER,
+        GET_TIME
+    };
 
 private:
-	Timer();
+    Timer();
 };
 
 /**
@@ -50,96 +50,96 @@ private:
  */
 class TimerSession : public PtClientSession {
 public:
-	/**
-	 * Creates a new session with given connection
-	 *
-	 * @param con the connection
-	 */
-	explicit TimerSession(Connection &con) : PtClientSession(con) {
-		get_sms();
-	}
-	/**
-	 * Destroys this session
-	 */
-	virtual ~TimerSession() {
-		for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-			delete _sms[cpu];
-		delete[] _sms;
-		CapSelSpace::get().free(_caps, 1 << CPU::order());
-	}
+    /**
+     * Creates a new session with given connection
+     *
+     * @param con the connection
+     */
+    explicit TimerSession(Connection &con) : PtClientSession(con) {
+        get_sms();
+    }
+    /**
+     * Destroys this session
+     */
+    virtual ~TimerSession() {
+        for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
+            delete _sms[cpu];
+        delete[] _sms;
+        CapSelSpace::get().free(_caps, 1 << CPU::order());
+    }
 
-	/**
-	 * Returns the semaphore that is signaled as soon as a timer fires.
-	 *
-	 * @param cpu the CPU id
-	 * @return the semaphore for the given CPU
-	 */
-	Sm &sm(cpu_t cpu) {
-		return *_sms[cpu];
-	}
+    /**
+     * Returns the semaphore that is signaled as soon as a timer fires.
+     *
+     * @param cpu the CPU id
+     * @return the semaphore for the given CPU
+     */
+    Sm &sm(cpu_t cpu) {
+        return *_sms[cpu];
+    }
 
-	/**
-	 * Waits for <cycles> cycles.
-	 *
-	 * @param cycles the number of cycles
-	 */
-	void wait_for(timevalue_t cycles) {
-		wait_until(Util::tsc() + cycles);
-	}
+    /**
+     * Waits for <cycles> cycles.
+     *
+     * @param cycles the number of cycles
+     */
+    void wait_for(timevalue_t cycles) {
+        wait_until(Util::tsc() + cycles);
+    }
 
-	/**
-	 * Waits until the TSC has the value <cycles>
-	 *
-	 * @param cycles the number of cycles
-	 */
-	void wait_until(timevalue_t cycles) {
-		program(cycles);
-		_sms[CPU::current().log_id()]->zero();
-	}
+    /**
+     * Waits until the TSC has the value <cycles>
+     *
+     * @param cycles the number of cycles
+     */
+    void wait_until(timevalue_t cycles) {
+        program(cycles);
+        _sms[CPU::current().log_id()]->zero();
+    }
 
-	/**
-	 * Programs a timer for the TSC value <cycles>. That is, it does not block. Use sm(cpu_t) to
-	 * get a signal.
-	 *
-	 * @param cycles the number of cycles
-	 */
-	void program(timevalue_t cycles) {
-		UtcbFrame uf;
-		uf << Timer::PROG_TIMER << cycles;
-		pt().call(uf);
-		uf.check_reply();
-	}
+    /**
+     * Programs a timer for the TSC value <cycles>. That is, it does not block. Use sm(cpu_t) to
+     * get a signal.
+     *
+     * @param cycles the number of cycles
+     */
+    void program(timevalue_t cycles) {
+        UtcbFrame uf;
+        uf << Timer::PROG_TIMER << cycles;
+        pt().call(uf);
+        uf.check_reply();
+    }
 
-	/**
-	 * Determines the current time
-	 *
-	 * @param uptime the time since systemstart in microseconds (Timer::WALLCLOCK_FREQ)
-	 * @param unixts the current unix timestamp in microseconds (Timer::WALLCLOCK_FREQ)
-	 */
-	void get_time(timevalue_t &uptime, timevalue_t &unixts) {
-		UtcbFrame uf;
-		uf << Timer::GET_TIME;
-		pt().call(uf);
-		uf.check_reply();
-		uf >> uptime >> unixts;
-	}
+    /**
+     * Determines the current time
+     *
+     * @param uptime the time since systemstart in microseconds (Timer::WALLCLOCK_FREQ)
+     * @param unixts the current unix timestamp in microseconds (Timer::WALLCLOCK_FREQ)
+     */
+    void get_time(timevalue_t &uptime, timevalue_t &unixts) {
+        UtcbFrame uf;
+        uf << Timer::GET_TIME;
+        pt().call(uf);
+        uf.check_reply();
+        uf >> uptime >> unixts;
+    }
 
 private:
-	void get_sms() {
-		UtcbFrame uf;
-		ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
-		uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
-		uf << Timer::GET_SMS;
-		pt().call(uf);
-		uf.check_reply();
-		_caps = caps.release();
-		_sms = new Sm *[CPU::count()];
-		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
-			_sms[it->log_id()] = new Sm(_caps + it->log_id(), true);
-	}
+    void get_sms() {
+        UtcbFrame uf;
+        ScopedCapSels caps(1 << CPU::order(), 1 << CPU::order());
+        uf.delegation_window(Crd(caps.get(), CPU::order(), Crd::OBJ_ALL));
+        uf << Timer::GET_SMS;
+        pt().call(uf);
+        uf.check_reply();
+        _caps = caps.release();
+        _sms = new Sm *[CPU::count()];
+        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+            _sms[it->log_id()] = new Sm(_caps + it->log_id(), true);
+    }
 
-	capsel_t _caps;
-	Sm **_sms;
+    capsel_t _caps;
+    Sm **_sms;
 };
 
 }

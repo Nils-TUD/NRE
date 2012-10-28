@@ -57,8 +57,8 @@ EXTERN_C void *mmap(void *start, size_t size, int prot, int flags, int fd, off_t
 EXTERN_C int munmap(void *start, size_t size);
 
 typedef struct DlMallocSm {
-	long value;
-	capsel_t sm;
+    long value;
+    capsel_t sm;
 } DlMallocSm;
 
 EXTERN_C void semaphore_init(DlMallocSm *lk, unsigned initial);

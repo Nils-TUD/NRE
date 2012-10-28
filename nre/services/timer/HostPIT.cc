@@ -24,19 +24,19 @@
 using namespace nre;
 
 HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE, 4), _freq() {
-	timevalue_t value = (FREQ * period_us) / 1000000ULL;
-	if(value == 0 || value > 65535) {
-		LOG(Logging::TIMER, Serial::get().writef(
-		        "TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n", period_us, DEFAULT_PERIOD));
-		period_us = DEFAULT_PERIOD;
-		value = (FREQ * DEFAULT_PERIOD) / 1000000ULL;
-	}
+    timevalue_t value = (FREQ * period_us) / 1000000ULL;
+    if(value == 0 || value > 65535) {
+        LOG(Logging::TIMER, Serial::get().writef(
+                "TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n", period_us, DEFAULT_PERIOD));
+        period_us = DEFAULT_PERIOD;
+        value = (FREQ * DEFAULT_PERIOD) / 1000000ULL;
+    }
 
-	_ports.out<uint8_t>(0x34, 3);
-	_ports.out<uint8_t>(value, 0);
-	_ports.out<uint8_t>(value >> 8, 0);
-	_freq = 1000000U / period_us;
+    _ports.out<uint8_t>(0x34, 3);
+    _ports.out<uint8_t>(value, 0);
+    _ports.out<uint8_t>(value >> 8, 0);
+    _freq = 1000000U / period_us;
 
-	LOG(Logging::TIMER, Serial::get().writef(
-	        "TIMER: PIT initalized. Ticks every %uus (period %Lu, %LuHZ).\n", period_us, value, _freq));
+    LOG(Logging::TIMER, Serial::get().writef(
+            "TIMER: PIT initalized. Ticks every %uus (period %Lu, %LuHZ).\n", period_us, value, _freq));
 }

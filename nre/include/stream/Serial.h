@@ -35,15 +35,15 @@ class LogSession;
  * Common base class for all serial-outstreams. Should not be used directly.
  */
 class BaseSerial : public OStream {
-	friend class ::Log;
+    friend class ::Log;
 
 protected:
-	static const size_t MAX_LINE_LEN    = 120;
+    static const size_t MAX_LINE_LEN    = 120;
 
-	explicit BaseSerial() : OStream() {
-	}
+    explicit BaseSerial() : OStream() {
+    }
 
-	static BaseSerial *_inst;
+    static BaseSerial *_inst;
 };
 
 /**
@@ -51,31 +51,31 @@ protected:
  * MAX_LINE_LEN local until it is sent to the log-service via a portal call.
  */
 class Serial : public BaseSerial {
-	class Init {
-		explicit Init();
-		static Init init;
-	};
+    class Init {
+        explicit Init();
+        static Init init;
+    };
 
 public:
-	/**
-	 * @return the instance of the serial outstream
-	 */
-	static BaseSerial& get() {
-		// shouldn't be used before the serial stuff has been initialized
-		assert(_inst != 0);
-		return *_inst;
-	}
+    /**
+     * @return the instance of the serial outstream
+     */
+    static BaseSerial& get() {
+        // shouldn't be used before the serial stuff has been initialized
+        assert(_inst != 0);
+        return *_inst;
+    }
 
 private:
-	explicit Serial();
-	virtual ~Serial();
+    explicit Serial();
+    virtual ~Serial();
 
-	virtual void write(char c);
+    virtual void write(char c);
 
-	Connection *_con;
-	LogSession *_sess;
-	size_t _bufpos;
-	char _buf[MAX_LINE_LEN + 1];
+    Connection *_con;
+    LogSession *_sess;
+    size_t _bufpos;
+    char _buf[MAX_LINE_LEN + 1];
 };
 
 }

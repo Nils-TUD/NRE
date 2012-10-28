@@ -25,7 +25,7 @@ namespace nre {
 
 class TimeoutListException : public Exception {
 public:
-	DEFINE_EXCONSTRS(TimeoutListException)
+    DEFINE_EXCONSTRS(TimeoutListException)
 };
 
 /**
@@ -33,115 +33,115 @@ public:
  */
 template<unsigned ENTRIES, typename DATA>
 class TimeoutList {
-	class TimeoutEntry {
-		friend class TimeoutList<ENTRIES, DATA>;
-		TimeoutEntry *_next;
-		TimeoutEntry *_prev;
-		timevalue_t _timeout;
-		DATA * data;
-		bool _free;
-	};
+    class TimeoutEntry {
+        friend class TimeoutList<ENTRIES, DATA>;
+        TimeoutEntry *_next;
+        TimeoutEntry *_prev;
+        timevalue_t _timeout;
+        DATA * data;
+        bool _free;
+    };
 
 public:
-	explicit TimeoutList() : _entries() {
-		for(size_t i = 0; i < ENTRIES; i++) {
-			_entries[i]._prev = _entries + i;
-			_entries[i]._next = _entries + i;
-			_entries[i].data = 0;
-			_entries[i]._free = true;
-		}
-		_entries[0]._timeout = ~0ULL;
-	}
+    explicit TimeoutList() : _entries() {
+        for(size_t i = 0; i < ENTRIES; i++) {
+            _entries[i]._prev = _entries + i;
+            _entries[i]._next = _entries + i;
+            _entries[i].data = 0;
+            _entries[i]._free = true;
+        }
+        _entries[0]._timeout = ~0ULL;
+    }
 
-	/**
-	 * Alloc a new timeout object.
-	 */
-	size_t alloc(DATA *data = 0) {
-		for(size_t i = 1; i < ENTRIES; i++) {
-			if(!_entries[i]._free)
-				continue;
-			_entries[i].data = data;
-			_entries[i]._free = false;
-			return i;
-		}
-		throw TimeoutListException(E_CAPACITY, "No free timeout slots");
-	}
+    /**
+     * Alloc a new timeout object.
+     */
+    size_t alloc(DATA *data = 0) {
+        for(size_t i = 1; i < ENTRIES; i++) {
+            if(!_entries[i]._free)
+                continue;
+            _entries[i].data = data;
+            _entries[i]._free = false;
+            return i;
+        }
+        throw TimeoutListException(E_CAPACITY, "No free timeout slots");
+    }
 
-	/**
-	 * Dealloc a timeout object.
-	 */
-	bool dealloc(size_t nr, bool withcancel = false) {
-		assert(nr >= 1 && nr <= ENTRIES - 1);
-		if(_entries[nr]._free)
-			return false;
+    /**
+     * Dealloc a timeout object.
+     */
+    bool dealloc(size_t nr, bool withcancel = false) {
+        assert(nr >= 1 && nr <= ENTRIES - 1);
+        if(_entries[nr]._free)
+            return false;
 
-		// should only be done when no no concurrent access happens ...
-		if(withcancel)
-			cancel(nr);
-		_entries[nr]._free = true;
-		_entries[nr].data = 0;
-		return true;
-	}
+        // should only be done when no no concurrent access happens ...
+        if(withcancel)
+            cancel(nr);
+        _entries[nr]._free = true;
+        _entries[nr].data = 0;
+        return true;
+    }
 
-	/**
-	 * Cancel a programmed timeout.
-	 */
-	bool cancel(size_t nr) {
-		assert(nr >= 1 && nr <= ENTRIES - 1);
-		TimeoutEntry *current = _entries + nr;
-		if(current->_next == current)
-			return false;
-		bool res = _entries[0]._next != current;
-		current->_next->_prev = current->_prev;
-		current->_prev->_next = current->_next;
-		current->_next = current->_prev = current;
-		return res;
-	}
+    /**
+     * Cancel a programmed timeout.
+     */
+    bool cancel(size_t nr) {
+        assert(nr >= 1 && nr <= ENTRIES - 1);
+        TimeoutEntry *current = _entries + nr;
+        if(current->_next == current)
+            return false;
+        bool res = _entries[0]._next != current;
+        current->_next->_prev = current->_prev;
+        current->_prev->_next = current->_next;
+        current->_next = current->_prev = current;
+        return res;
+    }
 
-	/**
-	 * Request a new timeout.
-	 */
-	bool request(size_t nr, timevalue_t to) {
-		assert(nr >= 1 && nr <= ENTRIES - 1);
-		timevalue_t old = timeout();
-		TimeoutEntry *current = _entries + nr;
-		cancel(nr);
+    /**
+     * Request a new timeout.
+     */
+    bool request(size_t nr, timevalue_t to) {
+        assert(nr >= 1 && nr <= ENTRIES - 1);
+        timevalue_t old = timeout();
+        TimeoutEntry *current = _entries + nr;
+        cancel(nr);
 
-		// keep a sorted list here
-		TimeoutEntry *t = _entries;
-		do {
-			t = t->_next;
-		}
-		while(t->_timeout < to);
+        // keep a sorted list here
+        TimeoutEntry *t = _entries;
+        do {
+            t = t->_next;
+        }
+        while(t->_timeout < to);
 
-		current->_timeout = to;
-		current->_next = t;
-		current->_prev = t->_prev;
-		t->_prev->_next = current;
-		t->_prev = current;
-		return timeout() == old;
-	}
+        current->_timeout = to;
+        current->_next = t;
+        current->_prev = t->_prev;
+        t->_prev->_next = current;
+        t->_prev = current;
+        return timeout() == old;
+    }
 
-	/**
-	 * Get the head of the queue.
-	 */
-	size_t trigger(timevalue_t now, DATA **data = 0) {
-		if(now >= timeout()) {
-			size_t i = _entries[0]._next - _entries;
-			if(data)
-				*data = _entries[i].data;
-			return i;
-		}
-		return 0;
-	}
+    /**
+     * Get the head of the queue.
+     */
+    size_t trigger(timevalue_t now, DATA **data = 0) {
+        if(now >= timeout()) {
+            size_t i = _entries[0]._next - _entries;
+            if(data)
+                *data = _entries[i].data;
+            return i;
+        }
+        return 0;
+    }
 
-	timevalue_t timeout() {
-		assert(_entries[0]._next);
-		return _entries[0]._next->_timeout;
-	}
+    timevalue_t timeout() {
+        assert(_entries[0]._next);
+        return _entries[0]._next->_timeout;
+    }
 
 private:
-	TimeoutEntry _entries[ENTRIES];
+    TimeoutEntry _entries[ENTRIES];
 };
 
 }

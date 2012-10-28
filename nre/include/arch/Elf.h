@@ -29,9 +29,9 @@
 namespace nre {
 
 enum ElfPhFlags {
-	PF_X    = 1 << 0,
-	PF_W    = 1 << 1,
-	PF_R    = 1 << 2,
+    PF_X    = 1 << 0,
+    PF_W    = 1 << 1,
+    PF_R    = 1 << 2,
 };
 
 #ifdef __i386__

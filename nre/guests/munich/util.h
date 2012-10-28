@@ -16,13 +16,11 @@
 
 #include "asm.h"
 
-
 #ifndef NDEBUG
 #    define assert(X) {if(!(X)) { out_string("\nAssertion failed: '" # X  "'\n\n"); __exit(0xbadbbbad); }}
 #else
 #    define assert(X)
 #endif
-
 
 /**
  * we want inlined stringops
@@ -37,48 +35,46 @@
  * A fatal error happens if value is true.
  */
 #    define ERROR(result, value, msg)               \
-	{                             \
-		if(value)                          \
-		{                             \
-			out_string(msg);                    \
-			__exit(result);                     \
-		}                             \
-	}
+    {                             \
+        if(value)                          \
+        {                             \
+            out_string(msg);                    \
+            __exit(result);                     \
+        }                             \
+    }
 
 #else
 
 #    define ERROR(result, value, msg)               \
-	{                             \
-		if(value)                          \
-			__exit(result);                       \
-	}
+    {                             \
+        if(value)                          \
+            __exit(result);                       \
+    }
 #endif
 
 /**
  * Returns result and prints the msg, if value is true.
  */
 #define CHECK3(result, value, msg)          \
-	{                         \
-		if(value)                      \
-		{                         \
-			out_info(msg);                  \
-			return result;                  \
-		}                         \
-	}
+    {                         \
+        if(value)                      \
+        {                         \
+            out_info(msg);                  \
+            return result;                  \
+        }                         \
+    }
 
 /**
  * Returns result and prints the msg and hex, if value is true.
  */
 #define CHECK4(result, value, msg, hex)         \
-	{                         \
-		if(value)                      \
-		{                         \
-			out_description(msg, hex);          \
-			return result;                  \
-		}                         \
-	}
-
-
+    {                         \
+        if(value)                      \
+        {                         \
+            out_description(msg, hex);          \
+            return result;                  \
+        }                         \
+    }
 
 /**
  * lowlevel output functions
@@ -95,8 +91,8 @@ extern const char const * message_label;
 void out_description(const char *prefix, unsigned int value);
 void out_info(const char *msg);
 
-char *get_arg (char **, char);
-int strcmp (char const *, char const *);
+char *get_arg(char **, char);
+int strcmp(char const *, char const *);
 unsigned long strtoul (char const *, char const **, int);
 
 /**

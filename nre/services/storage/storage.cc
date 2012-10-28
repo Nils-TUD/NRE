@@ -35,173 +35,173 @@ static StorageService *srv;
 
 class StorageServiceSession : public ServiceSession {
 public:
-	explicit StorageServiceSession(Service *s, size_t id, capsel_t cap, capsel_t caps,
-	                               Pt::portal_func func)
-		: ServiceSession(s, id, cap, caps, func), _ctrlds(), _prod(), _datads(), _drive() {
-	}
-	virtual ~StorageServiceSession() {
-		delete _ctrlds;
-		delete _prod;
-		delete _datads;
-	}
+    explicit StorageServiceSession(Service *s, size_t id, capsel_t cap, capsel_t caps,
+                                   Pt::portal_func func)
+        : ServiceSession(s, id, cap, caps, func), _ctrlds(), _prod(), _datads(), _drive() {
+    }
+    virtual ~StorageServiceSession() {
+        delete _ctrlds;
+        delete _prod;
+        delete _datads;
+    }
 
-	bool initialized() const {
-		return _ctrlds != 0;
-	}
-	size_t drive() const {
-		return _drive;
-	}
-	size_t ctrl() const {
-		return _drive / Storage::MAX_DRIVES;
-	}
-	const DataSpace &data() const {
-		return *_datads;
-	}
-	const Storage::Parameter &params() const {
-		return _params;
-	}
-	Producer<Storage::Packet> *prod() {
-		return _prod;
-	}
+    bool initialized() const {
+        return _ctrlds != 0;
+    }
+    size_t drive() const {
+        return _drive;
+    }
+    size_t ctrl() const {
+        return _drive / Storage::MAX_DRIVES;
+    }
+    const DataSpace &data() const {
+        return *_datads;
+    }
+    const Storage::Parameter &params() const {
+        return _params;
+    }
+    Producer<Storage::Packet> *prod() {
+        return _prod;
+    }
 
-	void init(DataSpace *ctrlds, DataSpace *data, size_t drive) {
-		size_t ctrl = drive / Storage::MAX_DRIVES;
-		if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
-			throw Exception(E_ARGS_INVALID, 64, "Controller/drive (%zu,%zu) does not exist", ctrl, drive);
-		if(_ctrlds)
-			throw Exception(E_EXISTS, "Already initialized");
-		_ctrlds = ctrlds;
-		_prod = new Producer<Storage::Packet>(_ctrlds, false);
-		_datads = data;
-		_drive = drive;
-		mng->get(ctrl)->get_params(_drive, &_params);
-	}
+    void init(DataSpace *ctrlds, DataSpace *data, size_t drive) {
+        size_t ctrl = drive / Storage::MAX_DRIVES;
+        if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
+            throw Exception(E_ARGS_INVALID, 64, "Controller/drive (%zu,%zu) does not exist", ctrl, drive);
+        if(_ctrlds)
+            throw Exception(E_EXISTS, "Already initialized");
+        _ctrlds = ctrlds;
+        _prod = new Producer<Storage::Packet>(_ctrlds, false);
+        _datads = data;
+        _drive = drive;
+        mng->get(ctrl)->get_params(_drive, &_params);
+    }
 
 private:
-	DataSpace *_ctrlds;
-	Producer<Storage::Packet> *_prod;
-	DataSpace *_datads;
-	size_t _drive;
-	Storage::Parameter _params;
+    DataSpace *_ctrlds;
+    Producer<Storage::Packet> *_prod;
+    DataSpace *_datads;
+    size_t _drive;
+    Storage::Parameter _params;
 };
 
 class StorageService : public Service {
 public:
-	explicit StorageService(const char *name)
-		: Service(name, CPUSet(CPUSet::ALL), portal) {
-		// we want to accept two dataspaces
-		for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-			LocalThread *ec = get_thread(it->log_id());
-			UtcbFrameRef uf(ec->utcb());
-			uf.accept_delegates(1);
-		}
-	}
+    explicit StorageService(const char *name)
+        : Service(name, CPUSet(CPUSet::ALL), portal) {
+        // we want to accept two dataspaces
+        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+            LocalThread *ec = get_thread(it->log_id());
+            UtcbFrameRef uf(ec->utcb());
+            uf.accept_delegates(1);
+        }
+    }
 
 private:
-	virtual ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
-	                                       Pt::portal_func func) {
-		return new StorageServiceSession(this, id, cap, caps, func);
-	}
+    virtual ServiceSession *create_session(size_t id, capsel_t cap, capsel_t caps,
+                                           Pt::portal_func func) {
+        return new StorageServiceSession(this, id, cap, caps, func);
+    }
 
-	PORTAL static void portal(capsel_t pid);
+    PORTAL static void portal(capsel_t pid);
 };
 
 void StorageService::portal(capsel_t pid) {
-	ScopedLock<RCULock> guard(&RCU::lock());
-	StorageServiceSession *sess = srv->get_session<StorageServiceSession>(pid);
-	UtcbFrameRef uf;
-	try {
-		Storage::Command cmd;
-		uf >> cmd;
-		switch(cmd) {
-			case Storage::INIT: {
-				capsel_t ctrlsel = uf.get_delegated(0).offset();
-				capsel_t datasel = uf.get_delegated(0).offset();
-				size_t drive;
-				uf >> drive;
-				uf.finish_input();
-				sess->init(new DataSpace(ctrlsel), new DataSpace(datasel), drive);
-				uf.accept_delegates();
-				uf << E_SUCCESS << sess->params();
-			}
-			break;
+    ScopedLock<RCULock> guard(&RCU::lock());
+    StorageServiceSession *sess = srv->get_session<StorageServiceSession>(pid);
+    UtcbFrameRef uf;
+    try {
+        Storage::Command cmd;
+        uf >> cmd;
+        switch(cmd) {
+            case Storage::INIT: {
+                capsel_t ctrlsel = uf.get_delegated(0).offset();
+                capsel_t datasel = uf.get_delegated(0).offset();
+                size_t drive;
+                uf >> drive;
+                uf.finish_input();
+                sess->init(new DataSpace(ctrlsel), new DataSpace(datasel), drive);
+                uf.accept_delegates();
+                uf << E_SUCCESS << sess->params();
+            }
+            break;
 
-			case Storage::FLUSH: {
-				Storage::tag_type tag;
-				uf >> tag;
-				uf.finish_input();
-				LOG(Logging::STORAGE_DETAIL, Serial::get().writef("[%zu,%#lx] FLUSH\n", sess->id(), tag));
-				mng->get(sess->ctrl())->flush(sess->drive(), sess->prod(), tag);
-				uf << E_SUCCESS;
-			}
-			break;
+            case Storage::FLUSH: {
+                Storage::tag_type tag;
+                uf >> tag;
+                uf.finish_input();
+                LOG(Logging::STORAGE_DETAIL, Serial::get().writef("[%zu,%#lx] FLUSH\n", sess->id(), tag));
+                mng->get(sess->ctrl())->flush(sess->drive(), sess->prod(), tag);
+                uf << E_SUCCESS;
+            }
+            break;
 
-			case Storage::READ:
-			case Storage::WRITE: {
-				Storage::tag_type tag;
-				Storage::sector_type sector;
-				DMADescList<Storage::MAX_DMA_DESCS> dma;
-				uf >> tag >> sector >> dma;
-				uf.finish_input();
+            case Storage::READ:
+            case Storage::WRITE: {
+                Storage::tag_type tag;
+                Storage::sector_type sector;
+                DMADescList<Storage::MAX_DMA_DESCS> dma;
+                uf >> tag >> sector >> dma;
+                uf.finish_input();
 
-				if(!sess->initialized())
-					throw Exception(E_ARGS_INVALID, "Not initialized");
+                if(!sess->initialized())
+                    throw Exception(E_ARGS_INVALID, "Not initialized");
 
-				LOG(Logging::STORAGE_DETAIL,
-				    Serial::get().writef("[%zu,%#lx] %s @ %Lu with ", sess->id(), tag,
-				                         cmd == Storage::READ ? "READ" : "WRITE", sector);
-				    Serial::get() << dma << "\n");
+                LOG(Logging::STORAGE_DETAIL,
+                    Serial::get().writef("[%zu,%#lx] %s @ %Lu with ", sess->id(), tag,
+                                         cmd == Storage::READ ? "READ" : "WRITE", sector);
+                    Serial::get() << dma << "\n");
 
-				// check offset and size
-				size_t size = dma.bytecount();
-				size_t count = size / sess->params().sector_size;
-				if(size == 0 || (size & (sess->params().sector_size - 1)))
-					throw Exception(E_ARGS_INVALID, 64, "Invalid size (%zu)", size);
-				if(sector >= sess->params().sectors) {
-					throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-					                sector,
-					                sess->params().sectors - 1);
-				}
-				if(sector + count > sess->params().sectors) {
-					throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-					                sector + count - 1, sess->params().sectors - 1);
-				}
+                // check offset and size
+                size_t size = dma.bytecount();
+                size_t count = size / sess->params().sector_size;
+                if(size == 0 || (size & (sess->params().sector_size - 1)))
+                    throw Exception(E_ARGS_INVALID, 64, "Invalid size (%zu)", size);
+                if(sector >= sess->params().sectors) {
+                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
+                                    sector,
+                                    sess->params().sectors - 1);
+                }
+                if(sector + count > sess->params().sectors) {
+                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
+                                    sector + count - 1, sess->params().sectors - 1);
+                }
 
-				if(cmd == Storage::READ) {
-					if(!(sess->data().flags() & DataSpaceDesc::R))
-						throw Exception(E_ARGS_INVALID, "Need to read, but no read permission");
-					mng->get(sess->ctrl())->read(sess->drive(), sess->prod(), tag,
-					                             sess->data(), sector, dma);
-				}
-				else {
-					if(!(sess->data().flags() & DataSpaceDesc::W))
-						throw Exception(E_ARGS_INVALID, "Need to write, but no write permission");
-					mng->get(sess->ctrl())->write(sess->drive(), sess->prod(), tag, sess->data(), sector,
-					                              dma);
-				}
-				uf << E_SUCCESS;
-			}
-			break;
-		}
-	}
-	catch(const Exception &e) {
-		Syscalls::revoke(uf.delegation_window(), true);
-		uf.clear();
-		uf << e;
-	}
+                if(cmd == Storage::READ) {
+                    if(!(sess->data().flags() & DataSpaceDesc::R))
+                        throw Exception(E_ARGS_INVALID, "Need to read, but no read permission");
+                    mng->get(sess->ctrl())->read(sess->drive(), sess->prod(), tag,
+                                                 sess->data(), sector, dma);
+                }
+                else {
+                    if(!(sess->data().flags() & DataSpaceDesc::W))
+                        throw Exception(E_ARGS_INVALID, "Need to write, but no write permission");
+                    mng->get(sess->ctrl())->write(sess->drive(), sess->prod(), tag, sess->data(), sector,
+                                                  dma);
+                }
+                uf << E_SUCCESS;
+            }
+            break;
+        }
+    }
+    catch(const Exception &e) {
+        Syscalls::revoke(uf.delegation_window(), true);
+        uf.clear();
+        uf << e;
+    }
 }
 
 int main(int argc, char *argv[]) {
-	bool idedma = true;
-	for(int i = 1; i < argc; ++i) {
-		if(strcmp(argv[i], "noidedma") == 0) {
-			LOG(Logging::STORAGE, Serial::get() << "Disabling DMA for IDE devices\n");
-			idedma = false;
-		}
-	}
+    bool idedma = true;
+    for(int i = 1; i < argc; ++i) {
+        if(strcmp(argv[i], "noidedma") == 0) {
+            LOG(Logging::STORAGE, Serial::get() << "Disabling DMA for IDE devices\n");
+            idedma = false;
+        }
+    }
 
-	mng = new ControllerMng(idedma);
-	srv = new StorageService("storage");
-	srv->start();
-	return 0;
+    mng = new ControllerMng(idedma);
+    srv = new StorageService("storage");
+    srv->start();
+    return 0;
 }

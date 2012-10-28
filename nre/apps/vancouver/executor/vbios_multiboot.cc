@@ -33,174 +33,174 @@ using namespace nre;
  */
 class VirtualBiosMultiboot : public StaticReceiver<VirtualBiosMultiboot>, BiosCommon {
 public:
-	enum mbi_enum {
-		MBI_MAGIC                   = 0x2badb002,
-		MBI_FLAG_MEM                = 1 << 0,
-		MBI_FLAG_CMDLINE            = 1 << 2,
-		MBI_FLAG_MODS               = 1 << 3,
-		MBI_FLAG_MMAP               = 1 << 6,
-		MBI_FLAG_BOOT_LOADER_NAME   = 1 << 9,
-		MBI_FLAG_VBE                = 1 << 11,
-	};
+    enum mbi_enum {
+        MBI_MAGIC                   = 0x2badb002,
+        MBI_FLAG_MEM                = 1 << 0,
+        MBI_FLAG_CMDLINE            = 1 << 2,
+        MBI_FLAG_MODS               = 1 << 3,
+        MBI_FLAG_MMAP               = 1 << 6,
+        MBI_FLAG_BOOT_LOADER_NAME   = 1 << 9,
+        MBI_FLAG_VBE                = 1 << 11,
+    };
 
-	struct Mbi {
-		unsigned flags;
-		unsigned mem_lower;
-		unsigned mem_upper;
-		unsigned dummy1;
-		unsigned cmdline;
-		unsigned mods_count;
-		unsigned mods_addr;
-		unsigned dummy2[4];
-		unsigned mmap_length;
-		unsigned mmap_addr;
-		unsigned dummy3[3];
-		unsigned boot_loader_name;
-		unsigned dummy4;
-		unsigned vbe_control_info;
-		unsigned vbe_mode_info;
-		unsigned short vbe_mode;
-		unsigned short vbe_interface_seg;
-		unsigned short vbe_interface_off;
-		unsigned short vbe_interface_len;
-	};
+    struct Mbi {
+        unsigned flags;
+        unsigned mem_lower;
+        unsigned mem_upper;
+        unsigned dummy1;
+        unsigned cmdline;
+        unsigned mods_count;
+        unsigned mods_addr;
+        unsigned dummy2[4];
+        unsigned mmap_length;
+        unsigned mmap_addr;
+        unsigned dummy3[3];
+        unsigned boot_loader_name;
+        unsigned dummy4;
+        unsigned vbe_control_info;
+        unsigned vbe_mode_info;
+        unsigned short vbe_mode;
+        unsigned short vbe_interface_seg;
+        unsigned short vbe_interface_off;
+        unsigned short vbe_interface_len;
+    };
 
-	struct Module {
-		unsigned mod_start;
-		unsigned mod_end;
-		unsigned string;
-		unsigned reserved;
-	};
+    struct Module {
+        unsigned mod_start;
+        unsigned mod_end;
+        unsigned string;
+        unsigned reserved;
+    };
 
-	struct MbiMmap {
-		unsigned size;
-		uint64_t base __attribute__ ((packed));
-		uint64_t length __attribute__ ((packed));
-		unsigned type;
-	};
+    struct MbiMmap {
+        unsigned size;
+        uint64_t base __attribute__ ((packed));
+        uint64_t length __attribute__ ((packed));
+        unsigned type;
+    };
 
 private:
-	uintptr_t _modaddr;
-	unsigned _lowmem;
+    uintptr_t _modaddr;
+    unsigned _lowmem;
 
-	/**
-	 * Initialize an MBI from the hip.
-	 */
-	unsigned long init_mbi(uintptr_t &rip) {
-		MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM, 0UL);
-		if(!(_mb.bus_hostop.send(msg1)))
-			Util::panic("could not find base address %x\n", 0);
+    /**
+     * Initialize an MBI from the hip.
+     */
+    unsigned long init_mbi(uintptr_t &rip) {
+        MessageHostOp msg1(MessageHostOp::OP_GUEST_MEM, 0UL);
+        if(!(_mb.bus_hostop.send(msg1)))
+            Util::panic("could not find base address %x\n", 0);
 
-		char *physmem = msg1.ptr;
-		size_t memsize = msg1.len;
-		size_t offset = _modaddr;
-		unsigned long mbi = 0;
-		Mbi *m = 0;
+        char *physmem = msg1.ptr;
+        size_t memsize = msg1.len;
+        size_t offset = _modaddr;
+        unsigned long mbi = 0;
+        Mbi *m = 0;
 
-		// get modules from sigma0
-		for(size_t modcount = 0;; modcount++) {
-			offset = (offset + 0xfff) & ~0xffful;
-			MessageHostOp msg2(modcount + 1, physmem + offset, msg1.len - offset);
-			if(!(_mb.bus_hostop.send(msg2)) || !msg2.size)
-				break;
+        // get modules from sigma0
+        for(size_t modcount = 0;; modcount++) {
+            offset = (offset + 0xfff) & ~0xffful;
+            MessageHostOp msg2(modcount + 1, physmem + offset, msg1.len - offset);
+            if(!(_mb.bus_hostop.send(msg2)) || !msg2.size)
+                break;
 
-			Serial::get().writef("\tmodule %x start %p+%lx cmdline %-40s\n",
-			                     modcount, msg2.start, msg2.size, msg2.cmdline);
-			switch(modcount) {
-				case 0:
-					if(Elf::decode_elf(msg2.start, msg2.size, physmem, rip, offset, memsize, 0, 0))
-						return 0;
-					offset = (offset + 0xfff) & ~0xffful;
-					mbi = offset;
-					offset += 0x1000;
-					m = reinterpret_cast<Mbi*>(physmem + mbi);
-					if(offset > memsize)
-						return 0;
-					memset(m, 0, sizeof(*m));
-					memmove(physmem + offset, msg2.cmdline, msg2.cmdlen);
-					m->cmdline = offset;
-					offset += msg2.cmdlen;
-					m->flags |= MBI_FLAG_CMDLINE;
-					break;
+            Serial::get().writef("\tmodule %x start %p+%lx cmdline %-40s\n",
+                                 modcount, msg2.start, msg2.size, msg2.cmdline);
+            switch(modcount) {
+                case 0:
+                    if(Elf::decode_elf(msg2.start, msg2.size, physmem, rip, offset, memsize, 0, 0))
+                        return 0;
+                    offset = (offset + 0xfff) & ~0xffful;
+                    mbi = offset;
+                    offset += 0x1000;
+                    m = reinterpret_cast<Mbi*>(physmem + mbi);
+                    if(offset > memsize)
+                        return 0;
+                    memset(m, 0, sizeof(*m));
+                    memmove(physmem + offset, msg2.cmdline, msg2.cmdlen);
+                    m->cmdline = offset;
+                    offset += msg2.cmdlen;
+                    m->flags |= MBI_FLAG_CMDLINE;
+                    break;
 
-				default: {
-					m->flags |= MBI_FLAG_MODS;
-					m->mods_addr = reinterpret_cast<char *>(m + 1) - physmem;
-					Module *mod = reinterpret_cast<Module *>(physmem + m->mods_addr)
-					              + m->mods_count;
-					m->mods_count++;
-					mod->mod_start = msg2.start - physmem;
-					mod->mod_end = mod->mod_start + msg2.size;
-					mod->string = msg2.cmdline - physmem;
-					mod->reserved = msg2.cmdlen;
-					if(offset < mod->mod_end)
-						offset = mod->mod_end;
-					if(offset < mod->string + msg2.cmdlen)
-						offset = mod->string + msg2.cmdlen;
-				}
-				break;
-			}
-		}
+                default: {
+                    m->flags |= MBI_FLAG_MODS;
+                    m->mods_addr = reinterpret_cast<char *>(m + 1) - physmem;
+                    Module *mod = reinterpret_cast<Module *>(physmem + m->mods_addr)
+                                  + m->mods_count;
+                    m->mods_count++;
+                    mod->mod_start = msg2.start - physmem;
+                    mod->mod_end = mod->mod_start + msg2.size;
+                    mod->string = msg2.cmdline - physmem;
+                    mod->reserved = msg2.cmdlen;
+                    if(offset < mod->mod_end)
+                        offset = mod->mod_end;
+                    if(offset < mod->string + msg2.cmdlen)
+                        offset = mod->string + msg2.cmdlen;
+                }
+                break;
+            }
+        }
 
-		if(!m)
-			return 0;
+        if(!m)
+            return 0;
 
-		// provide memory map
-		if(discovery_read_dw("bda", 0x13, _lowmem))
-			_lowmem = (_lowmem & 0xffff) << 10;
+        // provide memory map
+        if(discovery_read_dw("bda", 0x13, _lowmem))
+            _lowmem = (_lowmem & 0xffff) << 10;
 
-		MbiMmap mymap[] = {
-			{20, 0, _lowmem, 0x1},
-			{20, _lowmem, 0xa0000 - _lowmem, 2},
-			{20, 1 << 20, memsize - (1 << 20), 0x1}
-		};
-		m->mem_lower = 640;
-		m->mem_upper = (memsize >> 10) - 1024;
-		m->mmap_addr = offset;
-		m->mmap_length = sizeof(mymap);
-		m->flags |= MBI_FLAG_MMAP | MBI_FLAG_MEM;
-		memcpy(physmem + m->mmap_addr, mymap, m->mmap_length);
+        MbiMmap mymap[] = {
+            {20, 0, _lowmem, 0x1},
+            {20, _lowmem, 0xa0000 - _lowmem, 2},
+            {20, 1 << 20, memsize - (1 << 20), 0x1}
+        };
+        m->mem_lower = 640;
+        m->mem_upper = (memsize >> 10) - 1024;
+        m->mmap_addr = offset;
+        m->mmap_length = sizeof(mymap);
+        m->flags |= MBI_FLAG_MMAP | MBI_FLAG_MEM;
+        memcpy(physmem + m->mmap_addr, mymap, m->mmap_length);
 
-		return mbi;
-	}
+        return mbi;
+    }
 
 public:
-	bool receive(MessageBios &msg) {
-		if(msg.irq != 0x19)
-			return false;
+    bool receive(MessageBios &msg) {
+        if(msg.irq != 0x19)
+            return false;
 
-		Serial::get().writef(">\t%s rip %x ilen %x cr0 %x efl %x\n", __PRETTY_FUNCTION__,
-		                     msg.cpu->eip, msg.cpu->inst_len, msg.cpu->cr0, msg.cpu->efl);
-		uintptr_t rip = 0xfffffff0;
-		unsigned long mbi;
-		if(!(mbi = init_mbi(rip)))
-			return false;
+        Serial::get().writef(">\t%s rip %x ilen %x cr0 %x efl %x\n", __PRETTY_FUNCTION__,
+                             msg.cpu->eip, msg.cpu->inst_len, msg.cpu->cr0, msg.cpu->efl);
+        uintptr_t rip = 0xfffffff0;
+        unsigned long mbi;
+        if(!(mbi = init_mbi(rip)))
+            return false;
 
-		msg.cpu->clear();
-		msg.cpu->eip = rip;
-		msg.cpu->eax = 0x2badb002;
-		msg.cpu->ebx = mbi;
-		msg.cpu->cr0 = 0x11;
-		msg.cpu->cs.ar = 0xc9b;
-		msg.cpu->cs.limit = 0xffffffff;
-		msg.cpu->ss.ar = 0xc93;
-		msg.cpu->efl = 2;
-		msg.cpu->ds.ar = msg.cpu->es.ar = msg.cpu->fs.ar = msg.cpu->gs.ar = msg.cpu->ss.ar;
-		msg.cpu->ld.ar = 0x1000;
-		msg.cpu->tr.ar = 0x8b;
-		msg.cpu->ss.base = msg.cpu->ds.base = msg.cpu->es.base = msg.cpu->fs.base =
-		                                                             msg.cpu->gs.base = msg.cpu->cs.base;
-		msg.cpu->ss.limit = msg.cpu->ds.limit = msg.cpu->es.limit = msg.cpu->fs.limit =
-		                                                                msg.cpu->gs.limit =
-		                                                                    msg.cpu->cs.limit;
-		msg.cpu->tr.limit = msg.cpu->ld.limit = msg.cpu->gd.limit = msg.cpu->id.limit = 0xffff;
-		msg.mtr_out = Mtd::ALL & ~Mtd::TSC;
-		return true;
-	}
+        msg.cpu->clear();
+        msg.cpu->eip = rip;
+        msg.cpu->eax = 0x2badb002;
+        msg.cpu->ebx = mbi;
+        msg.cpu->cr0 = 0x11;
+        msg.cpu->cs.ar = 0xc9b;
+        msg.cpu->cs.limit = 0xffffffff;
+        msg.cpu->ss.ar = 0xc93;
+        msg.cpu->efl = 2;
+        msg.cpu->ds.ar = msg.cpu->es.ar = msg.cpu->fs.ar = msg.cpu->gs.ar = msg.cpu->ss.ar;
+        msg.cpu->ld.ar = 0x1000;
+        msg.cpu->tr.ar = 0x8b;
+        msg.cpu->ss.base = msg.cpu->ds.base = msg.cpu->es.base = msg.cpu->fs.base =
+                                                                     msg.cpu->gs.base = msg.cpu->cs.base;
+        msg.cpu->ss.limit = msg.cpu->ds.limit = msg.cpu->es.limit = msg.cpu->fs.limit =
+                                                                        msg.cpu->gs.limit =
+                                                                            msg.cpu->cs.limit;
+        msg.cpu->tr.limit = msg.cpu->ld.limit = msg.cpu->gd.limit = msg.cpu->id.limit = 0xffff;
+        msg.mtr_out = Mtd::ALL & ~Mtd::TSC;
+        return true;
+    }
 
-	VirtualBiosMultiboot(Motherboard &mb, uintptr_t modaddr, unsigned lowmem)
-		: BiosCommon(mb), _modaddr(modaddr), _lowmem(lowmem) {
-	}
+    VirtualBiosMultiboot(Motherboard &mb, uintptr_t modaddr, unsigned lowmem)
+        : BiosCommon(mb), _modaddr(modaddr), _lowmem(lowmem) {
+    }
 };
 
 uintptr_t _vbios_multiboot_modaddr = 0x1800000;
@@ -208,7 +208,7 @@ PARAM_HANDLER(
     vbios_multiboot_modaddr,
     "vbios_multiboot_modaddr:modaddr - override the default modaddr parameter of vbios_multiboot")
 {
-	_vbios_multiboot_modaddr = argv[0];
+    _vbios_multiboot_modaddr = argv[0];
 }
 
 PARAM_HANDLER(
@@ -217,8 +217,8 @@ PARAM_HANDLER(
     "Example:  'vbios_multiboot'",
     "modaddr defines where the modules are loaded in guest memory.",
     "lowmem allows to restrict memory below 1M to less than 640k.") {
-	mb.bus_bios.add(
-	    new VirtualBiosMultiboot(mb, argv[0] != ~0ul ? argv[0] : _vbios_multiboot_modaddr,
-	                             argv[1] != ~0ul ? argv[1] : 0xa0000),
-	    VirtualBiosMultiboot::receive_static);
+    mb.bus_bios.add(
+        new VirtualBiosMultiboot(mb, argv[0] != ~0ul ? argv[0] : _vbios_multiboot_modaddr,
+                                 argv[1] != ~0ul ? argv[1] : 0xa0000),
+        VirtualBiosMultiboot::receive_static);
 }

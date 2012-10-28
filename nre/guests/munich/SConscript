@@ -5,6 +5,6 @@ Import('guestenv')
 myenv = guestenv.Clone()
 myenv['CFLAGS'] = '-Wall -Wextra -std=gnu99 -m32 -g -O0 -mregparm=3'
 myenv['LINKFLAGS'] = "-m32 -g -nostdlib -ffreestanding -std=gnu99 -Wl,--build-id=none " \
-	"-Wl,-T,guests/munich/munich.ld"
+    "-Wl,-T,guests/munich/munich.ld"
 prog = myenv.Program('guest_munich', Glob('*.[cs]'))
 myenv.Install(myenv['BINARYDIR'], prog)

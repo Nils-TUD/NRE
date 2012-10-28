@@ -12,11 +12,11 @@ vcenv.Append(CFLAGS = ' -Wno-unused-parameter -Wno-parentheses -fno-strict-alias
 # an asm constraint is impossible. strange :/
 btype = os.environ.get('NRE_BUILD')
 if btype == 'debug':
-	halienv = vcenv.Clone()
-	halienv.Append(CXXFLAGS = ' -O1 -fno-inline')
-	halifax = halienv.Object('executor/halifax.cc')
+    halienv = vcenv.Clone()
+    halienv.Append(CXXFLAGS = ' -O1 -fno-inline')
+    halifax = halienv.Object('executor/halifax.cc')
 else:
-	halifax = vcenv.Object('executor/halifax.cc')
+    halifax = vcenv.Object('executor/halifax.cc')
 # use custom linker script
 vcenv['LINKFLAGS'] += ' -Wl,-T,apps/vancouver/linker_' + vcenv['ARCH'] + '.ld'
 files = [f for f in Glob('*/*.cc') if 'executor/halifax.cc' not in str(f)]

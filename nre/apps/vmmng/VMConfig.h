@@ -25,74 +25,74 @@ class VMConfig;
 nre::OStream & operator<<(nre::OStream &os, const VMConfig &cfg);
 
 class VMConfig : public nre::SListItem {
-	static const size_t MAX_ARGS_LEN    = 256;
+    static const size_t MAX_ARGS_LEN    = 256;
 
-	friend nre::OStream & operator<<(nre::OStream &os, const VMConfig &cfg);
+    friend nre::OStream & operator<<(nre::OStream &os, const VMConfig &cfg);
 
-	class Module : public nre::SListItem {
-	public:
-		explicit Module(const char *line, size_t namelen, size_t linelen)
-			: nre::SListItem(), _name(line, namelen), _args(line, linelen) {
-		}
+    class Module : public nre::SListItem {
+    public:
+        explicit Module(const char *line, size_t namelen, size_t linelen)
+            : nre::SListItem(), _name(line, namelen), _args(line, linelen) {
+        }
 
-		const nre::String &name() const {
-			return _name;
-		}
-		const nre::String &args() const {
-			return _args;
-		}
+        const nre::String &name() const {
+            return _name;
+        }
+        const nre::String &args() const {
+            return _args;
+        }
 
-	private:
-		nre::String _name;
-		nre::String _args;
-	};
+    private:
+        nre::String _name;
+        nre::String _args;
+    };
 
-	class VMChildConfig : public nre::ChildConfig {
-	public:
-		explicit VMChildConfig(const nre::SList<Module> &mods, const nre::String &cmdline, cpu_t cpu)
-			: nre::ChildConfig(0, cmdline, cpu), _mods(mods) {
-		}
+    class VMChildConfig : public nre::ChildConfig {
+    public:
+        explicit VMChildConfig(const nre::SList<Module> &mods, const nre::String &cmdline, cpu_t cpu)
+            : nre::ChildConfig(0, cmdline, cpu), _mods(mods) {
+        }
 
-		virtual bool get_module(size_t i, nre::HipMem &mem) const {
-			nre::SList<Module>::iterator it;
-			for(it = _mods.begin(); it != _mods.end() && i-- > 0; ++it)
-				;
-			if(it == _mods.end())
-				return false;
-			mem = *VMConfig::get_module(it->name());
-			mem.aux = reinterpret_cast<word_t>(it->args().str());
-			return true;
-		}
+        virtual bool get_module(size_t i, nre::HipMem &mem) const {
+            nre::SList<Module>::iterator it;
+            for(it = _mods.begin(); it != _mods.end() && i-- > 0; ++it)
+                ;
+            if(it == _mods.end())
+                return false;
+            mem = *VMConfig::get_module(it->name());
+            mem.aux = reinterpret_cast<word_t>(it->args().str());
+            return true;
+        }
 
-	private:
-		const nre::SList<Module> &_mods;
-	};
+    private:
+        const nre::SList<Module> &_mods;
+    };
 
 public:
-	explicit VMConfig(uintptr_t phys, size_t size, const char *name)
-		: nre::SListItem(), _ds(size, nre::DataSpaceDesc::ANONYMOUS, nre::DataSpaceDesc::R, phys),
-		  _name(name), _mods() {
-		find_mods(size);
-	}
-	~VMConfig() {
-		for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it)
-			delete &*it;
-	}
+    explicit VMConfig(uintptr_t phys, size_t size, const char *name)
+        : nre::SListItem(), _ds(size, nre::DataSpaceDesc::ANONYMOUS, nre::DataSpaceDesc::R, phys),
+          _name(name), _mods() {
+        find_mods(size);
+    }
+    ~VMConfig() {
+        for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it)
+            delete &*it;
+    }
 
-	const char *name() const {
-		return _name;
-	}
-	const nre::String &args() const {
-		nre::SList<Module>::iterator first = _mods.begin();
-		return first->args();
-	}
-	nre::Child::id_type start(nre::ChildManager &cm, size_t console, cpu_t cpu);
+    const char *name() const {
+        return _name;
+    }
+    const nre::String &args() const {
+        nre::SList<Module>::iterator first = _mods.begin();
+        return first->args();
+    }
+    nre::Child::id_type start(nre::ChildManager &cm, size_t console, cpu_t cpu);
 
 private:
-	void find_mods(size_t len);
-	static nre::Hip::mem_iterator get_module(const nre::String &name);
+    void find_mods(size_t len);
+    static nre::Hip::mem_iterator get_module(const nre::String &name);
 
-	nre::DataSpace _ds;
-	const char *_name;
-	nre::SList<Module> _mods;
+    nre::DataSpace _ds;
+    const char *_name;
+    nre::SList<Module> _mods;
 };

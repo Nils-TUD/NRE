@@ -2,43 +2,43 @@
 
 # config
 if [ -f /proc/cpuinfo ]; then
-	cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
+    cpus=`cat /proc/cpuinfo | grep '^processor[[:space:]]*:' | wc -l`
 else
-	cpus=1
+    cpus=1
 fi
 opts="-j$cpus"
 
 # fall back to some reasonable defaults for the NRE environment variables
 if [ -z "$NRE_TARGET" ]; then
-	export NRE_TARGET=x86_64
+    export NRE_TARGET=x86_64
 fi
 if [ "$NRE_BUILD" != "debug" ]; then
-	export NRE_BUILD="release"
+    export NRE_BUILD="release"
 fi
 if [ -z "$NRE_TFTPDIR" ]; then
-	export NRE_TFTPDIR=/var/lib/tftpboot
+    export NRE_TFTPDIR=/var/lib/tftpboot
 fi
 if [ -z "$NRE_GDB_X86_32" ]; then
-	export NRE_GDB_X86_32=gdbtui
+    export NRE_GDB_X86_32=gdbtui
 fi
 if [ -z "$NRE_GDB_X86_64" ]; then
-	export NRE_GDB_X86_64=x86_64-linux-gnu-gdbtui
+    export NRE_GDB_X86_64=x86_64-linux-gnu-gdbtui
 fi
 
 # target dependend values
 if [ "$NRE_TARGET" = "x86_32" ]; then
-	cross="i686-pc-nulnova"
-	gdb=$NRE_GDB_X86_32
-	export QEMU="qemu-system-i386"
-	export QEMU_FLAGS="-cpu phenom "
+    cross="i686-pc-nulnova"
+    gdb=$NRE_GDB_X86_32
+    export QEMU="qemu-system-i386"
+    export QEMU_FLAGS="-cpu phenom "
 elif [ "$NRE_TARGET" = "x86_64" ]; then
-	cross="x86_64-pc-nulnova"
-	gdb=$NRE_GDB_X86_64
-	export QEMU="qemu-system-x86_64"
-	export QEMU_FLAGS=""
+    cross="x86_64-pc-nulnova"
+    gdb=$NRE_GDB_X86_64
+    export QEMU="qemu-system-x86_64"
+    export QEMU_FLAGS=""
 else
-	echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
-	exit 1
+    echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
+    exit 1
 fi
 
 # don't change anything below!
@@ -50,55 +50,55 @@ novadir="../kernel/nova"
 bochscfg="bochs.cfg"
 
 help() {
-	echo "Usage: $1 [<cmd> <arg>] [--no-build|-n]"
-	echo ""
-	echo -n "This is a convenience script that is responsible for building everything (NOVA and NRE)"
-	echo -n " and running the specified command afterwards. It does also support switching between"
-	echo -n " debug and release builds by changing the Makefile of NOVA accordingly (adjust"
-	echo -n " optimization level, ...). The most important environment variables that influence its"
-	echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
-	echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
-	echo -n " In this case, only the specified command is executed."
-	echo ""
-	echo ""
-	echo "The following commands are available:"
-	echo "    clean:                   do a clean in NOVA and NRE"
-	echo "    distclean:               remove NRE build-dirs and remove NOVA so that"
-	echo "                             NOVA is checked out again and everything is"
-	echo "                             rebuild"
-	echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
-	echo "                             in bochs"
-	echo "    qemu <bootscript>:       run <bootscript> in qemu"
-	echo "    qemunet:                 run qemu and boot from network"
-	echo "    srv <bootscript>:        copy <bootscript> to the server specified in"
-	echo "                             ~/.novaboot with a grub config"
-	echo "    srvp <bootscript>:       copy <bootscript> to the server specified in"
-	echo "                             ~/.novaboot with a pulsar config"
-	echo "    dis=<prog>:              run objdump -SC <prog> (the cross-compiler version)"
-	echo "    elf=<prog>:              run readelf -a <prog> (the cross-compiler version)"
-	echo "    straddr=<prog> <str>:    search for the string <str> in <prog> and display"
-	echo "                             the addresses"
-	echo "    trace=<prog>:            start the backtrace script for <prog>"
-	echo "    dbg=<prog> <bootscript>: run <bootscript> in qemu and remote-debug <prog>"
-	echo "                             in gdb"
-	echo "    dbgr <bootscript>:       run <bootscript> in qemu and wait"
-	echo "    list:                    list the link-address of all programs"
-	echo ""
-	echo "Environment variables:"
-	echo "    NRE_TARGET:              the target architecture. Either x86_32 or x86_64."
-	echo "                             The default is x86_64."
-	echo "    NRE_BUILD:               the build-type. Either debug or release. In debug"
-	echo "                             mode optimizations are disabled, debug infos are"
-	echo "                             available and assertions are active. In release"
-	echo "                             mode all that is disabled. The default is release."
-	echo "    NRE_TFTPDIR:             the directory of your tftp-server which is used for"
-	echo "                             qemu network booting. The default is"
-	echo "                             /var/lib/tftpboot."
-	echo "    NRE_GDB_X86_32:          the executable of gdb to use for NRE_TARGET=x86_32."
-	echo "                             The default is gdbtui."
-	echo "    NRE_GDB_X86_64:          the executable of gdb to use for NRE_TARGET=x86_64."
-	echo "                             The default is x86_64-linux-gnu-gdbtui."
-	exit 0
+    echo "Usage: $1 [<cmd> <arg>] [--no-build|-n]"
+    echo ""
+    echo -n "This is a convenience script that is responsible for building everything (NOVA and NRE)"
+    echo -n " and running the specified command afterwards. It does also support switching between"
+    echo -n " debug and release builds by changing the Makefile of NOVA accordingly (adjust"
+    echo -n " optimization level, ...). The most important environment variables that influence its"
+    echo " behaviour are NRE_BUILD=(debug|release) and NRE_TARGET=(x86_32|x86_64)."
+    echo -n "You can also prevent the script from building everything by specifying -n or --no-build."
+    echo -n " In this case, only the specified command is executed."
+    echo ""
+    echo ""
+    echo "The following commands are available:"
+    echo "    clean:                   do a clean in NOVA and NRE"
+    echo "    distclean:               remove NRE build-dirs and remove NOVA so that"
+    echo "                             NOVA is checked out again and everything is"
+    echo "                             rebuild"
+    echo "    bochs <bootscript>:      generate an ISO image for <bootscript> and run it"
+    echo "                             in bochs"
+    echo "    qemu <bootscript>:       run <bootscript> in qemu"
+    echo "    qemunet:                 run qemu and boot from network"
+    echo "    srv <bootscript>:        copy <bootscript> to the server specified in"
+    echo "                             ~/.novaboot with a grub config"
+    echo "    srvp <bootscript>:       copy <bootscript> to the server specified in"
+    echo "                             ~/.novaboot with a pulsar config"
+    echo "    dis=<prog>:              run objdump -SC <prog> (the cross-compiler version)"
+    echo "    elf=<prog>:              run readelf -a <prog> (the cross-compiler version)"
+    echo "    straddr=<prog> <str>:    search for the string <str> in <prog> and display"
+    echo "                             the addresses"
+    echo "    trace=<prog>:            start the backtrace script for <prog>"
+    echo "    dbg=<prog> <bootscript>: run <bootscript> in qemu and remote-debug <prog>"
+    echo "                             in gdb"
+    echo "    dbgr <bootscript>:       run <bootscript> in qemu and wait"
+    echo "    list:                    list the link-address of all programs"
+    echo ""
+    echo "Environment variables:"
+    echo "    NRE_TARGET:              the target architecture. Either x86_32 or x86_64."
+    echo "                             The default is x86_64."
+    echo "    NRE_BUILD:               the build-type. Either debug or release. In debug"
+    echo "                             mode optimizations are disabled, debug infos are"
+    echo "                             available and assertions are active. In release"
+    echo "                             mode all that is disabled. The default is release."
+    echo "    NRE_TFTPDIR:             the directory of your tftp-server which is used for"
+    echo "                             qemu network booting. The default is"
+    echo "                             /var/lib/tftpboot."
+    echo "    NRE_GDB_X86_32:          the executable of gdb to use for NRE_TARGET=x86_32."
+    echo "                             The default is gdbtui."
+    echo "    NRE_GDB_X86_64:          the executable of gdb to use for NRE_TARGET=x86_64."
+    echo "                             The default is x86_64-linux-gnu-gdbtui."
+    exit 0
 }
 
 # parse arguments
@@ -106,170 +106,170 @@ dobuild=true
 cmd=""
 script=""
 while [ $# -gt 0 ]; do
-	case "$1" in
-		-h|-\?|--help)
-			help $0
-			;;
+    case "$1" in
+        -h|-\?|--help)
+            help $0
+            ;;
 
-		-n|--no-build)
-			dobuild=false
-			;;
+        -n|--no-build)
+            dobuild=false
+            ;;
 
-		*)
-			if [ "$cmd" = "" ]; then
-				cmd="$1"
-			elif [ "$script" = "" ]; then
-				script="$1"
-			else
-				echo "Too many arguments" >&2
-				exit 1
-			fi
-			;;
-	esac
-	shift
+        *)
+            if [ "$cmd" = "" ]; then
+                cmd="$1"
+            elif [ "$script" = "" ]; then
+                script="$1"
+            else
+                echo "Too many arguments" >&2
+                exit 1
+            fi
+            ;;
+    esac
+    shift
 done
 
 # for clean and distclean, it makes no sense to build it (this might even fail because e.g. scons has
 # a non existing dependency which might be the reason the user wants to do a clean)
 if [ "$cmd" = "clean" ] || [ "$cmd" = "distclean" ]; then
-	dobuild=false
+    dobuild=false
 fi
 
 echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 
 if $dobuild; then
-	echo "Building NRE and NOVA with $cpus jobs..."
+    echo "Building NRE and NOVA with $cpus jobs..."
 
-	# build userland
-	scons $opts
-	if [ $? -ne 0 ]; then
-		exit 1
-	fi
+    # build userland
+    scons $opts
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
 
-	# checkout nova, if not already done
-	if [ ! -d "$novadir" ]; then
-		$root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
-			`find $root/$kerndir/patches -type f | sort`
-		if [ $? -ne 0 ]; then
-			exit 1
-		fi
-	else
-		# check whether NOVA should be updated
-		( cd $novadir && git branch --contains `cat ../NOVA_REVISION` >/dev/null 2>/dev/null )
-		if [ $? -ne 0 ]; then
-			/bin/echo -n -e "\e[1mWarning: Your NOVA version is not up to date (revision in kernel/NOVA_REVISION does not"
-			/bin/echo -e " appear in your NOVA repo)\e[0m"
-		fi
-	fi
+    # checkout nova, if not already done
+    if [ ! -d "$novadir" ]; then
+        $root/tools/checkout.sh $novadir `cat $kerndir/NOVA_URL` `cat $kerndir/NOVA_REVISION` nre-local \
+            `find $root/$kerndir/patches -type f | sort`
+        if [ $? -ne 0 ]; then
+            exit 1
+        fi
+    else
+        # check whether NOVA should be updated
+        ( cd $novadir && git branch --contains `cat ../NOVA_REVISION` >/dev/null 2>/dev/null )
+        if [ $? -ne 0 ]; then
+            /bin/echo -n -e "\e[1mWarning: Your NOVA version is not up to date (revision in kernel/NOVA_REVISION does not"
+            /bin/echo -e " appear in your NOVA repo)\e[0m"
+        fi
+    fi
 
-	cd $novadir/build
-	# adjust build-flags depending on build-type
-	if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
-		if [ "$NRE_BUILD" != "debug" ]; then
-			# it should be release, but isn't
-			sed --in-place -e \
-				's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
-		fi
-	else
-		if [ "$NRE_BUILD" != "release" ]; then
-			# it should be debug, but isn't
-			sed --in-place -e \
-				's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
-		fi
-	fi
-	# build NOVA
-	ARCH=$NRE_TARGET make $jobs
-	if [ $? -ne 0 ]; then
-		exit 1
-	fi
+    cd $novadir/build
+    # adjust build-flags depending on build-type
+    if [ "`grep 'OFLAGS[[:space:]]*:=[[:space:]]*-O0' Makefile`" != "" ]; then
+        if [ "$NRE_BUILD" != "debug" ]; then
+            # it should be release, but isn't
+            sed --in-place -e \
+                's/OFLAGS[[:space:]]*:=[[:space:]]*-O0.*/OFLAGS\t\t:= -Os -g/' Makefile
+        fi
+    else
+        if [ "$NRE_BUILD" != "release" ]; then
+            # it should be debug, but isn't
+            sed --in-place -e \
+                's/OFLAGS[[:space:]]*:=[[:space:]]*.*/OFLAGS\t\t:= -O0 -g -DDEBUG/' Makefile
+        fi
+    fi
+    # build NOVA
+    ARCH=$NRE_TARGET make $jobs
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
 
-	# copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
-	if [ "$NRE_TARGET" = "x86_64" ]; then
-		$crossdir/bin/$cross-objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
-	else
-		cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
-	fi
-	cd $root
+    # copy to build-dir; convert to elf32-binary when using x86_64, because grub can't load elf64-binaries.
+    if [ "$NRE_TARGET" = "x86_64" ]; then
+        $crossdir/bin/$cross-objcopy -O elf32-i386 hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+    else
+        cp hypervisor-$NRE_TARGET $root/$build/bin/apps/hypervisor
+    fi
+    cd $root
 fi
 
 # run the specified command, if any
 case "$cmd" in
-	clean)
-		scons -c
-		( cd $novadir/build && ARCH=$NRE_TARGET make clean )
-		;;
-	distclean)
-		rm -Rf build/* $novadir
-		;;
-	prof=*)
-		$build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
-		;;
-	bochs)
-		mkdir -p $build/bin/boot/grub
-		cp $root/dist/iso/boot/grub/stage2_eltorito $build/bin/boot/grub
-		./tools/novaboot --build-dir="$PWD/$build" --iso -- $script
-		# replace the build path for all ata drives
-		path=`echo $build/ | sed -e 's/\//\\\\\//g'`
-		sed --in-place -e 's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='$path'\2,/g' $bochscfg
-		# put the generated iso into ata0-master
-		filename=`basename $script`
-		path=`echo $build/$filename.iso | sed -e 's/\//\\\\\//g'`
-		sed --in-place -e 's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='$path',/' $bochscfg
-		bochs -f $bochscfg -q
-		;;
-	qemu)
-		./$script --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
-		;;
-	qemunet)
-		$QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $NRE_TFTPDIR
-		;;
-	srv)
-		./$script --server --build-dir="$PWD/$build"
-		;;
-	srvp)
-		./$script --server -p --build-dir="$PWD/$build"
-		;;
-	dis=*)
-		$crossdir/bin/$cross-objdump -SC $build/bin/apps/${cmd#dis=} | less
-		;;
-	elf=*)
-		$crossdir/bin/$cross-readelf -a $build/bin/apps/${cmd#elf=} | less
-		;;
-	straddr=*)
-		echo "Strings containing '$script' in ${cmd#straddr=}:"
-		# find base address of .rodata
-		base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${cmd#straddr=} | grep .rodata | \
-			xargs | cut -d ' ' -f 5`
-		# grep for matching lines, prepare for better use of awk and finally add offset to base
-		$crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${cmd#straddr=} | grep $script | \
-			sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
-			awk '{ printf("0x%x: %s %s %s %s %s %s\n",0x'$base' + strtonum($1),$2,$3,$4,$5,$6,$7) }'
-		;;
-	trace=*)
-		tools/backtrace $build/bin/apps/${cmd#trace=}
-		;;
-	dbg=*)
-		tmp=$(tempfile)
-		echo "target remote localhost:1234" >> $tmp
-		echo "display/i \$pc" >> $tmp
-		# the problem is that qemu terminates if it receives SIGINT. so, if we want to
-		# interrupt the execution and examine the state in gdb by pressing ^C, qemu
-		# terminates. to prevent that we use a small program (ignoreint) no block SIGINT,
-		# which replaces itself with the given program afterwards
-		$build/tools/ignoreint/ignoreint ./$script --qemu="$QEMU" \
-			--build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s" > log.txt &
-		$gdb $build/bin/apps/${cmd#dbg=} --command=$tmp
-		rm -f $tmp
-		kill `pgrep qemu` 2>/dev/null
-		;;
-	dbgr)
-		./$script --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
-		;;
-	list)
-		echo "Start of section .text:"
-		ls -1 $build/bin/apps | while read l; do	
-			$crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
-				grep "\.text " | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
-		done
-		;;
+    clean)
+        scons -c
+        ( cd $novadir/build && ARCH=$NRE_TARGET make clean )
+        ;;
+    distclean)
+        rm -Rf build/* $novadir
+        ;;
+    prof=*)
+        $build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
+        ;;
+    bochs)
+        mkdir -p $build/bin/boot/grub
+        cp $root/dist/iso/boot/grub/stage2_eltorito $build/bin/boot/grub
+        ./tools/novaboot --build-dir="$PWD/$build" --iso -- $script
+        # replace the build path for all ata drives
+        path=`echo $build/ | sed -e 's/\//\\\\\//g'`
+        sed --in-place -e 's/\(ata.*\?:.*\?path\)=build\/[^\/]*\?\/\(.*\?\),/\1='$path'\2,/g' $bochscfg
+        # put the generated iso into ata0-master
+        filename=`basename $script`
+        path=`echo $build/$filename.iso | sed -e 's/\//\\\\\//g'`
+        sed --in-place -e 's/^\(ata0-master:.*\?path\)=\(.*\?\),/\1='$path',/' $bochscfg
+        bochs -f $bochscfg -q
+        ;;
+    qemu)
+        ./$script --qemu="$QEMU" --qemu-append="$QEMU_FLAGS" --build-dir="$PWD/$build" | tee log.txt
+        ;;
+    qemunet)
+        $QEMU $QEMU_FLAGS -boot n -bootp pulsar -tftp $NRE_TFTPDIR
+        ;;
+    srv)
+        ./$script --server --build-dir="$PWD/$build"
+        ;;
+    srvp)
+        ./$script --server -p --build-dir="$PWD/$build"
+        ;;
+    dis=*)
+        $crossdir/bin/$cross-objdump -SC $build/bin/apps/${cmd#dis=} | less
+        ;;
+    elf=*)
+        $crossdir/bin/$cross-readelf -a $build/bin/apps/${cmd#elf=} | less
+        ;;
+    straddr=*)
+        echo "Strings containing '$script' in ${cmd#straddr=}:"
+        # find base address of .rodata
+        base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${cmd#straddr=} | grep .rodata | \
+            xargs | cut -d ' ' -f 5`
+        # grep for matching lines, prepare for better use of awk and finally add offset to base
+        $crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${cmd#straddr=} | grep $script | \
+            sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
+            awk '{ printf("0x%x: %s %s %s %s %s %s\n",0x'$base' + strtonum($1),$2,$3,$4,$5,$6,$7) }'
+        ;;
+    trace=*)
+        tools/backtrace $build/bin/apps/${cmd#trace=}
+        ;;
+    dbg=*)
+        tmp=$(tempfile)
+        echo "target remote localhost:1234" >> $tmp
+        echo "display/i \$pc" >> $tmp
+        # the problem is that qemu terminates if it receives SIGINT. so, if we want to
+        # interrupt the execution and examine the state in gdb by pressing ^C, qemu
+        # terminates. to prevent that we use a small program (ignoreint) no block SIGINT,
+        # which replaces itself with the given program afterwards
+        $build/tools/ignoreint/ignoreint ./$script --qemu="$QEMU" \
+            --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s" > log.txt &
+        $gdb $build/bin/apps/${cmd#dbg=} --command=$tmp
+        rm -f $tmp
+        kill `pgrep qemu` 2>/dev/null
+        ;;
+    dbgr)
+        ./$script --qemu="$QEMU" --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s"
+        ;;
+    list)
+        echo "Start of section .text:"
+        ls -1 $build/bin/apps | while read l; do	
+            $crossdir/bin/$cross-readelf -S $build/bin/apps/$l | \
+                grep "\.text " | awk "{ printf(\"%12s: %s\n\",\"$l\",\$5) }"
+        done
+        ;;
 esac

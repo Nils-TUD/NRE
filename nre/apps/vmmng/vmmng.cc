@@ -40,132 +40,132 @@ static ChildManager cm;
 static Cycler<CPU::iterator> cpucyc(CPU::begin(), CPU::end());
 
 static void refresh_console() {
-	static UserSm sm;
-	ScopedLock<UserSm> guard(&sm);
-	ConsoleStream cs(cons, 0);
-	cons.clear(0);
-	cs << "Welcome to the interactive VM manager!\n\n";
-	cs << "VM configurations:\n";
-	size_t no = 1;
-	for(SList<VMConfig>::iterator it = configs.begin(); it != configs.end(); ++it, ++no)
-		cs << "  [" << no << "] " << it->name() << "\n";
-	cs << "\n";
+    static UserSm sm;
+    ScopedLock<UserSm> guard(&sm);
+    ConsoleStream cs(cons, 0);
+    cons.clear(0);
+    cs << "Welcome to the interactive VM manager!\n\n";
+    cs << "VM configurations:\n";
+    size_t no = 1;
+    for(SList<VMConfig>::iterator it = configs.begin(); it != configs.end(); ++it, ++no)
+        cs << "  [" << no << "] " << it->name() << "\n";
+    cs << "\n";
 
-	cs << "Running VMs:\n";
-	ScopedLock<RCULock> rcuguard(&RCU::lock());
-	RunningVM *vm;
-	if(vmidx >= RunningVMList::get().count())
-		vmidx = RunningVMList::get().count() - 1;
-	for(size_t i = 0; (vm = RunningVMList::get().get(i)) != 0; ++i) {
-		const Child *c = cm.get(vm->id());
-		if(c) {
-			uint8_t oldcol = cs.color();
-			if(vmidx == i)
-				cs.color(CUR_ROW_COLOR);
-			size_t virt, phys;
-			c->reglist().memusage(virt, phys);
-			cs << "  [" << (i + 1) << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
-			cs << "K CFG:" << vm->cfg()->name();
-			while(cs.x() != 0)
-				cs << ' ';
-			if(vmidx == i)
-				cs.color(oldcol);
-		}
-	}
-	cs << "\nPress R to reset or K to kill the selected VM";
+    cs << "Running VMs:\n";
+    ScopedLock<RCULock> rcuguard(&RCU::lock());
+    RunningVM *vm;
+    if(vmidx >= RunningVMList::get().count())
+        vmidx = RunningVMList::get().count() - 1;
+    for(size_t i = 0; (vm = RunningVMList::get().get(i)) != 0; ++i) {
+        const Child *c = cm.get(vm->id());
+        if(c) {
+            uint8_t oldcol = cs.color();
+            if(vmidx == i)
+                cs.color(CUR_ROW_COLOR);
+            size_t virt, phys;
+            c->reglist().memusage(virt, phys);
+            cs << "  [" << (i + 1) << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
+            cs << "K CFG:" << vm->cfg()->name();
+            while(cs.x() != 0)
+                cs << ' ';
+            if(vmidx == i)
+                cs.color(oldcol);
+        }
+    }
+    cs << "\nPress R to reset or K to kill the selected VM";
 }
 
 static void input_thread(void*) {
-	while(1) {
-		Console::ReceivePacket *pk = cons.consumer().get();
-		switch(pk->keycode) {
-			case Keyboard::VK_1 ... Keyboard::VK_9: {
-				if(pk->flags & Keyboard::RELEASE) {
-					size_t idx = pk->keycode - Keyboard::VK_1;
-					SList<VMConfig>::iterator it;
-					for(it = configs.begin(); it != configs.end() && idx-- > 0; ++it)
-						;
-					if(it != configs.end())
-						RunningVMList::get().add(cm, &*it, cpucyc.next()->log_id());
-				}
-			}
-			break;
+    while(1) {
+        Console::ReceivePacket *pk = cons.consumer().get();
+        switch(pk->keycode) {
+            case Keyboard::VK_1 ... Keyboard::VK_9: {
+                if(pk->flags & Keyboard::RELEASE) {
+                    size_t idx = pk->keycode - Keyboard::VK_1;
+                    SList<VMConfig>::iterator it;
+                    for(it = configs.begin(); it != configs.end() && idx-- > 0; ++it)
+                        ;
+                    if(it != configs.end())
+                        RunningVMList::get().add(cm, &*it, cpucyc.next()->log_id());
+                }
+            }
+            break;
 
-			case Keyboard::VK_R: {
-				ScopedLock<RCULock> guard(&RCU::lock());
-				RunningVM *vm = RunningVMList::get().get(vmidx);
-				if(vm && (pk->flags & Keyboard::RELEASE)) {
-					if(pk->keycode == Keyboard::VK_R)
-						vm->execute(VMManager::RESET);
-					else
-						vm->execute(VMManager::KILL);
-				}
-			}
-			break;
+            case Keyboard::VK_R: {
+                ScopedLock<RCULock> guard(&RCU::lock());
+                RunningVM *vm = RunningVMList::get().get(vmidx);
+                if(vm && (pk->flags & Keyboard::RELEASE)) {
+                    if(pk->keycode == Keyboard::VK_R)
+                        vm->execute(VMManager::RESET);
+                    else
+                        vm->execute(VMManager::KILL);
+                }
+            }
+            break;
 
-			case Keyboard::VK_UP:
-				if((~pk->flags & Keyboard::RELEASE) && vmidx > 0) {
-					vmidx--;
-					refresh_console();
-				}
-				break;
+            case Keyboard::VK_UP:
+                if((~pk->flags & Keyboard::RELEASE) && vmidx > 0) {
+                    vmidx--;
+                    refresh_console();
+                }
+                break;
 
-			case Keyboard::VK_DOWN:
-				if((~pk->flags & Keyboard::RELEASE) && vmidx + 1 < RunningVMList::get().count()) {
-					vmidx++;
-					refresh_console();
-				}
-				break;
+            case Keyboard::VK_DOWN:
+                if((~pk->flags & Keyboard::RELEASE) && vmidx + 1 < RunningVMList::get().count()) {
+                    vmidx++;
+                    refresh_console();
+                }
+                break;
 
-			case Keyboard::VK_K: {
-				if(pk->flags & Keyboard::RELEASE) {
-					Child::id_type id = ObjCap::INVALID;
-					{
-						ScopedLock<RCULock> guard(&RCU::lock());
-						RunningVM *vm = RunningVMList::get().get(vmidx);
-						if(vm) {
-							id = vm->id();
-							RunningVMList::get().remove(vm);
-						}
-					}
-					if(id != ObjCap::INVALID)
-						cm.kill(id);
-				}
-			}
-			break;
-		}
-		cons.consumer().next();
-	}
+            case Keyboard::VK_K: {
+                if(pk->flags & Keyboard::RELEASE) {
+                    Child::id_type id = ObjCap::INVALID;
+                    {
+                        ScopedLock<RCULock> guard(&RCU::lock());
+                        RunningVM *vm = RunningVMList::get().get(vmidx);
+                        if(vm) {
+                            id = vm->id();
+                            RunningVMList::get().remove(vm);
+                        }
+                    }
+                    if(id != ObjCap::INVALID)
+                        cm.kill(id);
+                }
+            }
+            break;
+        }
+        cons.consumer().next();
+    }
 }
 
 static void refresh_thread(void*) {
-	Connection timercon("timer");
-	TimerSession timer(timercon);
-	Clock clock(1000);
-	while(1) {
-		timevalue_t next = clock.source_time(1000);
-		refresh_console();
+    Connection timercon("timer");
+    TimerSession timer(timercon);
+    Clock clock(1000);
+    while(1) {
+        timevalue_t next = clock.source_time(1000);
+        refresh_console();
 
-		// wait a second
-		timer.wait_until(next);
-	}
+        // wait a second
+        timer.wait_until(next);
+    }
 }
 
 int main() {
-	const Hip &hip = Hip::get();
+    const Hip &hip = Hip::get();
 
-	for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
-		if(strstr(mem->cmdline(), ".vmconfig")) {
-			VMConfig *cfg = new VMConfig(mem->addr, mem->size, mem->cmdline());
-			configs.append(cfg);
-			Serial::get() << *cfg << "\n";
-		}
-	}
+    for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
+        if(strstr(mem->cmdline(), ".vmconfig")) {
+            VMConfig *cfg = new VMConfig(mem->addr, mem->size, mem->cmdline());
+            configs.append(cfg);
+            Serial::get() << *cfg << "\n";
+        }
+    }
 
-	GlobalThread::create(input_thread, CPU::current().log_id(), String("vmmng-input"))->start();
-	GlobalThread::create(refresh_thread, CPU::current().log_id(), String("vmmng-refresh"))->start();
+    GlobalThread::create(input_thread, CPU::current().log_id(), String("vmmng-input"))->start();
+    GlobalThread::create(refresh_thread, CPU::current().log_id(), String("vmmng-refresh"))->start();
 
-	VMMngService *srv = VMMngService::create("vmmanager");
-	srv->start();
-	return 0;
+    VMMngService *srv = VMMngService::create("vmmanager");
+    srv->start();
+    return 0;
 }

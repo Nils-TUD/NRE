@@ -24,63 +24,63 @@ using namespace nre::test;
 static void test_slist();
 
 const TestCase slisttest = {
-	"Singly linked list", test_slist
+    "Singly linked list", test_slist
 };
 
 static void test_slist() {
-	SListItem e1, e2, e3;
-	SList<SListItem>::iterator it;
-	SList<SListItem> l;
-	WVPASSEQ(l.length(), static_cast<size_t>(0));
-	WVPASS(l.begin() == l.end());
+    SListItem e1, e2, e3;
+    SList<SListItem>::iterator it;
+    SList<SListItem> l;
+    WVPASSEQ(l.length(), static_cast<size_t>(0));
+    WVPASS(l.begin() == l.end());
 
-	l.append(&e1);
-	l.append(&e2);
-	l.append(&e3);
-	WVPASSEQ(l.length(), static_cast<size_t>(3));
-	it = l.begin();
-	WVPASS(&*it == &e1);
-	++it;
-	WVPASS(&*it == &e2);
-	++it;
-	WVPASS(&*it == &e3);
-	++it;
-	WVPASS(it == l.end());
+    l.append(&e1);
+    l.append(&e2);
+    l.append(&e3);
+    WVPASSEQ(l.length(), static_cast<size_t>(3));
+    it = l.begin();
+    WVPASS(&*it == &e1);
+    ++it;
+    WVPASS(&*it == &e2);
+    ++it;
+    WVPASS(&*it == &e3);
+    ++it;
+    WVPASS(it == l.end());
 
-	l.remove(&e2);
-	WVPASSEQ(l.length(), static_cast<size_t>(2));
-	it = l.begin();
-	WVPASS(&*it == &e1);
-	++it;
-	WVPASS(&*it == &e3);
-	++it;
-	WVPASS(it == l.end());
+    l.remove(&e2);
+    WVPASSEQ(l.length(), static_cast<size_t>(2));
+    it = l.begin();
+    WVPASS(&*it == &e1);
+    ++it;
+    WVPASS(&*it == &e3);
+    ++it;
+    WVPASS(it == l.end());
 
-	l.remove(&e3);
-	WVPASSEQ(l.length(), static_cast<size_t>(1));
-	it = l.begin();
-	WVPASS(&*it == &e1);
-	++it;
-	WVPASS(it == l.end());
+    l.remove(&e3);
+    WVPASSEQ(l.length(), static_cast<size_t>(1));
+    it = l.begin();
+    WVPASS(&*it == &e1);
+    ++it;
+    WVPASS(it == l.end());
 
-	l.append(&e3);
-	WVPASSEQ(l.length(), static_cast<size_t>(2));
-	it = l.begin();
-	WVPASS(&*it == &e1);
-	++it;
-	WVPASS(&*it == &e3);
-	++it;
-	WVPASS(it == l.end());
+    l.append(&e3);
+    WVPASSEQ(l.length(), static_cast<size_t>(2));
+    it = l.begin();
+    WVPASS(&*it == &e1);
+    ++it;
+    WVPASS(&*it == &e3);
+    ++it;
+    WVPASS(it == l.end());
 
-	l.remove(&e1);
-	l.remove(&e3);
-	WVPASSEQ(l.length(), static_cast<size_t>(0));
-	WVPASS(l.begin() == l.end());
+    l.remove(&e1);
+    l.remove(&e3);
+    WVPASSEQ(l.length(), static_cast<size_t>(0));
+    WVPASS(l.begin() == l.end());
 
-	l.append(&e2);
-	WVPASSEQ(l.length(), static_cast<size_t>(1));
-	it = l.begin();
-	WVPASS(&*it == &e2);
-	++it;
-	WVPASS(it == l.end());
+    l.append(&e2);
+    WVPASSEQ(l.length(), static_cast<size_t>(1));
+    it = l.begin();
+    WVPASS(&*it == &e2);
+    ++it;
+    WVPASS(it == l.end());
 }

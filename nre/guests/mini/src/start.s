@@ -20,49 +20,49 @@
 .extern main
 .extern idt_callbacks
 
-.set MULTIBOOT_PAGE_ALIGN,			1 << 0
-.set MULTIBOOT_MEMORY_INFO,			1 << 1
-.set MULTIBOOT_HEADER_MAGIC,		0x1BADB002
-.set MULTIBOOT_HEADER_FLAGS,		MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
-.set MULTIBOOT_CHECKSUM,			-(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+.set MULTIBOOT_PAGE_ALIGN,          1 << 0
+.set MULTIBOOT_MEMORY_INFO,         1 << 1
+.set MULTIBOOT_HEADER_MAGIC,        0x1BADB002
+.set MULTIBOOT_HEADER_FLAGS,        MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
+.set MULTIBOOT_CHECKSUM,            -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
-.set PAGE_SIZE,						4096
-.set STACK_SIZE,					PAGE_SIZE
+.set PAGE_SIZE,                     4096
+.set STACK_SIZE,                    PAGE_SIZE
 
 .macro BUILD_ERR_ISR no
-	.global entry_\no
-	entry_\no:
-	pushl	$\no					# the interrupt-number
-	jmp		isr
+    .global entry_\no
+    entry_\no:
+    pushl   $\no                    # the interrupt-number
+    jmp     isr
 .endm
 .macro BUILD_DEF_ISR no
-	.global entry_\no
-	entry_\no:
-	pushl	$0						# error code
-	pushl	$\no					# the interrupt-number
-	jmp		isr
+    .global entry_\no
+    entry_\no:
+    pushl   $0                      # error code
+    pushl   $\no                    # the interrupt-number
+    jmp     isr
 .endm
 
 .section .text
 
 # Multiboot header
 .align 4
-	.long	MULTIBOOT_HEADER_MAGIC
-	.long	MULTIBOOT_HEADER_FLAGS
-	.long	MULTIBOOT_CHECKSUM
+    .long   MULTIBOOT_HEADER_MAGIC
+    .long   MULTIBOOT_HEADER_FLAGS
+    .long   MULTIBOOT_CHECKSUM
 
 # the kernel entry point
 start:
-	cli
-	mov		$kernelStack,%esp
-	mov		%esp,%ebp
-	xor		%ebp,%ebp
+    cli
+    mov     $kernelStack,%esp
+    mov     %esp,%ebp
+    xor     %ebp,%ebp
 
-	push	%ebx
-	call	main
-	
-1:									# just to be sure...
-	jmp	1b
+    push    %ebx
+    call    main
+
+1:                                  # just to be sure...
+    jmp    1b
 
 BUILD_DEF_ISR 0
 BUILD_DEF_ISR 1
@@ -114,18 +114,18 @@ BUILD_DEF_ISR 46
 BUILD_DEF_ISR 47
 
 isr:
-	pusha
-	mov		32(%esp),%eax
-	mov		$idt_callbacks,%ecx
-	mov		(%ecx,%eax,4),%eax
-	call	*%eax
-	popa
-	add		$8,%esp					# remove error-code from stack
-	iret
+    pusha
+    mov     32(%esp), %eax
+    mov     $idt_callbacks, %ecx
+    mov     (%ecx, %eax, 4), %eax
+    call    *%eax
+    popa
+    add     $8,%esp                 # remove error-code from stack
+    iret
 
 # kernel stack
 .align PAGE_SIZE
 .rept STACK_SIZE
-	.byte	0
+    .byte  0
 .endr
 kernelStack:

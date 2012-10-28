@@ -28,35 +28,35 @@ class GlobalThread;
  * Represents a protection domain
  */
 class Pd : public ObjCap {
-	friend class GlobalThread;
-	friend void ::_post_init();
+    friend class GlobalThread;
+    friend void ::_post_init();
 
-	/**
-	 * Creates protection-domain object for the current Pd (only used during startup)
-	 *
-	 * @param cap the capability-selector
-	 */
-	explicit Pd(capsel_t cap);
+    /**
+     * Creates protection-domain object for the current Pd (only used during startup)
+     *
+     * @param cap the capability-selector
+     */
+    explicit Pd(capsel_t cap);
 
 public:
-	/**
-	 * @return the current protection domain
-	 */
-	static Pd *current();
+    /**
+     * @return the current protection domain
+     */
+    static Pd *current();
 
-	/**
-	 * Creates a new protection domain
-	 *
-	 * @param crd the capabilities to pass to the new Pd
-	 * @param pd the protection-domain to create the new Pd in
-	 */
-	explicit Pd(Crd crd = Crd(0), Pd *pd = Pd::current());
+    /**
+     * Creates a new protection domain
+     *
+     * @param crd the capabilities to pass to the new Pd
+     * @param pd the protection-domain to create the new Pd in
+     */
+    explicit Pd(Crd crd = Crd(0), Pd *pd = Pd::current());
 
 private:
-	Pd(const Pd&);
-	Pd& operator=(const Pd&);
+    Pd(const Pd&);
+    Pd& operator=(const Pd&);
 
-	static Pd _cur;
+    static Pd _cur;
 };
 
 }

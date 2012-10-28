@@ -38,111 +38,111 @@ class RCULock;
  * additional ones by Thread::create_tls().
  */
 class Thread : public Ec, public SListItem {
-	friend class RCU;
-	friend class RCULock;
+    friend class RCU;
+    friend class RCULock;
 
-	static const size_t TLS_SIZE    = 4;
+    static const size_t TLS_SIZE    = 4;
 
 public:
-	// the slot 0 is reserved for putting a ec-parameter in it
-	static const size_t TLS_PARAM   = 0;
-	enum Flags {
-		HAS_OWN_STACK   = 1,
-		HAS_OWN_UTCB    = 2,
-	};
+    // the slot 0 is reserved for putting a ec-parameter in it
+    static const size_t TLS_PARAM   = 0;
+    enum Flags {
+        HAS_OWN_STACK   = 1,
+        HAS_OWN_UTCB    = 2,
+    };
 
-	/**
-	 * @return the current execution context
-	 */
-	static Thread *current() {
-		return ExecEnv::get_current_thread();
-	}
+    /**
+     * @return the current execution context
+     */
+    static Thread *current() {
+        return ExecEnv::get_current_thread();
+    }
 
 protected:
-	/**
-	 * Constructor
-	 *
-	 * @param cpu the logical cpu to bind the Thread to
-	 * @param evb the offset for the event-portals
-	 * @param cap the capability (INVALID if a new one should be used)
-	 * @param stack the stack address (0 = create one automatically)
-	 * @param uaddr the utcb address (0 = create one automatically)
-	 */
-	explicit Thread(cpu_t cpu, capsel_t evb, capsel_t cap = INVALID, uintptr_t stack = 0,
-	                uintptr_t uaddr = 0);
-	/**
-	 * The actual creation of the Thread.
-	 *
-	 * @param pd the protection domain the Thread should run in
-	 * @param type the type of Thread
-	 * @param sp the stack-pointer
-	 */
-	void create(Pd *pd, Syscalls::ECType type, void *sp);
+    /**
+     * Constructor
+     *
+     * @param cpu the logical cpu to bind the Thread to
+     * @param evb the offset for the event-portals
+     * @param cap the capability (INVALID if a new one should be used)
+     * @param stack the stack address (0 = create one automatically)
+     * @param uaddr the utcb address (0 = create one automatically)
+     */
+    explicit Thread(cpu_t cpu, capsel_t evb, capsel_t cap = INVALID, uintptr_t stack = 0,
+                    uintptr_t uaddr = 0);
+    /**
+     * The actual creation of the Thread.
+     *
+     * @param pd the protection domain the Thread should run in
+     * @param type the type of Thread
+     * @param sp the stack-pointer
+     */
+    void create(Pd *pd, Syscalls::ECType type, void *sp);
 
 public:
-	/**
-	 * Destructor
-	 */
-	virtual ~Thread();
+    /**
+     * Destructor
+     */
+    virtual ~Thread();
 
-	/**
-	 * @return the flags
-	 */
-	uint flags() const {
-		return _flags;
-	}
-	/**
-	 * @return the stack-address
-	 */
-	uintptr_t stack() const {
-		return _stack_addr;
-	}
-	/**
-	 * @return the utcb
-	 */
-	Utcb *utcb() {
-		return reinterpret_cast<Utcb*>(_utcb_addr);
-	}
+    /**
+     * @return the flags
+     */
+    uint flags() const {
+        return _flags;
+    }
+    /**
+     * @return the stack-address
+     */
+    uintptr_t stack() const {
+        return _stack_addr;
+    }
+    /**
+     * @return the utcb
+     */
+    Utcb *utcb() {
+        return reinterpret_cast<Utcb*>(_utcb_addr);
+    }
 
-	/**
-	 * Creates a new TLS slot for all Threads
-	 *
-	 * @return the TLS index
-	 */
-	size_t create_tls() {
-		size_t next = Atomic::add(&_tls_idx, +1);
-		assert(next < TLS_SIZE);
-		return next;
-	}
-	/**
-	 * @param idx the TLS index
-	 * @return the value at given index
-	 */
-	template<typename T>
-	T get_tls(size_t idx) const {
-		assert(idx < TLS_SIZE);
-		return reinterpret_cast<T>(_tls[idx]);
-	}
-	/**
-	 * @param idx the TLS index
-	 * @param val the new value
-	 */
-	template<typename T>
-	void set_tls(size_t idx, T val) {
-		assert(idx < TLS_SIZE);
-		_tls[idx] = reinterpret_cast<void*>(val);
-	}
+    /**
+     * Creates a new TLS slot for all Threads
+     *
+     * @return the TLS index
+     */
+    size_t create_tls() {
+        size_t next = Atomic::add(&_tls_idx, +1);
+        assert(next < TLS_SIZE);
+        return next;
+    }
+    /**
+     * @param idx the TLS index
+     * @return the value at given index
+     */
+    template<typename T>
+    T get_tls(size_t idx) const {
+        assert(idx < TLS_SIZE);
+        return reinterpret_cast<T>(_tls[idx]);
+    }
+    /**
+     * @param idx the TLS index
+     * @param val the new value
+     */
+    template<typename T>
+    void set_tls(size_t idx, T val) {
+        assert(idx < TLS_SIZE);
+        _tls[idx] = reinterpret_cast<void*>(val);
+    }
 
 private:
-	Thread(const Thread&);
-	Thread& operator=(const Thread&);
+    Thread(const Thread&);
+    Thread& operator=(const Thread&);
 
-	uint32_t _rcu_counter;
-	uintptr_t _utcb_addr;
-	uintptr_t _stack_addr;
-	uint _flags;
-	void *_tls[TLS_SIZE];
-	static size_t _tls_idx;
+    uint32_t _rcu_counter;
+    uintptr_t _utcb_addr;
+    uintptr_t _stack_addr;
+    uint _flags;
+    void *_tls[TLS_SIZE];
+    static size_t _tls_idx;
 };
 
 }

@@ -32,33 +32,33 @@ namespace nre {
  */
 class ACPI {
 public:
-	/**
-	 * The available commands
-	 */
-	enum Command {
-		GET_MEM,
-		FIND_TABLE,
-		IRQ_TO_GSI,
-		GET_GSI,
-	};
+    /**
+     * The available commands
+     */
+    enum Command {
+        GET_MEM,
+        FIND_TABLE,
+        IRQ_TO_GSI,
+        GET_GSI,
+    };
 
-	/**
-	 * Root system descriptor table
-	 */
-	struct RSDT {
-		char signature[4];
-		uint32_t length;
-		uint8_t revision;
-		uint8_t checksum;
-		char oemId[6];
-		char oemTableId[8];
-		uint32_t oemRevision;
-		char creatorId[4];
-		uint32_t creatorRevision;
-	} PACKED;
+    /**
+     * Root system descriptor table
+     */
+    struct RSDT {
+        char signature[4];
+        uint32_t length;
+        uint8_t revision;
+        uint8_t checksum;
+        char oemId[6];
+        char oemTableId[8];
+        uint32_t oemRevision;
+        char creatorId[4];
+        uint32_t creatorRevision;
+    } PACKED;
 
 private:
-	ACPI();
+    ACPI();
 };
 
 /**
@@ -66,90 +66,90 @@ private:
  */
 class ACPISession : public PtClientSession {
 public:
-	/**
-	 * Creates a new session with given connection
-	 *
-	 * @param con the connection
-	 */
-	explicit ACPISession(Connection &con) : PtClientSession(con), _ds() {
-		get_mem();
-	}
-	/**
-	 * Destroys this session
-	 */
-	virtual ~ACPISession() {
-		delete _ds;
-	}
+    /**
+     * Creates a new session with given connection
+     *
+     * @param con the connection
+     */
+    explicit ACPISession(Connection &con) : PtClientSession(con), _ds() {
+        get_mem();
+    }
+    /**
+     * Destroys this session
+     */
+    virtual ~ACPISession() {
+        delete _ds;
+    }
 
-	/**
-	 * Finds the ACPI table with given name
-	 *
-	 * @param name the name of the table
-	 * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
-	 * @return the RSDT or 0 if not found
-	 */
-	ACPI::RSDT *find_table(const String &name, uint instance = 0) const {
-		UtcbFrame uf;
-		uf << ACPI::FIND_TABLE << name << instance;
-		pt().call(uf);
+    /**
+     * Finds the ACPI table with given name
+     *
+     * @param name the name of the table
+     * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
+     * @return the RSDT or 0 if not found
+     */
+    ACPI::RSDT *find_table(const String &name, uint instance = 0) const {
+        UtcbFrame uf;
+        uf << ACPI::FIND_TABLE << name << instance;
+        pt().call(uf);
 
-		uf.check_reply();
-		uintptr_t offset;
-		uf >> offset;
-		return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
-	}
+        uf.check_reply();
+        uintptr_t offset;
+        uf >> offset;
+        return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
+    }
 
-	/**
-	 * Determines the GSI that corresponds to the given ISA IRQ. If the MADT is present, it will
-	 * be searched for an interrupt source override entry for that IRQ. If not found or MADT
-	 * is not present, it will be assumed that the IRQ is identity mapped to the GSI.
-	 *
-	 * @param irq the ISA IRQ
-	 * @return the GSI
-	 */
-	uint irq_to_gsi(uint irq) const {
-		UtcbFrame uf;
-		uf << ACPI::IRQ_TO_GSI << irq;
-		pt().call(uf);
+    /**
+     * Determines the GSI that corresponds to the given ISA IRQ. If the MADT is present, it will
+     * be searched for an interrupt source override entry for that IRQ. If not found or MADT
+     * is not present, it will be assumed that the IRQ is identity mapped to the GSI.
+     *
+     * @param irq the ISA IRQ
+     * @return the GSI
+     */
+    uint irq_to_gsi(uint irq) const {
+        UtcbFrame uf;
+        uf << ACPI::IRQ_TO_GSI << irq;
+        pt().call(uf);
 
-		uf.check_reply();
-		uint gsi;
-		uf >> gsi;
-		return gsi;
-	}
+        uf.check_reply();
+        uint gsi;
+        uf >> gsi;
+        return gsi;
+    }
 
-	/**
-	 * Search for the GSI that is triggered by the given device, specified by <bdf>.
-	 *
-	 * @param bdf the bus-device-function triple of the device
-	 * @param pin the IRQ pin of the device
-	 * @param parent_bdf the bus-device-function triple of the parent device (e.g. bridge)
-	 * @return the GSI
-	 */
-	uint get_gsi(PCIConfig::bdf_type bdf, uint8_t pin, PCIConfig::bdf_type parent_bdf) const {
-		UtcbFrame uf;
-		uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
-		pt().call(uf);
+    /**
+     * Search for the GSI that is triggered by the given device, specified by <bdf>.
+     *
+     * @param bdf the bus-device-function triple of the device
+     * @param pin the IRQ pin of the device
+     * @param parent_bdf the bus-device-function triple of the parent device (e.g. bridge)
+     * @return the GSI
+     */
+    uint get_gsi(PCIConfig::bdf_type bdf, uint8_t pin, PCIConfig::bdf_type parent_bdf) const {
+        UtcbFrame uf;
+        uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
+        pt().call(uf);
 
-		uf.check_reply();
-		uint gsi;
-		uf >> gsi;
-		return gsi;
-	}
+        uf.check_reply();
+        uint gsi;
+        uf >> gsi;
+        return gsi;
+    }
 
 private:
-	void get_mem() {
-		UtcbFrame uf;
-		uf << ACPI::GET_MEM;
-		pt().call(uf);
+    void get_mem() {
+        UtcbFrame uf;
+        uf << ACPI::GET_MEM;
+        pt().call(uf);
 
-		uf.check_reply();
-		DataSpaceDesc desc;
-		uf >> desc;
-		_ds = new DataSpace(desc);
-	}
+        uf.check_reply();
+        DataSpaceDesc desc;
+        uf >> desc;
+        _ds = new DataSpace(desc);
+    }
 
-	DataSpace *_ds;
+    DataSpace *_ds;
 };
 
 }

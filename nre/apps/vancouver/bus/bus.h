@@ -24,13 +24,13 @@
  * The generic Device used in generic bus transactions.
  */
 class Device {
-	const char *_debug_name;
+    const char *_debug_name;
 public:
-	void debug_dump() {
-		nre::Serial::get().writef("\t%s\n", _debug_name);
-	}
-	Device(const char *debug_name) : _debug_name(debug_name) {
-	}
+    void debug_dump() {
+        nre::Serial::get().writef("\t%s\n", _debug_name);
+    }
+    Device(const char *debug_name) : _debug_name(debug_name) {
+    }
 };
 
 /**
@@ -39,12 +39,12 @@ public:
 template<typename Y>
 class StaticReceiver : public Device {
 public:
-	template<class M>
-	static bool receive_static(Device *o, M& msg) {
-		return static_cast<Y*>(o)->receive(msg);
-	}
-	StaticReceiver() : Device(__PRETTY_FUNCTION__) {
-	}
+    template<class M>
+    static bool receive_static(Device *o, M& msg) {
+        return static_cast<Y*>(o)->receive(msg);
+    }
+    StaticReceiver() : Device(__PRETTY_FUNCTION__) {
+    }
 };
 
 /**
@@ -52,99 +52,99 @@ public:
  */
 template<class M>
 class DBus {
-	typedef bool (*ReceiveFunction)(Device *, M&);
-	struct Entry {
-		Device *_dev;
-		ReceiveFunction _func;
-	};
+    typedef bool (*ReceiveFunction)(Device *, M&);
+    struct Entry {
+        Device *_dev;
+        ReceiveFunction _func;
+    };
 
-	unsigned long _debug_counter;
-	size_t _list_count;
-	size_t _list_size;
-	struct Entry *_list;
+    unsigned long _debug_counter;
+    size_t _list_count;
+    size_t _list_size;
+    struct Entry *_list;
 
-	/**
-	 * To avoid bugs we disallow the copy constuctor.
-	 */
-	DBus(const DBus<M> &bus);
-	DBus& operator=(const DBus<M> &bus);
+    /**
+     * To avoid bugs we disallow the copy constuctor.
+     */
+    DBus(const DBus<M> &bus);
+    DBus& operator=(const DBus<M> &bus);
 
-	void set_size(size_t new_size) {
-		Entry *n = new Entry[new_size];
-		if(_list) {
-			memcpy(n, _list, _list_count * sizeof(*_list));
-			delete[] _list;
-		}
-		_list = n;
-		_list_size = new_size;
-	}
+    void set_size(size_t new_size) {
+        Entry *n = new Entry[new_size];
+        if(_list) {
+            memcpy(n, _list, _list_count * sizeof(*_list));
+            delete[] _list;
+        }
+        _list = n;
+        _list_size = new_size;
+    }
 
 public:
-	void add(Device *dev, ReceiveFunction func) {
-		if(_list_count >= _list_size)
-			set_size(_list_size > 0 ? _list_size * 2 : 1);
-		_list[_list_count]._dev = dev;
-		_list[_list_count]._func = func;
-		_list_count++;
-	}
+    void add(Device *dev, ReceiveFunction func) {
+        if(_list_count >= _list_size)
+            set_size(_list_size > 0 ? _list_size * 2 : 1);
+        _list[_list_count]._dev = dev;
+        _list[_list_count]._func = func;
+        _list_count++;
+    }
 
-	/**
-	 * Send message LIFO.
-	 */
-	bool send(M &msg, bool earlyout = false) {
-		_debug_counter++;
-		bool res = false;
-		for(size_t i = _list_count; i-- && !(earlyout && res); )
-			res |= _list[i]._func(_list[i]._dev, msg);
-		return res;
-	}
+    /**
+     * Send message LIFO.
+     */
+    bool send(M &msg, bool earlyout = false) {
+        _debug_counter++;
+        bool res = false;
+        for(size_t i = _list_count; i-- && !(earlyout && res); )
+            res |= _list[i]._func(_list[i]._dev, msg);
+        return res;
+    }
 
-	/**
-	 * Send message in FIFO order
-	 */
-	bool send_fifo(M &msg) {
-		_debug_counter++;
-		bool res = false;
-		for(size_t i = 0; i < _list_count; i++)
-			res |= _list[i]._func(_list[i]._dev, msg);
-		return 0;
-	}
+    /**
+     * Send message in FIFO order
+     */
+    bool send_fifo(M &msg) {
+        _debug_counter++;
+        bool res = false;
+        for(size_t i = 0; i < _list_count; i++)
+            res |= _list[i]._func(_list[i]._dev, msg);
+        return 0;
+    }
 
-	/**
-	 * Send message first hit round robin and return the number of the
-	 * next one that accepted the message.
-	 */
-	bool send_rr(M &msg, unsigned &start) {
-		_debug_counter++;
-		for(size_t i = 0; i < _list_count; i++) {
-			if(_list[i]._func(_list[(i + start) % _list_count]._dev, msg)) {
-				start = (i + start + 1) % _list_count;
-				return true;
-			}
-		}
-		return false;
-	}
+    /**
+     * Send message first hit round robin and return the number of the
+     * next one that accepted the message.
+     */
+    bool send_rr(M &msg, unsigned &start) {
+        _debug_counter++;
+        for(size_t i = 0; i < _list_count; i++) {
+            if(_list[i]._func(_list[(i + start) % _list_count]._dev, msg)) {
+                start = (i + start + 1) % _list_count;
+                return true;
+            }
+        }
+        return false;
+    }
 
-	/**
-	 * Return the number of entries in the list.
-	 */
-	size_t count() {
-		return _list_count;
-	}
+    /**
+     * Return the number of entries in the list.
+     */
+    size_t count() {
+        return _list_count;
+    }
 
-	/**
-	 * Debugging output.
-	 */
-	void debug_dump() {
-		nre::Serial::get().writef("%s: Bus used %ld times.", __PRETTY_FUNCTION__, _debug_counter);
-		for(size_t i = 0; i < _list_count; i++) {
-			nre::Serial::get().writef("\n%2d:\t", i);
-			_list[i]._dev->debug_dump();
-		}
-		nre::Serial::get().writef("\n");
-	}
+    /**
+     * Debugging output.
+     */
+    void debug_dump() {
+        nre::Serial::get().writef("%s: Bus used %ld times.", __PRETTY_FUNCTION__, _debug_counter);
+        for(size_t i = 0; i < _list_count; i++) {
+            nre::Serial::get().writef("\n%2d:\t", i);
+            _list[i]._dev->debug_dump();
+        }
+        nre::Serial::get().writef("\n");
+    }
 
-	/** Default constructor. */
-	DBus() : _debug_counter(), _list_count(), _list_size(), _list() {
-	}
+    /** Default constructor. */
+    DBus() : _debug_counter(), _list_count(), _list_size(), _list() {
+    }
 };

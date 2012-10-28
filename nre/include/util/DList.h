@@ -30,34 +30,34 @@ class DListIterator;
  * data to the item.
  */
 class DListItem {
-	template<class T>
-	friend class DList;
-	template<class T>
-	friend class DListIterator;
+    template<class T>
+    friend class DList;
+    template<class T>
+    friend class DListIterator;
 
 public:
-	/**
-	 * Constructor
-	 */
-	explicit DListItem() : _prev(), _next() {
-	}
+    /**
+     * Constructor
+     */
+    explicit DListItem() : _prev(), _next() {
+    }
 
 private:
-	DListItem *prev() {
-		return _prev;
-	}
-	void prev(DListItem *i) {
-		_prev = i;
-	}
-	DListItem *next() {
-		return _next;
-	}
-	void next(DListItem *i) {
-		_next = i;
-	}
+    DListItem *prev() {
+        return _prev;
+    }
+    void prev(DListItem *i) {
+        _prev = i;
+    }
+    DListItem *next() {
+        return _next;
+    }
+    void next(DListItem *i) {
+        _next = i;
+    }
 
-	DListItem *_prev;
-	DListItem *_next;
+    DListItem *_prev;
+    DListItem *_next;
 };
 
 /**
@@ -67,46 +67,46 @@ private:
 template<class T>
 class DListIterator {
 public:
-	explicit DListIterator(T *p = 0, T *n = 0) : _p(p), _n(n) {
-	}
+    explicit DListIterator(T *p = 0, T *n = 0) : _p(p), _n(n) {
+    }
 
-	T & operator*() const {
-		return *_n;
-	}
-	T *operator->() const {
-		return &operator*();
-	}
-	DListIterator<T>& operator--() {
-		_n = _p;
-		if(_p)
-			_p = static_cast<T*>(_p->prev());
-		return *this;
-	}
-	DListIterator<T> operator--(int) {
-		DListIterator<T> tmp(*this);
-		operator--();
-		return tmp;
-	}
-	DListIterator<T>& operator++() {
-		_p = _n;
-		_n = static_cast<T*>(_n->next());
-		return *this;
-	}
-	DListIterator<T> operator++(int) {
-		DListIterator<T> tmp(*this);
-		operator++();
-		return tmp;
-	}
-	bool operator==(const DListIterator<T>& rhs) const {
-		return _n == rhs._n;
-	}
-	bool operator!=(const DListIterator<T>& rhs) const {
-		return _n != rhs._n;
-	}
+    T & operator*() const {
+        return *_n;
+    }
+    T *operator->() const {
+        return &operator*();
+    }
+    DListIterator<T>& operator--() {
+        _n = _p;
+        if(_p)
+            _p = static_cast<T*>(_p->prev());
+        return *this;
+    }
+    DListIterator<T> operator--(int) {
+        DListIterator<T> tmp(*this);
+        operator--();
+        return tmp;
+    }
+    DListIterator<T>& operator++() {
+        _p = _n;
+        _n = static_cast<T*>(_n->next());
+        return *this;
+    }
+    DListIterator<T> operator++(int) {
+        DListIterator<T> tmp(*this);
+        operator++();
+        return tmp;
+    }
+    bool operator==(const DListIterator<T>& rhs) const {
+        return _n == rhs._n;
+    }
+    bool operator!=(const DListIterator<T>& rhs) const {
+        return _n != rhs._n;
+    }
 
 private:
-	T *_p;
-	T *_n;
+    T *_p;
+    T *_n;
 };
 
 /**
@@ -117,73 +117,73 @@ private:
 template<class T>
 class DList {
 public:
-	typedef DListIterator<T> iterator;
+    typedef DListIterator<T> iterator;
 
-	/**
-	 * Constructor. Creates an empty list
-	 */
-	explicit DList() : _head(0), _tail(0), _len(0) {
-	}
+    /**
+     * Constructor. Creates an empty list
+     */
+    explicit DList() : _head(0), _tail(0), _len(0) {
+    }
 
-	/**
-	 * @return the number of items in the list
-	 */
-	size_t length() const {
-		return _len;
-	}
+    /**
+     * @return the number of items in the list
+     */
+    size_t length() const {
+        return _len;
+    }
 
-	/**
-	 * @return beginning of list
-	 */
-	iterator begin() const {
-		return iterator(0, _head);
-	}
-	/**
-	 * @return end of list
-	 */
-	iterator end() const {
-		return iterator(_tail, 0);
-	}
+    /**
+     * @return beginning of list
+     */
+    iterator begin() const {
+        return iterator(0, _head);
+    }
+    /**
+     * @return end of list
+     */
+    iterator end() const {
+        return iterator(_tail, 0);
+    }
 
-	/**
-	 * Appends the given item to the list. This works in constant time.
-	 *
-	 * @param e the list item
-	 * @return the position where it has been inserted
-	 */
-	iterator append(T *e) {
-		if(_head == 0)
-			_head = e;
-		else
-			_tail->next(e);
-		e->prev(_tail);
-		e->next(0);
-		_tail = e;
-		_len++;
-		return iterator(static_cast<T*>(e->prev()), e);
-	}
-	/**
-	 * Removes the given item from the list. This works in constant time.
-	 * Expects that the item is in the list!
-	 *
-	 * @param e the list item
-	 */
-	void remove(T *e) {
-		if(e->prev())
-			e->prev()->next(e->next());
-		if(e->next())
-			e->next()->prev(e->prev());
-		if(e == _head)
-			_head = static_cast<T*>(e->next());
-		if(e == _tail)
-			_tail = static_cast<T*>(e->prev());
-		_len--;
-	}
+    /**
+     * Appends the given item to the list. This works in constant time.
+     *
+     * @param e the list item
+     * @return the position where it has been inserted
+     */
+    iterator append(T *e) {
+        if(_head == 0)
+            _head = e;
+        else
+            _tail->next(e);
+        e->prev(_tail);
+        e->next(0);
+        _tail = e;
+        _len++;
+        return iterator(static_cast<T*>(e->prev()), e);
+    }
+    /**
+     * Removes the given item from the list. This works in constant time.
+     * Expects that the item is in the list!
+     *
+     * @param e the list item
+     */
+    void remove(T *e) {
+        if(e->prev())
+            e->prev()->next(e->next());
+        if(e->next())
+            e->next()->prev(e->prev());
+        if(e == _head)
+            _head = static_cast<T*>(e->next());
+        if(e == _tail)
+            _tail = static_cast<T*>(e->prev());
+        _len--;
+    }
 
 private:
-	T *_head;
-	T *_tail;
-	size_t _len;
+    T *_head;
+    T *_tail;
+    size_t _len;
 };
 
 }

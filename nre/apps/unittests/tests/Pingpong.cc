@@ -27,7 +27,7 @@ using namespace nre::test;
 static void test_pingpong();
 
 const TestCase pingpong = {
-	"PingPong", test_pingpong
+    "PingPong", test_pingpong
 };
 
 static const uint tries = 10000;
@@ -36,58 +36,58 @@ PORTAL static void portal_empty(capsel_t) {
 }
 
 PORTAL static void portal_data(capsel_t) {
-	UtcbFrameRef uf;
-	try {
-		uint a, b, c;
-		uf >> a >> b >> c;
-		uf.clear();
-		uf << (a + b) << (a + b + c);
-	}
-	catch(const Exception&) {
-		uf.clear();
-	}
+    UtcbFrameRef uf;
+    try {
+        uint a, b, c;
+        uf >> a >> b >> c;
+        uf.clear();
+        uf << (a + b) << (a + b + c);
+    }
+    catch(const Exception&) {
+        uf.clear();
+    }
 }
 
 static void print_result(AvgProfiler &prof, uint sum) {
-	WVPERF(prof.avg(), "cycles");
-	WVPASSEQ(sum, (1 + 2) * tries + (1 + 2 + 3) * tries);
-	WVPRINTF("sum: %u", sum);
-	WVPRINTF("min: %Lu", prof.min());
-	WVPRINTF("max: %Lu", prof.max());
+    WVPERF(prof.avg(), "cycles");
+    WVPASSEQ(sum, (1 + 2) * tries + (1 + 2 + 3) * tries);
+    WVPRINTF("sum: %u", sum);
+    WVPRINTF("min: %Lu", prof.min());
+    WVPRINTF("max: %Lu", prof.max());
 }
 
 static void test_pingpong() {
-	LocalThread *ec = LocalThread::create(CPU::current().log_id());
+    LocalThread *ec = LocalThread::create(CPU::current().log_id());
 
-	{
-		Pt pt(ec, portal_empty);
-		AvgProfiler prof(tries);
-		UtcbFrame uf;
-		for(uint i = 0; i < tries; i++) {
-			prof.start();
-			pt.call(uf);
-			prof.stop();
-		}
-		WVPRINTF("Using portal_empty:");
-		print_result(prof, (1 + 2) * tries + (1 + 2 + 3) * tries);
-	}
+    {
+        Pt pt(ec, portal_empty);
+        AvgProfiler prof(tries);
+        UtcbFrame uf;
+        for(uint i = 0; i < tries; i++) {
+            prof.start();
+            pt.call(uf);
+            prof.stop();
+        }
+        WVPRINTF("Using portal_empty:");
+        print_result(prof, (1 + 2) * tries + (1 + 2 + 3) * tries);
+    }
 
-	{
-		Pt pt(ec, portal_data);
-		AvgProfiler prof(tries);
-		uint sum = 0;
-		UtcbFrame uf;
-		for(uint i = 0; i < tries; i++) {
-			prof.start();
-			uf << 1 << 2 << 3;
-			pt.call(uf);
-			uint x = 0, y = 0;
-			uf >> x >> y;
-			uf.clear();
-			sum += x + y;
-			prof.stop();
-		}
-		WVPRINTF("Using portal_data:");
-		print_result(prof, sum);
-	}
+    {
+        Pt pt(ec, portal_data);
+        AvgProfiler prof(tries);
+        uint sum = 0;
+        UtcbFrame uf;
+        for(uint i = 0; i < tries; i++) {
+            prof.start();
+            uf << 1 << 2 << 3;
+            pt.call(uf);
+            uint x = 0, y = 0;
+            uf >> x >> y;
+            uf.clear();
+            sum += x + y;
+            prof.stop();
+        }
+        WVPRINTF("Using portal_data:");
+        print_result(prof, sum);
+    }
 }

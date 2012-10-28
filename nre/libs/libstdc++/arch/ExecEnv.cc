@@ -24,74 +24,74 @@
 namespace nre {
 
 void ExecEnv::exit(int code) {
-	// jump to that address to cause a pagefault. this way, we tell our parent that we exited
-	// voluntarily with given exit code
-	asm volatile (
-	    "jmp	*%0;"
-		:
-		: "r" (EXIT_START + (code & (EXIT_CODE_NUM - 1)))
-	);
-	UNREACHED;
+    // jump to that address to cause a pagefault. this way, we tell our parent that we exited
+    // voluntarily with given exit code
+    asm volatile (
+        "jmp	*%0;"
+        :
+        : "r" (EXIT_START + (code & (EXIT_CODE_NUM - 1)))
+    );
+    UNREACHED;
 }
 
 void ExecEnv::thread_exit() {
-	Thread *t = Thread::current();
-	// tell our parent the stack and utcb address, if we've got it from him, via rsi and rdi and
-	// announce our termination via pagefault at THREAD_EXIT. he will free the resources.
-	uintptr_t stack = t->stack();
-	uintptr_t utcb = reinterpret_cast<uintptr_t>(t->utcb());
-	uint flags = t->flags();
-	// now its safe to delete our thread object
-	delete t;
-	asm volatile (
-	    "jmp	*%0;"
-		:
-		: "r" (THREAD_EXIT),
-	    "S" ((~flags & Thread::HAS_OWN_STACK) ? stack : 0),
-	    "D" ((~flags & Thread::HAS_OWN_UTCB) ? utcb : 0)
-	);
-	UNREACHED;
+    Thread *t = Thread::current();
+    // tell our parent the stack and utcb address, if we've got it from him, via rsi and rdi and
+    // announce our termination via pagefault at THREAD_EXIT. he will free the resources.
+    uintptr_t stack = t->stack();
+    uintptr_t utcb = reinterpret_cast<uintptr_t>(t->utcb());
+    uint flags = t->flags();
+    // now its safe to delete our thread object
+    delete t;
+    asm volatile (
+        "jmp	*%0;"
+        :
+        : "r" (THREAD_EXIT),
+        "S" ((~flags & Thread::HAS_OWN_STACK) ? stack : 0),
+        "D" ((~flags & Thread::HAS_OWN_UTCB) ? utcb : 0)
+    );
+    UNREACHED;
 }
 
 void *ExecEnv::setup_stack(Pd *pd, Thread *t, startup_func start, uintptr_t ret, uintptr_t stack) {
-	void **sp = reinterpret_cast<void**>(stack);
-	size_t stack_top = STACK_SIZE / sizeof(void*);
-	sp[--stack_top] = t;
-	sp[--stack_top] = pd;
-	// add another word here to align the stack to 16-bytes + 8. this is necessary to get SSE
-	// working. as it seems, the compiler expects that at a function-entry it is not aligned to
-	// 16-byte.
-	sp[--stack_top] = 0;
-	sp[--stack_top] = reinterpret_cast<void*>(start);
-	sp[--stack_top] = reinterpret_cast<void*>(ret);
-	return sp + stack_top;
+    void **sp = reinterpret_cast<void**>(stack);
+    size_t stack_top = STACK_SIZE / sizeof(void*);
+    sp[--stack_top] = t;
+    sp[--stack_top] = pd;
+    // add another word here to align the stack to 16-bytes + 8. this is necessary to get SSE
+    // working. as it seems, the compiler expects that at a function-entry it is not aligned to
+    // 16-byte.
+    sp[--stack_top] = 0;
+    sp[--stack_top] = reinterpret_cast<void*>(start);
+    sp[--stack_top] = reinterpret_cast<void*>(ret);
+    return sp + stack_top;
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t *frames, size_t max) {
-	uintptr_t bp;
-	asm volatile ("mov %%" EXPAND(REG(bp)) ",%0" : "=a" (bp));
-	return collect_backtrace(Math::round_dn<uintptr_t>(bp, ExecEnv::STACK_SIZE), bp, frames, max);
+    uintptr_t bp;
+    asm volatile ("mov %%" EXPAND(REG(bp)) ",%0" : "=a" (bp));
+    return collect_backtrace(Math::round_dn<uintptr_t>(bp, ExecEnv::STACK_SIZE), bp, frames, max);
 }
 
 size_t ExecEnv::collect_backtrace(uintptr_t stack, uintptr_t bp, uintptr_t *frames, size_t max) {
-	uintptr_t end, start;
-	uintptr_t *frame = frames;
-	size_t count = 0;
-	end = Math::round_up<uintptr_t>(bp, ExecEnv::STACK_SIZE);
-	start = end - ExecEnv::STACK_SIZE;
-	for(size_t i = 0; i < max - 1; i++) {
-		// prevent page-fault
-		if(bp < start || bp >= end)
-			break;
-		bp = stack + (bp & (ExecEnv::STACK_SIZE - 1));
-		*frame = *(reinterpret_cast<uintptr_t*>(bp) + 1) - CALL_INSTR_SIZE;
-		frame++;
-		count++;
-		bp = *reinterpret_cast<uintptr_t*>(bp);
-	}
-	// terminate
-	*frame = 0;
-	return count;
+    uintptr_t end, start;
+    uintptr_t *frame = frames;
+    size_t count = 0;
+    end = Math::round_up<uintptr_t>(bp, ExecEnv::STACK_SIZE);
+    start = end - ExecEnv::STACK_SIZE;
+    for(size_t i = 0; i < max - 1; i++) {
+        // prevent page-fault
+        if(bp < start || bp >= end)
+            break;
+        bp = stack + (bp & (ExecEnv::STACK_SIZE - 1));
+        *frame = *(reinterpret_cast<uintptr_t*>(bp) + 1) - CALL_INSTR_SIZE;
+        frame++;
+        count++;
+        bp = *reinterpret_cast<uintptr_t*>(bp);
+    }
+    // terminate
+    *frame = 0;
+    return count;
 }
 
 }

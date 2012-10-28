@@ -28,34 +28,34 @@ class ConsoleService;
 class ConsoleSessionData;
 
 class ViewSwitcher {
-	static const size_t DS_SIZE       = nre::ExecEnv::PAGE_SIZE * Screen::PAGES;
-	static const uint COLOR           = 0x1F;
-	static const uint SWITCH_TIME     = 1000; // ms
-	static const uint REFRESH_DELAY   = 25;   // ms
+    static const size_t DS_SIZE       = nre::ExecEnv::PAGE_SIZE * Screen::PAGES;
+    static const uint COLOR           = 0x1F;
+    static const uint SWITCH_TIME     = 1000; // ms
+    static const uint REFRESH_DELAY   = 25;   // ms
 
-	struct SwitchCommand {
-		size_t oldsessid;
-		size_t sessid;
-	};
+    struct SwitchCommand {
+        size_t oldsessid;
+        size_t sessid;
+    };
 
 public:
-	explicit ViewSwitcher(ConsoleService *srv);
+    explicit ViewSwitcher(ConsoleService *srv);
 
-	void start() {
-		_ec->start();
-	}
+    void start() {
+        _ec->start();
+    }
 
-	void switch_to(ConsoleSessionData *from, ConsoleSessionData *to);
+    void switch_to(ConsoleSessionData *from, ConsoleSessionData *to);
 
 private:
-	static void switch_thread(void*);
+    static void switch_thread(void*);
 
-	nre::UserSm _sm;
-	nre::DataSpace _ds;
-	nre::Producer<SwitchCommand> _prod;
-	nre::Consumer<SwitchCommand> _cons;
-	nre::GlobalThread *_ec;
-	ConsoleService *_srv;
-	static char _backup[];
-	static char _buffer[];
+    nre::UserSm _sm;
+    nre::DataSpace _ds;
+    nre::Producer<SwitchCommand> _prod;
+    nre::Consumer<SwitchCommand> _cons;
+    nre::GlobalThread *_ec;
+    ConsoleService *_srv;
+    static char _backup[];
+    static char _buffer[];
 };

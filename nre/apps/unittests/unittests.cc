@@ -37,41 +37,41 @@ using namespace nre;
 using namespace nre::test;
 
 const TestCase testcases[] = {
-	memcpytest,
-	memsettest,
-	threads,
-	pingpong,
-	pingpongxpd,
-	catchex,
-	delegateperf,
-	utcbnest,
-	utcbperf,
-	dstest,
-	slisttest,
-	sortedslisttest,
-	dlisttest,
-	cyclertest1,
-	cyclertest2,
-	cyclertest3,
-	regmng,
-	maskfield,
-	sharedmem,
-	treaptest_inorder,
-	treaptest_revorder,
-	treaptest_randorder,
-	treaptest_perf,
+    memcpytest,
+    memsettest,
+    threads,
+    pingpong,
+    pingpongxpd,
+    catchex,
+    delegateperf,
+    utcbnest,
+    utcbperf,
+    dstest,
+    slisttest,
+    sortedslisttest,
+    dlisttest,
+    cyclertest1,
+    cyclertest2,
+    cyclertest3,
+    regmng,
+    maskfield,
+    sharedmem,
+    treaptest_inorder,
+    treaptest_revorder,
+    treaptest_randorder,
+    treaptest_perf,
 };
 
 int main() {
-	for(size_t i = 0; i < ARRAY_SIZE(testcases); ++i) {
-		Serial::get().writef("Testing %s...\n", testcases[i].name);
-		try {
-			testcases[i].func();
-		}
-		catch(const Exception& e) {
-			Serial::get() << e;
-		}
-		Serial::get().writef("Done\n");
-	}
-	return 0;
+    for(size_t i = 0; i < ARRAY_SIZE(testcases); ++i) {
+        Serial::get().writef("Testing %s...\n", testcases[i].name);
+        try {
+            testcases[i].func();
+        }
+        catch(const Exception& e) {
+            Serial::get() << e;
+        }
+        Serial::get().writef("Done\n");
+    }
+    return 0;
 }

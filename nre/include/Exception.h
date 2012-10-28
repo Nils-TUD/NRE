@@ -35,16 +35,16 @@
  * switch easily to the constructor inheritance concept as soon as its available in gcc.
  */
 #define DEFINE_EXCONSTRS(className)                                                                      \
-	explicit className(ErrorCode code = E_FAILURE, const char *msg = 0) throw() : Exception(code, msg) { \
-	}                                                                                                    \
-	explicit className(ErrorCode code, size_t bufsize, const char *fmt, ...) throw() : Exception(code) { \
-		va_list ap;                                                                                      \
-		va_start(ap, fmt);                                                                               \
-		_msg.vformat(bufsize, fmt, ap);                                                                  \
-		va_end(ap);                                                                                      \
-	}                                                                                                    \
+    explicit className(ErrorCode code = E_FAILURE, const char *msg = 0) throw() : Exception(code, msg) { \
+    }                                                                                                    \
+    explicit className(ErrorCode code, size_t bufsize, const char *fmt, ...) throw() : Exception(code) { \
+        va_list ap;                                                                                      \
+        va_start(ap, fmt);                                                                               \
+        _msg.vformat(bufsize, fmt, ap);                                                                  \
+        va_end(ap);                                                                                      \
+    }                                                                                                    \
     explicit className(ErrorCode code, const String &msg) throw() : Exception(code, msg) {               \
-	}
+    }
 
 namespace std {
 
@@ -100,116 +100,116 @@ UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
  * have optionally a message (string).
  */
 class Exception {
-	friend UtcbFrameRef & operator<<(UtcbFrameRef &uf, const Exception &e);
-	friend UtcbFrameRef & operator>>(UtcbFrameRef &uf, Exception &e);
+    friend UtcbFrameRef & operator<<(UtcbFrameRef &uf, const Exception &e);
+    friend UtcbFrameRef & operator>>(UtcbFrameRef &uf, Exception &e);
 
-	static const size_t MAX_TRACE_DEPTH = 16;
-
-public:
-	typedef const uintptr_t *backtrace_iterator;
+    static const size_t MAX_TRACE_DEPTH = 16;
 
 public:
-	/**
-	 * Constructor
-	 *
-	 * @param code the error-code
-	 * @param msg optionally, a message describing the error
-	 */
-	explicit Exception(ErrorCode code = E_FAILURE, const char *msg = 0) throw();
+    typedef const uintptr_t *backtrace_iterator;
 
-	/**
-	 * Constructor with a formatted string
-	 *
-	 * @param code the error-code
-	 * @param bufsize the size of the buffer for string to create
-	 * @param msg a message describing the error
-	 */
-	explicit Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw();
+public:
+    /**
+     * Constructor
+     *
+     * @param code the error-code
+     * @param msg optionally, a message describing the error
+     */
+    explicit Exception(ErrorCode code = E_FAILURE, const char *msg = 0) throw();
 
-	/**
-	 * Constructor
-	 *
-	 * @param code the error-code
-	 * @param msg a message describing the error
-	 */
-	explicit Exception(ErrorCode code, const String &msg) throw();
+    /**
+     * Constructor with a formatted string
+     *
+     * @param code the error-code
+     * @param bufsize the size of the buffer for string to create
+     * @param msg a message describing the error
+     */
+    explicit Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~Exception() throw() {
-	}
+    /**
+     * Constructor
+     *
+     * @param code the error-code
+     * @param msg a message describing the error
+     */
+    explicit Exception(ErrorCode code, const String &msg) throw();
 
-	/**
-	 * @return the error message
-	 */
-	const char *msg() const {
-		return _msg.str();
-	}
-	/**
-	 * @return the error-code as a string
-	 */
-	const char *name() const {
-		return to_string(_code);
-	}
-	/**
-	 * @return the error-code
-	 */
-	ErrorCode code() const {
-		return _code;
-	}
+    /**
+     * Destructor
+     */
+    virtual ~Exception() throw() {
+    }
 
-	/**
-	 * @return beginning of the backtrace
-	 */
-	backtrace_iterator backtrace_begin() const {
-		return _backtrace;
-	}
-	/**
-	 * @return end of the backtrace
-	 */
-	backtrace_iterator backtrace_end() const {
-		return _backtrace + _count;
-	}
+    /**
+     * @return the error message
+     */
+    const char *msg() const {
+        return _msg.str();
+    }
+    /**
+     * @return the error-code as a string
+     */
+    const char *name() const {
+        return to_string(_code);
+    }
+    /**
+     * @return the error-code
+     */
+    ErrorCode code() const {
+        return _code;
+    }
 
-	/**
-	 * Writes this exception to the given stream. May be overwritten by subclasses.
-	 *
-	 * @param os the stream
-	 */
-	virtual void write(OStream &os) const {
-		os << "Exception: " << name() << " (" << code() << ")";
-		if(msg())
-			os << ": " << msg();
-		os << '\n';
-		write_backtrace(os);
-	}
+    /**
+     * @return beginning of the backtrace
+     */
+    backtrace_iterator backtrace_begin() const {
+        return _backtrace;
+    }
+    /**
+     * @return end of the backtrace
+     */
+    backtrace_iterator backtrace_end() const {
+        return _backtrace + _count;
+    }
+
+    /**
+     * Writes this exception to the given stream. May be overwritten by subclasses.
+     *
+     * @param os the stream
+     */
+    virtual void write(OStream &os) const {
+        os << "Exception: " << name() << " (" << code() << ")";
+        if(msg())
+            os << ": " << msg();
+        os << '\n';
+        write_backtrace(os);
+    }
 
 protected:
-	/**
-	 * Convenience method to write the backtrace to the given stream
-	 *
-	 * @param os the stream
-	 */
-	void write_backtrace(OStream &os) const {
-		os.writef("Backtrace:\n");
-		for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
-			os.writef("\t%p\n", reinterpret_cast<void*>(*it));
-	}
+    /**
+     * Convenience method to write the backtrace to the given stream
+     *
+     * @param os the stream
+     */
+    void write_backtrace(OStream &os) const {
+        os.writef("Backtrace:\n");
+        for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
+            os.writef("\t%p\n", reinterpret_cast<void*>(*it));
+    }
 
-	ErrorCode _code;
-	String _msg;
-	uintptr_t _backtrace[MAX_TRACE_DEPTH];
-	size_t _count;
-	static const char *_msgs[];
+    ErrorCode _code;
+    String _msg;
+    uintptr_t _backtrace[MAX_TRACE_DEPTH];
+    size_t _count;
+    static const char *_msgs[];
 };
 
 UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
 UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
 
 static inline OStream &operator<<(OStream &os, const Exception &e) {
-	e.write(os);
-	return os;
+    e.write(os);
+    return os;
 }
 
 }

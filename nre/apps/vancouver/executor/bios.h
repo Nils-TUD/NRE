@@ -29,70 +29,70 @@
 
 class BiosCommon : public DiscoveryHelper<BiosCommon> {
 public:
-	Motherboard &_mb;
+    Motherboard &_mb;
 
-	enum {
-		RESET_VECTOR = 0x100, MAX_VECTOR
-	};
+    enum {
+        RESET_VECTOR = 0x100, MAX_VECTOR
+    };
 
 protected:
 
 #include "../model/simplemem.h"
 
-	/**
-	 * Write bios data helper.
-	 */
-	void write_bda(unsigned short offset, unsigned value, size_t len) {
-		assert(len <= sizeof(value));
-		copy_out(0x400 + offset, &value, len);
-	}
+    /**
+     * Write bios data helper.
+     */
+    void write_bda(unsigned short offset, unsigned value, size_t len) {
+        assert(len <= sizeof(value));
+        copy_out(0x400 + offset, &value, len);
+    }
 
-	/**
-	 * Read bios data helper.
-	 */
-	unsigned read_bda(size_t offset) {
-		unsigned res;
-		copy_in(0x400 + offset, &res, sizeof(res));
-		return res;
-	}
+    /**
+     * Read bios data helper.
+     */
+    unsigned read_bda(size_t offset) {
+        unsigned res;
+        copy_in(0x400 + offset, &res, sizeof(res));
+        return res;
+    }
 
-	/**
-	 * Jump to another realmode INT handler.
-	 */
-	bool jmp_int(MessageBios &msg, unsigned char number) {
-		unsigned short v[2];
-		copy_in(number * 4, v, 4);
+    /**
+     * Jump to another realmode INT handler.
+     */
+    bool jmp_int(MessageBios &msg, unsigned char number) {
+        unsigned short v[2];
+        copy_in(number * 4, v, 4);
 
-		msg.cpu->cs.sel = v[1];
-		msg.cpu->cs.base = v[1] << 4;
-		msg.cpu->rip = v[0];
-		msg.mtr_out |= nre::Mtd::RIP_LEN | nre::Mtd::CS_SS;
-		return true;
-	}
+        msg.cpu->cs.sel = v[1];
+        msg.cpu->cs.base = v[1] << 4;
+        msg.cpu->rip = v[0];
+        msg.mtr_out |= nre::Mtd::RIP_LEN | nre::Mtd::CS_SS;
+        return true;
+    }
 
-	bool jmp_hlt(MessageBios &msg) {
-		msg.cpu->rip--;
-		return true;
-	}
+    bool jmp_hlt(MessageBios &msg) {
+        msg.cpu->rip--;
+        return true;
+    }
 
-	/**
-	 * Set the usual error indication.
-	 */
-	void error(MessageBios &msg, unsigned char errorcode) {
-		msg.cpu->rfl |= 1;
-		msg.cpu->ah = errorcode;
-		msg.mtr_out |= nre::Mtd::RFLAGS | nre::Mtd::GPR_ACDB;
-	}
+    /**
+     * Set the usual error indication.
+     */
+    void error(MessageBios &msg, unsigned char errorcode) {
+        msg.cpu->rfl |= 1;
+        msg.cpu->ah = errorcode;
+        msg.mtr_out |= nre::Mtd::RFLAGS | nre::Mtd::GPR_ACDB;
+    }
 
-	/**
-	 * Out to IO-port.
-	 */
-	void outb(unsigned short port, unsigned value) {
-		MessageIOOut msg(MessageIOOut::TYPE_OUTB, port, value);
-		_mb.bus_ioout.send(msg);
-	}
+    /**
+     * Out to IO-port.
+     */
+    void outb(unsigned short port, unsigned value) {
+        MessageIOOut msg(MessageIOOut::TYPE_OUTB, port, value);
+        _mb.bus_ioout.send(msg);
+    }
 
-	BiosCommon(Motherboard &mb)
-		: _mb(mb), _bus_memregion(&mb.bus_memregion), _bus_mem(&mb.bus_mem) {
-	}
+    BiosCommon(Motherboard &mb)
+        : _mb(mb), _bus_memregion(&mb.bus_memregion), _bus_mem(&mb.bus_mem) {
+    }
 };

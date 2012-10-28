@@ -15,9 +15,9 @@
  */
 
 .section .init
-	leave
-	ret
+    leave
+    ret
 
 .section .fini
-	leave
-	ret
+    leave
+    ret

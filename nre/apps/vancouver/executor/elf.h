@@ -24,73 +24,73 @@
 #include "../bus/helper.h"
 
 struct Elf {
-	static unsigned is_not_elf(const nre::ElfEh32 *elf, size_t modsize) {
-		check1(1, modsize < sizeof(nre::ElfPh32));
-		check1(2, modsize < elf->e_phoff + elf->e_phentsize * elf->e_phnum);
-		check1(3,
-		       !(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' && elf->e_ident[2] == 'L' &&
-		         elf->e_ident[3] == 'F'));
-		check1(4, !(elf->e_ident[4] == 0x01 && elf->e_ident[5] == 0x01));
-		check1(5, !(elf->e_type == 2 && elf->e_machine == 0x03 && elf->e_version == 1));
-		check1(6, !(sizeof(nre::ElfPh32) <= elf->e_phentsize));
-		return 0;
-	}
+    static unsigned is_not_elf(const nre::ElfEh32 *elf, size_t modsize) {
+        check1(1, modsize < sizeof(nre::ElfPh32));
+        check1(2, modsize < elf->e_phoff + elf->e_phentsize * elf->e_phnum);
+        check1(3,
+               !(elf->e_ident[0] == 0x7f && elf->e_ident[1] == 'E' && elf->e_ident[2] == 'L' &&
+                 elf->e_ident[3] == 'F'));
+        check1(4, !(elf->e_ident[4] == 0x01 && elf->e_ident[5] == 0x01));
+        check1(5, !(elf->e_type == 2 && elf->e_machine == 0x03 && elf->e_version == 1));
+        check1(6, !(sizeof(nre::ElfPh32) <= elf->e_phentsize));
+        return 0;
+    }
 
 public:
-	/**
-	 * Get the size of the PT_LOAD sections.
-	 */
-	static size_t loaded_memsize(char *module, size_t modsize) {
-		nre::ElfEh32 *elf = reinterpret_cast<nre::ElfEh32*>(module);
-		if(is_not_elf(elf, modsize))
-			return 0;
+    /**
+     * Get the size of the PT_LOAD sections.
+     */
+    static size_t loaded_memsize(char *module, size_t modsize) {
+        nre::ElfEh32 *elf = reinterpret_cast<nre::ElfEh32*>(module);
+        if(is_not_elf(elf, modsize))
+            return 0;
 
-		size_t start = ~0ul;
-		size_t end = 0;
-		for(size_t j = 0; j < elf->e_phnum; j++) {
-			nre::ElfPh32 *ph =
-			    reinterpret_cast<nre::ElfPh32*>(module + elf->e_phoff + j * elf->e_phentsize);
-			if(ph->p_type != 1)
-				continue;
-			if(start > ph->p_paddr)
-				start = ph->p_paddr;
-			if(end < ph->p_paddr + ph->p_memsz)
-				end = ph->p_paddr + ph->p_memsz;
-		}
-		return end - start;
-	}
+        size_t start = ~0ul;
+        size_t end = 0;
+        for(size_t j = 0; j < elf->e_phnum; j++) {
+            nre::ElfPh32 *ph =
+                reinterpret_cast<nre::ElfPh32*>(module + elf->e_phoff + j * elf->e_phentsize);
+            if(ph->p_type != 1)
+                continue;
+            if(start > ph->p_paddr)
+                start = ph->p_paddr;
+            if(end < ph->p_paddr + ph->p_memsz)
+                end = ph->p_paddr + ph->p_memsz;
+        }
+        return end - start;
+    }
 
-	/**
-	 * Decode an elf32 binary. I.e. copy the ELF segments from ELF image
-	 * pointed by module to the memory at phys_mem.
-	 */
-	static unsigned decode_elf(char *module, size_t modsize, char *phys_mem, uintptr_t &rip,
-	                           uintptr_t &maxptr, size_t mem_size, size_t mem_offset, uint64_t magic) {
-		unsigned res;
-		nre::ElfEh32 *elf = reinterpret_cast<nre::ElfEh32*>(module);
-		check1(res, res = is_not_elf(elf, modsize));
-		rip = elf->e_entry;
-		for(size_t j = 0; j < elf->e_phnum; j++) {
-			nre::ElfPh32 *ph =
-			    reinterpret_cast<nre::ElfPh32*>(module + elf->e_phoff + j * elf->e_phentsize);
-			if(ph->p_type != 1)
-				continue;
-			check1(7, modsize < ph->p_offset + ph->p_filesz);
-			if(magic) {
-				check1(8, ph->p_filesz < sizeof(uint64_t));
-				check1(8, magic != *reinterpret_cast<uint64_t *>(module + ph->p_offset),
-				       "wrong file: magic %llx vs %llx", magic,
-				       *reinterpret_cast<uint64_t *>(module + ph->p_offset));
-				magic = 0;
-			}
-			check1(9, !(mem_size >= ph->p_paddr + ph->p_memsz - mem_offset),
-			       "elf section out of memory %lx vs %x ofs %lx", mem_size, ph->p_paddr + ph->p_memsz,
-			       mem_offset);
-			memcpy(phys_mem + ph->p_paddr - mem_offset, module + ph->p_offset, ph->p_filesz);
-			memset(phys_mem + ph->p_paddr - mem_offset + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
-			if(maxptr < ph->p_memsz + ph->p_paddr - mem_offset)
-				maxptr = ph->p_paddr + ph->p_memsz - mem_offset;
-		}
-		return 0;
-	}
+    /**
+     * Decode an elf32 binary. I.e. copy the ELF segments from ELF image
+     * pointed by module to the memory at phys_mem.
+     */
+    static unsigned decode_elf(char *module, size_t modsize, char *phys_mem, uintptr_t &rip,
+                               uintptr_t &maxptr, size_t mem_size, size_t mem_offset, uint64_t magic) {
+        unsigned res;
+        nre::ElfEh32 *elf = reinterpret_cast<nre::ElfEh32*>(module);
+        check1(res, res = is_not_elf(elf, modsize));
+        rip = elf->e_entry;
+        for(size_t j = 0; j < elf->e_phnum; j++) {
+            nre::ElfPh32 *ph =
+                reinterpret_cast<nre::ElfPh32*>(module + elf->e_phoff + j * elf->e_phentsize);
+            if(ph->p_type != 1)
+                continue;
+            check1(7, modsize < ph->p_offset + ph->p_filesz);
+            if(magic) {
+                check1(8, ph->p_filesz < sizeof(uint64_t));
+                check1(8, magic != *reinterpret_cast<uint64_t *>(module + ph->p_offset),
+                       "wrong file: magic %llx vs %llx", magic,
+                       *reinterpret_cast<uint64_t *>(module + ph->p_offset));
+                magic = 0;
+            }
+            check1(9, !(mem_size >= ph->p_paddr + ph->p_memsz - mem_offset),
+                   "elf section out of memory %lx vs %x ofs %lx", mem_size, ph->p_paddr + ph->p_memsz,
+                   mem_offset);
+            memcpy(phys_mem + ph->p_paddr - mem_offset, module + ph->p_offset, ph->p_filesz);
+            memset(phys_mem + ph->p_paddr - mem_offset + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
+            if(maxptr < ph->p_memsz + ph->p_paddr - mem_offset)
+                maxptr = ph->p_paddr + ph->p_memsz - mem_offset;
+        }
+        return 0;
+    }
 };

@@ -28,8 +28,8 @@ namespace test {
 
 typedef void (*test_func)();
 struct TestCase {
-	const char *name;
-	test_func func;
+    const char *name;
+    test_func func;
 };
 
 // Whether to print info before execution of the test. Zero means
@@ -76,227 +76,227 @@ struct TestCase {
                          nre::test::WvTest::shortpath(__FILE__), __LINE__, ## __VA_ARGS__)
 
 class WvTest {
-	const char *file, *condstr;
-	int line;
+    const char *file, *condstr;
+    int line;
 
-	struct NovaErr {
-		enum ErrorCode err;
-		NovaErr(unsigned char _err)
-			: err(static_cast<enum ErrorCode>(_err)) {
-		}
+    struct NovaErr {
+        enum ErrorCode err;
+        NovaErr(unsigned char _err)
+            : err(static_cast<enum ErrorCode>(_err)) {
+        }
 
-		const char *tostr() {
-			return to_string(err);
-		}
-	};
+        const char *tostr() {
+            return to_string(err);
+        }
+    };
 
-	const char *resultstr(bool result) {
-		return result ? "ok" : "FAILED";
-	}
+    const char *resultstr(bool result) {
+        return result ? "ok" : "FAILED";
+    }
 
-	const char *resultstr(char *result) {
-		return result;
-	}
+    const char *resultstr(char *result) {
+        return result;
+    }
 
-	const char *resultstr(NovaErr result) {
-		return result.tostr();
-	}
+    const char *resultstr(NovaErr result) {
+        return result.tostr();
+    }
 
-	void save_info(const char *_file, int _line, const char *_condstr) {
-		file = _file;
-		condstr = _condstr;
-		line = _line;
-	}
+    void save_info(const char *_file, int _line, const char *_condstr) {
+        file = _file;
+        condstr = _condstr;
+        line = _line;
+    }
 
 #if WVTEST_PRINT_INFO_BEFORE
-	void print_info()
-	{
-		Serial::get().writef("! %s:%d %s ", file, line, condstr);
-	}
+    void print_info()
+    {
+        Serial::get().writef("! %s:%d %s ", file, line, condstr);
+    }
 
-	template<typename T>
-	void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "")
-	{
-		Serial::get().writef("%s%s%s %s\n", sb, suffix, se, resultstr(result));
-	}
+    template<typename T>
+    void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "")
+    {
+        Serial::get().writef("%s%s%s %s\n", sb, suffix, se, resultstr(result));
+    }
 #else
-	template<typename T>
-	void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "") {
-		Serial::get().writef("! %s:%d %s %s%s%s %s\n", file, line, condstr, sb, suffix, se,
-		                     resultstr(result));
-	}
+    template<typename T>
+    void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "") {
+        Serial::get().writef("! %s:%d %s %s%s%s %s\n", file, line, condstr, sb, suffix, se,
+                             resultstr(result));
+    }
 #endif
 
-	static void print_failed_cmp(const char *op, const char *a, const char *b) {
-		Serial::get().writef("wvtest comparison '%s' %s '%s' FAILED\n", a, op, b);
-	}
+    static void print_failed_cmp(const char *op, const char *a, const char *b) {
+        Serial::get().writef("wvtest comparison '%s' %s '%s' FAILED\n", a, op, b);
+    }
 
-	static void print_failed_cmp(const char *op, unsigned a, unsigned b) {
-		Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
-	}
+    static void print_failed_cmp(const char *op, unsigned a, unsigned b) {
+        Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
+    }
 
-	static void print_failed_cmp(const char *op, ulong a, ulong b) {
-		Serial::get().writef("wvtest comparison %ld == 0x%lx %s %ld == 0x%lx FAILED\n", a, a, op, b, b);
-	}
+    static void print_failed_cmp(const char *op, ulong a, ulong b) {
+        Serial::get().writef("wvtest comparison %ld == 0x%lx %s %ld == 0x%lx FAILED\n", a, a, op, b, b);
+    }
 
-	static void print_failed_cmp(const char *op, ullong a, ullong b) {
-		Serial::get().writef("wvtest comparison %Ld == 0x%Lx %s %Ld == 0x%Lx FAILED\n", a, a, op, b, b);
-	}
+    static void print_failed_cmp(const char *op, ullong a, ullong b) {
+        Serial::get().writef("wvtest comparison %Ld == 0x%Lx %s %Ld == 0x%Lx FAILED\n", a, a, op, b, b);
+    }
 
-	static void print_failed_cmp(const char *op, int a, int b) {
-		Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
-	}
+    static void print_failed_cmp(const char *op, int a, int b) {
+        Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
+    }
 
-	static void stringify(char *buf, unsigned size, ullong val) {
-		OStringStream::format(buf, size, "%Lu", val);
-	}
+    static void stringify(char *buf, unsigned size, ullong val) {
+        OStringStream::format(buf, size, "%Lu", val);
+    }
 
-	static void stringify(char *buf, unsigned size, ulong val) {
-		OStringStream::format(buf, size, "%lu", val);
-	}
+    static void stringify(char *buf, unsigned size, ulong val) {
+        OStringStream::format(buf, size, "%lu", val);
+    }
 
-	static void stringify(char *buf, unsigned size, unsigned val) {
-		OStringStream::format(buf, size, "%u", val);
-	}
+    static void stringify(char *buf, unsigned size, unsigned val) {
+        OStringStream::format(buf, size, "%u", val);
+    }
 
-	static void stringify(char *buf, unsigned size, int val) {
-		OStringStream::format(buf, size, "%d", val);
-	}
+    static void stringify(char *buf, unsigned size, int val) {
+        OStringStream::format(buf, size, "%d", val);
+    }
 
-	static void stringify(char *buf, unsigned size, Crd crd) {
-		OStringStream os(buf, size);
-		os << crd;
-	}
+    static void stringify(char *buf, unsigned size, Crd crd) {
+        OStringStream os(buf, size);
+        os << crd;
+    }
 
-	static void stringifyx(char *buf, unsigned size, ullong val) {
-		OStringStream::format(buf, size, "0x%Lx", val);
-	}
+    static void stringifyx(char *buf, unsigned size, ullong val) {
+        OStringStream::format(buf, size, "0x%Lx", val);
+    }
 
-	static void stringifyx(char *buf, unsigned size, ulong val) {
-		OStringStream::format(buf, size, "0x%lx", val);
-	}
+    static void stringifyx(char *buf, unsigned size, ulong val) {
+        OStringStream::format(buf, size, "0x%lx", val);
+    }
 
-	static void stringifyx(char *buf, unsigned size, unsigned val) {
-		OStringStream::format(buf, size, "0x%x", val);
-	}
+    static void stringifyx(char *buf, unsigned size, unsigned val) {
+        OStringStream::format(buf, size, "0x%x", val);
+    }
 
-	static void stringifyx(char *buf, unsigned size, int val) {
-		OStringStream::format(buf, size, "0x%x", val);
-	}
+    static void stringifyx(char *buf, unsigned size, int val) {
+        OStringStream::format(buf, size, "0x%x", val);
+    }
 
-	static void stringifyx(char *buf, unsigned size, void *val) {
-		OStringStream::format(buf, size, "%p", val);
-	}
+    static void stringifyx(char *buf, unsigned size, void *val) {
+        OStringStream::format(buf, size, "%p", val);
+    }
 
 public:
-	static const char *shortpath(const char *path) {
-		const char *cur = 0;
-		const char *last = path;
-		do {
-			cur = strchr(last, '/');
-			if(cur)
-				last = cur + 1;
-		}
-		while(cur);
-		return last;
-	}
+    static const char *shortpath(const char *path) {
+        const char *cur = 0;
+        const char *last = path;
+        do {
+            cur = strchr(last, '/');
+            if(cur)
+                last = cur + 1;
+        }
+        while(cur);
+        return last;
+    }
 
-	explicit WvTest(const char *file, int line,
-	                const char *condstr) : file(shortpath(file)), condstr(condstr), line(line) {
+    explicit WvTest(const char *file, int line,
+                    const char *condstr) : file(shortpath(file)), condstr(condstr), line(line) {
 #if WVTEST_PRINT_INFO_BEFORE
-		// If we are sure that nothing is printed during the "check", we can
-		// print the info here, and the result after the "check" finishes.
-		print_info(true, file, line, condstr, 0);
+        // If we are sure that nothing is printed during the "check", we can
+        // print the info here, and the result after the "check" finishes.
+        print_info(true, file, line, condstr, 0);
 #endif
-	}
+    }
 
-	bool check(bool cond, const char* suffix = "") {
-		print_result(cond, suffix);
-		return cond;
-	}
+    bool check(bool cond, const char* suffix = "") {
+        print_result(cond, suffix);
+        return cond;
+    }
 
-	unsigned check_novaerr(unsigned novaerr) {
-		print_result(NovaErr(novaerr));
-		return novaerr;
-	}
+    unsigned check_novaerr(unsigned novaerr) {
+        print_result(NovaErr(novaerr));
+        return novaerr;
+    }
 
-	bool check_eq(const char *a, const char *b, bool expect_equal) {
-		bool result = !!strcmp(a, b) ^ expect_equal;
-		if(!result)
-			print_failed_cmp(expect_equal ? "==" : "!=", a, b);
-		check(result);
-		return result;
-	}
-	bool check_eq(char *a, char *b, bool expect_equal) {
-		return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
-	}
-	bool check_eq(const char *a, char *b, bool expect_equal) {
-		return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
-	}
-	bool check_eq(char *a, const char *b, bool expect_equal) {
-		return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
-	}
+    bool check_eq(const char *a, const char *b, bool expect_equal) {
+        bool result = !!strcmp(a, b) ^ expect_equal;
+        if(!result)
+            print_failed_cmp(expect_equal ? "==" : "!=", a, b);
+        check(result);
+        return result;
+    }
+    bool check_eq(char *a, char *b, bool expect_equal) {
+        return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
+    }
+    bool check_eq(const char *a, char *b, bool expect_equal) {
+        return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
+    }
+    bool check_eq(char *a, const char *b, bool expect_equal) {
+        return check_eq(static_cast<const char*>(a), static_cast<const char*>(b), expect_equal);
+    }
 
-	template<typename T>
-	bool check_eq(T a, T b, bool expect_equal) {
-		bool result = ((a == b) ^ !expect_equal);
-		if(!result)
-			print_failed_cmp(expect_equal ? "==" : "!=", a, b);
-		check(result);
-		return result;
-	}
+    template<typename T>
+    bool check_eq(T a, T b, bool expect_equal) {
+        bool result = ((a == b) ^ !expect_equal);
+        if(!result)
+            print_failed_cmp(expect_equal ? "==" : "!=", a, b);
+        check(result);
+        return result;
+    }
 
-	template<typename T>
-	bool check_lt(T a, T b) {
-		bool result = (a < b);
-		if(!result)
-			print_failed_cmp("<", a, b);
-		check(result);
-		return result;
-	}
+    template<typename T>
+    bool check_lt(T a, T b) {
+        bool result = (a < b);
+        if(!result)
+            print_failed_cmp("<", a, b);
+        check(result);
+        return result;
+    }
 
-	template<typename T>
-	bool check_le(T a, T b) {
-		bool result = (a <= b);
-		if(!result)
-			print_failed_cmp("<=", a, b);
-		check(result);
-		return result;
-	}
+    template<typename T>
+    bool check_le(T a, T b) {
+        bool result = (a <= b);
+        if(!result)
+            print_failed_cmp("<=", a, b);
+        check(result);
+        return result;
+    }
 
-	template<typename T>
-	T check_perf(T val, const char *units) {
-		char valstr[20 + strlen(units)];
-		stringify(valstr, sizeof(valstr), val);
-		print_result(true, " ", valstr, units);
-		return val;
-	}
+    template<typename T>
+    T check_perf(T val, const char *units) {
+        char valstr[20 + strlen(units)];
+        stringify(valstr, sizeof(valstr), val);
+        print_result(true, " ", valstr, units);
+        return val;
+    }
 
-	const char *show(const char *val) {
-		print_result(true, val, "= \"", "\"");
-		return val;
-	}
+    const char *show(const char *val) {
+        print_result(true, val, "= \"", "\"");
+        return val;
+    }
 
-	char *show(char *val) {
-		print_result(true, val, "= \"", "\"");
-		return val;
-	}
+    char *show(char *val) {
+        print_result(true, val, "= \"", "\"");
+        return val;
+    }
 
-	template<typename T>
-	T show(T val) {
-		char valstr[40];
-		stringify(valstr, sizeof(valstr), val);
-		print_result(true, valstr, "= ");
-		return val;
-	}
+    template<typename T>
+    T show(T val) {
+        char valstr[40];
+        stringify(valstr, sizeof(valstr), val);
+        print_result(true, valstr, "= ");
+        return val;
+    }
 
-	template<typename T>
-	T show_hex(T val) {
-		char valstr[40];
-		stringifyx(valstr, sizeof(valstr), val);
-		print_result(true, valstr, "= ");
-		return val;
-	}
+    template<typename T>
+    T show_hex(T val) {
+        char valstr[40];
+        stringifyx(valstr, sizeof(valstr), val);
+        print_result(true, valstr, "= ");
+        return val;
+    }
 };
 
 }

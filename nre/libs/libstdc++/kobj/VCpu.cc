@@ -20,13 +20,13 @@
 namespace nre {
 
 VCpu::~VCpu() {
-	delete _sc;
+    delete _sc;
 }
 
 void VCpu::start(Qpd qpd) {
-	assert(_sc == 0);
-	_sc = new Sc(this, qpd);
-	_sc->start(_name);
+    assert(_sc == 0);
+    _sc = new Sc(this, qpd);
+    _sc->start(_name);
 }
 
 }

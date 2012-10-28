@@ -31,27 +31,27 @@ class SListIterator;
  * data to the item.
  */
 class SListItem {
-	template<class T>
-	friend class SList;
-	template<class T>
-	friend class SListIterator;
+    template<class T>
+    friend class SList;
+    template<class T>
+    friend class SListIterator;
 
 public:
-	/**
-	 * Constructor
-	 */
-	explicit SListItem() : _next() {
-	}
+    /**
+     * Constructor
+     */
+    explicit SListItem() : _next() {
+    }
 
 private:
-	SListItem *next() {
-		return _next;
-	}
-	void next(SListItem *i) {
-		_next = i;
-	}
+    SListItem *next() {
+        return _next;
+    }
+    void next(SListItem *i) {
+        _next = i;
+    }
 
-	SListItem *_next;
+    SListItem *_next;
 };
 
 /**
@@ -60,33 +60,33 @@ private:
 template<class T>
 class SListIterator {
 public:
-	explicit SListIterator(T *n = 0) : _n(n) {
-	}
+    explicit SListIterator(T *n = 0) : _n(n) {
+    }
 
-	T & operator*() const {
-		return *_n;
-	}
-	T *operator->() const {
-		return &operator*();
-	}
-	SListIterator<T>& operator++() {
-		_n = static_cast<T*>(_n->next());
-		return *this;
-	}
-	SListIterator<T> operator++(int) {
-		SListIterator<T> tmp(*this);
-		operator++();
-		return tmp;
-	}
-	bool operator==(const SListIterator<T>& rhs) const {
-		return _n == rhs._n;
-	}
-	bool operator!=(const SListIterator<T>& rhs) const {
-		return _n != rhs._n;
-	}
+    T & operator*() const {
+        return *_n;
+    }
+    T *operator->() const {
+        return &operator*();
+    }
+    SListIterator<T>& operator++() {
+        _n = static_cast<T*>(_n->next());
+        return *this;
+    }
+    SListIterator<T> operator++(int) {
+        SListIterator<T> tmp(*this);
+        operator++();
+        return tmp;
+    }
+    bool operator==(const SListIterator<T>& rhs) const {
+        return _n == rhs._n;
+    }
+    bool operator!=(const SListIterator<T>& rhs) const {
+        return _n != rhs._n;
+    }
 
 private:
-	T *_n;
+    T *_n;
 };
 
 /**
@@ -97,103 +97,103 @@ private:
 template<class T>
 class SList {
 public:
-	typedef SListIterator<T> iterator;
+    typedef SListIterator<T> iterator;
 
-	/**
-	 * Constructor. Creates an empty list
-	 */
-	explicit SList() : _head(0), _tail(0), _len(0) {
-	}
+    /**
+     * Constructor. Creates an empty list
+     */
+    explicit SList() : _head(0), _tail(0), _len(0) {
+    }
 
-	/**
-	 * @return the number of items in the list
-	 */
-	size_t length() const {
-		return _len;
-	}
+    /**
+     * @return the number of items in the list
+     */
+    size_t length() const {
+        return _len;
+    }
 
-	/**
-	 * @return beginning of list
-	 */
-	iterator begin() const {
-		return iterator(_head);
-	}
-	/**
-	 * @return end of list
-	 */
-	iterator end() const {
-		return iterator();
-	}
-	/**
-	 * @return tail of the list, i.e. the last valid item
-	 */
-	iterator tail() const {
-		return iterator(_tail);
-	}
+    /**
+     * @return beginning of list
+     */
+    iterator begin() const {
+        return iterator(_head);
+    }
+    /**
+     * @return end of list
+     */
+    iterator end() const {
+        return iterator();
+    }
+    /**
+     * @return tail of the list, i.e. the last valid item
+     */
+    iterator tail() const {
+        return iterator(_tail);
+    }
 
-	/**
-	 * Appends the given item to the list. This works in constant time.
-	 *
-	 * @param e the list item
-	 * @return the position where it has been inserted
-	 */
-	iterator append(T *e) {
-		if(_head == 0)
-			_head = e;
-		else
-			_tail->next(e);
-		_tail = e;
-		e->next(0);
-		_len++;
-		return iterator(e);
-	}
-	/**
-	 * Inserts the given item into the list after <p>. This works in constant time.
-	 *
-	 * @param p the previous item (p = insert it at the beginning)
-	 * @param e the list item
-	 * @return the position where it has been inserted
-	 */
-	iterator insert(T *p, T *e) {
-		e->next(p ? p->next() : _head);
-		if(p)
-			p->next(e);
-		else
-			_head = e;
-		if(!e->next())
-			_tail = e;
-		_len++;
-		return iterator(e);
-	}
-	/**
-	 * Removes the given item from the list. This works in linear time.
-	 * Does NOT expect that the item is in the list!
-	 *
-	 * @param e the list item
-	 * @return true if the item has been found and removed
-	 */
-	bool remove(T *e) {
-		T *t = _head, *p = 0;
-		while(t && t != e) {
-			p = t;
-			t = static_cast<T*>(t->next());
-		}
-		if(!t)
-			return false;
-		if(p)
-			p->next(e->next());
-		else
-			_head = static_cast<T*>(e->next());
-		if(!e->next())
-			_tail = p;
-		_len--;
-		return true;
-	}
+    /**
+     * Appends the given item to the list. This works in constant time.
+     *
+     * @param e the list item
+     * @return the position where it has been inserted
+     */
+    iterator append(T *e) {
+        if(_head == 0)
+            _head = e;
+        else
+            _tail->next(e);
+        _tail = e;
+        e->next(0);
+        _len++;
+        return iterator(e);
+    }
+    /**
+     * Inserts the given item into the list after <p>. This works in constant time.
+     *
+     * @param p the previous item (p = insert it at the beginning)
+     * @param e the list item
+     * @return the position where it has been inserted
+     */
+    iterator insert(T *p, T *e) {
+        e->next(p ? p->next() : _head);
+        if(p)
+            p->next(e);
+        else
+            _head = e;
+        if(!e->next())
+            _tail = e;
+        _len++;
+        return iterator(e);
+    }
+    /**
+     * Removes the given item from the list. This works in linear time.
+     * Does NOT expect that the item is in the list!
+     *
+     * @param e the list item
+     * @return true if the item has been found and removed
+     */
+    bool remove(T *e) {
+        T *t = _head, *p = 0;
+        while(t && t != e) {
+            p = t;
+            t = static_cast<T*>(t->next());
+        }
+        if(!t)
+            return false;
+        if(p)
+            p->next(e->next());
+        else
+            _head = static_cast<T*>(e->next());
+        if(!e->next())
+            _tail = p;
+        _len--;
+        return true;
+    }
 
 private:
-	T *_head;
-	T *_tail;
-	size_t _len;
+    T *_head;
+    T *_tail;
+    size_t _len;
 };
 
 }

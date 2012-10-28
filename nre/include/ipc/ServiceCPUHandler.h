@@ -31,39 +31,39 @@ class Service;
  */
 class ServiceCPUHandler {
 public:
-	/**
-	 * Constructor. Creates the threads and portals
-	 *
-	 * @param s the service
-	 * @param pt the portal-selector
-	 * @param cpu the CPU to run on
-	 */
-	explicit ServiceCPUHandler(Service* s, capsel_t pt, cpu_t cpu);
+    /**
+     * Constructor. Creates the threads and portals
+     *
+     * @param s the service
+     * @param pt the portal-selector
+     * @param cpu the CPU to run on
+     */
+    explicit ServiceCPUHandler(Service* s, capsel_t pt, cpu_t cpu);
 
-	/**
-	 * @return the CPU
-	 */
-	cpu_t cpu() const {
-		return _session_ec->cpu();
-	}
-	/**
-	 * @return the thread that is used for the service-portal
-	 */
-	LocalThread &thread() {
-		return *_session_ec;
-	}
+    /**
+     * @return the CPU
+     */
+    cpu_t cpu() const {
+        return _session_ec->cpu();
+    }
+    /**
+     * @return the thread that is used for the service-portal
+     */
+    LocalThread &thread() {
+        return *_session_ec;
+    }
 
 private:
-	ServiceCPUHandler(const ServiceCPUHandler&);
-	ServiceCPUHandler& operator=(const ServiceCPUHandler&);
+    ServiceCPUHandler(const ServiceCPUHandler&);
+    ServiceCPUHandler& operator=(const ServiceCPUHandler&);
 
-	PORTAL static void portal(capsel_t pid);
+    PORTAL static void portal(capsel_t pid);
 
-	Service *_s;
-	LocalThread *_session_ec;
-	LocalThread *_service_ec;
-	Pt _pt;
-	UserSm _sm;
+    Service *_s;
+    LocalThread *_session_ec;
+    LocalThread *_service_ec;
+    Pt _pt;
+    UserSm _sm;
 };
 
 }

@@ -22,19 +22,19 @@
 namespace nre {
 
 ObjCap::~ObjCap() {
-	if(_sel != INVALID) {
-		if(!(_sel & KEEP_CAP_BIT)) {
-			// the destructor shouldn't throw
-			try {
-				Syscalls::revoke(Crd(sel(), 0, Crd::OBJ_ALL), true);
-			}
-			catch(...) {
-				// ignore it
-			}
-		}
-		if(!(_sel & KEEP_SEL_BIT))
-			CapSelSpace::get().free(_sel);
-	}
+    if(_sel != INVALID) {
+        if(!(_sel & KEEP_CAP_BIT)) {
+            // the destructor shouldn't throw
+            try {
+                Syscalls::revoke(Crd(sel(), 0, Crd::OBJ_ALL), true);
+            }
+            catch(...) {
+                // ignore it
+            }
+        }
+        if(!(_sel & KEEP_SEL_BIT))
+            CapSelSpace::get().free(_sel);
+    }
 }
 
 }

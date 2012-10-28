@@ -25,27 +25,27 @@
  */
 class CpuState : public nre::UtcbExc {
 public:
-	unsigned cpl() {
-		return (ss.ar >> 5) & 3;
-	}
-	unsigned iopl() {
-		return (efl >> 12) & 3;
-	}
-	unsigned pm() {
-		return cr0 & 0x1;
-	}
-	unsigned pg() {
-		return cr0 & 0x80000000;
-	}
-	unsigned v86() {
-		return (cr0 & 0x1) && (efl & (1 << 17));
-	}
-	void edx_eax(uint64_t value) {
-		eax = value;
-		edx = value >> 32;
-	}
+    unsigned cpl() {
+        return (ss.ar >> 5) & 3;
+    }
+    unsigned iopl() {
+        return (efl >> 12) & 3;
+    }
+    unsigned pm() {
+        return cr0 & 0x1;
+    }
+    unsigned pg() {
+        return cr0 & 0x80000000;
+    }
+    unsigned v86() {
+        return (cr0 & 0x1) && (efl & (1 << 17));
+    }
+    void edx_eax(uint64_t value) {
+        eax = value;
+        edx = value >> 32;
+    }
 
-	uint64_t edx_eax() {
-		return union64(edx, eax);
-	}
+    uint64_t edx_eax() {
+        return union64(edx, eax);
+    }
 };

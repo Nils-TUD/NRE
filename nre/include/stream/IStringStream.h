@@ -26,41 +26,41 @@ namespace nre {
  */
 class IStringStream : public IStream {
 public:
-	/**
-	 * Reads a value of type <T> from the given string
-	 *
-	 * @param str the string
-	 * @param len the length or -1 for "use strlen()"
-	 * @return the read value
-	 */
-	template<typename T>
-	static T read_from(const char *str, size_t len = (size_t)-1) {
-		IStringStream is(str, len);
-		T t;
-		is >> t;
-		return t;
-	}
+    /**
+     * Reads a value of type <T> from the given string
+     *
+     * @param str the string
+     * @param len the length or -1 for "use strlen()"
+     * @return the read value
+     */
+    template<typename T>
+    static T read_from(const char *str, size_t len = (size_t)-1) {
+        IStringStream is(str, len);
+        T t;
+        is >> t;
+        return t;
+    }
 
-	/**
-	 * Constructor
-	 *
-	 * @param str the string
-	 * @param len the length or -1 for "use strlen()"
-	 */
-	explicit IStringStream(const char *str, size_t len = (size_t)-1)
-		: IStream(), _str(str), _len(len == (size_t) - 1 ? strlen(str) : len), _pos() {
-	}
+    /**
+     * Constructor
+     *
+     * @param str the string
+     * @param len the length or -1 for "use strlen()"
+     */
+    explicit IStringStream(const char *str, size_t len = (size_t)-1)
+        : IStream(), _str(str), _len(len == (size_t) - 1 ? strlen(str) : len), _pos() {
+    }
 
 private:
-	virtual char read() {
-		if(_pos < _len)
-			return _str[_pos++];
-		return '\0';
-	}
+    virtual char read() {
+        if(_pos < _len)
+            return _str[_pos++];
+        return '\0';
+    }
 
-	const char *_str;
-	size_t _len;
-	size_t _pos;
+    const char *_str;
+    size_t _len;
+    size_t _pos;
 };
 
 }
