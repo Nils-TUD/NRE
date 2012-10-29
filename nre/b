@@ -145,7 +145,7 @@ case "$cmd" in
         fi
         binary=${cmd#*=}
         if [ ! -f "$build/bin/apps/$binary" ]; then
-            echo "The file $build/bin/apps/$binary does not exits" >&2
+            echo "The file $build/bin/apps/$binary does not exist" >&2
             exit 1
         fi
         ;;
