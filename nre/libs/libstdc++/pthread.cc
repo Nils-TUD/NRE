@@ -38,7 +38,7 @@ int pthread_cancel(pthread_t) {
 }
 
 int pthread_once(pthread_once_t* control, void (*init)(void)) {
-    if(Atomic::swap(control, 1, 2))
+    if(Atomic::cmpnswap(control, 1, 2))
         (*init)();
     return 0;
 }

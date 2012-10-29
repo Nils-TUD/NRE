@@ -162,7 +162,7 @@ bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
             if(to == 0ULL)
                 goto next;
         }
-        while(!Atomic::swap<timevalue_t, timevalue_t>(&cur.data.abstimeout, to, 0));
+        while(!Atomic::cmpnswap<timevalue_t, timevalue_t>(&cur.data.abstimeout, to, 0));
 
         if(to < per_cpu->last_to)
             reprogram = true;

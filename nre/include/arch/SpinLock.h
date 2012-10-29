@@ -23,7 +23,7 @@
 typedef word_t spinlock_t;
 
 static inline void lock(spinlock_t *val) {
-    while(!nre::Atomic::swap(val, 0, 1))
+    while(!nre::Atomic::cmpnswap(val, 0, 1))
         asm volatile ("pause" ::: "memory");
 }
 
