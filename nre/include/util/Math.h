@@ -23,22 +23,22 @@ namespace nre {
 class Math {
 public:
     template<typename T>
-    static inline T min(T a, T b) {
+    static T min(T a, T b) {
         return a < b ? a : b;
     }
 
     template<typename T>
-    static inline T max(T a, T b) {
+    static T max(T a, T b) {
         return a < b ? b : a;
     }
 
     template<typename T>
-    static inline T round_up(T value, T align) {
+    static T round_up(T value, T align) {
         return (value + align - 1) & ~(align - 1);
     }
 
     template<typename T>
-    static inline T round_dn(T value, T align) {
+    static T round_dn(T value, T align) {
         return value & ~(align - 1);
     }
 
@@ -50,13 +50,13 @@ public:
     }
 
     template<typename T>
-    static inline T moddiv(T &value, T divisor) {
+    static T moddiv(T &value, T divisor) {
         T res = value % divisor;
         value /= divisor;
         return res;
     }
     template<typename T>
-    static inline T divmod(T &value, T divisor) {
+    static T divmod(T &value, T divisor) {
         T res = value / divisor;
         value %= divisor;
         return res;
@@ -80,7 +80,7 @@ public:
      * @return the number of blocks of size <blocksize> that <value> contains
      */
     template<typename T>
-    static inline T blockcount(T value, T blocksize) {
+    static T blockcount(T value, T blocksize) {
         return (value + blocksize - 1) / blocksize;
     }
 
@@ -94,14 +94,14 @@ public:
     /**
      * @return true if <address> is in the range [base..base+size)
      */
-    static inline bool in_range(uintptr_t address, uintptr_t base, uintptr_t size) {
+    static bool in_range(uintptr_t address, uintptr_t base, uintptr_t size) {
         return (base <= address) && (address <= base + size - 1);
     }
 
     /**
      * @return whether the ranges [<b1>..<b1>+<s1>) and [<b2>..<b2>+<s2>) overlap somewhere.
      */
-    static inline bool overlapped(uint64_t b1, size_t s1, uint64_t b2, size_t s2) {
+    static bool overlapped(uint64_t b1, size_t s1, uint64_t b2, size_t s2) {
         // note that we use 64-bit address here to support the Hip-memory-entries
         uint64_t e1 = b1 + s1;
         uint64_t e2 = b2 + s2;
@@ -114,7 +114,7 @@ public:
      * @return the position of the most significant "1" bit
      */
     template<typename T>
-    static inline T bit_scan_reverse(T value) {
+    static T bit_scan_reverse(T value) {
         return __builtin_clz(value) ^ 0x1F;
     }
 
@@ -122,12 +122,12 @@ public:
      * @return the position of the least significant "1" bit
      */
     template<typename T>
-    static inline T bit_scan_forward(T value) {
+    static T bit_scan_forward(T value) {
         return __builtin_ctz(value);
     }
 
     template<typename T>
-    static inline bool is_pow2(T value) {
+    static bool is_pow2(T value) {
         return (value & (value - 1)) == 0;
     }
 
@@ -136,11 +136,11 @@ public:
      *  not it rounds down to the prev power of two.
      */
     template<typename T>
-    static inline T prev_pow2(T value) {
+    static T prev_pow2(T value) {
         return 1 << prev_pow2_shift(value);
     }
     template<typename T>
-    static inline T prev_pow2_shift(T value) {
+    static T prev_pow2_shift(T value) {
         if(value <= 1)
             return value;
         if(!is_pow2(value))
@@ -153,13 +153,13 @@ public:
      *  not it rounds up to the next power of two.
      */
     template<typename T>
-    static inline T next_pow2(T value) {
+    static T next_pow2(T value) {
         if(is_pow2(value))
             return value;
         return 1 << next_pow2_shift(value);
     }
     template<typename T>
-    static inline T next_pow2_shift(T value) {
+    static T next_pow2_shift(T value) {
         if(!value)
             return 0;
         if(!is_pow2(value))
@@ -176,7 +176,7 @@ public:
      * @return The calculated order or the minshift parameter is it is
      * smaller then the order.
      */
-    static inline uint minshift(uintptr_t start, size_t size) {
+    static uint minshift(uintptr_t start, size_t size) {
         uint basealign = static_cast<uint>(bit_scan_forward(
                                                start | (1ul << (8 * sizeof(uintptr_t) - 1))));
         uint shiftalign = static_cast<uint>(bit_scan_reverse(size | 1));

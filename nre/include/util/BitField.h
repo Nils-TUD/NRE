@@ -25,7 +25,7 @@ namespace nre {
 template<uint BITS>
 class BitField;
 template<uint BITS>
-static inline OStream &operator<<(OStream &os, const BitField<BITS> &bf);
+static OStream &operator<<(OStream &os, const BitField<BITS> &bf);
 
 /**
  * A field of <BITS> bits that is managed in an array of words.

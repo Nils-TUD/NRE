@@ -36,9 +36,9 @@ struct ProfileEvent {
     ProfileEvent *next;
 };
 
-NOINSTR static inline uint8_t inb(uint16_t port);
-NOINSTR static inline void outb(uint16_t port, uint8_t value);
-NOINSTR static inline timevalue_t rdtsc();
+NOINSTR static uint8_t inb(uint16_t port);
+NOINSTR static void outb(uint16_t port, uint8_t value);
+NOINSTR static timevalue_t rdtsc();
 NOINSTR static void logc(char c);
 NOINSTR static void logu(ulong u, uint base);
 NOINSTR static void init();

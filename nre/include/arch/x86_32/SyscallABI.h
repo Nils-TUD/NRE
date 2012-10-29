@@ -24,7 +24,7 @@ namespace nre {
 
 class SyscallABI {
 public:
-    static inline void syscall(word_t w0) {
+    static void syscall(word_t w0) {
         asm volatile (
             "mov %%esp, %%ecx;"
             "mov $1f, %%edx;"
@@ -37,7 +37,7 @@ public:
         handle_result(w0);
     }
 
-    static inline void syscall(word_t w0, word_t w1) {
+    static void syscall(word_t w0, word_t w1) {
         word_t dummy;
         asm volatile (
             "mov %%esp, %%ecx;"
@@ -51,7 +51,7 @@ public:
         handle_result(w0);
     }
 
-    static inline void syscall(word_t w0, word_t w1, word_t w2) {
+    static void syscall(word_t w0, word_t w1, word_t w2) {
         word_t dummy;
         asm volatile (
             "mov %%esp, %%ecx;"
@@ -65,7 +65,7 @@ public:
         handle_result(w0);
     }
 
-    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3) {
+    static void syscall(word_t w0, word_t w1, word_t w2, word_t w3) {
         word_t dummy;
         asm volatile (
             "mov %%esp, %%ecx;"
@@ -79,7 +79,7 @@ public:
         handle_result(w0);
     }
 
-    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4) {
+    static void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4) {
         word_t dummy;
         asm volatile (
             "push %%ebp;"
@@ -96,7 +96,7 @@ public:
         handle_result(w0);
     }
 
-    static inline void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4, word_t &out1,
+    static void syscall(word_t w0, word_t w1, word_t w2, word_t w3, word_t w4, word_t &out1,
                                word_t &out2) {
         word_t dummy;
         asm volatile (
@@ -119,7 +119,7 @@ public:
 private:
     SyscallABI();
 
-    static inline void handle_result(uint8_t res) {
+    static void handle_result(uint8_t res) {
         if(EXPECT_FALSE(res != E_SUCCESS))
             throw SyscallException(static_cast<ErrorCode>(res));
     }

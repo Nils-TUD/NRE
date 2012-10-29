@@ -138,7 +138,7 @@ public:
     }
 
 private:
-    inline uint32_t wait_timeout(volatile uint32_t *reg, uint32_t mask, uint32_t value) {
+    uint32_t wait_timeout(volatile uint32_t *reg, uint32_t mask, uint32_t value) {
         timevalue_t timeout = _clock.source_time(TIMEOUT);
         while(((*reg & mask) != value) && _clock.source_time() < timeout)
             nre::Util::pause();

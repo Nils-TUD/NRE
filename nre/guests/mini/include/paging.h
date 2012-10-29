@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    static inline void flush(uintptr_t addr) {
+    static void flush(uintptr_t addr) {
         __asm__(
             "invlpg (%0)"
             : : "r" (addr)

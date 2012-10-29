@@ -27,7 +27,7 @@ template<class DS>
 class DataSpaceManager;
 
 template<class DS>
-static inline OStream &operator<<(OStream &os, const DataSpaceManager<DS> &mng);
+static OStream &operator<<(OStream &os, const DataSpaceManager<DS> &mng);
 
 /**
  * The DataSpaceManager is responsible for keeping track of the number of references to a dataspace.

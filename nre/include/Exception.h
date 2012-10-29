@@ -91,7 +91,7 @@ namespace nre {
 
 class Exception;
 class UtcbFrameRef;
-static inline OStream &operator<<(OStream &os, const Exception &e);
+static OStream &operator<<(OStream &os, const Exception &e);
 UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
 UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
 
