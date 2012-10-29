@@ -129,11 +129,39 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# for clean and distclean, it makes no sense to build it (this might even fail because e.g. scons has
-# a non existing dependency which might be the reason the user wants to do a clean)
-if [ "$cmd" = "clean" ] || [ "$cmd" = "distclean" ]; then
-    dobuild=false
-fi
+binary=""
+case "$cmd" in
+    # check parameters
+    bochs|qemu|srv|srvp|dbg|dbgr)
+        if [ "$script" = "" ]; then
+            echo "Usage: $0 $cmd <script>" >&2
+            exit 1
+        fi
+        ;;
+    prof=*|straddr=*|dis=*|elf=*|trace=*|dbg=*)
+        if [ "`echo $cmd | grep '^straddr='`" != "" ] && [ "$script" = "" ]; then
+            echo "Usage: $0 $cmd <string>" >&2
+            exit 1
+        fi
+        binary=${cmd#*=}
+        if [ ! -f "$build/bin/apps/$binary" ]; then
+            echo "The file $build/bin/apps/$binary does not exits" >&2
+            exit 1
+        fi
+        ;;
+    # for clean and distclean, it makes no sense to build it (this might even fail because e.g. scons has
+    # a non existing dependency which might be the reason the user wants to do a clean)
+    clean|distclean)
+        dobuild=false
+        ;;
+    # check for unknown commands
+    qemunet|list)
+        ;;
+    ?*)
+        echo "Unknown command '$cmd'" >&2
+        exit 1
+        ;;
+esac
 
 echo "Working with $NRE_TARGET in $NRE_BUILD mode"
 
@@ -202,7 +230,7 @@ case "$cmd" in
         rm -Rf build/* $novadir
         ;;
     prof=*)
-        $build/tools/conv/conv i586 log.txt $build/bin/apps/${cmd#prof=} > result.xml
+        $build/tools/conv/conv i586 log.txt $build/bin/apps/$binary > result.xml
         ;;
     bochs)
         mkdir -p $build/bin/boot/grub
@@ -230,23 +258,23 @@ case "$cmd" in
         ./$script --server -p --build-dir="$PWD/$build"
         ;;
     dis=*)
-        $crossdir/bin/$cross-objdump -SC $build/bin/apps/${cmd#dis=} | less
+        $crossdir/bin/$cross-objdump -SC $build/bin/apps/$binary | less
         ;;
     elf=*)
-        $crossdir/bin/$cross-readelf -a $build/bin/apps/${cmd#elf=} | less
+        $crossdir/bin/$cross-readelf -a $build/bin/apps/$binary | less
         ;;
     straddr=*)
-        echo "Strings containing '$script' in ${cmd#straddr=}:"
+        echo "Strings containing '$script' in $binary:"
         # find base address of .rodata
-        base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/${cmd#straddr=} | grep .rodata | \
+        base=`$crossdir/bin/$cross-readelf -S $build/bin/apps/$binary | grep .rodata | \
             xargs | cut -d ' ' -f 5`
         # grep for matching lines, prepare for better use of awk and finally add offset to base
-        $crossdir/bin/$cross-readelf -p 4 $build/bin/apps/${cmd#straddr=} | grep $script | \
+        $crossdir/bin/$cross-readelf -p 4 $build/bin/apps/$binary | grep $script | \
             sed 's/^ *\[ *\([[:xdigit:]]*\)\] *\(.*\)$/0x\1 \2/' | \
             awk '{ printf("0x%x: %s %s %s %s %s %s\n",0x'$base' + strtonum($1),$2,$3,$4,$5,$6,$7) }'
         ;;
     trace=*)
-        tools/backtrace $build/bin/apps/${cmd#trace=}
+        tools/backtrace $build/bin/apps/$binary
         ;;
     dbg=*)
         tmp=$(tempfile)
@@ -258,7 +286,7 @@ case "$cmd" in
         # which replaces itself with the given program afterwards
         $build/tools/ignoreint/ignoreint ./$script --qemu="$QEMU" \
             --build-dir="$PWD/$build" --qemu-append="$QEMU_FLAGS-S -s" > log.txt &
-        $gdb $build/bin/apps/${cmd#dbg=} --command=$tmp
+        $gdb $build/bin/apps/$binary --command=$tmp
         rm -f $tmp
         kill `pgrep qemu` 2>/dev/null
         ;;
