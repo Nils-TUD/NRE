@@ -75,8 +75,10 @@ public:
         find_mods(size);
     }
     ~VMConfig() {
-        for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ++it)
-            delete &*it;
+        for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ) {
+            nre::SList<Module>::iterator old = it++;
+            delete &*old;
+        }
     }
 
     const char *name() const {
