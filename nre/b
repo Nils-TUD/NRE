@@ -277,7 +277,7 @@ case "$cmd" in
         tools/backtrace $build/bin/apps/$binary
         ;;
     dbg=*)
-        tmp=$(tempfile)
+        tmp=$(mktemp)
         echo "target remote localhost:1234" >> $tmp
         echo "display/i \$pc" >> $tmp
         # the problem is that qemu terminates if it receives SIGINT. so, if we want to
