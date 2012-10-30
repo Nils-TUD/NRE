@@ -163,9 +163,9 @@ if $BUILD_GCC; then
     # libgcc
     # first, generate crt*S.o and libc for libgcc_s. Its not necessary to have a full libc (we'll have
     # one later). But at least its necessary to provide the correct startup-files
-    TMPCRT0=`tempfile`
-    TMPCRT1=`tempfile`
-    TMPCRTN=`tempfile`
+    TMPCRT0=`mktemp`
+    TMPCRT1=`mktemp`
+    TMPCRTN=`mktemp`
     # crt0 can be empty
     echo ".section .init" >> $TMPCRT1
     echo ".global _init" >> $TMPCRT1
