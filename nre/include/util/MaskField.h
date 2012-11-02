@@ -29,7 +29,7 @@ namespace nre {
 template<uint BITS>
 class MaskField;
 template<uint BITS>
-static inline OStream &operator<<(OStream &os, const MaskField<BITS> &bf);
+static OStream &operator<<(OStream &os, const MaskField<BITS> &bf);
 
 /**
  * MaskField is essentially the same as BitField but allows multiple bits. That is, it manages

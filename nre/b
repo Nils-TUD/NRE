@@ -151,7 +151,7 @@ case "$cmd" in
         fi
         binary=${cmd#*=}
         if [ ! -f "$build/bin/apps/$binary" ]; then
-            echo "The file $build/bin/apps/$binary does not exits" >&2
+            echo "The file $build/bin/apps/$binary does not exist" >&2
             exit 1
         fi
         ;;
@@ -267,7 +267,7 @@ case "$cmd" in
         tools/backtrace $build/bin/apps/$binary
         ;;
     dbg=*)
-        tmp=$(tempfile)
+        tmp=$(mktemp)
         echo "target remote localhost:1234" >> $tmp
         echo "display/i \$pc" >> $tmp
         # the problem is that qemu terminates if it receives SIGINT. so, if we want to

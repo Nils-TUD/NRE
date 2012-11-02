@@ -73,7 +73,7 @@ public:
      * @return the value
      */
     template<typename T>
-    inline T in(port_t offset = 0) {
+    T in(port_t offset = 0) {
         assert(offset < _count);
         T val;
         asm volatile ("in %w1, %0" : "=a" (val) : "Nd" (_base + offset));
@@ -87,7 +87,7 @@ public:
      * @param offset the offset within the port-range
      */
     template<typename T>
-    inline void out(T val, port_t offset = 0) {
+    void out(T val, port_t offset = 0) {
         assert(offset < _count);
         asm volatile ("out %0, %w1" : : "a" (val), "Nd" (_base + offset));
     }

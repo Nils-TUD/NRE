@@ -35,7 +35,7 @@ public:
 
 public:
     static void clear();
-    static inline void set_color(int fg, int bg) {
+    static void set_color(int fg, int bg) {
         color = ((bg & 0xF) << 4) | (fg & 0xF);
     }
     static void putc(char c);

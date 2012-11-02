@@ -36,14 +36,14 @@ typedef unsigned long size_t;
 
 class Util {
 public:
-    static inline void set_cr0(uint32_t val) {
+    static void set_cr0(uint32_t val) {
         asm (
             "mov	%0,%%cr0"
             : : "r" (val)
         );
     }
 
-    static inline uint32_t get_cr0() {
+    static uint32_t get_cr0() {
         uint32_t res;
         asm (
             "mov	%%cr0,%0"
@@ -52,18 +52,18 @@ public:
         return res;
     }
 
-    static inline void set_cr3(uint32_t val) {
+    static void set_cr3(uint32_t val) {
         asm (
             "mov	%0,%%cr3"
             : : "r" (val)
         );
     }
 
-    static inline void enable_ints() {
+    static void enable_ints() {
         asm volatile ("sti");
     }
 
-    static inline void disable_ints() {
+    static void disable_ints() {
         asm volatile ("cli");
     }
 

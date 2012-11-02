@@ -19,12 +19,13 @@
 #include <arch/Types.h>
 #include <arch/Defines.h>
 #include <util/Atomic.h>
+#include <util/Util.h>
 
 typedef word_t spinlock_t;
 
 static inline void lock(spinlock_t *val) {
     while(!nre::Atomic::cmpnswap(val, 0, 1))
-        asm volatile ("pause" ::: "memory");
+        nre::Util::pause();
 }
 
 static inline void unlock(spinlock_t *val) {

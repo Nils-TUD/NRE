@@ -205,7 +205,7 @@ private:
             throw ChildException(E_NOT_FOUND, 32, "Child with idx %zu does not exist", idx);
         return c;
     }
-    static inline size_t per_child_caps() {
+    static size_t per_child_caps() {
         return Math::next_pow2(Hip::get().service_caps() * CPU::count());
     }
     cpu_t get_cpu(capsel_t pid) const {

@@ -65,14 +65,14 @@ public:
     }
 
     // TODO move that to somewhere else
-    static inline uint32_t cpuid(uint32_t eax, uint32_t &ebx, uint32_t &ecx, uint32_t &edx) {
+    static uint32_t cpuid(uint32_t eax, uint32_t &ebx, uint32_t &ecx, uint32_t &edx) {
         asm volatile ("cpuid" : "+a" (eax), "+b" (ebx), "+c" (ecx), "+d" (edx));
         return eax;
     }
-    static inline void pause() {
+    static void pause() {
         asm volatile ("pause");
     }
-    static inline timevalue_t tsc() {
+    static timevalue_t tsc() {
         uint32_t u, l;
         asm volatile ("rdtsc" : "=a" (l), "=d" (u));
         return (timevalue_t)u << 32 | l;
