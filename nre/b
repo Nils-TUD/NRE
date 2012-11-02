@@ -24,22 +24,25 @@ fi
 if [ -z "$NRE_GDB_X86_64" ]; then
     export NRE_GDB_X86_64=x86_64-linux-gnu-gdbtui
 fi
+if [ -z "$QEMU" ]; then
+   export QEMU=qemu-system-x86_64
+fi
 
 # target dependend values
 if [ "$NRE_TARGET" = "x86_32" ]; then
     cross="i686-pc-nulnova"
     gdb=$NRE_GDB_X86_32
-    export QEMU="qemu-system-i386"
-    export QEMU_FLAGS="-cpu phenom "
+    qemuflags="-cpu phenom"
 elif [ "$NRE_TARGET" = "x86_64" ]; then
     cross="x86_64-pc-nulnova"
     gdb=$NRE_GDB_X86_64
-    export QEMU="qemu-system-x86_64"
-    export QEMU_FLAGS=""
 else
     echo 'Please define $NRE_TARGET to x86_32 or x86_64!' >&2
     exit 1
 fi
+
+# take care that we have no additional spaces; they lead to empty arguments ('') to qemu
+export QEMU_FLAGS="`echo $qemuflags $QEMU_FLAGS | xargs`"
 
 # don't change anything below!
 crossdir="/opt/nre-cross-$NRE_TARGET"
@@ -98,6 +101,9 @@ help() {
     echo "                             The default is gdbtui."
     echo "    NRE_GDB_X86_64:          the executable of gdb to use for NRE_TARGET=x86_64."
     echo "                             The default is x86_64-linux-gnu-gdbtui."
+    echo "    QEMU:                    The qemu executable to use (default is"
+    echo "                             qemu-system-x86_64)."
+    echo "    QEMU_FLAGS:              Pass additional arguments to qemu."
     exit 0
 }
 
@@ -169,10 +175,7 @@ if $dobuild; then
     echo "Building NRE and NOVA with $cpus jobs..."
 
     # build userland
-    scons $opts
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
+    scons $opts || exit 1
 
     if [ -d $novadir/build ]; then
         cd $novadir/build
