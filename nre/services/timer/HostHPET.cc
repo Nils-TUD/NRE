@@ -198,7 +198,7 @@ HostHPET::HostHPET(bool force_legacy)
 uint16_t HostHPET::get_rid(uint8_t block, uint comparator) {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table(String("DMAR"));
+    ACPI::RSDT *addr = sess.find_table("DMAR");
     if(!addr)
         return 0;
 
@@ -243,7 +243,7 @@ uint16_t HostHPET::get_rid(uint8_t block, uint comparator) {
 uintptr_t HostHPET::get_address() {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table(String("HPET"));
+    ACPI::RSDT *addr = sess.find_table("HPET");
     if(!addr)
         throw Exception(E_NOT_FOUND, "Unable to find HPET in ACPI tables");
 

@@ -213,11 +213,11 @@ int main() {
     }
 
     mng = new ChildManager();
-    GlobalThread::create(log_thread, CPU::current().log_id(), String("root-log"))->start();
-    GlobalThread::create(sysinfo_thread, CPU::current().log_id(), String("root-sysinfo"))->start();
+    GlobalThread::create(log_thread, CPU::current().log_id(), "root-log")->start();
+    GlobalThread::create(sysinfo_thread, CPU::current().log_id(), "root-sysinfo")->start();
 
     // wait until log and sysinfo are registered
-    while(mng->registry().find(String("log")) == 0 || mng->registry().find(String("sysinfo")) == 0)
+    while(mng->registry().find("log") == 0 || mng->registry().find("sysinfo") == 0)
         Util::pause();
 
     start_childs();
@@ -247,7 +247,7 @@ static void start_childs() {
             uintptr_t virt = VirtualMemory::alloc(it->size);
             Hypervisor::map_mem(it->addr, virt, it->size);
 
-            ChildConfig cfg(mod, String(it->cmdline()), cpus.next()->log_id());
+            ChildConfig cfg(mod, it->cmdline(), cpus.next()->log_id());
             mng->load(virt, it->size, cfg);
             if(cfg.last())
                 break;

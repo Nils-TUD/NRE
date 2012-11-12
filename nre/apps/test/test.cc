@@ -107,7 +107,7 @@ static void view0(void*) {
     char title[64];
     size_t subcon = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
     OStringStream::format(title, sizeof(title), "Test-%zu", subcon);
-    ConsoleSession conssess(*conscon, subcon, String(title));
+    ConsoleSession conssess(*conscon, subcon, title);
     ConsoleStream view(conssess, 0);
     int i = 0;
     while(i < 10000) {
@@ -137,7 +137,7 @@ static void tick_thread(void*) {
 int main() {
     conscon = new Connection("console");
     for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-        GlobalThread *gt = GlobalThread::create(view0, it->log_id(), String("test-thread"));
+        GlobalThread *gt = GlobalThread::create(view0, it->log_id(), "test-thread");
         gt->set_tls<size_t>(Thread::TLS_PARAM, 1 + it->log_id());
         gt->start();
     }

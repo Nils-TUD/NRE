@@ -300,7 +300,7 @@ int main() {
     Connection timercon("timer");
     TimerSession timer(timercon);
     Connection conscon("console");
-    ConsoleSession console(conscon, 1, String("CycleBurner"));
+    ConsoleSession console(conscon, 1, "CycleBurner");
 
     gen_sinlut();
     gen_sqrtlut();

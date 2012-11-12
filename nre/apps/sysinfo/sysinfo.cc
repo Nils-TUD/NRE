@@ -30,7 +30,7 @@ static Connection timercon("timer");
 static Connection sysinfocon("sysinfo");
 static SysInfoSession sysinfo(sysinfocon);
 static Connection conscon("console");
-static ConsoleSession cons(conscon, 0, String("SysInfo"));
+static ConsoleSession cons(conscon, 0, "SysInfo");
 static size_t page = 0;
 static SysInfoPage *pages[] = {
     new ScInfoPage(cons, sysinfo),
@@ -98,7 +98,7 @@ int main() {
     regs.cursor_style = 0x2000;
     cons.set_regs(regs);
 
-    GlobalThread::create(input_thread, CPU::current().log_id(), String("sysinfo-input"))->start();
+    GlobalThread::create(input_thread, CPU::current().log_id(), "sysinfo-input")->start();
     refresh_thread();
     return 0;
 }

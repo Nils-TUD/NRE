@@ -143,7 +143,7 @@ static void test_pingpong() {
             char cmdline[64];
             OStringStream os(cmdline, sizeof(cmdline));
             os << "pingpongservice provides=pingpong " << reinterpret_cast<uintptr_t>(funcs[i]);
-            ChildConfig cfg(0, String(cmdline));
+            ChildConfig cfg(0, cmdline);
             cfg.entry(reinterpret_cast<uintptr_t>(pingpong_server));
             mng->load(ds.virt(), self->size, cfg);
         }
@@ -151,7 +151,7 @@ static void test_pingpong() {
             char cmdline[64];
             OStringStream os(cmdline, sizeof(cmdline));
             os << "pingpongclient " << reinterpret_cast<uintptr_t>(clientfuncs[i]);
-            ChildConfig cfg(0, String(cmdline));
+            ChildConfig cfg(0, cmdline);
             cfg.entry(reinterpret_cast<uintptr_t>(pingpong_client));
             mng->load(ds.virt(), self->size, cfg);
         }

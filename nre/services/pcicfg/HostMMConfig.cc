@@ -26,7 +26,7 @@ using namespace nre;
 HostMMConfig::HostMMConfig() {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table(String("MCFG"));
+    ACPI::RSDT *addr = sess.find_table("MCFG");
     if(addr == 0)
         throw Exception(E_NOT_FOUND, "No MCFG table found");
 

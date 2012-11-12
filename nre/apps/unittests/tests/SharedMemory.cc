@@ -50,7 +50,7 @@ class ShmSession : public ServiceSession {
 public:
     explicit ShmSession(Service *s, size_t id, capsel_t cap, capsel_t caps, Pt::portal_func func)
         : ServiceSession(s, id, cap, caps, func),
-          _ec(GlobalThread::create(receiver, CPU::current().log_id(), String("shm-receiver"))),
+          _ec(GlobalThread::create(receiver, CPU::current().log_id(), "shm-receiver")),
           _cons(), _ds() {
         _ec->set_tls<capsel_t>(Thread::TLS_PARAM, caps);
     }
@@ -179,14 +179,14 @@ static void test_shm() {
         // map the memory of the module
         DataSpace *ds = new DataSpace(self->size, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::R, self->addr);
         {
-            ChildConfig cfg(0, String("shm_service provides=shm"));
+            ChildConfig cfg(0, "shm_service provides=shm");
             cfg.entry(reinterpret_cast<uintptr_t>(shm_service));
             mng->load(ds->virt(), self->size, cfg);
         }
         {
             OStringStream os(cmdline, sizeof(cmdline));
             os << "shm_client " << ds_sizes[i];
-            ChildConfig cfg(0, String(cmdline));
+            ChildConfig cfg(0, cmdline);
             cfg.entry(reinterpret_cast<uintptr_t>(shm_client));
             mng->load(ds->virt(), self->size, cfg);
         }

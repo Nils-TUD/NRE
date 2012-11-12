@@ -38,7 +38,7 @@ static void test_threads() {
     AvgProfiler prof(TEST_COUNT);
     for(size_t i = 0; i < TEST_COUNT; ++i) {
         prof.start();
-        threads[i] = GlobalThread::create(dummy, CPU::current().log_id(), String(""));
+        threads[i] = GlobalThread::create(dummy, CPU::current().log_id(), "");
         prof.stop();
     }
 

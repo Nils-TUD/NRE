@@ -36,7 +36,7 @@ void Admission::init() {
         OStringStream stream(name, sizeof(name));
         stream << "CPU" << it->log_id() << "-idle";
         capsel_t sc = Hypervisor::request_idle_sc(it->phys_id());
-        add_sc(new SchedEntity(String(name), it->log_id(), sc));
+        add_sc(new SchedEntity(name, it->log_id(), sc));
     }
 }
 

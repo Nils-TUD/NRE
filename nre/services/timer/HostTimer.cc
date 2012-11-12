@@ -127,13 +127,13 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
         // need to query other CPUs.
         if((_per_cpu[cpu]->slot_count > 0) || !_per_cpu[cpu]->has_timer) {
             // Create wakeup thread
-            GlobalThread *gt = GlobalThread::create(xcpu_wakeup_thread, cpu, String("timer-wakeup"));
+            GlobalThread *gt = GlobalThread::create(xcpu_wakeup_thread, cpu, "timer-wakeup");
             gt->set_tls(Thread::TLS_PARAM, this);
             gt->start();
             xcpu_threads_started++;
         }
         if(_per_cpu[cpu]->has_timer) {
-            GlobalThread *gt = GlobalThread::create(gsi_thread, cpu, String("timer-gsi"));
+            GlobalThread *gt = GlobalThread::create(gsi_thread, cpu, "timer-gsi");
             gt->set_tls(Thread::TLS_PARAM, this);
             gt->start();
         }

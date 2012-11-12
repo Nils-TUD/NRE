@@ -32,8 +32,8 @@ ConsoleService::ConsoleService(const char *name, uint modifier)
     }
 
     // add dummy session for boot screen and HV screen
-    create_dummy(0, String("Bootloader"));
-    create_dummy(1, String("Hypervisor"));
+    create_dummy(0, "Bootloader");
+    create_dummy(1, "Hypervisor");
     _switcher.start();
 }
 

@@ -48,7 +48,7 @@ void HostRebootPCIReset::reboot() {
 HostRebootACPI::HostRebootACPI()
     : HostRebootMethod(), _method(), _value(), _addr(), _con("acpi"), _sess(_con), _ports(), _ds() {
     LOG(Logging::REBOOT, Serial::get() << "Trying reboot via ACPI...\n");
-    ACPI::RSDT *rsdt = _sess.find_table(String("FACP"));
+    ACPI::RSDT *rsdt = _sess.find_table("FACP");
     if(!rsdt)
         throw Exception(E_NOT_FOUND, "FACP not found");
 

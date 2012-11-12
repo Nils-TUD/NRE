@@ -34,7 +34,7 @@ static const uint CUR_ROW_COLOR = 0x70;
 
 static size_t vmidx = 0;
 static Connection conscon("console");
-static ConsoleSession cons(conscon, 0, String("VMManager"));
+static ConsoleSession cons(conscon, 0, "VMManager");
 static SList<VMConfig> configs;
 static ChildManager cm;
 static Cycler<CPU::iterator> cpucyc(CPU::begin(), CPU::end());
@@ -162,8 +162,8 @@ int main() {
         }
     }
 
-    GlobalThread::create(input_thread, CPU::current().log_id(), String("vmmng-input"))->start();
-    GlobalThread::create(refresh_thread, CPU::current().log_id(), String("vmmng-refresh"))->start();
+    GlobalThread::create(input_thread, CPU::current().log_id(), "vmmng-input")->start();
+    GlobalThread::create(refresh_thread, CPU::current().log_id(), "vmmng-refresh")->start();
 
     VMMngService *srv = VMMngService::create("vmmanager");
     srv->start();

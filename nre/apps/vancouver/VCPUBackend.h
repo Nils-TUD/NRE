@@ -46,7 +46,7 @@ class VCPUBackend : public nre::SListItem {
 public:
     VCPUBackend(Motherboard *mb, VCVCpu *vcpu, bool use_svm, cpu_t cpu)
         : SListItem(), _ec(nre::LocalThread::create(cpu)), _caps(get_portals(use_svm)), _sm(0),
-          _vcpu(cpu, _caps, nre::String("vmm-vcpu")) {
+          _vcpu(cpu, _caps, "vmm-vcpu") {
         _ec->set_tls<VCVCpu*>(nre::Thread::TLS_PARAM, vcpu);
         _vcpu.start();
         _mb = mb;

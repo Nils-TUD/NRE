@@ -63,7 +63,7 @@ HostAHCICtrl::HostAHCICtrl(uint id, PCI &pci, PCI::bdf_type bdf, Gsi *gsi, bool 
     char name[32];
     OStringStream os(name, sizeof(name));
     os << "ahci-gsi-" << _gsi->gsi();
-    GlobalThread *gt = GlobalThread::create(gsi_thread, CPU::current().log_id(), String(name));
+    GlobalThread *gt = GlobalThread::create(gsi_thread, CPU::current().log_id(), name);
     gt->set_tls<HostAHCICtrl*>(Thread::TLS_PARAM, this);
     gt->start();
 }

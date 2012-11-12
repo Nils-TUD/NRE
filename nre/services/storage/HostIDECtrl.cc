@@ -38,7 +38,7 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
         char name[32];
         nre::OStringStream os(name, sizeof(name));
         os << "ide-gsi-" << gsi;
-        GlobalThread *gt = GlobalThread::create(gsi_thread, CPU::current().log_id(), nre::String(name));
+        GlobalThread *gt = GlobalThread::create(gsi_thread, CPU::current().log_id(), name);
         gt->set_tls<HostIDECtrl*>(Thread::TLS_PARAM, this);
         gt->start();
     }

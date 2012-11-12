@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     }
 
     srv = new ConsoleService("console", modifier);
-    GlobalThread::create(input_thread, CPU::current().log_id(), String("console-input"))->start();
+    GlobalThread::create(input_thread, CPU::current().log_id(), "console-input")->start();
     srv->start();
     return 0;
 }

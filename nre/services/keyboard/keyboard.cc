@@ -176,7 +176,7 @@ PORTAL static void portal_mouse(capsel_t pid) {
 
 static void mouseservice(void*) {
     mousesrv = new KeyboardService<Mouse::Packet>("mouse", portal_mouse);
-    GlobalThread::create(mousehandler, CPU::current().log_id(), String("mouse-broadcast"))->start();
+    GlobalThread::create(mousehandler, CPU::current().log_id(), "mouse-broadcast")->start();
     mousesrv->start();
 }
 
@@ -203,9 +203,9 @@ int main(int argc, char *argv[]) {
 
     kbsrv = new KeyboardService<Keyboard::Packet>("keyboard", portal_keyboard);
     if(hostkb->mouse_enabled())
-        GlobalThread::create(mouseservice, CPU::current().log_id(), String("mouse"))->start();
+        GlobalThread::create(mouseservice, CPU::current().log_id(), "mouse")->start();
 
-    GlobalThread::create(kbhandler, CPU::current().log_id(), String("keyboard-broadcast"))->start();
+    GlobalThread::create(kbhandler, CPU::current().log_id(), "keyboard-broadcast")->start();
     kbsrv->start();
     return 0;
 }

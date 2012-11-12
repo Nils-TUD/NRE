@@ -46,7 +46,7 @@ public:
         create_vcpus();
 
         nre::GlobalThread *input = nre::GlobalThread::create(
-            keyboard_thread, nre::CPU::current().log_id(), nre::String("vmm-input"));
+            keyboard_thread, nre::CPU::current().log_id(), "vmm-input");
         input->set_tls<Vancouver*>(nre::Thread::TLS_PARAM, this);
         input->start();
 
@@ -55,7 +55,7 @@ public:
             _vmmngcon = new nre::Connection("vmmanager");
             _vmmng = new nre::VMManagerSession(*_vmmngcon);
             nre::GlobalThread *vmmng = nre::GlobalThread::create(
-                vmmng_thread, nre::CPU::current().log_id(), nre::String("vmm-vmmng"));
+                vmmng_thread, nre::CPU::current().log_id(), "vmm-vmmng");
             vmmng->set_tls<Vancouver*>(nre::Thread::TLS_PARAM, this);
             vmmng->start();
         }
