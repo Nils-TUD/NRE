@@ -115,8 +115,12 @@ static void adjust_memory_map() {
             // (i.e. whether requested device memory overlaps with available memory). therefore
             // it is sufficient to make sure that the available page frames don't overlap with
             // the reserved page frames.
-            uint64_t addr = Math::round_up<uint64_t>(it->addr, ExecEnv::PAGE_SIZE);
-            uint64_t size = it->size - (ExecEnv::PAGE_SIZE - (it->addr & (ExecEnv::PAGE_SIZE - 1)));
+            uint64_t addr = it->addr;
+            uint64_t size = it->size;
+            if(addr & (ExecEnv::PAGE_SIZE - 1)) {
+                addr = Math::round_up<uint64_t>(addr, ExecEnv::PAGE_SIZE);
+                size -= ExecEnv::PAGE_SIZE - (addr & (ExecEnv::PAGE_SIZE - 1));
+            }
             chip->add_mem(addr, Math::round_dn<uint64_t>(size, ExecEnv::PAGE_SIZE),
                           it->aux, it->type);
         }
