@@ -133,13 +133,6 @@ int main() {
     adjust_memory_map();
     const Hip &hip = Hip::get();
 
-    LOG(Logging::MEM_MAP, Serial::get().writef("Memory map:\n"));
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-        LOG(Logging::MEM_MAP, Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%p",
-                                                   it->addr, it->size, it->type, it->aux));
-        LOG(Logging::MEM_MAP, Serial::get() << '\n');
-    }
-
     // add all available memory
     LOG(Logging::PLATFORM, Serial::get() << "Hip checksum is "
                                          << (hip.is_valid() ? "valid" : "not valid") << "\n");
