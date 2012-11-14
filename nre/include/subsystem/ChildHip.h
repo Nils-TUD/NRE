@@ -114,7 +114,7 @@ private:
 
     HipCPU cpus[MAX_CPUS];
     union {
-        HipMem mems[];
+        HipMem mems[1];
         uint8_t reserved[(ExecEnv::PAGE_SIZE - sizeof(Hip) - sizeof(cpus))];
     };
 };
