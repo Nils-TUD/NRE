@@ -29,9 +29,11 @@
 #define UNREACHED               __builtin_unreachable()
 
 #ifdef __clang__
+#    define COMPILER_NAME       "clang " __VERSION__
 #    define _STATIC_ASSERT(X, M)  typedef char static_assertion_ ## M[(!!(X)) * 2 - 1]
 #    define STATIC_ASSERT(X)     _STATIC_ASSERT (X, __LINE__)
 #else
+#    define COMPILER_NAME       "gcc " __VERSION__
 #    define STATIC_ASSERT(X)                                                  \
     ({                                                                        \
         extern int __attribute__((error("static assert failed: '" # X "'")))  \

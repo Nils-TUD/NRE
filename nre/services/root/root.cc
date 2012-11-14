@@ -133,7 +133,8 @@ int main() {
     adjust_memory_map();
     const Hip &hip = Hip::get();
 
-    // add all available memory
+    LOG(Logging::PLATFORM, Serial::get().writef("Welcome to NRE rev %x built with %s\n",
+                                                NRE_REV, COMPILER_NAME));
     LOG(Logging::PLATFORM, Serial::get() << "Hip checksum is "
                                          << (hip.is_valid() ? "valid" : "not valid") << "\n");
     LOG(Logging::PLATFORM, Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
@@ -141,6 +142,7 @@ int main() {
     LOG(Logging::PLATFORM, Serial::get().writef("CPU runs @ %u Mhz, bus @ %u Mhz\n",
                                                 Hip::get().freq_tsc / 1000, Hip::get().freq_bus /
                                                 1000));
+    // add all available memory
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // FIXME: why can't we use the memory above 4G?
         if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
