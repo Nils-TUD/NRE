@@ -57,11 +57,10 @@ public:
 
 private:
     explicit LocalThread(cpu_t cpu, capsel_t event_base, uintptr_t stackaddr, uintptr_t utcb)
-        : Thread(cpu, event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,
-                 INVALID, stackaddr, utcb) {
-        Pd *pd = Pd::current();
-        uintptr_t ret = reinterpret_cast<uintptr_t>(portal_reply_landing_spot);
-        Thread::create(pd, Syscalls::EC_LOCAL, ExecEnv::setup_stack(pd, this, 0, ret, stack()));
+        : Thread(Pd::current(), Syscalls::EC_LOCAL, 0,
+                 reinterpret_cast<uintptr_t>(portal_reply_landing_spot), cpu,
+                 event_base == INVALID ? Hip::get().service_caps() * cpu : event_base,
+                 stackaddr, utcb) {
     }
 };
 
