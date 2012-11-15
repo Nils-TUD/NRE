@@ -18,6 +18,7 @@
 
 #include <util/CPUSet.h>
 #include <Hip.h>
+#include <CPU.h>
 #include <Assert.h>
 
 namespace nre {
