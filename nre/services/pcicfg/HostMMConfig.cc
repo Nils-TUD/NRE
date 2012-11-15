@@ -27,7 +27,7 @@ HostMMConfig::HostMMConfig() {
     Connection con("acpi");
     ACPISession sess(con);
     ACPI::RSDT *addr = sess.find_table("MCFG");
-    if(addr == 0)
+    if(addr == nullptr)
         throw Exception(E_NOT_FOUND, "No MCFG table found");
 
     AcpiMCFG *mcfg = reinterpret_cast<AcpiMCFG*>(addr);

@@ -40,7 +40,7 @@ public:
     }
 
     bool initialized() const {
-        return _prod != 0;
+        return _prod != nullptr;
     }
     void set_producer(nre::Producer<nre::VMManager::Packet> *prod) {
         _prod = prod;

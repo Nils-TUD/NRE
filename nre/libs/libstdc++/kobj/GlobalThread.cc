@@ -37,7 +37,7 @@ GlobalThread::~GlobalThread() {
 }
 
 void GlobalThread::start(Qpd qpd, Pd *pd) {
-    assert(_sc == 0);
+    assert(_sc == nullptr);
     _sc = new Sc(this, qpd, pd);
     _sc->start(_name);
 }

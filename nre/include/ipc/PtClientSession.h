@@ -33,7 +33,7 @@ public:
      */
     explicit PtClientSession(Connection &con) : ClientSession(con), _pts(new Pt *[CPU::count()]) {
         for(cpu_t cpu = 0; cpu < CPU::count(); ++cpu)
-            _pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : 0;
+            _pts[cpu] = con.available_on(cpu) ? new Pt(caps() + cpu) : nullptr;
     }
     /**
      * Destroys this session
@@ -49,7 +49,7 @@ public:
      * @return the portal for the given cpu
      */
     Pt &pt(cpu_t cpu = CPU::current().log_id()) const {
-        assert(_pts[cpu] != 0);
+        assert(_pts[cpu] != nullptr);
         return *_pts[cpu];
     }
 

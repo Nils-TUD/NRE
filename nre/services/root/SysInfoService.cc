@@ -43,7 +43,7 @@ const char *SysInfoService::get_root_info(size_t &virt, size_t &phys, size_t &th
     // we've passed to children
     phys = PhysicalMemory::total_size() - PhysicalMemory::free_size();
     const Child *c;
-    for(size_t i = 0; (c = _cm->get_at(i)) != 0; ++i) {
+    for(size_t i = 0; (c = _cm->get_at(i)) != nullptr; ++i) {
         size_t cvirt, cphys;
         c->reglist().memusage(cvirt, cphys);
         phys -= cphys;
@@ -111,7 +111,7 @@ void SysInfoService::portal(capsel_t) {
                 if(idx > 0) {
                     ScopedLock<RCULock> guard(&RCU::lock());
                     idx--;
-                    const Child *c = idx >= ChildManager::MAX_CHILDS ? 0 : srv->_cm->get_at(idx);
+                    const Child *c = idx >= ChildManager::MAX_CHILDS ? nullptr : srv->_cm->get_at(idx);
                     if(c) {
                         // the main thread is not included in the sc-list
                         threads = c->scs().length() + 1;

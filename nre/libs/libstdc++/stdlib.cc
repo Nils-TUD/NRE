@@ -30,6 +30,6 @@ void thread_exit() {
 }
 
 void exit(int code) {
-    __cxa_finalize(0);
+    __cxa_finalize(nullptr);
     ExecEnv::exit(code);
 }

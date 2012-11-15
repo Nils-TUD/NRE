@@ -286,7 +286,7 @@ Child::id_type ChildManager::load(uintptr_t addr, size_t size, const ChildConfig
     }
     catch(...) {
         delete c;
-        rcu_assign_pointer(_childs[idx], 0);
+        rcu_assign_pointer(_childs[idx], nullptr);
         throw;
     }
 
@@ -456,7 +456,7 @@ void ChildManager::Portals::gsi(capsel_t pid) {
         ScopedLock<RCULock> guard(&RCU::lock());
         Child *c = cm->get_child(pid);
         uint gsi;
-        void *pcicfg = 0;
+        void *pcicfg = nullptr;
         Gsi::Op op;
         uf >> op >> gsi;
         if(op == Gsi::ALLOC)
@@ -1089,7 +1089,7 @@ void ChildManager::destroy_child(capsel_t pid) {
     Child *c = rcu_dereference(_childs[i]);
     if(!c)
         return;
-    rcu_assign_pointer(_childs[i], 0);
+    rcu_assign_pointer(_childs[i], nullptr);
     _registry.remove(c);
     RCU::invalidate(c);
     // we have to wait until its deleted here because before that we can't reuse the slot.

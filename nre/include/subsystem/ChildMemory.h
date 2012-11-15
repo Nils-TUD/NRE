@@ -194,7 +194,7 @@ public:
      * Finds the dataspace with given selector
      *
      * @param sel the selector
-     * @return the dataspace or 0 if not found
+     * @return the dataspace or nullptr if not found
      */
     DS *find(capsel_t sel) {
         return get(sel);
@@ -203,14 +203,14 @@ public:
      * Finds the dataspace with given address
      *
      * @param addr the virtual address
-     * @return the dataspace or 0 if not found
+     * @return the dataspace or nullptr if not found
      */
     DS *find_by_addr(uintptr_t addr) {
         for(iterator it = begin(); it != end(); ++it) {
             if(addr >= it->desc().virt() && addr < it->desc().virt() + it->desc().size())
                 return &*it;
         }
-        return 0;
+        return nullptr;
     }
 
     /**
@@ -259,18 +259,18 @@ public:
      * @throws ChildMemoryException if not found
      */
     DataSpaceDesc remove(capsel_t sel) {
-        return remove(get(sel), 0);
+        return remove(get(sel), nullptr);
     }
 
     /**
      * Removes the dataspace that contains the given address
      *
      * @param addr the virtual address
-     * @param sel will be set to the descriptor, if not 0
+     * @param sel will be set to the descriptor, if not nullptr
      * @return the descriptor
      * @throws ChildMemoryException if not found
      */
-    DataSpaceDesc remove_by_addr(uintptr_t addr, capsel_t *sel = 0) {
+    DataSpaceDesc remove_by_addr(uintptr_t addr, capsel_t *sel = nullptr) {
         return remove(find_by_addr(addr), sel);
     }
 
@@ -280,7 +280,7 @@ private:
             if(it->cap() == sel)
                 return &*it;
         }
-        return 0;
+        return nullptr;
     }
     DataSpaceDesc remove(DS *ds, capsel_t *sel) {
         DataSpaceDesc desc;

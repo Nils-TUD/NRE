@@ -228,7 +228,7 @@ private:
             // TODO this is not enough. we have to use the session-id and check whether the session
             // still exists. because the user might have closed it between a transfer-start and
             // the completion
-            ctrl->_tag.prod = 0;
+            ctrl->_tag.prod = nullptr;
             ctrl->_tag.dma = false;
         }
     }

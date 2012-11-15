@@ -59,7 +59,7 @@ public:
      *
      * @throws DataSpaceException if the creation failed
      */
-    static void create(DataSpaceDesc &desc, capsel_t *sel = 0, capsel_t *unmapsel = 0);
+    static void create(DataSpaceDesc &desc, capsel_t *sel = nullptr, capsel_t *unmapsel = nullptr);
 
     /**
      * Creates a new dataspace with given properties

@@ -39,7 +39,7 @@ public:
     }
 
     bool exists(size_t ctrl) const {
-        return ctrl < nre::Storage::MAX_CONTROLLER && _ctrls[ctrl] != 0;
+        return ctrl < nre::Storage::MAX_CONTROLLER && _ctrls[ctrl] != nullptr;
     }
     Controller *get(size_t ctrl) const {
         return _ctrls[ctrl];

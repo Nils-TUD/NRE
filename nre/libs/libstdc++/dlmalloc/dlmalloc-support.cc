@@ -117,7 +117,7 @@ void free(void *p) {
 static void* startup_malloc(size_t size) {
     void* res;
     if(pos + size >= sizeof(startup_heap))
-        return 0;
+        return nullptr;
 
     res = startup_heap + pos;
     pos += size;

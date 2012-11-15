@@ -18,7 +18,7 @@
 
 using namespace nre;
 
-VMMngService *VMMngService::_inst = 0;
+VMMngService *VMMngService::_inst = nullptr;
 
 void VMMngService::portal(capsel_t pid) {
     nre::ScopedLock<nre::RCULock> guard(&nre::RCU::lock());

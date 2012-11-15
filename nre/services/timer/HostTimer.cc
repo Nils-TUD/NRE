@@ -275,7 +275,7 @@ NORETURN void HostTimer::xcpu_wakeup_thread(void *) {
 
     WorkerMessage m;
     m.type = our->has_timer ? WorkerMessage::XCPU_REQUEST : WorkerMessage::TIMER_IRQ;
-    m.data = 0;
+    m.data = nullptr;
     while(1) {
         our->xcpu_sm.zero();
 
@@ -291,7 +291,7 @@ NORETURN void HostTimer::gsi_thread(void *) {
     PerCpu *const our = ht->_per_cpu[cpu];
     WorkerMessage m;
     m.type = WorkerMessage::TIMER_IRQ;
-    m.data = 0;
+    m.data = nullptr;
     LOG(Logging::TIMER, Serial::get().writef("Listening to GSI %u\n", our->timer->gsi().gsi()));
     while(1) {
         our->timer->gsi().down();

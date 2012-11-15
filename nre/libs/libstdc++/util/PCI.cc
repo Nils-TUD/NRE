@@ -70,7 +70,7 @@ Gsi *PCI::get_gsi(bdf_type bdf, uint nr, bool /*level*/, void *msix_table) {
 
     // we can't program vector > 0 when we only have legacy interrupts
     assert(nr == 0);
-    assert(_acpi != 0);
+    assert(_acpi != nullptr);
 
     // normal GSIs -  ask atare
     value_type pin = conf_read(bdf, 0xf) >> 8;

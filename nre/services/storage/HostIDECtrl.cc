@@ -26,8 +26,8 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
                          Ports::port_t bmportbase, uint bmportcount, bool dma)
     : Controller(id), _dma(dma && bmportbase), _irqs(gsi), _in_progress(false), _ready(0),
       _ctrl(portbase, 9), _ctrlreg(portbase + ATA_REG_CONTROL, 1),
-      _bm(dma && bmportbase ? new Ports(bmportbase, bmportcount) : 0), _clock(1000), _sm(),
-      _gsi(gsi ? new Gsi(gsi) : 0),
+      _bm(dma && bmportbase ? new Ports(bmportbase, bmportcount) : nullptr), _clock(1000), _sm(),
+      _gsi(gsi ? new Gsi(gsi) : nullptr),
       _prdt(Storage::MAX_DMA_DESCS * 8, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _devs() {
     // check if the bus is empty
     if(!is_bus_responding())
@@ -51,7 +51,7 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
         }
         catch(const Exception &e) {
             ATA_LOGDETAIL("Identify failed: %s", e.msg());
-            _devs[j] = 0;
+            _devs[j] = nullptr;
         }
     }
 }

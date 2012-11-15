@@ -133,7 +133,7 @@ public:
      * store it in a variable. If its none-zero, you can use it without trouble.
      *
      * @param id the child id
-     * @return the child with given id or 0 if not existing
+     * @return the child with given id or nullptr if not existing
      */
     const Child *get(Child::id_type id) const {
         return get_at((id - _portal_caps) / per_child_caps());
@@ -144,7 +144,7 @@ public:
      * store it in a variable. If its none-zero, you can use it without trouble.
      *
      * @param idx the index of the child
-     * @return the child at given index or 0 if not existing
+     * @return the child at given index or nullptr if not existing
      */
     const Child *get_at(size_t idx) const {
         return rcu_dereference(_childs[idx]);
@@ -175,7 +175,7 @@ public:
      * @return a semaphore cap that is used to notify the service about potentially destroyed sessions
      */
     capsel_t reg_service(capsel_t cap, const String& name, const BitField<Hip::MAX_CPUS> &available) {
-        return reg_service(0, cap, name, available);
+        return reg_service(nullptr, cap, name, available);
     }
     /**
      * Unregisters the service with given name
@@ -183,14 +183,14 @@ public:
      * @param name the service name
      */
     void unreg_service(const String& name) {
-        unreg_service(0, name);
+        unreg_service(nullptr, name);
     }
 
 private:
     size_t free_slot() const {
         ScopedLock<UserSm> guard(&_slotsm);
         for(size_t i = 0; i < MAX_CHILDS; ++i) {
-            if(_childs[i] == 0)
+            if(_childs[i] == nullptr)
                 return i;
         }
         throw ChildException(E_CAPACITY, "No free child slots");

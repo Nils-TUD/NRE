@@ -67,7 +67,7 @@ public:
     }
 
     virtual bool exists(size_t drive) const {
-        return idx(drive) < ARRAY_SIZE(_ports) && _ports[idx(drive)] != 0;
+        return idx(drive) < ARRAY_SIZE(_ports) && _ports[idx(drive)] != nullptr;
     }
     virtual size_t drive_count() const {
         return _portcount;

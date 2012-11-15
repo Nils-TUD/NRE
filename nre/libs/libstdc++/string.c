@@ -14,6 +14,7 @@
  * General Public License version 2 for more details.
  */
 
+#include <arch/Defines.h>
 #include <cstring>
 
 void* memcpy(void *dest, const void *src, size_t len) {
@@ -162,16 +163,16 @@ char *strchr(const char *str, int ch) {
         if(*str++ == ch)
             return (char*)(str - 1);
     }
-    return 0;
+    return nullptr;
 }
 
 char *strstr(const char *str1, const char *str2) {
-    char *res = 0;
+    char *res = nullptr;
     char *sub;
 
     // handle special case to prevent looping the string
     if(!*str2)
-        return 0;
+        return nullptr;
     while(*str1) {
         // matching char?
         if(*str1++ == *str2) {
@@ -187,7 +188,7 @@ char *strstr(const char *str1, const char *str2) {
                 return res;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 size_t strcspn(const char *s, const char *reject) {

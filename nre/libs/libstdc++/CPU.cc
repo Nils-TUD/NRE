@@ -31,13 +31,13 @@ class CPUInit {
 
 size_t CPU::_count = 0;
 uint CPU::_order = 0;
-CPU *CPU::_online = 0;
+CPU *CPU::_online = nullptr;
 CPU CPU::_cpus[Hip::MAX_CPUS] INIT_PRIO_CPUS;
 cpu_t CPU::_logtophys[Hip::MAX_CPUS];
 CPUInit CPUInit::init INIT_PRIO_CPUS;
 
 CPUInit::CPUInit() {
-    CPU *last = 0;
+    CPU *last = nullptr;
     const Hip& hip = Hip::get();
     cpu_t i = 0, id = 0, offline = 0;
     for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
@@ -56,7 +56,7 @@ CPUInit::CPUInit() {
             last->_next = &cpu;
         else
             CPU::_online = &cpu;
-        cpu._next = 0;
+        cpu._next = nullptr;
         last = &cpu;
 
         // copy attributes from Hip-CPU

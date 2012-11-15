@@ -242,7 +242,7 @@ int main() {
     GlobalThread::create(sysinfo_thread, CPU::current().log_id(), "root-sysinfo")->start();
 
     // wait until log and sysinfo are registered
-    while(mng->registry().find("log") == 0 || mng->registry().find("sysinfo") == 0)
+    while(mng->registry().find("log") == nullptr || mng->registry().find("sysinfo") == nullptr)
         Util::pause();
 
     start_childs();

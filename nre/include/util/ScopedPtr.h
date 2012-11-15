@@ -60,7 +60,7 @@ public:
      */
     T *release() {
         T *res = _obj;
-        _obj = 0;
+        _obj = nullptr;
         return res;
     }
 

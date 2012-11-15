@@ -22,7 +22,7 @@ namespace nre {
 ServiceSession *Service::new_session(capsel_t cap) {
     ScopedLock<UserSm> guard(&_sm);
     for(size_t i = 0; i < MAX_SESSIONS; ++i) {
-        if(_sessions[i] == 0) {
+        if(_sessions[i] == nullptr) {
             LOG(Logging::SERVICES, Serial::get() << "Creating session " << i
                                                  << " (caps=" << _caps + (i << CPU::order()) << ")\n");
             add_session(create_session(i, cap, _caps + (i << CPU::order()), _func));

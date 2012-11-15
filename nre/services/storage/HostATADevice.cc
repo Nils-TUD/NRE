@@ -93,7 +93,7 @@ void HostATADevice::transferPIO(Operation op, const DataSpace &ds, size_t secsiz
         }
 
         // now read / write the data
-        _ctrl.start_transfer(0, 0, false);
+        _ctrl.start_transfer(nullptr, 0, false);
         if(op == READ)
             _ctrl.inwords(ATA_REG_DATA, reinterpret_cast<uint16_t*>(buffer()), secsize / sizeof(uint16_t));
         else

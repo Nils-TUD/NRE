@@ -26,10 +26,10 @@ class Init {
     static Init init;
 };
 
-uint32_t *RCU::_versions = 0;
+uint32_t *RCU::_versions = nullptr;
 size_t RCU::_versions_count = 0;
 SList<Thread> RCU::_ecs;
-RCUObject *RCU::_objs = 0;
+RCUObject *RCU::_objs = nullptr;
 RCULock RCU::_lock;
 UserSm RCU::_sm INIT_PRIO_RCU;
 UserSm RCU::_ecsm INIT_PRIO_RCU;

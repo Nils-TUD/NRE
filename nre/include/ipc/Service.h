@@ -90,7 +90,7 @@ public:
             if(_reg_cpus.is_set(i))
                 _insts[i] = new ServiceCPUHandler(this, _regcaps + i, i);
             else
-                _insts[i] = 0;
+                _insts[i] = nullptr;
         }
     }
     /**
@@ -195,7 +195,7 @@ public:
      * @return the local thread for the given CPU to handle the provided portal
      */
     LocalThread *get_thread(cpu_t cpu) const {
-        return _insts[cpu] != 0 ? &_insts[cpu]->thread() : 0;
+        return _insts[cpu] != nullptr ? &_insts[cpu]->thread() : nullptr;
     }
 
 protected:
@@ -252,7 +252,7 @@ private:
         created_session(sess->id());
     }
     void remove_session(ServiceSession *sess) {
-        rcu_assign_pointer(_sessions[sess->id()], 0);
+        rcu_assign_pointer(_sessions[sess->id()], nullptr);
         sess->invalidate();
         RCU::invalidate(sess);
         RCU::gc(true);
@@ -339,7 +339,7 @@ private:
                 return t;
             _pos++;
         }
-        return 0;
+        return nullptr;
     }
     T *prev() {
         while(_pos >= 0) {
@@ -348,7 +348,7 @@ private:
                 return t;
             _pos--;
         }
-        return 0;
+        return nullptr;
     }
 
     Service* _s;

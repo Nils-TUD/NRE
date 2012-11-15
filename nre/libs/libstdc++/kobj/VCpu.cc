@@ -24,7 +24,7 @@ VCpu::~VCpu() {
 }
 
 void VCpu::start(Qpd qpd) {
-    assert(_sc == 0);
+    assert(_sc == nullptr);
     _sc = new Sc(this, qpd);
     _sc->start(_name);
 }

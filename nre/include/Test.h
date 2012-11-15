@@ -190,7 +190,7 @@ class WvTest {
 
 public:
     static const char *shortpath(const char *path) {
-        const char *cur = 0;
+        const char *cur = nullptr;
         const char *last = path;
         do {
             cur = strchr(last, '/');

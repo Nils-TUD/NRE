@@ -172,7 +172,7 @@ void HostAHCIDevice::identify_drive(nre::DataSpace &buffer) {
     memset(reinterpret_cast<void*>(buffer.virt()), 0, 512);
     set_command(0xec, 0, true);
     add_prd(buffer, 512);
-    size_t tag = start_command(0, 0);
+    size_t tag = start_command(nullptr, 0);
 
     // there is no IRQ on identify, as this is PIO data-in command
     if(wait_timeout(&_regs->ci, 1 << tag, 0))
@@ -187,7 +187,7 @@ void HostAHCIDevice::identify_drive(nre::DataSpace &buffer) {
 
 uint HostAHCIDevice::set_features(uint features, uint count) {
     set_command(0xef, 0, false, count, false, 0, features);
-    size_t tag = start_command(0, 0);
+    size_t tag = start_command(nullptr, 0);
 
     // there is no IRQ on set_features, as this is a PIO command
     check3(wait_timeout(&_regs->ci, 1 << tag, 0));

@@ -49,7 +49,7 @@ public:
         for(it = _list.begin(); it != _list.end() && idx-- > 0; ++it)
             ;
         if(it == _list.end())
-            return 0;
+            return nullptr;
         return &*it;
     }
     RunningVM *get_by_pd(capsel_t pd) {
@@ -58,7 +58,7 @@ public:
             if(it->pd() == pd)
                 return &*it;
         }
-        return 0;
+        return nullptr;
     }
     void remove(RunningVM *vm) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);

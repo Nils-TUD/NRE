@@ -56,7 +56,7 @@ void HostATAPIDevice::determine_capacity() {
     uint8_t *resp = cmd + 8;
     memset(cmd, 0, 20);
     cmd[0] = SCSI_CMD_READ_CAPACITY;
-    request(_buffer, _buffer, dma, 0, 0);
+    request(_buffer, _buffer, dma, nullptr, 0);
     // wait until the data is available
     _ctrl.wait_ready();
     _capacity = (resp[0] << 24) | (resp[1] << 16) | (resp[2] << 8) | (resp[3] << 0);
@@ -67,7 +67,7 @@ void HostATAPIDevice::request(const DataSpace &cmd, const DataSpace &data, const
     // send PACKET command to drive
     dma_type cdma;
     cdma.push(DMADesc(0, 12));
-    HostATADevice::readwrite(PACKET, cmd, 0xFFFF00, cdma, 0, 0, 12);
+    HostATADevice::readwrite(PACKET, cmd, 0xFFFF00, cdma, nullptr, 0, 12);
     // we don't get an interrupt in this case
     _ctrl.stop_transfer();
 

@@ -71,7 +71,7 @@ public:
      * @return the position where it has been inserted
      */
     iterator insert(T *e) {
-        T *p = 0;
+        T *p = nullptr;
         iterator it;
         for(it = begin(); it != end() && _isless(*it, *e); ++it)
             p = &*it;

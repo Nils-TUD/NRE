@@ -60,7 +60,7 @@ private:
 template<class T>
 class SListIterator {
 public:
-    explicit SListIterator(T *n = 0) : _n(n) {
+    explicit SListIterator(T *n = nullptr) : _n(n) {
     }
 
     T & operator*() const {
@@ -102,7 +102,7 @@ public:
     /**
      * Constructor. Creates an empty list
      */
-    explicit SList() : _head(0), _tail(0), _len(0) {
+    explicit SList() : _head(nullptr), _tail(nullptr), _len(0) {
     }
 
     /**
@@ -138,12 +138,12 @@ public:
      * @return the position where it has been inserted
      */
     iterator append(T *e) {
-        if(_head == 0)
+        if(_head == nullptr)
             _head = e;
         else
             _tail->next(e);
         _tail = e;
-        e->next(0);
+        e->next(nullptr);
         _len++;
         return iterator(e);
     }
@@ -173,7 +173,7 @@ public:
      * @return true if the item has been found and removed
      */
     bool remove(T *e) {
-        T *t = _head, *p = 0;
+        T *t = _head, *p = nullptr;
         while(t && t != e) {
             p = t;
             t = static_cast<T*>(t->next());

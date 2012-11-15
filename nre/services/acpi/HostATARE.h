@@ -57,7 +57,7 @@ class HostATARE {
         size_t namelen;
         PciRoutingEntry *routing;
         NamedRef(NamedRef *_next, const uint8_t *_ptr, size_t _len, const char *_name, size_t _namelen)
-            : next(_next), ptr(_ptr), len(_len), name(_name), namelen(_namelen), routing(0) {
+            : next(_next), ptr(_ptr), len(_len), name(_name), namelen(_namelen), routing(nullptr) {
         }
     };
 
@@ -65,7 +65,7 @@ public:
     typedef nre::PCIConfig::bdf_type bdf_type;
     typedef nre::PCIConfig::value_type value_type;
 
-    explicit HostATARE(HostACPI &acpi, uint debug) : _head(0) {
+    explicit HostATARE(HostACPI &acpi, uint debug) : _head(nullptr) {
         size_t len;
         uintptr_t addr;
         // add entries from the SSDT
@@ -118,7 +118,7 @@ private:
     static uint get_namedef_value(NamedRef *head, NamedRef *parent, const char *name);
     static NamedRef *search_ref(NamedRef *head, NamedRef *parent, const char *name, bool upstream);
     static bdf_type get_device_bdf(NamedRef *head, NamedRef *dev);
-    static NamedRef *add_refs(const uint8_t *table, unsigned len, NamedRef *res = 0);
+    static NamedRef *add_refs(const uint8_t *table, unsigned len, NamedRef *res = nullptr);
     static void add_routing(NamedRef *head);
 
     NamedRef *_head;

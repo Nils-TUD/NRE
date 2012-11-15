@@ -86,7 +86,7 @@ public:
      *
      * @param name the name of the table
      * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
-     * @return the RSDT or 0 if not found
+     * @return the RSDT or nullptr if not found
      */
     ACPI::RSDT *find_table(const String &name, uint instance = 0) const {
         UtcbFrame uf;

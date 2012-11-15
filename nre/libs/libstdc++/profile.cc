@@ -47,9 +47,9 @@ NOINSTR static ProfileEvent *alloc();
 EXTERN_C NOINSTR void __cyg_profile_func_enter(void *this_fn, void *call_site);
 EXTERN_C NOINSTR void __cyg_profile_func_exit(void *this_fn, void *call_site);
 
-static ProfileEvent *evfree = 0;
-static ProfileEvent *evlist = 0;
-static ProfileEvent *evend = 0;
+static ProfileEvent *evfree = nullptr;
+static ProfileEvent *evlist = nullptr;
+static ProfileEvent *evend = nullptr;
 static ProfileEvent evbuf[MAX_EVENTS];
 static nre::SpinLock spin;
 
@@ -85,7 +85,7 @@ static void logu(ulong u, uint base) {
 }
 
 static void init() {
-    evfree = 0;
+    evfree = nullptr;
     for(size_t i = 0; i < MAX_EVENTS; ++i) {
         evbuf[i].next = evfree;
         evfree = evbuf + i;
@@ -110,12 +110,12 @@ static ProfileEvent *alloc() {
             ev = ev->next;
         }
         evfree = evlist;
-        evlist = 0;
-        evend = 0;
+        evlist = nullptr;
+        evend = nullptr;
         ev = evfree;
     }
     evfree = evfree->next;
-    ev->next = 0;
+    ev->next = nullptr;
     if(evend)
         evend->next = ev;
     else

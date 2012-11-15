@@ -38,9 +38,7 @@ public:
      * @throws Exception if the connection failed
      */
     explicit Connection(const char *service)
-        : _available(), _caps(connect(service)), _pts(new Pt *[CPU::count()]) {
-        for(size_t i = 0; i < CPU::count(); ++i)
-            _pts[i] = 0;
+        : _available(), _caps(connect(service)), _pts(new Pt *[CPU::count()]()) {
     }
     /**
      * Closes the connection
@@ -65,7 +63,7 @@ public:
      */
     Pt *pt(cpu_t log_id) {
         assert(available_on(log_id));
-        if(_pts[log_id] == 0)
+        if(_pts[log_id] == nullptr)
             _pts[log_id] = new Pt(_caps + log_id);
         return _pts[log_id];
     }

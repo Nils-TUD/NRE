@@ -98,7 +98,7 @@ public:
     }
 
     void free(uintptr_t addr, size_t size) {
-        Region *p = 0, *n = 0;
+        Region *p = nullptr, *n = nullptr;
         for(size_t i = 0; i < MAX_REGIONS; ++i) {
             if(_regs[i].size > 0) {
                 if(_regs[i].addr + _regs[i].size == addr)
@@ -139,14 +139,14 @@ private:
                     return _regs + i;
             }
         }
-        return 0;
+        return nullptr;
     }
     Region *get(uintptr_t addr, size_t size, bool) {
         for(size_t i = 0; i < MAX_REGIONS; ++i) {
             if(addr >= _regs[i].addr && _regs[i].addr + _regs[i].size >= addr + size)
                 return _regs + i;
         }
-        return 0;
+        return nullptr;
     }
     Region *get_free() {
         for(size_t i = 0; i < MAX_REGIONS; ++i) {

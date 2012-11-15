@@ -46,7 +46,7 @@ void ConsoleService::create_dummy(uint page, const String &title) {
     memcpy(reinterpret_cast<void*>(ds->virt() + sess->offset()),
            reinterpret_cast<void*>(_screen->mem().virt() + sess->offset()),
            ExecEnv::PAGE_SIZE);
-    sess->create(0, ds, 0, title);
+    sess->create(nullptr, ds, 0, title);
 }
 
 void ConsoleService::up() {
@@ -73,7 +73,7 @@ void ConsoleService::left_unlocked() {
     do {
         _console = (_console - 1) % Console::SUBCONS;
     }
-    while(_cons[_console] == 0);
+    while(_cons[_console] == nullptr);
     iterator it = _concyc[_console]->current();
     _switcher.switch_to(old, &*it);
 }
@@ -84,7 +84,7 @@ void ConsoleService::right() {
     do {
         _console = (_console + 1) % Console::SUBCONS;
     }
-    while(_cons[_console] == 0);
+    while(_cons[_console] == nullptr);
     iterator it = _concyc[_console]->current();
     _switcher.switch_to(old, &*it);
 }
@@ -111,8 +111,8 @@ void ConsoleService::remove(ConsoleSessionData *sess) {
     if(_cons[con]->length() == 0) {
         delete _cons[con];
         delete _concyc[con];
-        _cons[con] = 0;
-        _concyc[con] = 0;
+        _cons[con] = nullptr;
+        _concyc[con] = nullptr;
         if(_console == con)
             left_unlocked();
     }
@@ -120,7 +120,7 @@ void ConsoleService::remove(ConsoleSessionData *sess) {
         iterator it = _cons[con]->begin();
         _concyc[con]->reset(it, it, _cons[con]->end());
         if(_console == con)
-            _switcher.switch_to(0, &*it);
+            _switcher.switch_to(nullptr, &*it);
     }
 }
 
@@ -128,7 +128,7 @@ void ConsoleService::session_ready(ConsoleSessionData *sess) {
     ScopedLock<UserSm> guard(&_sm);
     ConsoleSessionData *old = active();
     _console = sess->console();
-    if(_cons[_console] == 0) {
+    if(_cons[_console] == nullptr) {
         _cons[_console] = new nre::DList<ConsoleSessionData>();
         _cons[_console]->append(sess);
         _concyc[_console] = new Cycler<iterator>(

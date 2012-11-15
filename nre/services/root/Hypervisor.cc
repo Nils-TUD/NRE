@@ -146,7 +146,7 @@ void Hypervisor::portal_gsi(capsel_t) {
     UtcbFrameRef uf;
     try {
         uint gsi;
-        void *pcicfg = 0;
+        void *pcicfg = nullptr;
         Gsi::Op op;
         uf >> op >> gsi;
         if(op == Gsi::ALLOC)

@@ -205,8 +205,8 @@ public:
      * @param msi_value will be set to the value of the MSI
      * @throws SyscallException if the system-call failed (result != E_SUCCESS)
      */
-    static void assign_gsi(capsel_t sm, cpu_t cpu, void *pci_cfg_mem = 0,
-                                  uint64_t *msi_address = 0, word_t *msi_value = 0) {
+    static void assign_gsi(capsel_t sm, cpu_t cpu, void *pci_cfg_mem = nullptr,
+                                  uint64_t *msi_address = nullptr, word_t *msi_value = nullptr) {
         word_t out1, out2;
         SyscallABI::syscall(sm << 8 | ASSIGN_GSI, reinterpret_cast<word_t>(pci_cfg_mem),
                             cpu, 0, 0, out1, out2);

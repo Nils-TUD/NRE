@@ -33,7 +33,7 @@ class Producer;
  *
  * Usage-example:
  * Consumer<char> cons(&ds);
- * for(char *c; (c = cons->get()) != 0; cons.next()) {
+ * for(char *c; (c = cons->get()) != nullptr; cons.next()) {
  *   // do something with *c
  * }
  */
@@ -107,13 +107,13 @@ public:
     T *get() {
         while(EXPECT_FALSE(_if->rpos == _if->wpos)) {
             if(EXPECT_FALSE(_stop))
-                return 0;
+                return nullptr;
             // they might fail if someone revokes the Sm-caps
             try {
                 _sm.zero();
             }
             catch(...) {
-                return 0;
+                return nullptr;
             }
         }
         return _if->buffer + _if->rpos;

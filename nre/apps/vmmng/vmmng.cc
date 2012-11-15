@@ -56,7 +56,7 @@ static void refresh_console() {
     RunningVM *vm;
     if(vmidx >= RunningVMList::get().count())
         vmidx = RunningVMList::get().count() - 1;
-    for(size_t i = 0; (vm = RunningVMList::get().get(i)) != 0; ++i) {
+    for(size_t i = 0; (vm = RunningVMList::get().get(i)) != nullptr; ++i) {
         const Child *c = cm.get(vm->id());
         if(c) {
             uint8_t oldcol = cs.color();

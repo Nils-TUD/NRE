@@ -146,7 +146,7 @@ static void test_add_and_rem(int *vals) {
     for(size_t i = 0; i < TEST_NODE_COUNT; i++) {
         tree.remove(nodes[i]);
         node = tree.find(vals[i]);
-        WVPASSEQPTR(node, (MyNode*)0);
+        WVPASSEQPTR(node, static_cast<MyNode*>(nullptr));
         delete nodes[i];
 
         for(size_t j = i + 1; j < TEST_NODE_COUNT; j++) {

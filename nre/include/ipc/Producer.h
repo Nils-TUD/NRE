@@ -58,14 +58,14 @@ public:
     }
 
     /**
-     * If the client is currently not able to accept it, the method will return 0.
+     * If the client is currently not able to accept it, the method will return nullptr.
      *
-     * @return the pointer to the slot to write to or 0 if there is no free slot at the moment
+     * @return the pointer to the slot to write to or nullptr if there is no free slot at the moment
      */
     T *current() {
         // is it full?
         if(EXPECT_FALSE(((_if->wpos + 1) & (_max - 1)) == _if->rpos))
-            return 0;
+            return nullptr;
         return _if->buffer + _if->wpos;
     }
 

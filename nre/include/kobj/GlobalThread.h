@@ -84,7 +84,8 @@ public:
     virtual ~GlobalThread();
 
     /**
-     * @return the scheduling context this thread is bound to (0 if start() hasn't been called yet)
+     * @return the scheduling context this thread is bound to (nullptr if start() hasn't been
+     *  called yet)
      */
     Sc *sc() const {
         return _sc;

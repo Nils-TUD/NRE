@@ -35,7 +35,8 @@
  * switch easily to the constructor inheritance concept as soon as its available in gcc.
  */
 #define DEFINE_EXCONSTRS(className)                                                                      \
-    explicit className(ErrorCode code = E_FAILURE, const char *msg = 0) throw() : Exception(code, msg) { \
+    explicit className(ErrorCode code = E_FAILURE, const char *msg = nullptr) throw()                    \
+        : Exception(code, msg) {                                                                         \
     }                                                                                                    \
     explicit className(ErrorCode code, size_t bufsize, const char *fmt, ...) throw() : Exception(code) { \
         va_list ap;                                                                                      \
@@ -115,7 +116,7 @@ public:
      * @param code the error-code
      * @param msg optionally, a message describing the error
      */
-    explicit Exception(ErrorCode code = E_FAILURE, const char *msg = 0) throw();
+    explicit Exception(ErrorCode code = E_FAILURE, const char *msg = nullptr) throw();
 
     /**
      * Constructor with a formatted string

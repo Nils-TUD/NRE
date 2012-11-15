@@ -22,7 +22,7 @@
 
 using namespace nre;
 
-PhysicalMemory::RootDataSpace *PhysicalMemory::RootDataSpace::_free = 0;
+PhysicalMemory::RootDataSpace *PhysicalMemory::RootDataSpace::_free = nullptr;
 size_t PhysicalMemory::_totalsize = 0;
 RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
@@ -75,7 +75,7 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 
 void *PhysicalMemory::RootDataSpace::operator new(size_t) throw() {
     RootDataSpace *res;
-    if(_free == 0) {
+    if(_free == nullptr) {
         uintptr_t phys = alloc(ExecEnv::PAGE_SIZE);
         uintptr_t virt = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
         Hypervisor::map_mem(phys, virt, ExecEnv::PAGE_SIZE);

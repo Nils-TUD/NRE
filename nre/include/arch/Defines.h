@@ -24,6 +24,9 @@
 #    error "Unsupported architecture"
 #endif
 
+#if !defined(__GXX_EXPERIMENTAL_CXX0X__) || !defined(__cplusplus)
+#   define nullptr             0
+#endif
 #define STRING(x)               # x
 #define EXPAND(x)               STRING(x)
 #define ARRAY_SIZE(X)           (sizeof((X)) / sizeof((X)[0]))

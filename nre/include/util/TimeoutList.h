@@ -47,7 +47,7 @@ public:
         for(size_t i = 0; i < ENTRIES; i++) {
             _entries[i]._prev = _entries + i;
             _entries[i]._next = _entries + i;
-            _entries[i].data = 0;
+            _entries[i].data = nullptr;
             _entries[i]._free = true;
         }
         _entries[0]._timeout = ~0ULL;
@@ -56,7 +56,7 @@ public:
     /**
      * Alloc a new timeout object.
      */
-    size_t alloc(DATA *data = 0) {
+    size_t alloc(DATA *data = nullptr) {
         for(size_t i = 1; i < ENTRIES; i++) {
             if(!_entries[i]._free)
                 continue;
@@ -79,7 +79,7 @@ public:
         if(withcancel)
             cancel(nr);
         _entries[nr]._free = true;
-        _entries[nr].data = 0;
+        _entries[nr].data = nullptr;
         return true;
     }
 
@@ -125,7 +125,7 @@ public:
     /**
      * Get the head of the queue.
      */
-    size_t trigger(timevalue_t now, DATA **data = 0) {
+    size_t trigger(timevalue_t now, DATA **data = nullptr) {
         if(now >= timeout()) {
             size_t i = _entries[0]._next - _entries;
             if(data)

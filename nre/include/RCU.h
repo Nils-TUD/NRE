@@ -29,7 +29,7 @@
  * break things. And note that the received object may change! So, if you want to work with an object
  * load it once with rcu_dereference() into a variable and use this variable for the rest of your
  * work. Whenever you change a pointer to a RCUObject, use rcu_assign_pointer() for the
- * same reason. If you want to delete a RCUObject, use rcu_assign_pointer(ptr,0) before calling
+ * same reason. If you want to delete a RCUObject, use rcu_assign_pointer(ptr, nullptr) before calling
  * RCU::invalidate(ptr). This is important because the method RCU::invalidate() is based on the
  * assumption that whenever an object is invalidated, there is NO way anymore to get access to it.
  *
@@ -163,7 +163,7 @@ class RCUObject {
     };
 
 public:
-    explicit RCUObject() : _state(VALID), _next(0) {
+    explicit RCUObject() : _state(VALID), _next(nullptr) {
     }
     virtual ~RCUObject() {
     }
@@ -251,8 +251,8 @@ public:
 private:
     static void delete_objects() {
         bool deletable = false;
-        RCUObject *p = 0, *o = _objs;
-        while(o != 0) {
+        RCUObject *p = nullptr, *o = _objs;
+        while(o != nullptr) {
             // all objects behind the first deletable one are deletable
             if(!deletable && o->_state != RCUObject::DELETABLE) {
                 p = o;

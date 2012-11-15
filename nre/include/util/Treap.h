@@ -89,10 +89,10 @@ public:
      * Finds the node with given key in the tree
      *
      * @param key the key
-     * @return the node or 0 if not found
+     * @return the node or nullptr if not found
      */
     T *find(typename T::key_t key) {
-        for(node_t *p = _root; p != 0; ) {
+        for(node_t *p = _root; p != nullptr; ) {
             if(p->_key == key)
                 return static_cast<T*>(p);
             if(key < p->_key)
@@ -100,7 +100,7 @@ public:
             else
                 p = p->_right;
         }
-        return 0;
+        return nullptr;
     }
 
     /**
@@ -140,7 +140,7 @@ public:
                 p = *l;
             }
         }
-        *l = *r = 0;
+        *l = *r = nullptr;
     }
 
     /**
@@ -191,7 +191,7 @@ private:
             *p = node->_right;
         // no child: simply remove us from parent
         else
-            *p = 0;
+            *p = nullptr;
     }
 
     int _prio;

@@ -35,10 +35,10 @@ public:
     ConsoleService(const char *name, uint modifier);
 
     ConsoleSessionData *active() {
-        if(_concyc[_console] == 0)
-            return 0;
+        if(_concyc[_console] == nullptr)
+            return nullptr;
         iterator it = _concyc[_console]->current();
-        return it != _cons[_console]->end() ? &*it : 0;
+        return it != _cons[_console]->end() ? &*it : nullptr;
     }
 
     void remove(ConsoleSessionData *sess);

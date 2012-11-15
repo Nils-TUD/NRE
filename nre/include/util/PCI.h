@@ -53,7 +53,7 @@ private:
     static const cap_type CAP_PCIE          = 0x10U;
 
 public:
-    explicit PCI(PCIConfigSession &pcicfg, ACPISession *acpi = 0) : _pcicfg(pcicfg), _acpi(acpi) {
+    explicit PCI(PCIConfigSession &pcicfg, ACPISession *acpi = nullptr) : _pcicfg(pcicfg), _acpi(acpi) {
     }
 
     value_type conf_read(bdf_type bdf, size_t dword) {
@@ -80,12 +80,12 @@ public:
     /**
      * Program the nr-th MSI/MSI-X vector of the given device.
      */
-    Gsi *get_gsi_msi(bdf_type bdf, uint nr, void *msix_table = 0);
+    Gsi *get_gsi_msi(bdf_type bdf, uint nr, void *msix_table = nullptr);
 
     /**
      * Returns the gsi and enables them.
      */
-    Gsi *get_gsi(bdf_type bdf, uint nr, bool /*level*/ = false, void *msix_table = 0);
+    Gsi *get_gsi(bdf_type bdf, uint nr, bool /*level*/ = false, void *msix_table = nullptr);
 
 private:
     void init_msix_table(void *addr, bdf_type bdf, value_type msix_offset, uint nr, Gsi *gsi) {
@@ -110,13 +110,13 @@ private:
     /**
      * Get the base and the type of a bar.
      */
-    uint64_t bar_base(bdf_type bdf, size_t bar, value_type *type = 0);
+    uint64_t bar_base(bdf_type bdf, size_t bar, value_type *type = nullptr);
 
     /**
      * Determines BAR size. You should probably disable interrupt
      * delivery from this device, while querying BAR sizes.
      */
-    uint64_t bar_size(bdf_type bdf, size_t bar, bool *is64bit = 0);
+    uint64_t bar_size(bdf_type bdf, size_t bar, bool *is64bit = nullptr);
 
 private:
     PCIConfigSession &_pcicfg;

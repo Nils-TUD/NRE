@@ -60,7 +60,7 @@ class DataSpaceManager {
     };
 
 public:
-    explicit DataSpaceManager() : _sm(), _tree(), _free(0), _slots() {
+    explicit DataSpaceManager() : _sm(), _tree(), _free(nullptr), _slots() {
         for(size_t i = 0; i < MAX_SLOTS; ++i) {
             _slots[i].next = _free;
             _free = _slots + i;
@@ -142,7 +142,7 @@ public:
             desc = s->ds->desc();
             delete s->ds;
             _tree.remove(s);
-            s->ds = 0;
+            s->ds = nullptr;
             s->next = _free;
             _free = s;
         }
@@ -154,7 +154,7 @@ private:
             if(_slots[i].ds && _slots[i].ds->sel() == sel)
                 return _slots + i;
         }
-        return 0;
+        return nullptr;
     }
     Slot *find_unmap(capsel_t sel) {
         return _tree.find(sel);

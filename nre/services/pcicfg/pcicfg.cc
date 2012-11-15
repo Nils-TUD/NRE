@@ -42,7 +42,7 @@ PORTAL static void portal_pcicfg(capsel_t) {
         PCIConfig::Command cmd;
         uf >> cmd;
 
-        Config *cfg = 0;
+        Config *cfg = nullptr;
         if(cmd == PCIConfig::READ || cmd == PCIConfig::WRITE || cmd == PCIConfig::ADDR) {
             uf >> bdf >> offset;
             cfg = find(bdf, offset);

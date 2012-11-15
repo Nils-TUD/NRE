@@ -30,7 +30,7 @@
 using namespace nre;
 
 static size_t ncpu = 1;
-static DataSpace *guest_mem = 0;
+static DataSpace *guest_mem = nullptr;
 static size_t guest_size = 0;
 nre::UserSm globalsm(0);
 

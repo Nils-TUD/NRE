@@ -61,10 +61,10 @@ public:
      * Allocates the given gsi. This will mark it as unavailable. You can either specify a known
      * gsi to allocate or specify <pcicfg> to determine the gsi automatically.
      *
-     * @param gsi the gsi (will be determined automatically if pcicfg != 0)
+     * @param gsi the gsi (will be determined automatically if pcicfg != nullptr)
      * @param pcicfg the address in the PCI configuration space of the device
      */
-    static void allocate_gsi(uint &gsi, void *pcicfg = 0) {
+    static void allocate_gsi(uint &gsi, void *pcicfg = nullptr) {
         nre::ScopedLock<nre::UserSm> guard(&_gsi_sm);
         if(pcicfg)
             gsi = nre::Hip::get().cfg_gsi - ++_next_msi;

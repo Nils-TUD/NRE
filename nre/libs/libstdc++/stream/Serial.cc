@@ -22,7 +22,7 @@
 
 namespace nre {
 
-BaseSerial *BaseSerial::_inst = 0;
+BaseSerial *BaseSerial::_inst = nullptr;
 Serial::Init Serial::Init::init INIT_PRIO_SERIAL;
 
 Serial::Init::Init() {

@@ -23,7 +23,7 @@ using namespace nre;
 
 void ConsoleSessionData::create(DataSpace *in_ds, DataSpace *out_ds, size_t con, const String &title) {
     ScopedLock<UserSm> guard(&_sm);
-    if(_in_ds != 0)
+    if(_in_ds != nullptr)
         throw Exception(E_EXISTS, "Console session already initialized");
     if(con >= Console::SUBCONS)
         throw Exception(E_ARGS_INVALID, 32, "Subconsole %zu does not exist", con);
