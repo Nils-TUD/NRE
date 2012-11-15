@@ -78,9 +78,8 @@ public:
      * @param utcb the utcb-address
      */
     explicit GlobalThread(startup_func start, cpu_t cpu, const String &name, Pd *pd, uintptr_t utcb)
-        : Thread(cpu, Hip::get().service_caps() * cpu, INVALID, 0, utcb), _sc(), _name(name) {
-        uintptr_t ret = reinterpret_cast<uintptr_t>(ec_landing_spot);
-        Thread::create(pd, Syscalls::EC_GLOBAL, ExecEnv::setup_stack(pd, this, start, ret, stack()));
+        : Thread(pd, Syscalls::EC_GLOBAL, start, reinterpret_cast<uintptr_t>(ec_landing_spot), cpu,
+                 Hip::get().service_caps() * cpu, 0, utcb), _sc(), _name(name) {
     }
     virtual ~GlobalThread();
 

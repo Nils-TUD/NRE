@@ -60,24 +60,31 @@ public:
 
 protected:
     /**
-     * Constructor
+     * Constructor to create a new Ec
      *
+     * @param pd the protection domain the Thread should run in
+     * @param type the type of Thread
+     * @param start the startup function
+     * @param ret the return address
      * @param cpu the logical cpu to bind the Thread to
      * @param evb the offset for the event-portals
      * @param cap the capability (INVALID if a new one should be used)
      * @param stack the stack address (0 = create one automatically)
      * @param uaddr the utcb address (0 = create one automatically)
      */
-    explicit Thread(cpu_t cpu, capsel_t evb, capsel_t cap = INVALID, uintptr_t stack = 0,
-                    uintptr_t uaddr = 0);
+    explicit Thread(Pd *pd, Syscalls::ECType type, ExecEnv::startup_func start, uintptr_t ret,
+                    cpu_t cpu, capsel_t evb, uintptr_t stack = 0, uintptr_t uaddr = 0);
+
     /**
-     * The actual creation of the Thread.
+     * Constructor for the first global thread
      *
-     * @param pd the protection domain the Thread should run in
-     * @param type the type of Thread
-     * @param sp the stack-pointer
+     * @param cpu the logical cpu to bind the Thread to
+     * @param evb the offset for the event-portals
+     * @param cap the capability
+     * @param stack the stack address
+     * @param uaddr the utcb address
      */
-    void create(Pd *pd, Syscalls::ECType type, void *sp);
+    explicit Thread(cpu_t cpu, capsel_t evb, capsel_t cap, uintptr_t stack, uintptr_t uaddr);
 
 public:
     /**
@@ -136,6 +143,10 @@ public:
 private:
     Thread(const Thread&);
     Thread& operator=(const Thread&);
+
+    static capsel_t create(Thread *t, Pd *pd, Syscalls::ECType type, cpu_t cpu, capsel_t evb,
+                           ExecEnv::startup_func start, uintptr_t ret, uintptr_t &uaddr,
+                           uintptr_t &stack, uint &flags);
 
     uint32_t _rcu_counter;
     uintptr_t _utcb_addr;
