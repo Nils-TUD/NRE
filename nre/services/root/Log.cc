@@ -36,7 +36,7 @@ BufferedLog::BufferedLog() : BaseSerial(), _bufpos(0), _buf() {
     BaseSerial::_inst = this;
 }
 
-Log::Log() : BaseSerial(), _ports(PORT_BASE, 6), _sm(1) {
+Log::Log() : BaseSerial(), _ports(PORT_BASE, 6), _sm(1), _ready(true) {
     _ports.out<uint8_t>(0x80, LCR);          // Enable DLAB (set baud rate divisor)
     _ports.out<uint8_t>(0x01, DLR_LO);       // Set divisor to 1 (lo byte) 115200 baud
     _ports.out<uint8_t>(0x00, DLR_HI);       //                  (hi byte)

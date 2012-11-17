@@ -87,6 +87,7 @@ private:
 
     nre::Ports _ports;
     nre::UserSm _sm;
+    bool _ready;
     static Log _inst;
     static nre::Service *_srv;
     static const char *_colors[];
@@ -106,7 +107,9 @@ class BufferedLog : public nre::BaseSerial {
             return;
 
         if(_bufpos == sizeof(_buf) || c == '\n') {
-            Log::get().write(Log::ROOT_SESS, _buf, _bufpos);
+            // take care that the log is already initialized
+            if(Log::get()._ready)
+                Log::get().write(Log::ROOT_SESS, _buf, _bufpos);
             _bufpos = 0;
         }
         if(c != '\n')
