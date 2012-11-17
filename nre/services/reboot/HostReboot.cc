@@ -68,7 +68,8 @@ HostRebootACPI::HostRebootACPI()
     _value = table[128];
     _addr = *reinterpret_cast<uint64_t*>(table + 120);
     LOG(Logging::REBOOT,
-        Serial::get().writef("Using method=%#x, value=%#x, addr=%#x\n", _method, _value, _addr));
+        Serial::get() << "Using method=" << fmt(_method, "#x") << ", value=" << fmt(_value, "#x")
+                      << ", addr=" << fmt(_addr, "#x") << "\n");
     switch(_method) {
         case 0:
             _ds = new DataSpace(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::RW, _addr);

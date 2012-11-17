@@ -291,7 +291,7 @@ void VCPUBackend::vmx_mmio(capsel_t pid) {
 }
 void VCPUBackend::vmx_startup(capsel_t pid) {
     UtcbExcFrameRef uf;
-    Serial::get().writef("startup\n");
+    Serial::get() << "startup\n";
     handle_vcpu(pid, false, CpuMessage::TYPE_HLT);
     uf->mtd |= Mtd::CTRL;
     uf->ctrl[0] = 0;

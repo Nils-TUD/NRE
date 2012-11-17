@@ -26,8 +26,8 @@ using namespace nre;
 HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE, 4), _freq() {
     timevalue_t value = (FREQ * period_us) / 1000000ULL;
     if(value == 0 || value > 65535) {
-        LOG(Logging::TIMER, Serial::get().writef(
-                "TIMER: Bogus PIT period %uus. Set to default (%Lu us)\n", period_us, DEFAULT_PERIOD));
+        LOG(Logging::TIMER, Serial::get() << "TIMER: Bogus PIT period " << period_us << "us."
+                                          << " Set to default (" << DEFAULT_PERIOD << "us)\n");
         period_us = DEFAULT_PERIOD;
         value = (FREQ * DEFAULT_PERIOD) / 1000000ULL;
     }
@@ -37,6 +37,6 @@ HostPIT::HostPIT(uint period_us) : _ports(PORT_BASE, 4), _freq() {
     _ports.out<uint8_t>(value >> 8, 0);
     _freq = 1000000U / period_us;
 
-    LOG(Logging::TIMER, Serial::get().writef(
-            "TIMER: PIT initalized. Ticks every %uus (period %Lu, %LuHZ).\n", period_us, value, _freq));
+    LOG(Logging::TIMER, Serial::get() << "TIMER: PIT initalized. Ticks every " << period_us << "us"
+                                      << " (period " << value <<", " << _freq << "HZ).\n");
 }

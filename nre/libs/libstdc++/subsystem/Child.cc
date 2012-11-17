@@ -67,7 +67,7 @@ void Child::release_regs() {
 
 OStream & operator<<(OStream &os, const Child &c) {
     os << "Child[cmdline='" << c.cmdline() << "' cpu=" << c._ec->cpu();
-    os << " entry=" << Format<uintptr_t>("%p", c.entry()) << "]:\n";
+    os << " entry=" << fmt(reinterpret_cast<void*>(c.entry())) << "]:\n";
     os << "\tScs:\n";
     for(SList<Child::SchedEntity>::iterator it = c.scs().begin(); it != c.scs().end(); ++it)
         os << "\t\t" << it->name() << " on CPU " << CPU::get(it->cpu()).phys_id() << "\n";

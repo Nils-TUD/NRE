@@ -137,15 +137,16 @@ int main() {
     adjust_memory_map();
     const Hip &hip = Hip::get();
 
-    LOG(Logging::PLATFORM, Serial::get().writef("Welcome to NRE rev %x built with %s\n",
-                                                NRE_REV, COMPILER_NAME));
-    LOG(Logging::PLATFORM, Serial::get() << "Hip checksum is "
-                                         << (hip.is_valid() ? "valid" : "not valid") << "\n");
-    LOG(Logging::PLATFORM, Serial::get().writef("SEL: %u, EXC: %u, VMI: %u, GSI: %u\n",
-                                                hip.cfg_cap, hip.cfg_exc, hip.cfg_vm, hip.cfg_gsi));
-    LOG(Logging::PLATFORM, Serial::get().writef("CPU runs @ %u Mhz, bus @ %u Mhz\n",
-                                                Hip::get().freq_tsc / 1000, Hip::get().freq_bus /
-                                                1000));
+    LOG(Logging::PLATFORM,
+        Serial::get() << "Welcome to NRE rev " << NRE_REV << " built with " << COMPILER_NAME << "\n");
+    LOG(Logging::PLATFORM,
+        Serial::get() << "Hip checksum is " << (hip.is_valid() ? "valid" : "not valid") << "\n");
+    LOG(Logging::PLATFORM,
+        Serial::get() << "SEL: " << hip.cfg_cap << ", EXC: " << hip.cfg_exc
+                      << ", VMI: " << hip.cfg_vm << ", GSI: " << hip.cfg_gsi << "\n");
+    LOG(Logging::PLATFORM,
+        Serial::get() << "CPU runs @ " << (Hip::get().freq_tsc / 1000) << " Mhz, bus @ "
+                      << (Hip::get().freq_bus / 1000) << " Mhz\n");
     // add all available memory
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // FIXME: why can't we use the memory above 4G?
@@ -168,10 +169,11 @@ int main() {
     LOG(Logging::MEM_MAP, Serial::get() << "Virtual memory:\n" << VirtualMemory::regions());
     LOG(Logging::MEM_MAP, Serial::get() << "Physical memory:\n" << PhysicalMemory::regions());
 
-    LOG(Logging::CPUS, Serial::get().writef("CPUs:\n"));
+    LOG(Logging::CPUS, Serial::get() << "CPUs:\n");
     for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-        LOG(Logging::CPUS, Serial::get().writef("\tpackage=%u, core=%u, thread=%u, flags=%u\n",
-                                                it->package(), it->core(), it->thread(), it->flags()));
+        LOG(Logging::CPUS,
+            Serial::get() << "\tpackage=" << it->package() << ", core=" << it->core()
+                          << ", thread=" << it->thread() << ", flags=" << it->flags() << "\n");
     }
 
     // now we can use dlmalloc (map-pt created and available memory added to pool)
@@ -228,12 +230,13 @@ int main() {
         }
     }
 
-    LOG(Logging::MEM_MAP, Serial::get().writef("Memory map:\n"));
+    LOG(Logging::MEM_MAP, Serial::get() << "Memory map:\n");
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-        LOG(Logging::MEM_MAP, Serial::get().writef("\taddr=%#Lx, size=%#Lx, type=%d, aux=%p",
-                                                   it->addr, it->size, it->type, it->aux));
+        LOG(Logging::MEM_MAP,
+            Serial::get() << "\taddr=" << fmt(it->addr, "#x") << ", size=" << fmt(it->size, "#x")
+                          << ", type=" << it->type << ", aux=" << fmt(it->aux, "p"));
         if(it->aux)
-            LOG(Logging::MEM_MAP, Serial::get().writef(" (%s)", it->cmdline()));
+            LOG(Logging::MEM_MAP, Serial::get() << " (" << it->cmdline() << ")");
         LOG(Logging::MEM_MAP, Serial::get() << '\n');
     }
 
@@ -322,12 +325,10 @@ static void portal_pagefault(capsel_t) {
     unsigned error = uf->qual[0];
     uintptr_t eip = uf->rip;
 
-    Serial::get().writef("Root: Pagefault for %p @ %p on cpu %u, error=%#x\n",
-                         pfaddr, eip, CPU::current().phys_id(), error);
+    Serial::get() << "Root: Pagefault for " << fmt(pfaddr, "p") << " @ " << fmt(eip, "p")
+                  << "on cpu " << CPU::current().phys_id() << ", error=" << fmt(error, "#x") << "\n";
     ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1), uf->rbp, addrs, 32);
-    Serial::get().writef("Backtrace:\n");
-    for(uintptr_t *addr = addrs; *addr != 0; ++addr)
-        Serial::get().writef("\t%p\n", *addr);
+    Util::write_backtrace(Serial::get(), addrs);
 
     // let the kernel kill us
     uf->rip = ExecEnv::KERNEL_START;

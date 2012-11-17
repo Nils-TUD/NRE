@@ -20,11 +20,11 @@
 #include <Compiler.h>
 
 // for printing debug-infos
-#define ATA_LOGDETAIL(fmt, ...)  \
-    LOG(nre::Logging::STORAGE_DETAIL, nre::Serial::get().writef(fmt "\n", ## __VA_ARGS__));
+#define ATA_LOGDETAIL(msg)  \
+    LOG(nre::Logging::STORAGE_DETAIL, nre::Serial::get() << msg << "\n");
 
-#define ATA_LOG(fmt, ...)    \
-    LOG(nre::Logging::STORAGE, nre::Serial::get().writef(fmt "\n", ## __VA_ARGS__));
+#define ATA_LOG(msg)    \
+    LOG(nre::Logging::STORAGE, nre::Serial::get() << msg << "\n");
 
 enum {
     DMA_TRANSFER_TIMEOUT        = 3000, // ms
@@ -363,10 +363,10 @@ public:
         params->sectors = capacity();
     }
     void print() const {
-        nre::Serial::get().writef("%s drive #%u present (%s)\n"
-                                  "  %Lu sectors with %zu bytes (%Lu MiB), max %zu requests\n",
-                                  type(), _id, _name, _capacity, _sector_size,
-                                  (_capacity * _sector_size) / (1024 * 1024), max_requests());
+        nre::Serial::get() << type() << " drive " << _id << " present (" << _name << ")\n";
+        nre::Serial::get() << "  " << _capacity << " sectors with " << _sector_size << " bytes"
+                           << " (" << ((_capacity * _sector_size) / (1024 * 1024)) << " MiB)"
+                           << ", max " << max_requests() << " requests\n";
     }
 
     virtual const char *type() const = 0;

@@ -164,8 +164,8 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os, const DataSpace &ds) {
-    os.writef("DataSpace[sel=%#x, umsel=%#x]: ", ds.sel(), ds.unmapsel());
-    os << ds.desc();
+    os << "DataSpace[sel=" << fmt(ds.sel(), "#x") << ", umsel=" << fmt(ds.unmapsel(), "#x") << "]: "
+       << ds.desc();
     return os;
 }
 

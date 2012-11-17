@@ -24,17 +24,19 @@ OStream &operator<<(OStream &os, const UtcbFrameRef &frm) {
     os << "\tTranslate: " << Crd(frm._utcb->crd_translate) << "\n";
     os << "\tUntyped: " << frm.untyped() << "\n";
     for(size_t i = 0; i < frm.untyped(); ++i)
-        os.writef("\t\t%zu: %#lx\n", i, frm._utcb->msg[i]);
+        os << "\t\t" << i << ": " << fmt(frm._utcb->msg[i], "#x") << "\n";
     os << "\tTyped: " << frm.typed() << "\n";
     for(size_t i = 0; i < frm.typed() * 2; i += 2) {
-        os.writef("\t\t%zu: %#lx %#lx @ %p\n", i, frm._top[-(i + 1)], frm._top[-(i + 2)],
-                  &frm._top[-(i + 1)]);
+        os << "\t\t" << i << ": "
+           << fmt(frm._top[-(i + 1)], "#x") << " " << fmt(frm._top[-(i + 2)], "#x")
+           << " @ " << &frm._top[-(i + 1)];
     }
     return os;
 }
 
 OStream & operator<<(OStream &os, const UtcbExc::Descriptor &desc) {
-    os.writef("Desc[base=%lx limit=%x sel=%x ar=%x]", desc.base, desc.limit, desc.sel, desc.ar);
+    os << "Desc[base=" << fmt(desc.base, "x") << " limit=" << fmt(desc.limit, "x")
+       << " sel=" << fmt(desc.sel, "x") << " ar=" << fmt(desc.ar, "x") << "]";
     return os;
 }
 
@@ -51,16 +53,18 @@ OStream & operator<<(OStream &os, const UtcbExcFrameRef &frm) {
         {"sysenter_rsp", frm->sysenter_rsp}, {"sysenter_rip", frm->sysenter_rip}
     };
     for(size_t i = 0; i < ARRAY_SIZE(words); ++i)
-        os.writef("\t%s: %#0" FMT_WORD_HEXLEN "lx\n", words[i].name, words[i].val);
+        os << "\t" << words[i].name << ": " << fmt(words[i].val, "#0x", sizeof(words[i].val) * 2) << "\n";
     for(size_t i = 0; i < ARRAY_SIZE(frm->gpr); ++i)
-        os.writef("\tgpr[%zu]: %#0" FMT_WORD_HEXLEN "lx\n", i, frm->gpr[i]);
-    os.writef("\tintr_state: %#08x\n", frm->intr_state);
-    os.writef("\tactv_state: %#08x\n", frm->actv_state);
-    os.writef("\tinj_info: %#08x\n", frm->inj_info);
-    os.writef("\tinj_error: %#08x\n", frm->inj_error);
-    os.writef("\tqual[0]: %#016Lx, qual[1]: %#016Lx\n", frm->qual[0], frm->qual[1]);
-    os.writef("\tctrl[0]: %#08x, ctrl[1]: %#08x\n", frm->ctrl[0], frm->ctrl[1]);
-    os.writef("\ttsc_off: %Ld\n", frm->tsc_off);
+        os << "\tgpr[" << i << "]: " << fmt(frm->gpr[i], "#0x", sizeof(frm->gpr[i]) * 2) << "\n";
+    os << "\tintr_state: " << fmt(frm->intr_state, "#0x", 8) << "\n";
+    os << "\tactv_state: " << fmt(frm->actv_state, "#0x", 8) << "\n";
+    os << "\tinj_info: " << fmt(frm->inj_info, "#0x", 8) << "\n";
+    os << "\tinj_error: " << fmt(frm->inj_error, "#0x", 8) << "\n";
+    os << "\tqual[0]: " << fmt(frm->qual[0], "#0x", 16)
+       << ", qual[1]: " << fmt(frm->qual[1], "#0x", 16) << "\n";
+    os << "\tctrl[0]: " << fmt(frm->ctrl[0], "#0x", 8)
+       << ", ctrl[1]: " << fmt(frm->ctrl[1], "#0x", 8) << "\n";
+    os << "\ttsc_off: " << frm->tsc_off << "\n";
     struct {
         const char *name;
         const UtcbExc::Descriptor *desc;

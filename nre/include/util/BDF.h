@@ -88,7 +88,9 @@ static inline bool operator!=(const BDF &bdf1, const BDF &bdf2) {
  * OStream operator
  */
 static inline OStream &operator<<(OStream &os, const BDF &bdf) {
-    os.writef("BDF[%02x:%02x.%x]", bdf.bus(), bdf.device(), bdf.function());
+    os << "BDF[" << fmt(bdf.bus(), "0x", 2) << ":"
+                 << fmt(bdf.device(), "0x", 2) << "."
+                 << fmt(bdf.function(), "x") << "]";
     return os;
 }
 

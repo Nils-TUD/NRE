@@ -23,79 +23,61 @@ namespace nre {
 char OStream::_hexchars_big[]     = "0123456789ABCDEF";
 char OStream::_hexchars_small[]   = "0123456789abcdef";
 
-void OStream::vwritef(const char *fmt, va_list ap) {
-    char c, b;
-    char *s;
-    llong n;
-    ullong u;
-    ulong pad, width, prec, base, flags;
-    bool readFlags;
-
-    while(1) {
-        // wait for a '%'
-        while((c = *fmt++) != '%') {
-            write(c);
-            // finished?
-            if(c == '\0')
-                return;
+OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list ap)
+        : _base(10), _flags(0), _pad(0), _prec(-1), _end() {
+    // read flags
+    bool readFlags = true;
+    while(readFlags) {
+        switch(*fmt) {
+            case '-':
+                _flags |= PADRIGHT;
+                fmt++;
+                break;
+            case '+':
+                _flags |= FORCESIGN;
+                fmt++;
+                break;
+            case ' ':
+                _flags |= SPACESIGN;
+                fmt++;
+                break;
+            case '#':
+                _flags |= PRINTBASE;
+                fmt++;
+                break;
+            case '0':
+                _flags |= PADZEROS;
+                fmt++;
+                break;
+            default:
+                readFlags = false;
+                break;
         }
+    }
 
-        // read flags
-        flags = 0;
-        readFlags = true;
-        while(readFlags) {
-            switch(*fmt) {
-                case '-':
-                    flags |= PADRIGHT;
-                    fmt++;
-                    break;
-                case '+':
-                    flags |= FORCESIGN;
-                    fmt++;
-                    break;
-                case ' ':
-                    flags |= SPACESIGN;
-                    fmt++;
-                    break;
-                case '#':
-                    flags |= PRINTBASE;
-                    fmt++;
-                    break;
-                case '0':
-                    flags |= PADZEROS;
-                    fmt++;
-                    break;
-                default:
-                    readFlags = false;
-                    break;
-            }
-        }
-
+    if(all) {
         // read pad-width
-        pad = 0;
         if(*fmt == '*') {
-            pad = va_arg(ap, ulong);
+            _pad = va_arg(ap, ulong);
             fmt++;
         }
         else {
             while(*fmt >= '0' && *fmt <= '9') {
-                pad = pad * 10 + (*fmt - '0');
+                _pad = _pad * 10 + (*fmt - '0');
                 fmt++;
             }
         }
 
         // read precision
-        prec = -1;
         if(*fmt == '.') {
-            flags |= PRECISION;
             if(*++fmt == '*') {
-                prec = va_arg(ap, ulong);
+                _prec = va_arg(ap, ulong);
                 fmt++;
             }
             else {
-                prec = 0;
+                _prec = 0;
                 while(*fmt >= '0' && *fmt <= '9') {
-                    prec = prec * 10 + (*fmt - '0');
+                    _prec = _prec * 10 + (*fmt - '0');
                     fmt++;
                 }
             }
@@ -104,85 +86,119 @@ void OStream::vwritef(const char *fmt, va_list ap) {
         // read length
         switch(*fmt) {
             case 'l':
-                flags |= LONG;
+                _flags |= FormatParams::LONG;
                 fmt++;
                 break;
             case 'L':
-                flags |= LONGLONG;
+                _flags |= LONGLONG;
                 fmt++;
                 break;
             case 'z':
-                flags |= SIZE_T;
+                _flags |= SIZE_T;
                 fmt++;
                 break;
             case 'P':
-                flags |= INTPTR_T;
+                _flags |= INTPTR_T;
                 fmt++;
                 break;
         }
+    }
+
+    // read base
+    switch(*fmt) {
+        case 'X':
+        case 'x':
+            if(*fmt == 'X')
+                _flags |= CAPHEX;
+            _base = 16;
+            break;
+        case 'o':
+            _base = 8;
+            break;
+        case 'b':
+            _base = 2;
+            break;
+        case 'p':
+            _flags |= POINTER;
+            break;
+    }
+    _end = fmt;
+}
+
+void OStream::vwritef(const char *fmt, va_list ap) {
+    while(1) {
+        char c;
+        // wait for a '%'
+        while((c = *fmt++) != '%') {
+            write(c);
+            // finished?
+            if(c == '\0')
+                return;
+        }
+
+        // read format parameter
+        FormatParams p(fmt, true, ap);
+        fmt = p.end();
 
         switch(c = *fmt++) {
             // signed integer
             case 'd':
             case 'i':
-                if(flags & LONGLONG)
+                llong n;
+                if(p.flags() & FormatParams::LONGLONG)
                     n = va_arg(ap, llong);
-                else if(flags & LONG)
+                else if(p.flags() & FormatParams::LONG)
                     n = va_arg(ap, long);
-                else if(flags & SIZE_T)
+                else if(p.flags() & FormatParams::SIZE_T)
                     n = va_arg(ap, ssize_t);
-                else if(flags & INTPTR_T)
+                else if(p.flags() & FormatParams::INTPTR_T)
                     n = va_arg(ap, intptr_t);
                 else
                     n = va_arg(ap, int);
-                printnpad(n, pad, flags);
+                printnpad(n, p.padding(), p.flags());
                 break;
 
             // pointer
-            case 'p':
-                u = va_arg(ap, uintptr_t);
-                printptr(u, flags);
+            case 'p': {
+                uintptr_t u = va_arg(ap, uintptr_t);
+                printptr(u, p.flags());
                 break;
+            }
 
             // unsigned integer
             case 'b':
             case 'u':
             case 'o':
             case 'x':
-            case 'X':
-                base = c == 'o' ? 8 : ((c == 'x' || c == 'X') ? 16 : (c == 'b' ? 2 : 10));
-                if(c == 'X')
-                    flags |= CAPHEX;
-                if(flags & LONGLONG)
+            case 'X': {
+                ullong u;
+                if(p.flags() & FormatParams::LONGLONG)
                     u = va_arg(ap, ullong);
-                else if(flags & LONG)
+                else if(p.flags() & FormatParams::LONG)
                     u = va_arg(ap, ulong);
-                else if(flags & SIZE_T)
+                else if(p.flags() & FormatParams::SIZE_T)
                     u = va_arg(ap, size_t);
-                else if(flags & INTPTR_T)
+                else if(p.flags() & FormatParams::INTPTR_T)
                     u = va_arg(ap, uintptr_t);
                 else
                     u = va_arg(ap, uint);
-                printupad(u, base, pad, flags);
+                printupad(u, p.base(), p.padding(), p.flags());
                 break;
+            }
 
             // string
-            case 's':
-                s = va_arg(ap, char*);
-                if(pad > 0 && !(flags & PADRIGHT)) {
-                    width = prec != (ulong) - 1 ? prec : strlen(s);
-                    printpad(pad - width, flags);
-                }
-                n = puts(s, prec);
-                if(pad > 0 && (flags & PADRIGHT))
-                    printpad(pad - n, flags);
+            case 's': {
+                char *s = va_arg(ap, char*);
+                putspad(s, p.padding(), p.precision(), p.flags());
                 break;
+            }
 
             // character
-            case 'c':
-                b = (char)va_arg(ap, uint);
+            case 'c': {
+                char b = va_arg(ap, uint);
                 write(b);
                 break;
+            }
 
             default:
                 write(c);
@@ -191,22 +207,32 @@ void OStream::vwritef(const char *fmt, va_list ap) {
     }
 }
 
+void OStream::putspad(const char *s, uint pad, uint prec, uint flags) {
+    if(pad > 0 && !(flags & FormatParams::PADRIGHT)) {
+        ulong width = prec != static_cast<uint>(-1) ? prec : strlen(s);
+        printpad(pad - width, flags);
+    }
+    int n = puts(s, prec);
+    if(pad > 0 && (flags & FormatParams::PADRIGHT))
+        printpad(pad - n, flags);
+}
+
 void OStream::printnpad(llong n, uint pad, uint flags) {
     int count = 0;
     // pad left
-    if(!(flags & PADRIGHT) && pad > 0) {
+    if(!(flags & FormatParams::PADRIGHT) && pad > 0) {
         size_t width = Digits::count_signed(n, 10);
-        if(n > 0 && (flags & (FORCESIGN | SPACESIGN)))
+        if(n > 0 && (flags & (FormatParams::FORCESIGN | FormatParams::SPACESIGN)))
             width++;
         count += printpad(pad - width, flags);
     }
     // print '+' or ' ' instead of '-'
     if(n > 0) {
-        if((flags & FORCESIGN)) {
+        if((flags & FormatParams::FORCESIGN)) {
             write('+');
             count++;
         }
-        else if(((flags) & SPACESIGN)) {
+        else if(((flags) & FormatParams::SPACESIGN)) {
             write(' ');
             count++;
         }
@@ -214,47 +240,47 @@ void OStream::printnpad(llong n, uint pad, uint flags) {
     // print number
     count += printn(n);
     // pad right
-    if((flags & PADRIGHT) && pad > 0)
+    if((flags & FormatParams::PADRIGHT) && pad > 0)
         printpad(pad - count, flags);
 }
 
 void OStream::printupad(ullong u, uint base, uint pad, uint flags) {
     int count = 0;
     // pad left - spaces
-    if(!(flags & PADRIGHT) && !(flags & PADZEROS) && pad > 0) {
+    if(!(flags & FormatParams::PADRIGHT) && !(flags & FormatParams::PADZEROS) && pad > 0) {
         size_t width = Digits::count_unsigned(u, base);
         count += printpad(pad - width, flags);
     }
     // print base-prefix
-    if((flags & PRINTBASE)) {
+    if((flags & FormatParams::PRINTBASE)) {
         if(base == 16 || base == 8) {
             write('0');
             count++;
         }
         if(base == 16) {
-            char c = (flags & CAPHEX) ? 'X' : 'x';
+            char c = (flags & FormatParams::CAPHEX) ? 'X' : 'x';
             write(c);
             count++;
         }
     }
     // pad left - zeros
-    if(!(flags & PADRIGHT) && (flags & PADZEROS) && pad > 0) {
+    if(!(flags & FormatParams::PADRIGHT) && (flags & FormatParams::PADZEROS) && pad > 0) {
         size_t width = Digits::count_unsigned(u, base);
         count += printpad(pad - width, flags);
     }
     // print number
-    if(flags & CAPHEX)
+    if(flags & FormatParams::CAPHEX)
         count += printu(u, base, _hexchars_big);
     else
         count += printu(u, base, _hexchars_small);
     // pad right
-    if((flags & PADRIGHT) && pad > 0)
+    if((flags & FormatParams::PADRIGHT) && pad > 0)
         printpad(pad - count, flags);
 }
 
 int OStream::printpad(int count, uint flags) {
     int res = count;
-    char c = flags & PADZEROS ? '0' : ' ';
+    char c = flags & FormatParams::PADZEROS ? '0' : ' ';
     while(count-- > 0)
         write(c);
     return res;
@@ -284,7 +310,7 @@ int OStream::printn(llong n) {
 
 void OStream::printptr(uintptr_t u, uint flags) {
     size_t size = sizeof(uintptr_t);
-    flags |= PADZEROS;
+    flags |= FormatParams::PADZEROS;
     // 2 hex-digits per byte and a ':' every 2 bytes
     while(size > 0) {
         printupad((u >> (size * 8 - 16)) & 0xFFFF, 16, 4, flags);
@@ -297,7 +323,7 @@ void OStream::printptr(uintptr_t u, uint flags) {
 int OStream::puts(const char *str, ulong prec) {
     const char *begin = str;
     char c;
-    while((prec == (ulong) - 1 || prec-- > 0) && (c = *str)) {
+    while((prec == static_cast<ulong>(-1) || prec-- > 0) && (c = *str)) {
         write(c);
         str++;
     }

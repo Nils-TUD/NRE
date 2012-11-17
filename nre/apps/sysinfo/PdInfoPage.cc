@@ -28,7 +28,9 @@ void PdInfoPage::refresh_console(bool) {
     // display header
     size_t memtotal, memfree;
     _sysinfo.get_mem(memtotal, memfree);
-    cs.writef("%*s: %24s%24s%8s\n", MAX_NAME_LEN, "Pd", "VirtMem", "PhysMem", "Threads");
+    cs << fmt("Pd", MAX_NAME_LEN) << ": " << fmt("VirtMem", 24) << fmt("PhysMem", 24)
+       << fmt("Threads", 8) << "\n";
+    //cs.writef("%*s: %24s%24s%8s\n", MAX_NAME_LEN, "Pd", "VirtMem", "PhysMem", "Threads");
     for(uint i = 0; i < Console::COLS; i++)
         cs << '-';
 
@@ -42,8 +44,12 @@ void PdInfoPage::refresh_console(bool) {
 
         size_t namelen = 0;
         const char *name = getname(c.cmdline(), namelen);
-        cs.writef("%*.*s: %20zu KiB%20zu KiB%8zu\n", MAX_NAME_LEN, namelen, name,
-                  c.virt_mem() / 1024, c.phys_mem() / 1024, c.threads());
+        cs << fmt(name, MAX_NAME_LEN, namelen) << ": "
+           << fmt(c.virt_mem() / 1024, 20) << " KiB"
+           << fmt(c.phys_mem() / 1024, 20) << " KiB"
+           << fmt(c.threads(), 8) << "\n";
+        //cs.writef("%*.*s: %20zu KiB%20zu KiB%8zu\n", MAX_NAME_LEN, namelen, name,
+        //          c.virt_mem() / 1024, c.phys_mem() / 1024, c.threads());
         totalvirt += c.virt_mem();
         totalphys += c.phys_mem();
         totalthreads += c.threads();
@@ -52,7 +58,11 @@ void PdInfoPage::refresh_console(bool) {
     // display footer
     for(uint i = 0; i < Console::COLS; i++)
         cs << '-';
-    cs.writef("%*s: %20zu KiB%8zu of %8zu KiB%8zu\n", MAX_NAME_LEN, "Total",
-              totalvirt / 1024, totalphys / 1024, memtotal / 1024, totalthreads);
+    cs << fmt("Total", MAX_NAME_LEN) << ": "
+       << fmt(totalvirt / 1024, 20) << " KiB"
+       << fmt(totalphys / 1024, 8) << " of " << fmt(memtotal / 1024, 8) << " KiB"
+       << fmt(totalthreads, 8) << "\n";
+    //cs.writef("%*s: %20zu KiB%8zu of %8zu KiB%8zu\n", MAX_NAME_LEN, "Total",
+    //         totalvirt / 1024, totalphys / 1024, memtotal / 1024, totalthreads);
     display_footer(cs, 1);
 }

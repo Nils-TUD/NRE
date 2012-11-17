@@ -158,13 +158,13 @@ void Hypervisor::portal_gsi(capsel_t) {
         switch(op) {
             case Gsi::ALLOC:
                 LOG(Logging::RESOURCES,
-                    Serial::get().writef("Root: Allocating GSI %u (PCI %p)\n", gsi, pcicfg));
+                    Serial::get() << "Root: Allocating GSI " << gsi << " (PCI " << pcicfg << ")\n");
                 allocate_gsi(gsi, pcicfg);
                 break;
 
             case Gsi::RELEASE:
                 LOG(Logging::RESOURCES,
-                    Serial::get().writef("Root: Releasing GSI %u\n", gsi));
+                    Serial::get() << "Root: Releasing GSI " << gsi << "\n");
                 release_gsi(gsi);
                 CapRange(Hip::MAX_CPUS + gsi, 1, Crd::OBJ_ALL).revoke(false);
                 break;
@@ -195,13 +195,15 @@ void Hypervisor::portal_io(capsel_t) {
         switch(op) {
             case Ports::ALLOC:
                 LOG(Logging::RESOURCES,
-                    Serial::get().writef("Root: Allocating ports %#x..%#x\n", base, base + count - 1));
+                    Serial::get() << "Root: Allocating ports "
+                                  << fmt(base, "#x") << ".." << fmt(base + count - 1, "#x") << "\n");
                 allocate_ports(base, count);
                 break;
 
             case Ports::RELEASE:
                 LOG(Logging::RESOURCES,
-                    Serial::get().writef("Root: Releasing ports %#x..%#x\n", base, base + count - 1));
+                    Serial::get() << "Root: Releasing ports "
+                                  << fmt(base, "#x") << ".." << fmt(base + count - 1, "#x") << "\n");
                 release_ports(base, count);
                 CapRange(base, count, Crd::IO_ALL).revoke(false);
                 break;

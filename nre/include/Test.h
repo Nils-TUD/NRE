@@ -122,29 +122,33 @@ class WvTest {
 #else
     template<typename T>
     void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "") {
-        Serial::get().writef("! %s:%d %s %s%s%s %s\n", file, line, condstr, sb, suffix, se,
-                             resultstr(result));
+        Serial::get() << "! " << file << ":" << line << " " << condstr << " "
+                      << sb << suffix << se << " " << resultstr(result) << "\n";
     }
 #endif
 
     static void print_failed_cmp(const char *op, const char *a, const char *b) {
-        Serial::get().writef("wvtest comparison '%s' %s '%s' FAILED\n", a, op, b);
+        Serial::get() << "wvtest comparison '" << a << "' " << op << " '" << b << "' FAILED\n";
     }
 
     static void print_failed_cmp(const char *op, unsigned a, unsigned b) {
-        Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
+        Serial::get() << "wvtest comparison " << a << " == " << fmt(a, "#x") << " " << op << " "
+                      << b << " == " << fmt(b, "#x") << " FAILED\n";
     }
 
     static void print_failed_cmp(const char *op, ulong a, ulong b) {
-        Serial::get().writef("wvtest comparison %ld == 0x%lx %s %ld == 0x%lx FAILED\n", a, a, op, b, b);
+        Serial::get() << "wvtest comparison " << a << " == " << fmt(a, "#x") << " " << op << " "
+                      << b << " == " << fmt(b, "#x") << " FAILED\n";
     }
 
     static void print_failed_cmp(const char *op, ullong a, ullong b) {
-        Serial::get().writef("wvtest comparison %Ld == 0x%Lx %s %Ld == 0x%Lx FAILED\n", a, a, op, b, b);
+        Serial::get() << "wvtest comparison " << a << " == " << fmt(a, "#x") << " " << op << " "
+                      << b << " == " << fmt(b, "#x") << " FAILED\n";
     }
 
     static void print_failed_cmp(const char *op, int a, int b) {
-        Serial::get().writef("wvtest comparison %d == 0x%x %s %d == 0x%x FAILED\n", a, a, op, b, b);
+        Serial::get() << "wvtest comparison " << a << " == " << fmt(a, "#x") << " " << op << " "
+                      << b << " == " << fmt(b, "#x") << " FAILED\n";
     }
 
     static void stringify(char *buf, unsigned size, ullong val) {

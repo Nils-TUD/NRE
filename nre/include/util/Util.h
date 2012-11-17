@@ -46,7 +46,7 @@ public:
     static void write_dump(OStream& os, void *p, size_t size) {
         word_t *ws = reinterpret_cast<word_t*>(p);
         for(size_t i = 0; i < size / sizeof(word_t); ++i)
-            os.writef("%p: %#0" FMT_WORD_HEXLEN "lx\n", ws + i, ws[i]);
+            os << (ws + i) << ": " << fmt(ws[i], "#0x", sizeof(ws[i]) * 2) << "\n";
     }
 
     static void write_backtrace(OStream& os) {
@@ -56,10 +56,10 @@ public:
     }
     static void write_backtrace(OStream& os, const uintptr_t *addrs) {
         const uintptr_t *addr;
-        os.writef("Backtrace:\n");
+        os << "Backtrace:\n";
         addr = addrs;
         while(*addr != 0) {
-            os.writef("\t%p\n", reinterpret_cast<void*>(*addr));
+            os << "\t" << fmt(*addr, "p") << "\n";
             addr++;
         }
     }

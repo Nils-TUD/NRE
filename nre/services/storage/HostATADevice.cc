@@ -183,7 +183,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_DRIVE_SELECT, devValue);
     }
 
-    ATA_LOGDETAIL("Selecting device %d (%s)", _id, is_atapi() ? "ATAPI" : "ATA");
+    ATA_LOGDETAIL("Selecting device " << _id << " (" << (is_atapi() ? "ATAPI" : "ATA") << ")");
     _ctrl.wait();
 
     ATA_LOGDETAIL("Resetting control-register");
@@ -195,7 +195,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_FEATURES, _ctrl.dma_enabled() && has_dma());
 
     if(has_lba48()) {
-        ATA_LOGDETAIL("LBA48: setting sector-count %Lu and LBA %Lu", count, sector);
+        ATA_LOGDETAIL("LBA48: setting sector-count " << count << " and LBA " << sector);
         // LBA: | LBA6 | LBA5 | LBA4 | LBA3 | LBA2 | LBA1 |
         //     48             32            16            0
         // sector-count high-byte
@@ -212,7 +212,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_ADDRESS3, (uint8_t)(sector >> 16));
     }
     else {
-        ATA_LOGDETAIL("LBA28: setting sector-count %Lu and LBA %Lu", count, sector);
+        ATA_LOGDETAIL("LBA28: setting sector-count " << count << " and LBA " << sector);
         // send sector-count
         _ctrl.outb(ATA_REG_SECTOR_COUNT, (uint8_t)count);
         // LBA1, LBA2 and LBA3
@@ -222,6 +222,6 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
     }
 
     // send command
-    ATA_LOGDETAIL("Sending command %d", cmd);
+    ATA_LOGDETAIL("Sending command " << cmd);
     _ctrl.outb(ATA_REG_COMMAND, cmd);
 }

@@ -102,7 +102,8 @@ void HostAHCIDevice::irq() {
     for(uint done = _inprogress & ~_regs->ci, tag; done; done &= ~(1 << tag)) {
         tag = nre::Math::bit_scan_forward(done);
         LOG(nre::Logging::STORAGE_DETAIL,
-            nre::Serial::get().writef("Operation for user %lx is finished\n", _usertags[tag].tag));
+            nre::Serial::get() << "Operation for user " << fmt(_usertags[tag].tag, "x")
+                               << " is finished\n");
         if(_usertags[tag].prod)
             _usertags[tag].prod->produce(nre::Storage::Packet(_usertags[tag].tag, 0));
 
@@ -111,7 +112,8 @@ void HostAHCIDevice::irq() {
     }
 
     if((_regs->tfd & 1) && (~_regs->tfd & 0x400)) {
-        LOG(nre::Logging::STORAGE, nre::Serial::get().writef("command failed with %x\n", _regs->tfd));
+        LOG(nre::Logging::STORAGE,
+            nre::Serial::get() << "command failed with " << fmt(_regs->tfd, "x") << "\n");
         init();
     }
 }

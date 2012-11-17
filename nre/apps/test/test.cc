@@ -29,7 +29,9 @@
 #include <services/Mouse.h>
 #include <services/ACPI.h>
 #include <services/Timer.h>
+#include <util/DMA.h>
 #include <util/Date.h>
+#include <util/MaskField.h>
 #include <Exception.h>
 
 using namespace nre;
@@ -121,20 +123,57 @@ static void view0(void*) {
 static void tick_thread(void*) {
     timevalue_t uptime, unixts;
     int i = 0;
+    auto &ser = Serial::get();
     while(1) {
         timer->wait_for(Hip::get().freq_tsc * 1000);
         timer->get_time(uptime, unixts);
         ScopedLock<UserSm> guard(&sm);
-        Serial::get() << "CPU" << CPU::current().log_id() << ": ";
-        Serial::get() << ++i << " ticks, uptime=" << uptime << ", unixtime=" << unixts << ", ";
+        ser << "CPU" << CPU::current().log_id() << ": ";
+        ser << ++i << " ticks, uptime=" << uptime << ", unixtime=" << unixts << ", ";
         DateInfo date;
         Date::gmtime(unixts / Timer::WALLCLOCK_FREQ, &date);
-        Serial::get().writef("date: %02d.%02d.%04d %d:%02d:%02d\n",
-                             date.mday, date.mon, date.year, date.hour, date.min, date.sec);
+        ser << "date: " << fmt(date.mday, "0", 2) << "." << fmt(date.mon, "0", 2) << "."
+            << fmt(date.year, "0", 4) << " " << date.hour << ":" << fmt(date.min, "0", 2) << ":"
+            << fmt(date.sec, "0", 2) << "\n";
     }
 }
 
 int main() {
+    auto &ser = Serial::get();
+    ser << "'" << fmt(0x1234U, "#x", 10) << "' '" << fmt(0xFFFFU, "-b", 20) << "'\n";
+    ser << fmt<unsigned>(0x1234, "#x") << "\n";
+
+    BitField<128> bf;
+    bf.set(3), bf.set(12), bf.set(14);
+    ser << bf << "\n";
+
+    DMADescList<3> dma;
+    dma.push(DMADesc(10, 20));
+    dma.push(DMADesc(1010, 220));
+    ser << dma << "\n";
+
+    MaskField<8> mask(32);
+    mask.set(3, 0x4);
+    mask.set(1, 0x1);
+    mask.set(2, 0xF);
+    ser << mask << "\n";
+
+    Util::write_dump(ser, &dma, 32);
+    Util::write_backtrace(ser);
+
+    UtcbFrame uf;
+    uf << 1 << 2 << 3UL;
+    uf.delegate(1,2);
+    ser << uf << "\n";
+
+    UtcbExcFrameRef euf;
+    ser << euf;
+
+    timercon = new Connection("timer");
+    timer = new TimerSession(*timercon);
+    tick_thread(nullptr);
+
+#if 0
     conscon = new Connection("console");
     for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
         GlobalThread *gt = GlobalThread::create(view0, it->log_id(), "test-thread");
@@ -145,6 +184,7 @@ int main() {
     // wait until all are finished
     for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
         done.down();
+#endif
 
     /*
     {

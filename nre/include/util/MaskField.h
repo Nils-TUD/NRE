@@ -121,7 +121,7 @@ static inline OStream &operator<<(OStream &os, const MaskField<BITS> &mf) {
     os << "Maskfield[";
     size_t count = mf._bits / BITS;
     for(size_t i = 0; i < count; ++i) {
-        os.writef("%#0*x", Math::blockcount<uint>(BITS, 4), mf.get(i));
+        os << fmt(mf.get(i), "#0x", Math::blockcount<uint>(BITS, 4));
         if(i < count - 1)
             os << ' ';
     }

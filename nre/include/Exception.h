@@ -193,9 +193,9 @@ protected:
      * @param os the stream
      */
     void write_backtrace(OStream &os) const {
-        os.writef("Backtrace:\n");
+        os << "Backtrace:\n";
         for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
-            os.writef("\t%p\n", reinterpret_cast<void*>(*it));
+            os << "\t" << fmt(*it, "p") << "\n";
     }
 
     ErrorCode _code;

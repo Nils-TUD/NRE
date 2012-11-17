@@ -50,7 +50,7 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
             LOG(nre::Logging::STORAGE, _devs[j]->print());
         }
         catch(const Exception &e) {
-            ATA_LOGDETAIL("Identify failed: %s", e.msg());
+            ATA_LOGDETAIL("Identify failed: " << e.msg());
             _devs[j] = nullptr;
         }
     }
@@ -84,7 +84,7 @@ HostATADevice *HostIDECtrl::detect_drive(uint id) {
         dev = identify(id, COMMAND_IDENTIFY);
     }
     catch(const Exception &e) {
-        ATA_LOGDETAIL("Identify failed (%s), trying IDENTIFY_PACKET now", e.msg());
+        ATA_LOGDETAIL("Identify failed (" << e.msg() << "), trying IDENTIFY_PACKET now");
         dev = identify(id, COMMAND_IDENTIFY_PACKET);
     }
 

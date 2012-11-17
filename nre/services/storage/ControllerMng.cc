@@ -42,10 +42,9 @@ void ControllerMng::find_ahci_controller() {
         Gsi *gsi = _pci.get_gsi(bdf, 0);
 
         LOG(Logging::STORAGE,
-            Serial::get().writef("Disk controller #%x AHCI (%02x,%02x,%02x) id %#x mmio %#x\n",
-                                 _count, bdf.bus(), bdf.device(), bdf.function(),
-                                 _pci.conf_read(bdf, 0),
-                                 _pci.conf_read(bdf, 9)));
+            Serial::get() << "Disk controller " << fmt(_count, "#x") << " AHCI " << bdf
+                          << " id " << fmt(_pci.conf_read(bdf, 0), "#x")
+                          << " mmio " << fmt(_pci.conf_read(bdf, 9), "#x") << "\n");
 
         HostAHCICtrl * ctrl = new HostAHCICtrl(_count, _pci, bdf, gsi, dmar);
         _ctrls[_count++] = ctrl;
@@ -86,8 +85,9 @@ void ControllerMng::find_ide_controller() {
             }
             // we need both ports
             if(!(bar0 & bar1 & 1)) {
-                LOG(Logging::STORAGE, Serial::get().writef("We need both ports: bar1=%#x, bar2=%#x\n",
-                                                           bar0, bar1));
+                LOG(Logging::STORAGE,
+                    Serial::get() << "We need both ports: bar1=" << fmt(bar0, "#x")
+                                  << ", bar2=" << fmt(bar1, "#x") << "\n");
                 continue;
             }
 
@@ -98,9 +98,10 @@ void ControllerMng::find_ide_controller() {
             if(progif == 0x8A || progif == 0x80)
                 gsi = _acpi.irq_to_gsi(14 + i);
 
-            LOG(Logging::STORAGE, Serial::get().writef(
-                    "Disk controller #%zx IDE (%02x,%02x,%02x) iobase %#x gsi %u bmr %#x\n",
-                    _count, bdf.bus(), bdf.device(), bdf.function(), bar0 & ~0x3, gsi, bmr));
+            LOG(Logging::STORAGE,
+                Serial::get() << "Disk controller " << fmt(_count, "#x") << " IDE " << bdf
+                              << " iobase " << fmt(bar0 & ~0x3, "#x")
+                              << " gsi " << gsi << " bmr " << fmt(bmr, "#x") << "\n");
 
             // create controller
             try {

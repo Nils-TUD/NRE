@@ -82,8 +82,13 @@ PORTAL static void portal_timer(capsel_t pid) {
                 uf.finish_input();
 
                 LOG(Logging::TIMER_DETAIL,
-                    Serial::get().writef("TIMER: (%zu) Programming for %#Lx on %u\n",
-                                         sess->id(), time, CPU::current().log_id()));
+                    Serial::get() << "TIMER: (" << sess->id() << ") Programming for "
+                                  << fmt("%#x", time) << " on "
+                                  << CPU::current().log_id() << "\n");
+
+                LOG(Logging::TIMER_DETAIL,
+                    Serial::get() << "TIMER: (" << sess->id() << ") Programming for "
+                                  << fmt(time, "#x") << " on " << CPU::current().log_id() << "\n");
                 timer->program_timer(sess->data(CPU::current().log_id()), time);
                 uf << E_SUCCESS;
             }
@@ -95,8 +100,8 @@ PORTAL static void portal_timer(capsel_t pid) {
                 timevalue_t uptime, unixts;
                 timer->get_time(uptime, unixts);
                 LOG(Logging::TIMER_DETAIL,
-                    Serial::get().writef("TIMER: (%zu) Getting time up=%#Lx unix=%#Lx\n",
-                                         sess->id(), uptime, unixts));
+                    Serial::get() << "TIMER: (" << sess->id() << ") Getting time up="
+                                  << fmt(uptime, "#x") << " unix=" << fmt(unixts, "#x") << "\n");
                 uf << E_SUCCESS << uptime << unixts;
             }
             break;

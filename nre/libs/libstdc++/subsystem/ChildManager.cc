@@ -467,12 +467,13 @@ void ChildManager::Portals::gsi(capsel_t pid) {
         {
             ScopedLock<UserSm> guard(&c->_sm);
             if(op == Gsi::ALLOC) {
-                LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' allocates GSI %u (PCI %p)\n",
-                                                             c->cmdline().str(), gsi, pcicfg));
+                LOG(Logging::RESOURCES,
+                    Serial::get() << "Child '" << c->cmdline() <<"' allocates GSI "
+                                  << gsi << " (PCI " << pcicfg << ")\n");
             }
             else {
-                LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' releases GSI %u\n",
-                                                             c->cmdline().str(), gsi));
+                LOG(Logging::RESOURCES,
+                    Serial::get() << "Child '" << c->cmdline() << "' releases GSI " << gsi << "\n");
             }
 
             if(gsi >= Hip::MAX_GSIS)
@@ -527,12 +528,14 @@ void ChildManager::Portals::io(capsel_t pid) {
         {
             ScopedLock<UserSm> guard(&c->_sm);
             if(op == Ports::ALLOC) {
-                LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' allocates ports %#x..%#x\n",
-                                                             c->cmdline().str(), base, base + count - 1));
+                LOG(Logging::RESOURCES,
+                    Serial::get() << "Child '" << c->cmdline() << "' allocates ports "
+                                  << fmt(base, "#x") << ".." << fmt(base + count - 1, "#x") << "\n");
             }
             else {
-                LOG(Logging::RESOURCES, Serial::get().writef("Child '%s' releases ports %#x..%#x\n",
-                                                             c->cmdline().str(), base, base + count - 1));
+                LOG(Logging::RESOURCES,
+                    Serial::get() << "Child '" << c->cmdline() << "' releases ports "
+                                  << fmt(base, "#x") << ".." << fmt(base + count - 1, "#x") << "\n");
             }
 
             // alloc() makes sure that nobody can free something from other childs.
@@ -625,8 +628,8 @@ void ChildManager::Portals::sc(capsel_t pid) {
                 c->add_sc(name, cpu, sc);
 
                 LOG(Logging::ADMISSION,
-                    Serial::get().writef("Child '%s' created sc '%s' on cpu %u (%u)\n",
-                                         c->cmdline().str(), name.str(), cpu, sc));
+                    Serial::get() << "Child '" << c->cmdline() << "' created sc '"
+                                  << name << "' on cpu " << cpu << " (" << sc << ")\n");
 
                 uf.accept_delegates();
                 uf.delegate(sc);
@@ -647,8 +650,8 @@ void ChildManager::Portals::sc(capsel_t pid) {
                     puf.check_reply();
                 }
 
-                LOG(Logging::ADMISSION, Serial::get().writef("Child '%s' destroyed sc (%u)\n",
-                                                             c->cmdline().str(), sc));
+                LOG(Logging::ADMISSION,
+                    Serial::get() << "Child '" << c->cmdline() << "' destroyed sc (" << sc << ")\n");
             }
             break;
         }
@@ -867,6 +870,7 @@ void ChildManager::Portals::pf(capsel_t pid) {
     ChildManager *cm = Thread::current()->get_tls<ChildManager*>(Thread::TLS_PARAM);
     UtcbExcFrameRef uf;
     cpu_t cpu = cm->get_cpu(pid);
+    cpu_t pcpu = CPU::get(cpu).phys_id();
 
     bool kill = false;
     uintptr_t pfaddr = uf->qual[1];
@@ -886,9 +890,9 @@ void ChildManager::Portals::pf(capsel_t pid) {
         ScopedLock<UserSm> guard_regs(&c->_sm);
 
         LOG(Logging::PFS,
-            Serial::get().writef("Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x\n",
-                                 c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
-                                 reinterpret_cast<void*>(eip), cpu, error));
+            Serial::get() << "Child '" << c->cmdline() << "': Pagefault for " << fmt(pfaddr, "p")
+                          << " @ " << fmt(eip, "p") << " on cpu " << pcpu << ", error="
+                          << fmt(error, "#x") << "\n");
 
         // TODO different handlers (cow, ...)
         uintptr_t pfpage = pfaddr & ~(ExecEnv::PAGE_SIZE - 1);
@@ -926,16 +930,16 @@ void ChildManager::Portals::pf(capsel_t pid) {
             }
             // same fault for same cpu again?
             else if(pfpage == c->_last_fault_addr && cpu == c->_last_fault_cpu) {
-                LOG(Logging::CHILD_KILL, Serial::get().writef(
-                        "Child '%s': Caused fault for %p on cpu %u twice. Giving up :(\n",
-                        c->cmdline().str(), reinterpret_cast<void*>(pfaddr), CPU::get(cpu).phys_id()));
+                LOG(Logging::CHILD_KILL,
+                    Serial::get() << "Child '" << c->cmdline() << "': Caused fault for "
+                                  << fmt(pfaddr, "p") << " on cpu " << pcpu << " twice. Giving up :(\n");
                 kill = true;
             }
             else {
-                LOG(Logging::PFS, Serial::get().writef(
-                        "Child '%s': Pagefault for %p @ %p on cpu %u, error=%#x (page already mapped)\n",
-                        c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
-                        reinterpret_cast<void*>(eip), CPU::get(cpu).phys_id(), error));
+                LOG(Logging::PFS,
+                    Serial::get() << "Child '" << c->cmdline() << "': Pagefault for " << fmt(pfaddr, "p")
+                                  << " @ " << fmt(eip, "p") << " on cpu " << pcpu << ", error="
+                                  << fmt(error, "#x") << " (page already mapped)\n");
                 LOG(Logging::PFS_DETAIL, Serial::get() << "See regionlist:\n" << c->reglist());
                 c->_last_fault_addr = pfpage;
                 c->_last_fault_cpu = cpu;
@@ -978,10 +982,10 @@ void ChildManager::Portals::pf(capsel_t pid) {
             {
                 ScopedLock<RCULock> guard(&RCU::lock());
                 Child *c = cm->get_child(pid);
-                LOG(Logging::CHILD_KILL, Serial::get().writef(
-                        "Child '%s': Unresolvable pagefault for %p @ %p on cpu %u, error=%#x\n",
-                        c->cmdline().str(), reinterpret_cast<void*>(pfaddr),
-                        reinterpret_cast<void*>(uf->rip), CPU::get(cpu).phys_id(), error));
+                LOG(Logging::CHILD_KILL,
+                    Serial::get() << "Child '" << c->cmdline() << "': Unresolvable pagefault for "
+                                  << fmt(pfaddr, "p") << " @ " << fmt(uf->rip, "p") << " on cpu "
+                                  << pcpu << ", error=" << fmt(error, "#x") << "\n");
             }
             cm->kill_child(pid, uf, FAULT);
         }
@@ -1012,9 +1016,10 @@ void ChildManager::term_child(capsel_t pid, UtcbExcFrameRef &uf) {
                 exitcode -= ExecEnv::EXIT_START;
             else
                 exitcode -= ExecEnv::THREAD_EXIT;
-            LOG(Logging::CHILD_KILL, Serial::get().writef(
-                    "Child '%s': %s terminated with exit code %d on cpu %u\n",
-                    c->cmdline().str(), pd ? "Pd" : "Thread", exitcode, get_cpu(pid)));
+            LOG(Logging::CHILD_KILL,
+                Serial::get() << "Child '" << c->cmdline() << "': " << (pd ? "Pd" : "Thread")
+                              << " terminated with exit code " << exitcode << " on cpu "
+                              << CPU::get(get_cpu(pid)).phys_id() << "\n");
         }
 
         kill_child(pid, uf, pd ? PROC_EXIT : THREAD_EXIT);
@@ -1033,12 +1038,12 @@ void ChildManager::kill_child(capsel_t pid, UtcbExcFrameRef &uf, ExitType type) 
         Child *c = get_child(pid);
         uintptr_t *addr, addrs[32];
         if(type == FAULT) {
-            LOG(Logging::CHILD_KILL, Serial::get().writef(
-                    "Child '%s': caused exception %u @ %p on cpu %u\n",
-                    c->cmdline().str(), get_vector(pid), reinterpret_cast<void*>(uf->rip),
-                    CPU::get(get_cpu(pid)).phys_id()));
+            LOG(Logging::CHILD_KILL,
+                Serial::get() << "Child '" << c->cmdline() << "': caused exception "
+                              << get_vector(pid) << " @ " << fmt(uf->rip, "p") << " on cpu "
+                              << CPU::get(get_cpu(pid)).phys_id() << "\n");
             LOG(Logging::CHILD_KILL, Serial::get() << c->reglist());
-            LOG(Logging::CHILD_KILL, Serial::get().writef("Unable to resolve fault; killing child\n"));
+            LOG(Logging::CHILD_KILL, Serial::get() << "Unable to resolve fault; killing child\n");
         }
         // if its a thread exit, free stack and utcb
         else if(type == THREAD_EXIT) {
@@ -1055,10 +1060,10 @@ void ChildManager::kill_child(capsel_t pid, UtcbExcFrameRef &uf, ExitType type) 
                 c->reglist().remove_by_addr(utcb);
         }
         ExecEnv::collect_backtrace(c->_ec->stack(), uf->rbp, addrs, 32);
-        LOG(Logging::CHILD_KILL, Serial::get().writef("Backtrace:\n"));
+        LOG(Logging::CHILD_KILL, Serial::get() << "Backtrace:\n");
         addr = addrs;
         while(*addr != 0) {
-            LOG(Logging::CHILD_KILL, Serial::get().writef("\t%p\n", reinterpret_cast<void*>(*addr)));
+            LOG(Logging::CHILD_KILL, Serial::get() << "\t" << fmt(*addr, "p") << "\n");
             addr++;
         }
     }

@@ -40,6 +40,13 @@ struct DateInfo {
     }
 };
 
+static inline OStream &operator<<(OStream &os, const DateInfo &d) {
+    os << "TIMER: date: "
+       << fmt(d.mday, "0", 2) << "." << fmt(d.mon, "0", 2) << "." << fmt(d.year, "0", 4) << " "
+       << d.hour << ":" << fmt(d.min, "0", 2) << ":" << fmt(d.sec, "0", 2);
+    return os;
+}
+
 class Date {
 public:
     static timevalue_t mktime(const DateInfo *tm) {

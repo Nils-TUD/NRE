@@ -35,9 +35,10 @@ HostMMConfig::HostMMConfig() {
     for(size_t i = 0; i < count; ++i) {
         AcpiMCFG::Entry *entry = mcfg->entries + i;
         LOG(Logging::PCICFG,
-            Serial::get().writef("MMConfig: base %#Lx seg %#02x bus %#02x-%#02x\n",
-                                 entry->base, entry->pci_seg, entry->pci_bus_start,
-                                 entry->pci_bus_end));
+            Serial::get() << "MMConfig: base " << fmt(entry->base, "#x")
+                          << " seg " << fmt(entry->pci_seg, "#0x", 2)
+                          << " bus " << fmt(entry->pci_bus_start, "#0x", 2)
+                          << "-" << fmt(entry->pci_bus_end, "#0x", 2) << "\n");
 
         uint start = (entry->pci_seg << 16) + entry->pci_bus_start * 32 * 8;
         uint buses = entry->pci_bus_end - entry->pci_bus_start + 1;

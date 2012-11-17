@@ -130,7 +130,8 @@ void StorageService::portal(capsel_t pid) {
                 Storage::tag_type tag;
                 uf >> tag;
                 uf.finish_input();
-                LOG(Logging::STORAGE_DETAIL, Serial::get().writef("[%zu,%#lx] FLUSH\n", sess->id(), tag));
+                LOG(Logging::STORAGE_DETAIL,
+                    Serial::get() << "[" << sess->id() << "," << fmt(tag, "#x") << "] FLUSH\n");
                 mng->get(sess->ctrl())->flush(sess->drive(), sess->prod(), tag);
                 uf << E_SUCCESS;
             }
@@ -148,9 +149,9 @@ void StorageService::portal(capsel_t pid) {
                     throw Exception(E_ARGS_INVALID, "Not initialized");
 
                 LOG(Logging::STORAGE_DETAIL,
-                    Serial::get().writef("[%zu,%#lx] %s @ %Lu with ", sess->id(), tag,
-                                         cmd == Storage::READ ? "READ" : "WRITE", sector);
-                    Serial::get() << dma << "\n");
+                    Serial::get() << "[" << sess->id() << "," << fmt(tag, "#x") << "] "
+                                  << (cmd == Storage::READ ? "READ" : "WRITE") << " @ " << sector
+                                  << " with " << dma << "\n");
 
                 // check offset and size
                 size_t size = dma.bytecount();
