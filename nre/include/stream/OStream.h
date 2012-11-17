@@ -170,7 +170,7 @@ public:
 
     template<typename T>
     OStream & operator<<(const Format<T>& fmt) {
-        va_list ap;
+        va_list ap{};
         FormatParams p(fmt.fmt(), false, ap);
         p.padding(fmt.padding());
         p.precision(fmt.precision());
