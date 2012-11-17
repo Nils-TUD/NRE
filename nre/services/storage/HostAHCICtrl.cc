@@ -42,11 +42,10 @@ HostAHCICtrl::HostAHCICtrl(uint id, PCI &pci, BDF bdf, Gsi *gsi, bool dmar)
 
     // enable AHCI
     _regs->ghc |= 0x80000000;
-    LOG(Logging::STORAGE,
-        Serial::get() << "AHCI: cap " << fmt(_regs->cap, "#x") << " cap2 " << fmt(_regs->cap2, "#x")
-                      << " global " << fmt(_regs->ghc, "#x") << " ports " << fmt(_regs->pi, "#x")
-                      << " version " << fmt(_regs->vs, "#x") << " bohc " << fmt(_regs->bohc, "#x")
-                      << "\n");
+    LOG(STORAGE, "AHCI:" << " cap " << fmt(_regs->cap, "#x") << " cap2 " << fmt(_regs->cap2, "#x")
+                         << " global " << fmt(_regs->ghc, "#x") << " ports " << fmt(_regs->pi, "#x")
+                         << " version " << fmt(_regs->vs, "#x") << " bohc " << fmt(_regs->bohc, "#x")
+                         << "\n");
     assert(!_regs->bohc);
 
     // create ports
@@ -82,12 +81,11 @@ void HostAHCICtrl::create_ahci_port(uint nr, HostAHCIDevice::Register *portreg, 
             _ports[nr] = new HostAHCIDevice(portreg, _id * Storage::MAX_DRIVES + _portcount,
                                             ((_regs->cap >> 8) & 0x1f) + 1, dmar);
             _ports[nr]->determine_capacity();
-            LOG(Logging::STORAGE, _ports[nr]->print());
+            LOG(STORAGE, *_ports[nr] << "\n");
             _portcount++;
         }
         catch(const Exception &e) {
-            LOG(Logging::STORAGE, Serial::get() << "Unable to create AHCI device for port "
-                                                << nr << ": " << e.msg() << "\n");
+            LOG(STORAGE, "Unable to create AHCI device for port " << nr << ": " << e.msg() << "\n");
             _ports[nr] = 0;
         }
     }

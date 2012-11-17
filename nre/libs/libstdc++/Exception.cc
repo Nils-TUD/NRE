@@ -23,7 +23,7 @@ namespace nre {
 Exception::Exception(ErrorCode code, const char *msg) throw()
     : _code(code), _msg(msg), _backtrace(), _count() {
     _count = ExecEnv::collect_backtrace(&_backtrace[0], MAX_TRACE_DEPTH);
-    LOG(Logging::EXCEPTIONS, Serial::get() << *this);
+    LOG(EXCEPTIONS, *this);
 }
 
 Exception::Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw()
@@ -33,13 +33,13 @@ Exception::Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw
     _msg.vformat(bufsize, fmt, ap);
     va_end(ap);
     _count = ExecEnv::collect_backtrace(&_backtrace[0], MAX_TRACE_DEPTH);
-    LOG(Logging::EXCEPTIONS, Serial::get() << *this);
+    LOG(EXCEPTIONS, *this);
 }
 
 Exception::Exception(ErrorCode code, const String &msg) throw()
     : _code(code), _msg(msg), _backtrace(), _count() {
     _count = ExecEnv::collect_backtrace(&_backtrace[0], MAX_TRACE_DEPTH);
-    LOG(Logging::EXCEPTIONS, Serial::get() << *this);
+    LOG(EXCEPTIONS, *this);
 }
 
 UtcbFrameRef & operator<<(UtcbFrameRef &uf, const Exception &e) {

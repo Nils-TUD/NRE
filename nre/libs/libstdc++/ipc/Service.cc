@@ -23,8 +23,7 @@ ServiceSession *Service::new_session(capsel_t cap) {
     ScopedLock<UserSm> guard(&_sm);
     for(size_t i = 0; i < MAX_SESSIONS; ++i) {
         if(_sessions[i] == nullptr) {
-            LOG(Logging::SERVICES, Serial::get() << "Creating session " << i
-                                                 << " (caps=" << _caps + (i << CPU::order()) << ")\n");
+            LOG(SERVICES, "Creating session " << i << " (caps=" << _caps + (i << CPU::order()) << ")\n");
             add_session(create_session(i, cap, _caps + (i << CPU::order()), _func));
             return _sessions[i];
         }
@@ -67,7 +66,7 @@ void Service::check_sessions() {
 void Service::destroy_session(capsel_t pid) {
     ScopedLock<UserSm> guard(&_sm);
     size_t i = (pid - _caps) >> CPU::order();
-    LOG(Logging::SERVICES, Serial::get() << "Destroying session " << i << "\n");
+    LOG(SERVICES, "Destroying session " << i << "\n");
     ServiceSession *sess = _sessions[i];
     if(!sess)
         throw ServiceException(E_NOT_FOUND, 32, "Session %zu does not exist", i);

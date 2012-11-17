@@ -25,7 +25,7 @@ HostRebootKeyboard::HostRebootKeyboard() : HostRebootMethod(), _con("keyboard"),
 }
 
 void HostRebootKeyboard::reboot() {
-    LOG(Logging::REBOOT, Serial::get() << "Trying reboot via PS2 keyboard...\n");
+    LOG(REBOOT, "Trying reboot via PS2 keyboard...\n");
     _sess.reboot();
 }
 
@@ -33,7 +33,7 @@ HostRebootSysCtrlPortA::HostRebootSysCtrlPortA() : HostRebootMethod(), _port(0x9
 }
 
 void HostRebootSysCtrlPortA::reboot() {
-    LOG(Logging::REBOOT, Serial::get() << "Trying reboot via System Control Port A...\n");
+    LOG(REBOOT, "Trying reboot via System Control Port A...\n");
     _port.out<uint8_t>(0x01);
 }
 
@@ -41,13 +41,13 @@ HostRebootPCIReset::HostRebootPCIReset() : HostRebootMethod(), _con("pcicfg"), _
 }
 
 void HostRebootPCIReset::reboot() {
-    LOG(Logging::REBOOT, Serial::get() << "Trying reboot via PCI...\n");
+    LOG(REBOOT, "Trying reboot via PCI...\n");
     _sess.reboot();
 }
 
 HostRebootACPI::HostRebootACPI()
     : HostRebootMethod(), _method(), _value(), _addr(), _con("acpi"), _sess(_con), _ports(), _ds() {
-    LOG(Logging::REBOOT, Serial::get() << "Trying reboot via ACPI...\n");
+    LOG(REBOOT, "Trying reboot via ACPI...\n");
     ACPI::RSDT *rsdt = _sess.find_table("FACP");
     if(!rsdt)
         throw Exception(E_NOT_FOUND, "FACP not found");
@@ -67,9 +67,8 @@ HostRebootACPI::HostRebootACPI()
     _method = table[116];
     _value = table[128];
     _addr = *reinterpret_cast<uint64_t*>(table + 120);
-    LOG(Logging::REBOOT,
-        Serial::get() << "Using method=" << fmt(_method, "#x") << ", value=" << fmt(_value, "#x")
-                      << ", addr=" << fmt(_addr, "#x") << "\n");
+    LOG(REBOOT, "Using method=" << fmt(_method, "#x") << ", value=" << fmt(_value, "#x")
+                                << ", addr=" << fmt(_addr, "#x") << "\n");
     switch(_method) {
         case 0:
             _ds = new DataSpace(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::RW, _addr);

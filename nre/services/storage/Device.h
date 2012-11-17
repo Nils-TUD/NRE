@@ -21,10 +21,10 @@
 
 // for printing debug-infos
 #define ATA_LOGDETAIL(msg)  \
-    LOG(nre::Logging::STORAGE_DETAIL, nre::Serial::get() << msg << "\n");
+    LOG(STORAGE_DETAIL, msg << "\n");
 
 #define ATA_LOG(msg)    \
-    LOG(nre::Logging::STORAGE, nre::Serial::get() << msg << "\n");
+    LOG(STORAGE, msg << "\n");
 
 enum {
     DMA_TRANSFER_TIMEOUT        = 3000, // ms
@@ -362,12 +362,6 @@ public:
         params->sector_size = sector_size();
         params->sectors = capacity();
     }
-    void print() const {
-        nre::Serial::get() << type() << " drive " << _id << " present (" << _name << ")\n";
-        nre::Serial::get() << "  " << _capacity << " sectors with " << _sector_size << " bytes"
-                           << " (" << ((_capacity * _sector_size) / (1024 * 1024)) << " MiB)"
-                           << ", max " << max_requests() << " requests\n";
-    }
 
     virtual const char *type() const = 0;
     virtual void determine_capacity() = 0;
@@ -405,3 +399,11 @@ protected:
     Identify _info;
     char _name[40];
 };
+
+static inline nre::OStream &operator<<(nre::OStream &os, const Device &d) {
+    os << d.type() << " drive " << d.id() << " present (" << d.name() << ")\n";
+    os << "  " << d.capacity() << " sectors with " << d.sector_size() << " bytes"
+       << " (" << ((d.capacity() * d.sector_size()) / (1024 * 1024)) << " MiB)"
+       << ", max " << d.max_requests() << " requests";
+    return os;
+}

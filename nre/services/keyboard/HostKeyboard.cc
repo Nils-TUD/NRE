@@ -251,7 +251,7 @@ bool HostKeyboard::enable_devices() {
 void HostKeyboard::enable_mouse() {
     // put mouse in streaming mode
     if(!write_mouse_ack(MOUSE_CMD_STREAMING))
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
     // enable mouse-wheel by setting sample-rate to 200, 100 and 80 and reading the device-id
     write_mouse_ack(MOUSE_CMD_SETSAMPLE);
@@ -332,9 +332,8 @@ bool HostKeyboard::handle_aux(Mouse::Packet &data, uint8_t byte) {
             if(byte == 0xaa)
                 _mousestate++;
             else {
-                LOG(Logging::KEYBOARD,
-                    Serial::get() << "kb: " << __func__ << "():" << __LINE__
-                                  << " no reset ack " << byte << "\n");
+                LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " no reset ack "
+                                     << byte << "\n");
             }
             return false;
 
@@ -345,9 +344,8 @@ bool HostKeyboard::handle_aux(Mouse::Packet &data, uint8_t byte) {
                 enable_mouse();
             }
             else {
-                LOG(Logging::KEYBOARD,
-                    Serial::get() << "kb: " << __func__ << "():" << __LINE__
-                                  << " unknown mouse id " << byte << "\n");
+                LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__
+                                     << " unknown mouse id " << byte << "\n");
             }
             return false;
 
@@ -355,9 +353,8 @@ bool HostKeyboard::handle_aux(Mouse::Packet &data, uint8_t byte) {
         case 0:
             // not in sync?
             if(~byte & 0x8) {
-                LOG(Logging::KEYBOARD,
-                    Serial::get() << "kb: " << __func__ << "():" << __LINE__
-                                  << " mouse not in sync - drop " << byte << "\n");
+                LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__
+                                     << " mouse not in sync - drop " << byte << "\n");
                 return false;
             }
             data.status = byte;
@@ -495,7 +492,7 @@ void HostKeyboard::reset() {
         _port_data.in<uint8_t>();
 
     if(!read_cmd(KBC_CMD_READ_STATUS, cmdbyte))
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
     cmdbyte &= ~KBC_CMDBYTE_TRANSPSAUX;
     // we enable translation if scset == 1
@@ -505,41 +502,41 @@ void HostKeyboard::reset() {
     // set translation and enable irqs
     if(!write_cmd(KBC_CMD_SET_STATUS, cmdbyte | KBC_CMDBYTE_IRQ1 | KBC_CMDBYTE_IRQ2) ||
        !read_cmd(KBC_CMD_READ_STATUS, cmdbyte)) {
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
     }
     _scset1 |= !!(cmdbyte & KBC_CMDBYTE_TRANSPSAUX);
 
     if(!enable_devices())
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
     // default+disable Keyboard
     if(!write_keyboard_ack(KB_CMD_DISABLE_SCAN))
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
     // switch to our scancode set
     if(!_scset1) {
         if(!(write_keyboard_ack(KB_CMD_GETSET_SCANCODE) && write_keyboard_ack(2))) {
-            LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "(): " << __LINE__ << " failed"
-                                                 << " -- buggy keyboard?\n");
+            LOG(KEYBOARD, "kb: " << __func__ << "(): " << __LINE__ << " failed"
+                                 << " -- buggy keyboard?\n");
             _scset1 = true;
         }
     }
 
     // enable Keyboard
     if(!write_keyboard_ack(KB_CMD_ENABLE_SCAN))
-        LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+        LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
     if(_mouse_enabled) {
         // reset mouse, we enable data reporting later after the reset is completed
         if(!write_mouse_ack(MOUSE_CMD_RESET)) {
-            LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n"
-                                                 << "Disabling mouse.\n");
+            LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n"
+                                 << "Disabling mouse.\n");
             _mouse_enabled = false;
         }
 
         // wait until we got response from the mice
         if(_mouse_enabled && !wait_output_full())
-            LOG(Logging::KEYBOARD, Serial::get() << "kb: " << __func__ << "():" << __LINE__ << " failed\n");
+            LOG(KEYBOARD, "kb: " << __func__ << "():" << __LINE__ << " failed\n");
 
         // if mouse enabling failed, we have to enable the keyboard again (at least on some machines)
         if(!_mouse_enabled)

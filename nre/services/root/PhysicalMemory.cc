@@ -164,8 +164,7 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
                 if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
                     uintptr_t addr = VirtualMemory::alloc(desc.size());
                     desc = DataSpaceDesc(desc.size(), desc.type(), desc.flags(), 0, addr);
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Allocated virtual ds " << desc << "\n");
+                    LOG(DATASPACES, "Root: Allocated virtual ds " << desc << "\n");
                     uf << E_SUCCESS << desc;
                 }
                 else {
@@ -174,12 +173,12 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
                                               : _dsmng.create(desc);
 
                     if(type == DataSpace::CREATE) {
-                        LOG(Logging::DATASPACES, Serial::get() << "Root: Created " << ds << "\n");
+                        LOG(DATASPACES, "Root: Created " << ds << "\n");
                         uf.delegate(ds.sel(), 0);
                         uf.delegate(ds.unmapsel(), 1);
                     }
                     else {
-                        LOG(Logging::DATASPACES, Serial::get() << "Root: Joined " << ds << "\n");
+                        LOG(DATASPACES, "Root: Joined " << ds << "\n");
                         uf.delegate(ds.unmapsel());
                     }
                     // pass back attributes so that the caller has the correct ones
@@ -189,13 +188,11 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 
             case DataSpace::DESTROY:
                 if(desc.type() == DataSpaceDesc::VIRTUAL) {
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Destroyed virtual ds: " << desc << "\n");
+                    LOG(DATASPACES, "Root: Destroyed virtual ds: " << desc << "\n");
                     VirtualMemory::free(desc.virt(), desc.size());
                 }
                 else {
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Destroyed ds " << sel << ": " << desc << "\n");
+                    LOG(DATASPACES, "Root: Destroyed ds " << sel << ": " << desc << "\n");
                     _dsmng.release(desc, sel);
                 }
                 uf << E_SUCCESS;

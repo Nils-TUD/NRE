@@ -47,7 +47,7 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
     for(ssize_t j = 1; j >= 0; --j) {
         try {
             _devs[j] = detect_drive(_id * Storage::MAX_DRIVES + j);
-            LOG(nre::Logging::STORAGE, _devs[j]->print());
+            ATA_LOG(*_devs[j]);
         }
         catch(const Exception &e) {
             ATA_LOGDETAIL("Identify failed: " << e.msg());

@@ -130,8 +130,7 @@ void StorageService::portal(capsel_t pid) {
                 Storage::tag_type tag;
                 uf >> tag;
                 uf.finish_input();
-                LOG(Logging::STORAGE_DETAIL,
-                    Serial::get() << "[" << sess->id() << "," << fmt(tag, "#x") << "] FLUSH\n");
+                LOG(STORAGE_DETAIL, "[" << sess->id() << "," << fmt(tag, "#x") << "] FLUSH\n");
                 mng->get(sess->ctrl())->flush(sess->drive(), sess->prod(), tag);
                 uf << E_SUCCESS;
             }
@@ -148,10 +147,9 @@ void StorageService::portal(capsel_t pid) {
                 if(!sess->initialized())
                     throw Exception(E_ARGS_INVALID, "Not initialized");
 
-                LOG(Logging::STORAGE_DETAIL,
-                    Serial::get() << "[" << sess->id() << "," << fmt(tag, "#x") << "] "
-                                  << (cmd == Storage::READ ? "READ" : "WRITE") << " @ " << sector
-                                  << " with " << dma << "\n");
+                LOG(STORAGE_DETAIL, "[" << sess->id() << "," << fmt(tag, "#x") << "] "
+                                        << (cmd == Storage::READ ? "READ" : "WRITE") << " @ " << sector
+                                        << " with " << dma << "\n");
 
                 // check offset and size
                 size_t size = dma.bytecount();
@@ -196,7 +194,7 @@ int main(int argc, char *argv[]) {
     bool idedma = true;
     for(int i = 1; i < argc; ++i) {
         if(strcmp(argv[i], "noidedma") == 0) {
-            LOG(Logging::STORAGE, Serial::get() << "Disabling DMA for IDE devices\n");
+            LOG(STORAGE, "Disabling DMA for IDE devices\n");
             idedma = false;
         }
     }

@@ -25,12 +25,15 @@
  * A UserSm is used to make sure that different log-statements in one program don't get mixed.
  * The nice thing is that the compiler is able to completely eliminate this code, if the log-level
  * is disabled.
+ *
+ * Usage example:
+ *  LOG(TIMER, "My message " << 123 << "\n");
  */
 #define LOG(lvl, expr)                                              \
     do {                                                            \
-        if(nre::Logging::level & (lvl)) {                           \
+        if(nre::Logging::level & (nre::Logging::lvl)) {             \
             nre::ScopedLock<nre::UserSm> guard(&nre::Logging::sm);  \
-            expr;                                                   \
+            nre::Serial::get() << expr;                             \
         }                                                           \
     }                                                               \
     while(0);

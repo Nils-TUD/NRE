@@ -34,8 +34,7 @@ void HostHPET::HPETTimer::init(HostTimerDevice &dev, cpu_t cpu) {
     // Prefer MSIs. No sharing, no routing problems, always edge triggered.
     if(!(_reg->config & LEG_RT_CNF) && (_reg->config & FSB_INT_DEL_CAP)) {
         uint16_t rid = get_rid(0, _no);
-        LOG(Logging::TIMER,
-            Serial::get() << "TIMER: HPET comparator " << _no << " RID " << fmt(rid, "x") << "\n");
+        LOG(TIMER, "TIMER: HPET comparator " << _no << " RID " << fmt(rid, "x") << "\n");
 
         // in this case we have to pass the MMIO space cap to NOVA instead of the MMConfig space cap
         // because the HPET is no PCI device, but does only use a PCI requester ID outside of
@@ -43,10 +42,9 @@ void HostHPET::HPETTimer::init(HostTimerDevice &dev, cpu_t cpu) {
         HostHPET &hpet = static_cast<HostHPET&>(dev);
         _gsi = new Gsi(reinterpret_cast<void*>(hpet._mem.virt()), cpu);
 
-        LOG(Logging::TIMER,
-            Serial::get() << "TIMER: Timer " << _no << " -> GSI " << _gsi->gsi() << " CPU " << cpu
-                          << " (" << fmt(_gsi->msi_addr(), "#x") << ":" << fmt(_gsi->msi_value(), "#x")
-                          << "\n");
+        LOG(TIMER, "TIMER: Timer " << _no << " -> GSI " << _gsi->gsi() << " CPU " << cpu
+                                   << " (" << fmt(_gsi->msi_addr(), "#x") << ":"
+                                   << fmt(_gsi->msi_value(), "#x") << "\n");
 
         _ack = 0;
         _reg->msi[0] = _gsi->msi_value();
@@ -66,10 +64,9 @@ void HostHPET::HPETTimer::init(HostTimerDevice &dev, cpu_t cpu) {
         _gsi = new Gsi(irq, cpu);
         _ack = (irq < 16) ? 0 : (1U << _no);
 
-        LOG(Logging::TIMER,
-            Serial::get() << "TIMER: Timer " << _no << " -> IRQ " << irq
-                          << " (assigned " << fmt(_assigned_irqs, "#x")
-                          << " ack " << fmt(_ack, "#x") << ").\n");
+        LOG(TIMER, "TIMER: Timer " << _no << " -> IRQ " << irq
+                                   << " (assigned " << fmt(_assigned_irqs, "#x")
+                                   << " ack " << fmt(_ack, "#x") << ").\n");
 
         _reg->config &= ~(0x1F << 9) | INT_TYPE_CNF;
         _reg->config |= (irq << 9) | ((irq < 16) ? 0 /* Edge */ : INT_TYPE_CNF /* Level */);
@@ -81,34 +78,29 @@ HostHPET::HostHPET(bool force_legacy)
       _mem(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::RW, _addr),
       _reg(reinterpret_cast<HostHpetRegister*>(_mem.virt())), _usable_timers(0) {
     bool legacy_only = force_legacy;
-    LOG(Logging::TIMER_DETAIL,
-        Serial::get() << "TIMER: HPET at " << fmt(_addr, "p") << " -> "
-                                           << fmt(_mem.virt(), "p") << "\n");
+    LOG(TIMER_DETAIL, "TIMER: HPET at " << fmt(_addr, "p") << " -> " << fmt(_mem.virt(), "p") << "\n");
 
     // Check for old AMD HPETs and go home. :)
     uint8_t rev = _reg->cap & 0xFF;
     uint16_t vendor = _reg->cap >> 16;
-    LOG(Logging::TIMER_DETAIL,
-        Serial::get() << "TIMER: HPET vendor " << fmt(vendor, "#0x", 4)
-                      << " revision " << fmt(rev, "#0x", 2) << ":"
-                      << ((_reg->cap & LEG_RT_CAP) ? " LEGACY" : "")
-                      << ((_reg->cap & BIT64_CAP) ? " 64BIT" : " 32BIT") << "\n");
+    LOG(TIMER_DETAIL, "TIMER: HPET" << " vendor " << fmt(vendor, "#0x", 4)
+                                    << " revision " << fmt(rev, "#0x", 2) << ":"
+                                    << ((_reg->cap & LEG_RT_CAP) ? " LEGACY" : "")
+                                    << ((_reg->cap & BIT64_CAP) ? " 64BIT" : " 32BIT") << "\n");
     switch(vendor) {
         case 0x8086: // Intel
             // Everything OK.
             break;
         case 0x4353: // AMD
             if(rev < 0x10) {
-                LOG(Logging::TIMER,
-                    Serial::get() << "TIMER: It's one of those old broken AMD HPETs. Use legacy mode.\n");
+                LOG(TIMER, "TIMER: It's one of those old broken AMD HPETs. Use legacy mode.\n");
                 legacy_only = true;
             }
             break;
         default:
             // Before you blindly enable features for other HPETs, check
             // Linux and FreeBSD source for quirks!
-            LOG(Logging::TIMER,
-                Serial::get() << "TIMER: Unknown HPET vendor ID. We only trust legacy mode.\n");
+            LOG(TIMER, "TIMER: Unknown HPET vendor ID. We only trust legacy mode.\n");
             legacy_only = true;
             break;
     }
@@ -120,19 +112,18 @@ HostHPET::HostHPET(bool force_legacy)
 
     // Figure out how many HPET timers are usable
     uint32_t cap = _reg->cap, config = _reg->config, period = _reg->period;
-    LOG(Logging::TIMER_DETAIL,
-        Serial::get() << "TIMER: HPET: cap " << fmt(cap, "#x")
-                      << " config " << fmt(config, "#x") << " period " << period << "\n");
+    LOG(TIMER_DETAIL, "TIMER: HPET:" << " cap " << fmt(cap, "#x")
+                                     << " config " << fmt(config, "#x")
+                                     << " period " << period << "\n");
     uint timers = ((_reg->cap >> 8) & 0x1F) + 1;
 
     uint32_t combined_irqs = ~0U;
     for(uint i = 0; i < timers; i++) {
-        LOG(Logging::TIMER_DETAIL,
-            Serial::get() << "TIMER: HPET Timer[" << i << "]:"
+        LOG(TIMER_DETAIL, "TIMER: HPET Timer[" << i << "]:"
                           << " config " << fmt(_reg->timer[i].config, "#x")
                           << " int " << fmt(_reg->timer[i].int_route, "#x") << "\n");
         if((_reg->timer[i].config | _reg->timer[i].int_route) == 0) {
-            LOG(Logging::TIMER, Serial::get() << "TIMER:\tTimer[" << i << "] seems bogus. Ignore.\n");
+            LOG(TIMER, "TIMER:\tTimer[" << i << "] seems bogus. Ignore.\n");
             continue;
         }
 
@@ -150,8 +141,7 @@ HostHPET::HostHPET(bool force_legacy)
     // TODO This overcompensates and is suboptimal. We need backtracking search. It's a bin packing problem.
     uint irqs = Math::popcount(combined_irqs);
     if(irqs < _usable_timers) {
-        LOG(Logging::TIMER_DETAIL,
-            Serial::get() << "TIMER: Reducing usable timers from " << _usable_timers << " to " << irqs
+        LOG(TIMER_DETAIL, "TIMER: Reducing usable timers from " << _usable_timers << " to " << irqs
                           << ". Combined IRQ mask is " << fmt(combined_irqs, "#x") << "\n");
         _usable_timers = irqs;
     }
@@ -161,16 +151,15 @@ HostHPET::HostHPET(bool force_legacy)
         throw Exception(E_NOT_FOUND, "No suitable HPET timer");
 
     if(legacy_only) {
-        LOG(Logging::TIMER, Serial::get() << "TIMER: Use one timer in legacy mode.\n");
+        LOG(TIMER, "TIMER: Use one timer in legacy mode.\n");
         _usable_timers = 1;
     }
     else
-        LOG(Logging::TIMER, Serial::get() << "TIMER: Found " << _usable_timers << " usable timers.\n");
+        LOG(TIMER, "TIMER: Found " << _usable_timers << " usable timers.\n");
 
     if(_usable_timers > CPU::count()) {
         _usable_timers = CPU::count();
-        LOG(Logging::TIMER, Serial::get() << "TIMER: More timers than CPUs. (Good!)"
-                                          << " Use only " << _usable_timers << " timers.\n");
+        LOG(TIMER, "TIMER: More timers than CPUs. " << " Use only " << _usable_timers << " timers.\n");
     }
 
     for(uint i = 0; i < _usable_timers; i++) {
@@ -188,7 +177,7 @@ HostHPET::HostHPET(bool force_legacy)
 
     // HPET configuration
     _freq = 1000000000000000ULL / _reg->period;
-    LOG(Logging::TIMER, Serial::get() << "TIMER: HPET ticks with " << _freq << " HZ.\n");
+    LOG(TIMER, "TIMER: HPET ticks with " << _freq << " HZ.\n");
 }
 
 /**

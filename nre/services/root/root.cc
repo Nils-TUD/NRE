@@ -137,16 +137,12 @@ int main() {
     adjust_memory_map();
     const Hip &hip = Hip::get();
 
-    LOG(Logging::PLATFORM,
-        Serial::get() << "Welcome to NRE rev " << NRE_REV << " built with " << COMPILER_NAME << "\n");
-    LOG(Logging::PLATFORM,
-        Serial::get() << "Hip checksum is " << (hip.is_valid() ? "valid" : "not valid") << "\n");
-    LOG(Logging::PLATFORM,
-        Serial::get() << "SEL: " << hip.cfg_cap << ", EXC: " << hip.cfg_exc
-                      << ", VMI: " << hip.cfg_vm << ", GSI: " << hip.cfg_gsi << "\n");
-    LOG(Logging::PLATFORM,
-        Serial::get() << "CPU runs @ " << (Hip::get().freq_tsc / 1000) << " Mhz, bus @ "
-                      << (Hip::get().freq_bus / 1000) << " Mhz\n");
+    LOG(PLATFORM, "Welcome to NRE rev " << NRE_REV << " built with " << COMPILER_NAME << "\n");
+    LOG(PLATFORM, "Hip checksum is " << (hip.is_valid() ? "valid" : "not valid") << "\n");
+    LOG(PLATFORM, "SEL: " << hip.cfg_cap << ", EXC: " << hip.cfg_exc
+                          << ", VMI: " << hip.cfg_vm << ", GSI: " << hip.cfg_gsi << "\n");
+    LOG(PLATFORM, "CPU runs @ " << (Hip::get().freq_tsc / 1000) << " Mhz, bus @ "
+                                << (Hip::get().freq_bus / 1000) << " Mhz\n");
     // add all available memory
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // FIXME: why can't we use the memory above 4G?
@@ -166,14 +162,13 @@ int main() {
 
     // now allocate the available memory from the hypervisor
     PhysicalMemory::map_all();
-    LOG(Logging::MEM_MAP, Serial::get() << "Virtual memory:\n" << VirtualMemory::regions());
-    LOG(Logging::MEM_MAP, Serial::get() << "Physical memory:\n" << PhysicalMemory::regions());
+    LOG(MEM_MAP, "Virtual memory:\n" << VirtualMemory::regions());
+    LOG(MEM_MAP, "Physical memory:\n" << PhysicalMemory::regions());
 
-    LOG(Logging::CPUS, Serial::get() << "CPUs:\n");
+    LOG(CPUS, "CPUs:\n");
     for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
-        LOG(Logging::CPUS,
-            Serial::get() << "\tpackage=" << it->package() << ", core=" << it->core()
-                          << ", thread=" << it->thread() << ", flags=" << it->flags() << "\n");
+        LOG(CPUS, "\tpackage=" << it->package() << ", core=" << it->core()
+                               << ", thread=" << it->thread() << ", flags=" << it->flags() << "\n");
     }
 
     // now we can use dlmalloc (map-pt created and available memory added to pool)
@@ -230,14 +225,13 @@ int main() {
         }
     }
 
-    LOG(Logging::MEM_MAP, Serial::get() << "Memory map:\n");
+    LOG(MEM_MAP, "Memory map:\n");
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-        LOG(Logging::MEM_MAP,
-            Serial::get() << "\taddr=" << fmt(it->addr, "#x") << ", size=" << fmt(it->size, "#x")
-                          << ", type=" << it->type << ", aux=" << fmt(it->aux, "p"));
+        LOG(MEM_MAP, "\taddr=" << fmt(it->addr, "#x") << ", size=" << fmt(it->size, "#x")
+                               << ", type=" << it->type << ", aux=" << fmt(it->aux, "p"));
         if(it->aux)
-            LOG(Logging::MEM_MAP, Serial::get() << " (" << it->cmdline() << ")");
-        LOG(Logging::MEM_MAP, Serial::get() << '\n');
+            LOG(MEM_MAP, " (" << it->cmdline() << ")");
+        LOG(MEM_MAP, '\n');
     }
 
     mng = new ChildManager();

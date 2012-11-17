@@ -103,9 +103,7 @@ size_t PCI::find_cap(BDF bdf, cap_type id) {
     catch(...) {
         // ignore
     }
-    LOG(nre::Logging::PCI,
-        nre::Serial::get() << "Unable to find cap " << fmt(id, "#x")
-                           << " for bdf " << bdf << "\n");
+    LOG(PCI, "Unable to find cap " << fmt(id, "#x") << " for bdf " << bdf << "\n");
     return 0;
 }
 
@@ -125,9 +123,7 @@ size_t PCI::find_extended_cap(BDF bdf, cap_type id) {
     catch(...) {
         // ignore
     }
-    LOG(nre::Logging::PCI,
-        nre::Serial::get() << "Unable to find extended cap " << fmt(id, "#x")
-                           << " for bdf " << bdf << "\n");
+    LOG(PCI, "Unable to find extended cap " << fmt(id, "#x") << " for bdf " << bdf << "\n");
     return 0;
 }
 
