@@ -23,7 +23,7 @@ namespace nre {
 char OStream::_hexchars_big[]     = "0123456789ABCDEF";
 char OStream::_hexchars_small[]   = "0123456789abcdef";
 
-OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list ap)
+OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list *ap)
         : _base(10), _flags(0), _pad(0), _prec(-1), _end() {
     // read flags
     bool readFlags = true;
@@ -58,7 +58,7 @@ OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list ap)
     if(all) {
         // read pad-width
         if(*fmt == '*') {
-            _pad = va_arg(ap, ulong);
+            _pad = va_arg(*ap, ulong);
             fmt++;
         }
         else {
@@ -71,7 +71,7 @@ OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list ap)
         // read precision
         if(*fmt == '.') {
             if(*++fmt == '*') {
-                _prec = va_arg(ap, ulong);
+                _prec = va_arg(*ap, ulong);
                 fmt++;
             }
             else {
@@ -125,7 +125,13 @@ OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list ap)
     _end = fmt;
 }
 
-void OStream::vwritef(const char *fmt, va_list ap) {
+void OStream::vwritef(const char *fmt, va_list ap0) {
+    // depending on the implementation of va_list, we might not be able to get a pointer to a
+    // va_list that has been passed in as a function parameter. as a workaround we use va_copy
+    // to copy the arguments to a local va_list, so that we can pass a pointer to that to a
+    // function.
+    va_list ap;
+    va_copy(ap, ap0);
     while(1) {
         char c;
         // wait for a '%'
@@ -137,7 +143,7 @@ void OStream::vwritef(const char *fmt, va_list ap) {
         }
 
         // read format parameter
-        FormatParams p(fmt, true, ap);
+        FormatParams p(fmt, true, &ap);
         fmt = p.end();
 
         switch(c = *fmt++) {

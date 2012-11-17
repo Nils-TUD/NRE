@@ -119,7 +119,7 @@ class OStream {
             POINTER     = 1 << 10,
         };
 
-        explicit FormatParams(const char *fmt, bool all, va_list ap);
+        explicit FormatParams(const char *fmt, bool all, va_list *ap);
 
         const char *end() const {
             return _end;
@@ -248,7 +248,7 @@ public:
     template<typename T>
     OStream & operator<<(const Format<T>& fmt) {
         va_list ap{};
-        FormatParams p(fmt.fmt(), false, ap);
+        FormatParams p(fmt.fmt(), false, &ap);
         p.padding(fmt.padding());
         p.precision(fmt.precision());
         FormatImpl<T>().write(*this, p, fmt.value());
