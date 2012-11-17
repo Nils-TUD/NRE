@@ -42,12 +42,12 @@ public:
 
 private:
     static const value_type BAR0            = 4;
-    static const value_type MAX_BAR     = 6;
+    static const value_type MAX_BAR         = 6;
     static const value_type BAR_TYPE_MASK   = 0x6;
     static const value_type BAR_TYPE_32B    = 0x0;
     static const value_type BAR_TYPE_64B    = 0x4;
     static const value_type BAR_IO          = 0x1;
-    static const value_type BAR_IO_MASK = 0xFFFFFFFC;
+    static const value_type BAR_IO_MASK     = 0xFFFFFFFC;
     static const value_type BAR_MEM_MASK    = 0xFFFFFFF0;
     static const cap_type CAP_MSI           = 0x05U;
     static const cap_type CAP_MSIX          = 0x11U;
