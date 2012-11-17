@@ -227,8 +227,10 @@ int main() {
 
     LOG(MEM_MAP, "Memory map:\n");
     for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-        LOG(MEM_MAP, "\taddr=" << fmt(it->addr, "#x") << ", size=" << fmt(it->size, "#x")
-                               << ", type=" << it->type << ", aux=" << fmt(it->aux, "p"));
+        LOG(MEM_MAP, "\t" << "addr=" << fmt(it->addr, "p")
+                          << " size=" << fmt(it->size, "#0x", 10)
+                          << " type=" << fmt(it->type, "+")
+                          << " aux=" << fmt(it->aux, "p"));
         if(it->aux)
             LOG(MEM_MAP, " (" << it->cmdline() << ")");
         LOG(MEM_MAP, '\n');
