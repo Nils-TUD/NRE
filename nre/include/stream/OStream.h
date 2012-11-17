@@ -64,11 +64,11 @@ namespace nre {
  * decided to interpret some formatting parameters as hints. Since the base will only be considered
  * for unsigned values, fmt(0x1234, "x") will print 0x1234 as an unsigned integer in base 16.
  * Similarly, when passing "+" or " " it will be printed as signed, even when its unsigned. And
- * finally, "p" forces a print as a pointer (xxxx:xxxx) even when its a some unsigned type or char*.
+ * finally, "p" forces a print as a pointer (xxxx:xxxx) even when its some unsigned type or char*.
  *
  * The syntax of writef() and fmt() is the same with the only difference that in fmt() it does not
  * start with '%' (there is exactly one thing to format anyway) and has the above mentioned
- * limitations). Thus it is described together here.
+ * limitations. Thus it is described together here.
  *
  * The basic syntax is: [flags][padding][.precision][length][type]
  * Where [flags] is any combination of:
@@ -79,7 +79,7 @@ namespace nre {
  * - '0': use zeros for padding instead of spaces
  *
  * [padding] and [.precision] is ignored in fmt(). It can be either '*' which expects the number of
- * characters as an argument. Or [0-9]+. Precision expect a '.' before that.
+ * characters as an argument. Or [0-9]+. Precision expects a '.' before that.
  *
  * [length] is ignored in fmt(). It can be:
  * - 'l': for long
