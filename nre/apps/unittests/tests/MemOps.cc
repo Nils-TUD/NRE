@@ -60,7 +60,7 @@ static void do_test(const char *name, memop_func func) {
     void *buf = malloc(AREA_SIZE);
 
     {
-        WVPRINTF("Testing aligned %s with %zu bytes", name, AREA_SIZE);
+        WVPRINT("Testing aligned " << name << " with " << AREA_SIZE << " bytes");
         AvgProfiler prof(TEST_COUNT);
         for(uint i = 0; i < TEST_COUNT; ++i) {
             prof.start();
@@ -68,12 +68,12 @@ static void do_test(const char *name, memop_func func) {
             prof.stop();
         }
         WVPERF(prof.avg(), " cycles");
-        WVPRINTF("min: %Lu", prof.min());
-        WVPRINTF("max: %Lu", prof.max());
+        WVPRINT("min: " << prof.min());
+        WVPRINT("max: " << prof.max());
     }
 
     {
-        WVPRINTF("Testing unaligned %s with %zu bytes", name, AREA_SIZE);
+        WVPRINT("Testing unaligned " << name << " with " << AREA_SIZE << " bytes");
         AvgProfiler prof(TEST_COUNT);
         for(uint i = 0; i < TEST_COUNT; ++i) {
             prof.start();
@@ -81,8 +81,8 @@ static void do_test(const char *name, memop_func func) {
             prof.stop();
         }
         WVPERF(prof.avg(), " cycles");
-        WVPRINTF("min: %Lu", prof.min());
-        WVPRINTF("max: %Lu", prof.max());
+        WVPRINT("min: " << prof.min());
+        WVPRINT("max: " << prof.max());
     }
 
     free(buf);

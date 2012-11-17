@@ -136,19 +136,19 @@ static void test_perf() {
     {
         AvgProfiler prof(tries);
         perform_test_unnested(prof);
-        WVPRINTF("Without nesting:");
+        WVPRINT("Without nesting:");
         WVPERF(prof.avg(), "cycles");
-        WVPRINTF("min: %Lu", prof.min());
-        WVPRINTF("max: %Lu", prof.max());
+        WVPRINT("min: " << prof.min());
+        WVPRINT("max: " << prof.max());
     }
 
     size_t sizes[] = {1, 2, 4, 8, 16, 32, 64, 128};
     for(size_t i = 0; i < ARRAY_SIZE(sizes); ++i) {
         AvgProfiler prof(tries);
         perform_test(sizes[i], prof);
-        WVPRINTF("Using %zu words:", sizes[i]);
+        WVPRINT("Using " << sizes[i] << " words:");
         WVPERF(prof.avg(), "cycles");
-        WVPRINTF("min: %Lu", prof.min());
-        WVPRINTF("max: %Lu", prof.max());
+        WVPRINT("min: " << prof.min());
+        WVPRINT("max: " << prof.max());
     }
 }

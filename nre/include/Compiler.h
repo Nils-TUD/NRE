@@ -23,6 +23,7 @@
 #define NOINLINE                __attribute__ ((noinline))
 #define INIT_PRIORITY(X)        __attribute__ ((init_priority((X))))
 #define WEAK                    __attribute__ ((weak))
+#define FMT_PRINTF(X, Y)        __attribute__ ((format (printf, (X), (Y))))
 #define EXPECT_FALSE(X)         __builtin_expect(!!(X), 0)
 #define EXPECT_TRUE(X)          __builtin_expect(!!(X), 1)
 #define UNUSED                  __attribute__ ((unused))

@@ -27,24 +27,6 @@ namespace nre {
 class OStringStream : public OStream {
 public:
     /**
-     * Convenience method to write to <dst> in given format
-     *
-     * @param dst the string
-     * @param max the size of <dst>
-     * @param fmt the format
-     */
-    static void format(char *dst, size_t max, const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        vformat(dst, max, fmt, ap);
-        va_end(ap);
-    }
-    static void vformat(char *dst, size_t max, const char *fmt, va_list ap) {
-        OStringStream os(dst, max);
-        os.vwritef(fmt, ap);
-    }
-
-    /**
      * Constructor
      *
      * @param dst the string

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <Compiler.h>
 #include <stdarg.h>
 
 namespace nre {
@@ -310,10 +311,11 @@ public:
      * Puts the given arguments formatted according to <fmt> into the stream.
      * The use of this function is STRONGLY DISCOURAGED. Please use the stream operators with
      * fmt() to apply formatting parameters. See the comment of OStream for further explanations.
+     * To give you at least the illusion of safety, FMT_PRINTF is used to warn you about errors ;)
      *
      * @param fmt the formatting specification
      */
-    void writef(const char *fmt, ...) {
+    FMT_PRINTF(2, 3) void writef(const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
         vwritef(fmt, ap);

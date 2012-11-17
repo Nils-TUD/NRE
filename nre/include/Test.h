@@ -38,8 +38,8 @@ struct TestCase {
 
 // Standard WVTEST API
 #define WVSTART(title) \
-    Serial::get().writef("Testing \"%s\" in %s:%d:\n", \
-                         title, nre::test::WvTest::shortpath(__FILE__), __LINE__);
+    Serial::get() << "Testing \"" << title << "\" in " << nre::test::WvTest::shortpath(__FILE__) \
+                  << ":" << __LINE__ << ":\n");
 #define WVPASS(cond)    \
     ({ nre::test::WvTest __t(__FILE__, __LINE__, # cond); __t.check(cond); })
 #define WVNOVA(novaerr) \
@@ -71,9 +71,9 @@ struct TestCase {
     ({ nre::test::WvTest __t(__FILE__, __LINE__, # val);  __t.show(val); })
 #define WVSHOWHEX(val)          \
     ({ nre::test::WvTest __t(__FILE__, __LINE__, # val);  __t.show_hex(val); })
-#define WVPRINTF(fmt, ...)      \
-    Serial::get().writef("! %s:%d " fmt " ok\n", \
-                         nre::test::WvTest::shortpath(__FILE__), __LINE__, ## __VA_ARGS__)
+#define WVPRINT(expr)           \
+    Serial::get() << "! " << nre::test::WvTest::shortpath(__FILE__) << ":" << __LINE__ \
+                  << " " << expr << " ok\n";
 
 class WvTest {
     const char *file, *condstr;
@@ -152,19 +152,19 @@ class WvTest {
     }
 
     static void stringify(char *buf, unsigned size, ullong val) {
-        OStringStream::format(buf, size, "%Lu", val);
+        OStringStream(buf, size) << val;
     }
 
     static void stringify(char *buf, unsigned size, ulong val) {
-        OStringStream::format(buf, size, "%lu", val);
+        OStringStream(buf, size) << val;
     }
 
     static void stringify(char *buf, unsigned size, unsigned val) {
-        OStringStream::format(buf, size, "%u", val);
+        OStringStream(buf, size) << val;
     }
 
     static void stringify(char *buf, unsigned size, int val) {
-        OStringStream::format(buf, size, "%d", val);
+        OStringStream(buf, size) << val;
     }
 
     static void stringify(char *buf, unsigned size, Crd crd) {
@@ -173,23 +173,23 @@ class WvTest {
     }
 
     static void stringifyx(char *buf, unsigned size, ullong val) {
-        OStringStream::format(buf, size, "0x%Lx", val);
+        OStringStream(buf, size) << fmt(val, "#x");
     }
 
     static void stringifyx(char *buf, unsigned size, ulong val) {
-        OStringStream::format(buf, size, "0x%lx", val);
+        OStringStream(buf, size) << fmt(val, "#x");
     }
 
     static void stringifyx(char *buf, unsigned size, unsigned val) {
-        OStringStream::format(buf, size, "0x%x", val);
+        OStringStream(buf, size) << fmt(val, "#x");
     }
 
     static void stringifyx(char *buf, unsigned size, int val) {
-        OStringStream::format(buf, size, "0x%x", val);
+        OStringStream(buf, size) << fmt(val, "#x");
     }
 
     static void stringifyx(char *buf, unsigned size, void *val) {
-        OStringStream::format(buf, size, "%p", val);
+        OStringStream(buf, size) << val;
     }
 
 public:

@@ -54,6 +54,6 @@ static void test_delegate() {
     }
 
     WVPERF(prof.avg(), "cycles");
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
 }

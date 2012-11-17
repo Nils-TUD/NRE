@@ -108,7 +108,7 @@ static Sm done(0);
 static void view0(void*) {
     char title[64];
     size_t subcon = Thread::current()->get_tls<word_t>(Thread::TLS_PARAM);
-    OStringStream::format(title, sizeof(title), "Test-%zu", subcon);
+    OStringStream(title, sizeof(title)) << "Test-" << subcon;
     ConsoleSession conssess(*conscon, subcon, title);
     ConsoleStream view(conssess, 0);
     int i = 0;
@@ -146,6 +146,10 @@ int main() {
     BitField<128> bf;
     bf.set(3), bf.set(12), bf.set(14);
     ser << bf << "\n";
+
+    char mystr[32];
+    OStringStream(mystr, sizeof(mystr)) << "foobar";
+    ser << mystr << "\n";
 
     DMADescList<3> dma;
     dma.push(DMADesc(10, 20));
