@@ -140,6 +140,14 @@ static void tick_thread(void*) {
 
 int main() {
     auto &ser = Serial::get();
+
+    try {
+        VTHROW(Exception, E_EXISTS, "foobar " << 0x1234 << " and more");
+    }
+    catch(const Exception &e) {
+        ser << e << "\n";
+    }
+
     ser << "'" << fmt(0x1234U, "#x", 10) << "' '" << fmt(0xFFFFU, "-b", 20) << "'\n";
     ser << fmt<unsigned>(0x1234, "#x") << "\n";
 

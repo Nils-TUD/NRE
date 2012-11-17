@@ -25,7 +25,9 @@ namespace nre {
 
 class DataSpaceException : public Exception {
 public:
-    DEFINE_EXCONSTRS(DataSpaceException)
+    explicit DataSpaceException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 class ClientSession;

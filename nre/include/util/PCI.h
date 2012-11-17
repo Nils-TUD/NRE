@@ -27,7 +27,9 @@ namespace nre {
 
 class PCIException : public Exception {
 public:
-    DEFINE_EXCONSTRS(PCIException)
+    explicit PCIException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**

@@ -66,8 +66,10 @@ public:
 
     void init(DataSpace *ctrlds, DataSpace *data, size_t drive) {
         size_t ctrl = drive / Storage::MAX_DRIVES;
-        if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
-            throw Exception(E_ARGS_INVALID, 64, "Controller/drive (%zu,%zu) does not exist", ctrl, drive);
+        if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive)) {
+            VTHROW(Exception, E_ARGS_INVALID,
+                   "Controller/drive (" << ctrl << "," << drive << ") does not exist");
+        }
         if(_ctrlds)
             throw Exception(E_EXISTS, "Already initialized");
         _ctrlds = ctrlds;
@@ -155,15 +157,16 @@ void StorageService::portal(capsel_t pid) {
                 size_t size = dma.bytecount();
                 size_t count = size / sess->params().sector_size;
                 if(size == 0 || (size & (sess->params().sector_size - 1)))
-                    throw Exception(E_ARGS_INVALID, 64, "Invalid size (%zu)", size);
+                    VTHROW(Exception, E_ARGS_INVALID, "Invalid size (" << size << ")");
                 if(sector >= sess->params().sectors) {
-                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-                                    sector,
-                                    sess->params().sectors - 1);
+                    VTHROW(Exception, E_ARGS_INVALID,
+                           "Sector " << sector << " is invalid"
+                                     << " (available: 0.." << sess->params().sectors - 1 << ")");
                 }
                 if(sector + count > sess->params().sectors) {
-                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-                                    sector + count - 1, sess->params().sectors - 1);
+                    VTHROW(Exception, E_ARGS_INVALID,
+                           "Sector " << (sector + count - 1) << " is invalid"
+                                     << " (available: 0.." << sess->params().sectors - 1 << ")");
                 }
 
                 if(cmd == Storage::READ) {

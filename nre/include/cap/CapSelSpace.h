@@ -26,7 +26,9 @@ namespace nre {
 
 class CapException : public Exception {
 public:
-    DEFINE_EXCONSTRS(CapException)
+    explicit CapException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**

@@ -31,7 +31,9 @@ namespace nre {
 
 class ChildMemoryException : public Exception {
 public:
-    DEFINE_EXCONSTRS(ChildMemoryException)
+    explicit ChildMemoryException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 class OStream;
@@ -230,8 +232,8 @@ public:
         e = (e + align - 1) & ~(align - 1);
         // check if the size fits below the kernel
         if(e + size < e || e + size > ExecEnv::KERNEL_START) {
-            throw ChildMemoryException(E_CAPACITY, 64,
-                                       "Unable to allocate %zu bytes in childs address space", size);
+            VTHROW(ChildMemoryException, E_CAPACITY,
+                   "Unable to allocate " << size << " bytes in childs address space");
         }
         return e;
     }

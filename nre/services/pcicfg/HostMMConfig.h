@@ -113,8 +113,8 @@ private:
             if(it->contains(bdf, offset))
                 return &*it;
         }
-        throw nre::Exception(nre::E_NOT_FOUND, 64, "Unable to find bdf %#x+%#x in MMConfig",
-                             bdf.value(), offset);
+        VTHROW(Exception, E_NOT_FOUND,
+               "Unable to find " << bdf << "+" << nre::fmt(offset, "#x") << " in MMConfig");
     }
 
     nre::SList<MMConfigRange> _ranges;

@@ -42,7 +42,9 @@ class SessionIterator;
  */
 class ServiceException : public Exception {
 public:
-    DEFINE_EXCONSTRS(ServiceException)
+    explicit ServiceException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**
@@ -186,7 +188,7 @@ public:
     T *get_session_by_id(size_t id) {
         T *sess = static_cast<T*>(rcu_dereference(_sessions[id]));
         if(!sess)
-            throw ServiceException(E_ARGS_INVALID, 32, "Session %zu does not exist", id);
+            VTHROW(ServiceException, E_ARGS_INVALID, "Session " << id << " does not exist");
         return sess;
     }
 

@@ -75,7 +75,7 @@ Gsi *PCI::get_gsi(BDF bdf, uint nr, bool /*level*/, void *msix_table) {
     // normal GSIs -  ask atare
     value_type pin = conf_read(bdf, 0xf) >> 8;
     if(!pin)
-        throw PCIException(E_NOT_FOUND, 32, "No IRQ PINs connected on BDF %#x", bdf);
+        VTHROW(PCIException, E_NOT_FOUND, "No IRQ PINs connected on " << bdf);
 
     uint gsi;
     try {

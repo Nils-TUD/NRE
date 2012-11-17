@@ -25,7 +25,9 @@ namespace nre {
 
 class TimeoutListException : public Exception {
 public:
-    DEFINE_EXCONSTRS(TimeoutListException)
+    explicit TimeoutListException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**

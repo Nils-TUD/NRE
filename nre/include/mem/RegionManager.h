@@ -24,7 +24,9 @@ namespace nre {
 
 class RegionManagerException : public Exception {
 public:
-    DEFINE_EXCONSTRS(RegionManagerException)
+    explicit RegionManagerException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 class OStream;
@@ -64,8 +66,8 @@ public:
     uintptr_t alloc(size_t size, size_t align = 1) {
         Region *r = get(size, align);
         if(!r) {
-            throw RegionManagerException(E_CAPACITY, 64,
-                                         "Unable to allocate %zu bytes aligned to %u", size, align);
+            VTHROW(RegionManagerException, E_CAPACITY,
+                   "Unable to allocate " << size << " bytes aligned to " << align);
         }
         uintptr_t org = r->addr;
         uintptr_t start = (r->addr + align - 1) & ~(align - 1);
@@ -85,8 +87,10 @@ public:
 
     void alloc_region(uintptr_t addr, size_t size) {
         Region *r = get(addr, size, true);
-        if(!r)
-            throw RegionManagerException(E_EXISTS, 64, "Region %p..%p not found", addr, addr + size);
+        if(!r) {
+            VTHROW(RegionManagerException, E_EXISTS,
+                   "Region " << fmt(addr, "p") << ".." << fmt(addr + size, "p") << " not found");
+        }
         remove_from(r, addr, size);
     }
 

@@ -41,8 +41,10 @@ BDF HostPCIConfig::search_device(value_type theclass, value_type subclass,
             }
         }
     }
-    throw Exception(E_NOT_FOUND, 64, "Unable to find class %#x subclass %#x inst %#x",
-                    theclass, subclass, orginst);
+    VTHROW(Exception, E_NOT_FOUND,
+           "Unable to find class " << fmt(theclass, "#x") << " subclass "
+                                   << fmt(subclass, "#x") << " inst "
+                                   << fmt(orginst, "#x"));
 }
 
 BDF HostPCIConfig::search_bridge(value_type dst) {
@@ -67,5 +69,5 @@ BDF HostPCIConfig::search_bridge(value_type dst) {
                 return bdf;
         }
     }
-    throw Exception(E_NOT_FOUND, 32, "Unable to find bridge %#x", dst);
+    VTHROW(Exception, E_NOT_FOUND, "Unable to find bridge " << fmt(dst, "#x"));
 }

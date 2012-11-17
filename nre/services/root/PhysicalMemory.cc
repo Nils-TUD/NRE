@@ -35,8 +35,9 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
     if(_desc.phys() != 0) {
         _desc.phys(Math::round_dn<uintptr_t>(_desc.phys(), ExecEnv::PAGE_SIZE));
         if(!PhysicalMemory::can_map(_desc.phys(), _desc.size(), flags)) {
-            throw DataSpaceException(E_ARGS_INVALID, 64, "Unable to map physical memory %p..%p",
-                                     _desc.phys(), _desc.phys() + _desc.size());
+            VTHROW(DataSpaceException, E_ARGS_INVALID,
+                   "Unable to map physical memory " << fmt(_desc.phys(), "p") << ".."
+                                                    << fmt(_desc.phys() + _desc.size(), "p"));
         }
         _desc.virt(VirtualMemory::alloc(_desc.size()));
         _desc.origin(_desc.phys());
@@ -56,7 +57,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 PhysicalMemory::RootDataSpace::RootDataSpace(capsel_t pid)
     : _desc(), _map(0, true), _unmap(0, true), _next() {
     // if we want to join a dataspace that does not exist in the root-task, its always an error
-    throw DataSpaceException(E_NOT_FOUND, 32, "Dataspace %u not found in root", pid);
+    VTHROW(DataSpaceException, E_NOT_FOUND, "Dataspace " << pid << " not found in root");
 }
 
 PhysicalMemory::RootDataSpace::~RootDataSpace() {

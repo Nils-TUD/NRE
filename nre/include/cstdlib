@@ -15,5 +15,6 @@
 EXTERN_C NORETURN void abort();
 EXTERN_C NORETURN void exit(int x);
 EXTERN_C NORETURN void thread_exit();
-EXTERN_C void* malloc(size_t size);
+EXTERN_C void *malloc(size_t size);
+EXTERN_C void *realloc(void *ptr, size_t new_size);
 EXTERN_C void free(void* p);

@@ -31,7 +31,7 @@ static Config *find(BDF bdf, size_t offset) {
         return pcicfg;
     if(mmcfg && mmcfg->contains(bdf, offset))
         return mmcfg;
-    throw Exception(E_NOT_FOUND, 32, "BDF %#x+%#x not found", bdf, offset);
+    VTHROW(Exception, E_NOT_FOUND, bdf << "+" << fmt(offset, "#x") << " not found");
 }
 
 PORTAL static void portal_pcicfg(capsel_t) {

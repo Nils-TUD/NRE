@@ -317,8 +317,10 @@ void ChildManager::Portals::startup(capsel_t pid) {
         if(c->_started) {
             uintptr_t stack = uf->rsp & ~(ExecEnv::PAGE_SIZE - 1);
             ChildMemory::DS *ds = c->reglist().find_by_addr(stack);
-            if(!ds)
-                throw ChildMemoryException(E_NOT_FOUND, 64, "Dataspace not found for stack @ %p", stack);
+            if(!ds) {
+                VTHROW(ChildMemoryException, E_NOT_FOUND,
+                       "Dataspace not found for stack @ " << fmt(stack, "p"));
+            }
             uf->rip = *reinterpret_cast<word_t*>(
                 ds->origin(stack) + (uf->rsp & (ExecEnv::PAGE_SIZE - 1)) + sizeof(word_t));
             uf->mtd = Mtd::RIP_LEN;
@@ -471,10 +473,10 @@ void ChildManager::Portals::gsi(capsel_t pid) {
             }
 
             if(gsi >= Hip::MAX_GSIS)
-                throw Exception(E_ARGS_INVALID, 32, "Invalid GSI %u", gsi);
+                VTHROW(Exception, E_ARGS_INVALID, "Invalid GSI " << gsi);
             // make sure that just the owner can release it
             if(op == Gsi::RELEASE && !c->gsis().is_set(gsi))
-                throw Exception(E_ARGS_INVALID, 32, "Can't release GSI %u. Not owner", gsi);
+                VTHROW(Exception, E_ARGS_INVALID, "Can't release GSI " << gsi << ". Not owner");
             if(c->_gsi_next == Hip::MAX_GSIS)
                 throw Exception(E_CAPACITY, "No free GSI slots");
 
@@ -729,13 +731,14 @@ void ChildManager::switch_to(UtcbFrameRef &uf, Child *c) {
             dst = c->reglist().find(dstsel);
             LOG(DATASPACES, "Child '" << c->cmdline() << "' switches:\n\t" << src->desc()
                                       << "\n\t" << dst->desc() << "\n");
-            if(!src || !dst)
-                throw Exception(E_ARGS_INVALID, 64, "Unable to switch. DS %u or %u not found", srcsel,
-                                dstsel);
+            if(!src || !dst) {
+                VTHROW(Exception, E_ARGS_INVALID,
+                       "Unable to switch. DS " << srcsel << " or " << dstsel << " not found");
+            }
             if(src->desc().size() != dst->desc().size()) {
-                throw Exception(E_ARGS_INVALID, 64,
-                                "Unable to switch non-equal-sized dataspaces (%zu,%zu)",
-                                src->desc().size(), dst->desc().size());
+                VTHROW(Exception, E_ARGS_INVALID,
+                       "Unable to switch non-equal-sized dataspaces (" << src->desc().size() << ","
+                                                                       << dst->desc().size() << ")");
             }
 
             // first revoke the memory to prevent further accesses

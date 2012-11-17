@@ -69,7 +69,7 @@ void Service::destroy_session(capsel_t pid) {
     LOG(SERVICES, "Destroying session " << i << "\n");
     ServiceSession *sess = _sessions[i];
     if(!sess)
-        throw ServiceException(E_NOT_FOUND, 32, "Session %zu does not exist", i);
+        VTHROW(ServiceException, E_NOT_FOUND, "Session " << i << " does not exist");
     remove_session(sess);
 }
 

@@ -42,7 +42,9 @@ OStream &operator<<(OStream &os, const UtcbExcFrameRef &frm);
  */
 class UtcbException : public Exception {
 public:
-    DEFINE_EXCONSTRS(UtcbException)
+    explicit UtcbException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**

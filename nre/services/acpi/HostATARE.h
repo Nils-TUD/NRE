@@ -94,9 +94,8 @@ public:
                 }
             }
         }
-        throw nre::Exception(nre::E_NOT_FOUND, 64,
-                             "ATARE was unable to find GSI for bdf %#x parent %#x pin %u",
-                             bdf, parent_bdf, pin);
+        VTHROW(Exception, E_NOT_FOUND,
+               "ATARE was unable to find GSI for " << bdf << " parent " << parent_bdf << " pin " << pin);
     }
 
 private:

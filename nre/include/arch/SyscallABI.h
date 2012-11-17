@@ -22,7 +22,9 @@ namespace nre {
 
 class SyscallException : public Exception {
 public:
-    DEFINE_EXCONSTRS(SyscallException)
+    explicit SyscallException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 
     virtual OStream& operator<<(OStream& os) const {
         os << "Systemcall failed: " << name() << "(" << code() << ")\n";
