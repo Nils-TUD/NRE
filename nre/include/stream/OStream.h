@@ -46,7 +46,7 @@ class OStream {
             POINTER     = 1 << 10,
         };
 
-        explicit FormatParams(const char *fmt, bool read_length, va_list ap);
+        explicit FormatParams(const char *fmt, bool all, va_list ap);
 
         const char *end() const {
             return _end;
