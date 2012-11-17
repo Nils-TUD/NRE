@@ -26,7 +26,7 @@ using namespace nre;
 static HostPCIConfig *pcicfg;
 static HostMMConfig *mmcfg;
 
-static Config *find(PCIConfig::bdf_type bdf, size_t offset) {
+static Config *find(BDF bdf, size_t offset) {
     if(pcicfg->contains(bdf, offset))
         return pcicfg;
     if(mmcfg && mmcfg->contains(bdf, offset))
@@ -37,7 +37,7 @@ static Config *find(PCIConfig::bdf_type bdf, size_t offset) {
 PORTAL static void portal_pcicfg(capsel_t) {
     UtcbFrameRef uf;
     try {
-        PCIConfig::bdf_type bdf = 0;
+        BDF bdf;
         size_t offset = 0;
         PCIConfig::Command cmd;
         uf >> cmd;
@@ -82,10 +82,10 @@ PORTAL static void portal_pcicfg(capsel_t) {
                 PCIConfig::value_type theclass, subclass, inst;
                 uf >> theclass >> subclass >> inst;
                 uf.finish_input();
-                PCIConfig::bdf_type bdf = pcicfg->search_device(theclass, subclass, inst);
+                BDF bdf = pcicfg->search_device(theclass, subclass, inst);
                 LOG(Logging::PCICFG, Serial::get().writef(
                         "PCIConfig::SEARCH_DEVICE class=%#x subclass=%#x inst=%#x => %02x,%02x,%02x\n",
-                        theclass, subclass, inst, (bdf >> 8) & 0xFF, (bdf >> 3) & 0x1F, bdf & 0x7));
+                        theclass, subclass, inst, bdf.bus(), bdf.device(), bdf.function()));
                 uf << E_SUCCESS << bdf;
             }
             break;
@@ -94,10 +94,10 @@ PORTAL static void portal_pcicfg(capsel_t) {
                 PCIConfig::value_type bridge;
                 uf >> bridge;
                 uf.finish_input();
-                PCIConfig::bdf_type bdf = pcicfg->search_bridge(bridge);
+                BDF bdf = pcicfg->search_bridge(bridge);
                 LOG(Logging::PCICFG, Serial::get().writef(
                         "PCIConfig::SEARCH_BRIDGE bridge=%#x => %02x,%02x,%02x\n",
-                        bridge, (bdf >> 8) & 0xFF, (bdf >> 3) & 0x1F, bdf & 0x7));
+                        bridge, bdf.bus(), bdf.device(), bdf.function()));
                 uf << E_SUCCESS << bdf;
             }
             break;

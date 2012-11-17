@@ -19,16 +19,16 @@
 
 using namespace nre;
 
-HostPCIConfig::bdf_type HostPCIConfig::search_device(value_type theclass, value_type subclass,
+BDF HostPCIConfig::search_device(value_type theclass, value_type subclass,
                                                      uint inst) {
     uint orginst = inst;
-    for(bdf_type bus = 0; bus < 256; bus++) {
+    for(BDF::bdf_type bus = 0; bus < 256; bus++) {
         // skip empty busses
         //if (conf_read(bus << 8, 0) == ~0u) continue;
-        for(bdf_type dev = 0; dev < 32; dev++) {
-            bdf_type maxfunc = 1;
-            for(bdf_type func = 0; func < maxfunc; func++) {
-                bdf_type bdf = (bus << 8) | (dev << 3) | func;
+        for(BDF::bdf_type dev = 0; dev < 32; dev++) {
+            BDF::bdf_type maxfunc = 1;
+            for(BDF::bdf_type func = 0; func < maxfunc; func++) {
+                BDF bdf(bus, dev, func);
                 value_type value = read(bdf, 2 * 4);
                 if(value == ~0U)
                     continue;
@@ -45,12 +45,12 @@ HostPCIConfig::bdf_type HostPCIConfig::search_device(value_type theclass, value_
                     theclass, subclass, orginst);
 }
 
-HostPCIConfig::bdf_type HostPCIConfig::search_bridge(value_type dst) {
+BDF HostPCIConfig::search_bridge(value_type dst) {
     value_type dstbus = dst >> 8;
-    for(bdf_type dev = 0; dev < 32; dev++) {
-        bdf_type maxfunc = 1;
-        for(bdf_type func = 0; func < maxfunc; func++) {
-            bdf_type bdf = (dev << 3) | func;
+    for(BDF::bdf_type dev = 0; dev < 32; dev++) {
+        BDF::bdf_type maxfunc = 1;
+        for(BDF::bdf_type func = 0; func < maxfunc; func++) {
+            BDF bdf(0, dev, func);
             value_type value = read(bdf, 2 * 4);
             if(value == ~0U)
                 continue;

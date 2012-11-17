@@ -62,7 +62,6 @@ class HostATARE {
     };
 
 public:
-    typedef nre::PCIConfig::bdf_type bdf_type;
     typedef nre::PCIConfig::value_type value_type;
 
     explicit HostATARE(HostACPI &acpi, uint debug) : _head(nullptr) {
@@ -84,13 +83,13 @@ public:
             debug_show_routing();
     }
 
-    uint get_gsi(bdf_type bdf, uint8_t pin, bdf_type parent_bdf) {
+    uint get_gsi(nre::BDF bdf, uint8_t pin, nre::BDF parent_bdf) {
         // find the device
         for(NamedRef *dev = _head; dev; dev = dev->next) {
             if(dev->ptr[0] == 0x82 && get_device_bdf(_head, dev) == parent_bdf) {
                 // look for the right entry
                 for(PciRoutingEntry *p = dev->routing; p; p = p->next) {
-                    if((p->adr >> 16) == ((bdf >> 3) & 0x1f) && (pin == p->pin))
+                    if((p->adr >> 16) == bdf.device() && (pin == p->pin))
                         return p->gsi;
                 }
             }
@@ -117,7 +116,7 @@ private:
     static void search_prt_indirect(NamedRef *head, NamedRef *dev, NamedRef *prt);
     static uint get_namedef_value(NamedRef *head, NamedRef *parent, const char *name);
     static NamedRef *search_ref(NamedRef *head, NamedRef *parent, const char *name, bool upstream);
-    static bdf_type get_device_bdf(NamedRef *head, NamedRef *dev);
+    static nre::BDF get_device_bdf(NamedRef *head, NamedRef *dev);
     static NamedRef *add_refs(const uint8_t *table, unsigned len, NamedRef *res = nullptr);
     static void add_routing(NamedRef *head);
 

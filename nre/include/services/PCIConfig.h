@@ -20,6 +20,7 @@
 #include <ipc/Connection.h>
 #include <ipc/PtClientSession.h>
 #include <utcb/UtcbFrame.h>
+#include <util/BDF.h>
 #include <Exception.h>
 #include <CPU.h>
 
@@ -30,7 +31,6 @@ namespace nre {
  */
 class PCIConfig {
 public:
-    typedef uint32_t bdf_type;
     typedef uint32_t value_type;
 
     /**
@@ -53,7 +53,6 @@ private:
  * Represents a session at the PCI configuration service
  */
 class PCIConfigSession : public PtClientSession {
-    typedef PCIConfig::bdf_type bdf_type;
     typedef PCIConfig::value_type value_type;
 
 public:
@@ -73,7 +72,7 @@ public:
      * @return the value
      * @throws Exception if not found
      */
-    value_type read(bdf_type bdf, size_t offset) const {
+    value_type read(BDF bdf, size_t offset) const {
         UtcbFrame uf;
         uf << PCIConfig::READ << bdf << offset;
         pt().call(uf);
@@ -91,7 +90,7 @@ public:
      * @param value the value to write
      * @throws Exception if not found
      */
-    void write(bdf_type bdf, size_t offset, value_type value) {
+    void write(BDF bdf, size_t offset, value_type value) {
         UtcbFrame uf;
         uf << PCIConfig::WRITE << bdf << offset << value;
         pt().call(uf);
@@ -106,7 +105,7 @@ public:
      * @return the address
      * @throws Exception if not found
      */
-    uintptr_t addr(bdf_type bdf, size_t offset) const {
+    uintptr_t addr(BDF bdf, size_t offset) const {
         UtcbFrame uf;
         uf << PCIConfig::ADDR << bdf << offset;
         pt().call(uf);
@@ -125,13 +124,13 @@ public:
      * @return the bus-device-function triple if found
      * @throws Exception if the device was not found
      */
-    bdf_type search_device(value_type theclass = ~0U, value_type subclass = ~0U,
+    BDF search_device(value_type theclass = ~0U, value_type subclass = ~0U,
                            uint inst = ~0U) const {
         UtcbFrame uf;
         uf << PCIConfig::SEARCH_DEVICE << theclass << subclass << inst;
         pt().call(uf);
         uf.check_reply();
-        bdf_type bdf;
+        BDF bdf;
         uf >> bdf;
         return bdf;
     }
@@ -143,12 +142,12 @@ public:
      * @return the bus-device-function triple if found
      * @throws Exception if the bridge was not found
      */
-    bdf_type search_bridge(value_type dst) const {
+    BDF search_bridge(BDF dst) const {
         UtcbFrame uf;
         uf << PCIConfig::SEARCH_BRIDGE << dst;
         pt().call(uf);
         uf.check_reply();
-        bdf_type bdf;
+        BDF bdf;
         uf >> bdf;
         return bdf;
     }

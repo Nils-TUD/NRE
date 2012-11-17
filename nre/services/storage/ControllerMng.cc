@@ -25,7 +25,7 @@ using namespace nre;
 
 void ControllerMng::find_ahci_controller() {
     uint inst = 0;
-    PCI::bdf_type bdf;
+    BDF bdf;
     while(_count < Storage::MAX_CONTROLLER) {
         try {
             bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL, SUBCLASS_SATA, inst);
@@ -43,7 +43,7 @@ void ControllerMng::find_ahci_controller() {
 
         LOG(Logging::STORAGE,
             Serial::get().writef("Disk controller #%x AHCI (%02x,%02x,%02x) id %#x mmio %#x\n",
-                                 _count, (bdf >> 8) & 0xFF, (bdf >> 3) & 0x1F, bdf & 0x7,
+                                 _count, bdf.bus(), bdf.device(), bdf.function(),
                                  _pci.conf_read(bdf, 0),
                                  _pci.conf_read(bdf, 9)));
 
@@ -55,7 +55,7 @@ void ControllerMng::find_ahci_controller() {
 
 void ControllerMng::find_ide_controller() {
     uint inst = 0;
-    PCI::bdf_type bdf;
+    BDF bdf;
     while(_count < Storage::MAX_CONTROLLER) {
         try {
             bdf = _pcicfg.search_device(CLASS_STORAGE_CTRL, SUBCLASS_IDE, inst);
@@ -100,7 +100,7 @@ void ControllerMng::find_ide_controller() {
 
             LOG(Logging::STORAGE, Serial::get().writef(
                     "Disk controller #%zx IDE (%02x,%02x,%02x) iobase %#x gsi %u bmr %#x\n",
-                    _count, (bdf >> 8) & 0xFF, (bdf >> 3) & 0x1F, bdf & 0x7, bar0 & ~0x3, gsi, bmr));
+                    _count, bdf.bus(), bdf.device(), bdf.function(), bar0 & ~0x3, gsi, bmr));
 
             // create controller
             try {

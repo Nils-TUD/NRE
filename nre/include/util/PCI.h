@@ -35,7 +35,6 @@ public:
  */
 class PCI {
 public:
-    typedef PCIConfig::bdf_type bdf_type;
     typedef PCIConfig::value_type value_type;
     typedef uint cap_type;
 
@@ -56,17 +55,17 @@ public:
     explicit PCI(PCIConfigSession &pcicfg, ACPISession *acpi = nullptr) : _pcicfg(pcicfg), _acpi(acpi) {
     }
 
-    value_type conf_read(bdf_type bdf, size_t dword) {
+    value_type conf_read(BDF bdf, size_t dword) {
         return _pcicfg.read(bdf, dword << 2);
     }
-    void conf_write(bdf_type bdf, size_t dword, value_type value) {
+    void conf_write(BDF bdf, size_t dword, value_type value) {
         _pcicfg.write(bdf, dword << 2, value);
     }
 
     /**
      * Induce the number of the bars from the header-type.
      */
-    uint count_bars(bdf_type bdf) {
+    uint count_bars(BDF bdf) {
         switch((conf_read(bdf, 0x3) >> 24) & 0x7f) {
             case 0:
                 return 6;
@@ -80,15 +79,15 @@ public:
     /**
      * Program the nr-th MSI/MSI-X vector of the given device.
      */
-    Gsi *get_gsi_msi(bdf_type bdf, uint nr, void *msix_table = nullptr);
+    Gsi *get_gsi_msi(BDF bdf, uint nr, void *msix_table = nullptr);
 
     /**
      * Returns the gsi and enables them.
      */
-    Gsi *get_gsi(bdf_type bdf, uint nr, bool /*level*/ = false, void *msix_table = nullptr);
+    Gsi *get_gsi(BDF bdf, uint nr, bool /*level*/ = false, void *msix_table = nullptr);
 
 private:
-    void init_msix_table(void *addr, bdf_type bdf, value_type msix_offset, uint nr, Gsi *gsi) {
+    void init_msix_table(void *addr, BDF bdf, value_type msix_offset, uint nr, Gsi *gsi) {
         volatile uint *msix_table = reinterpret_cast<volatile uint*>(addr);
         msix_table[nr * 4 + 0] = gsi->msi_addr();
         msix_table[nr * 4 + 1] = gsi->msi_addr() >> 32;
@@ -100,23 +99,23 @@ private:
     /**
      * Find the position of a legacy PCI capability.
      */
-    size_t find_cap(bdf_type bdf, cap_type id);
+    size_t find_cap(BDF bdf, cap_type id);
 
     /**
      * Find the position of an extended PCI capability.
      */
-    size_t find_extended_cap(bdf_type bdf, cap_type id);
+    size_t find_extended_cap(BDF bdf, cap_type id);
 
     /**
      * Get the base and the type of a bar.
      */
-    uint64_t bar_base(bdf_type bdf, size_t bar, value_type *type = nullptr);
+    uint64_t bar_base(BDF bdf, size_t bar, value_type *type = nullptr);
 
     /**
      * Determines BAR size. You should probably disable interrupt
      * delivery from this device, while querying BAR sizes.
      */
-    uint64_t bar_size(bdf_type bdf, size_t bar, bool *is64bit = nullptr);
+    uint64_t bar_size(BDF bdf, size_t bar, bool *is64bit = nullptr);
 
 private:
     PCIConfigSession &_pcicfg;

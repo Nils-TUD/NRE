@@ -19,7 +19,7 @@
 
 namespace nre {
 
-Gsi *PCI::get_gsi_msi(bdf_type bdf, uint nr, void *msix_table) {
+Gsi *PCI::get_gsi_msi(BDF bdf, uint nr, void *msix_table) {
     size_t msix_offset = find_cap(bdf, CAP_MSIX);
     size_t msi_offset = find_cap(bdf, CAP_MSI);
     if(!(msix_offset || msi_offset))
@@ -63,7 +63,7 @@ Gsi *PCI::get_gsi_msi(bdf_type bdf, uint nr, void *msix_table) {
     return gsi;
 }
 
-Gsi *PCI::get_gsi(bdf_type bdf, uint nr, bool /*level*/, void *msix_table) {
+Gsi *PCI::get_gsi(BDF bdf, uint nr, bool /*level*/, void *msix_table) {
     // If the device is MSI or MSI-X capable, don't use legacy interrupts.
     if(find_cap(bdf, CAP_MSIX) || find_cap(bdf, CAP_MSI))
         return get_gsi_msi(bdf, nr, msix_table);
@@ -88,7 +88,7 @@ Gsi *PCI::get_gsi(bdf_type bdf, uint nr, bool /*level*/, void *msix_table) {
     return new Gsi(gsi, CPU::current().log_id());
 }
 
-size_t PCI::find_cap(bdf_type bdf, cap_type id) {
+size_t PCI::find_cap(BDF bdf, cap_type id) {
     try {
         // capabilities supported?
         if((conf_read(bdf, 1) >> 16) & 0x10) {
@@ -108,7 +108,7 @@ size_t PCI::find_cap(bdf_type bdf, cap_type id) {
     return 0;
 }
 
-size_t PCI::find_extended_cap(bdf_type bdf, cap_type id) {
+size_t PCI::find_extended_cap(BDF bdf, cap_type id) {
     try {
         value_type header;
         size_t offset;
@@ -129,7 +129,7 @@ size_t PCI::find_extended_cap(bdf_type bdf, cap_type id) {
     return 0;
 }
 
-uint64_t PCI::bar_base(bdf_type bdf, size_t bar, value_type *type) {
+uint64_t PCI::bar_base(BDF bdf, size_t bar, value_type *type) {
     value_type val = conf_read(bdf, bar);
     if((val & BAR_IO) == BAR_IO) {
         // XXX
@@ -151,7 +151,7 @@ uint64_t PCI::bar_base(bdf_type bdf, size_t bar, value_type *type) {
     }
 }
 
-uint64_t PCI::bar_size(bdf_type bdf, size_t bar, bool *is64bit) {
+uint64_t PCI::bar_size(BDF bdf, size_t bar, bool *is64bit) {
     value_type old = conf_read(bdf, bar);
     uint64_t size = 0;
 

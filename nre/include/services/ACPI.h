@@ -126,7 +126,7 @@ public:
      * @param parent_bdf the bus-device-function triple of the parent device (e.g. bridge)
      * @return the GSI
      */
-    uint get_gsi(PCIConfig::bdf_type bdf, uint8_t pin, PCIConfig::bdf_type parent_bdf) const {
+    uint get_gsi(BDF bdf, uint8_t pin, BDF parent_bdf) const {
         UtcbFrame uf;
         uf << ACPI::GET_GSI << bdf << pin << parent_bdf;
         pt().call(uf);

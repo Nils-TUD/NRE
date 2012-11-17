@@ -65,7 +65,7 @@ PORTAL static void portal_acpi(capsel_t) {
             break;
 
             case ACPI::GET_GSI: {
-                HostATARE::bdf_type bdf, parentbdf;
+                BDF bdf, parentbdf;
                 uint8_t pin;
                 uf >> bdf >> pin >> parentbdf;
                 uf.finish_input();

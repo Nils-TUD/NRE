@@ -21,7 +21,6 @@
 
 class Config {
 public:
-    typedef nre::PCIConfig::bdf_type bdf_type;
     typedef nre::PCIConfig::value_type value_type;
 
     explicit Config() {
@@ -30,8 +29,8 @@ public:
     }
 
     virtual const char *name() const = 0;
-    virtual bool contains(bdf_type bdf, size_t offset) const = 0;
-    virtual uintptr_t addr(bdf_type bdf, size_t offset) = 0;
-    virtual value_type read(bdf_type bdf, size_t offset) = 0;
-    virtual void write(bdf_type bdf, size_t offset, value_type value) = 0;
+    virtual bool contains(nre::BDF bdf, size_t offset) const = 0;
+    virtual uintptr_t addr(nre::BDF bdf, size_t offset) = 0;
+    virtual value_type read(nre::BDF bdf, size_t offset) = 0;
+    virtual void write(nre::BDF bdf, size_t offset, value_type value) = 0;
 };

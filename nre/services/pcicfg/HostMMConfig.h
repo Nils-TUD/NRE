@@ -59,19 +59,19 @@ class HostMMConfig : public Config {
         uintptr_t addr() const {
             return _ds.phys();
         }
-        bool contains(bdf_type bdf, size_t offset) {
-            return offset < 0x400 && nre::Math::in_range(bdf, _start, _size);
+        bool contains(nre::BDF bdf, size_t offset) {
+            return offset < 0x400 && nre::Math::in_range(bdf.value(), _start, _size);
         }
-        value_type read(bdf_type bdf, size_t offset) {
+        value_type read(nre::BDF bdf, size_t offset) {
             return *field(bdf, offset);
         }
-        void write(bdf_type bdf, size_t offset, value_type value) {
+        void write(nre::BDF bdf, size_t offset, value_type value) {
             *field(bdf, offset) = value;
         }
 
     private:
-        uint *field(bdf_type bdf, size_t offset) const {
-            return _mmconfig + (bdf << 10) + (offset & 0x3FF);
+        uint *field(nre::BDF bdf, size_t offset) const {
+            return _mmconfig + (bdf.value() << 10) + (offset & 0x3FF);
         }
 
     private:
@@ -87,33 +87,34 @@ public:
     virtual const char *name() const {
         return "MMConfig";
     }
-    virtual bool contains(bdf_type bdf, size_t offset) const {
+    virtual bool contains(nre::BDF bdf, size_t offset) const {
         for(nre::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {
             if(it->contains(bdf, offset))
                 return true;
         }
         return false;
     }
-    virtual uintptr_t addr(bdf_type bdf, size_t offset) {
+    virtual uintptr_t addr(nre::BDF bdf, size_t offset) {
         MMConfigRange *range = find(bdf, offset);
         return range->addr();
     }
-    virtual value_type read(bdf_type bdf, size_t offset) {
+    virtual value_type read(nre::BDF bdf, size_t offset) {
         MMConfigRange *range = find(bdf, offset);
         return range->read(bdf, offset);
     }
-    virtual void write(bdf_type bdf, size_t offset, value_type value) {
+    virtual void write(nre::BDF bdf, size_t offset, value_type value) {
         MMConfigRange *range = find(bdf, offset);
         range->write(bdf, offset, value);
     }
 
 private:
-    MMConfigRange *find(bdf_type bdf, size_t offset) {
+    MMConfigRange *find(nre::BDF bdf, size_t offset) {
         for(nre::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {
             if(it->contains(bdf, offset))
                 return &*it;
         }
-        throw nre::Exception(nre::E_NOT_FOUND, 64, "Unable to find bdf %#x+%#x in MMConfig", bdf, offset);
+        throw nre::Exception(nre::E_NOT_FOUND, 64, "Unable to find bdf %#x+%#x in MMConfig",
+                             bdf.value(), offset);
     }
 
     nre::SList<MMConfigRange> _ranges;

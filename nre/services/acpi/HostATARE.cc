@@ -33,10 +33,10 @@ void HostATARE::debug_show_routing() {
 
     for(NamedRef *dev = _head; dev; dev = dev->next) {
         if(dev->ptr[0] == 0x82) {
-            bdf_type bdf = get_device_bdf(_head, dev);
+            BDF bdf = get_device_bdf(_head, dev);
             Serial::get().writef("at: %04x:%02x:%02x.%x tag %p name %.*s\n",
-                                 bdf >> 16, (bdf >> 8) & 0xff, (bdf >> 3) & 0x1f, bdf & 7, dev->ptr - 1,
-                                 4, dev->name + dev->namelen - 4);
+                                 bdf.value() >> 16, bdf.bus(), bdf.device(), bdf.function(),
+                                 dev->ptr - 1, 4, dev->name + dev->namelen - 4);
             for(PciRoutingEntry *p = dev->routing; p; p = p->next) {
                 Serial::get().writef("at:\t  parent %p addr %02x_%x gsi %x\n",
                                      dev->ptr - 1, p->adr >> 16, p->pin, p->gsi);
@@ -285,11 +285,11 @@ HostATARE::NamedRef *HostATARE::search_ref(NamedRef *head, NamedRef *parent, con
 /**
  * Return a single bdf for a device struct by combining different device properties.
  */
-HostATARE::bdf_type HostATARE::get_device_bdf(NamedRef *head, NamedRef *dev) {
+BDF HostATARE::get_device_bdf(NamedRef *head, NamedRef *dev) {
     uint adr = get_namedef_value(head, dev, "_ADR");
     uint bbn = get_namedef_value(head, dev, "_BBN");
     uint seg = get_namedef_value(head, dev, "_SEG");
-    return (seg << 16) + (bbn << 8) + ((adr >> 16) << 3) + (adr & 0xffff);
+    return BDF((seg << 16) + (bbn << 8) + ((adr >> 16) << 3) + (adr & 0xffff));
 }
 
 /**

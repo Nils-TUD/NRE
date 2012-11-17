@@ -23,7 +23,7 @@
 
 using namespace nre;
 
-HostAHCICtrl::HostAHCICtrl(uint id, PCI &pci, PCI::bdf_type bdf, Gsi *gsi, bool dmar)
+HostAHCICtrl::HostAHCICtrl(uint id, PCI &pci, BDF bdf, Gsi *gsi, bool dmar)
     : Controller(id), _gsi(gsi), _bdf(bdf), _regs_ds(), _regs_high_ds(), _regs(),
       _regs_high(0), _portcount(0), _ports() {
     assert(!(~pci.conf_read(_bdf, 1) & 6) && "we need mem-decode and busmaster dma");

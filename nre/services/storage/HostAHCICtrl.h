@@ -59,7 +59,7 @@ class HostAHCICtrl : public Controller {
     };
 
 public:
-    explicit HostAHCICtrl(uint id, nre::PCI &pci, nre::PCI::bdf_type bdf, nre::Gsi *gsi, bool dmar);
+    explicit HostAHCICtrl(uint id, nre::PCI &pci, nre::BDF bdf, nre::Gsi *gsi, bool dmar);
     virtual ~HostAHCICtrl() {
         delete _gsi;
         delete _regs_ds;
@@ -100,7 +100,7 @@ private:
     static void gsi_thread(void*);
 
     nre::Gsi *_gsi;
-    nre::PCI::bdf_type _bdf;
+    nre::BDF _bdf;
     uint _hostirq;
     nre::DataSpace *_regs_ds;
     nre::DataSpace *_regs_high_ds;

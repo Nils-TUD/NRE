@@ -34,18 +34,18 @@ public:
     virtual const char *name() const {
         return "PCIConfig";
     }
-    virtual bool contains(bdf_type bdf, size_t offset) const {
-        return offset < 0x100 && bdf < 0x10000;
+    virtual bool contains(nre::BDF bdf, size_t offset) const {
+        return offset < 0x100 && bdf.value() < 0x10000;
     }
-    virtual uintptr_t addr(bdf_type, size_t) {
+    virtual uintptr_t addr(nre::BDF, size_t) {
         throw nre::Exception(nre::E_ARGS_INVALID, "ADDR cmd not supported in PCI config space");
     }
-    virtual value_type read(bdf_type bdf, size_t offset) {
+    virtual value_type read(nre::BDF bdf, size_t offset) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
         select(bdf, offset);
         return _data.in<uint32_t>();
     }
-    virtual void write(bdf_type bdf, size_t offset, value_type value) {
+    virtual void write(nre::BDF bdf, size_t offset, value_type value) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
         select(bdf, offset);
         _data.out<uint32_t>(value);
@@ -56,12 +56,12 @@ public:
         _addr.out<uint8_t>(0x01, 1);
     }
 
-    bdf_type search_device(value_type theclass = ~0U, value_type subclass = ~0U, uint inst = ~0U);
-    bdf_type search_bridge(value_type dst);
+    nre::BDF search_device(value_type theclass = ~0U, value_type subclass = ~0U, uint inst = ~0U);
+    nre::BDF search_bridge(value_type dst);
 
 private:
-    void select(bdf_type bdf, size_t offset) {
-        uint32_t addr = 0x80000000 | (bdf << 8) | (offset & 0xFC);
+    void select(nre::BDF bdf, size_t offset) {
+        uint32_t addr = 0x80000000 | (bdf.value() << 8) | (offset & 0xFC);
         _addr.out<uint32_t>(addr);
     }
 
