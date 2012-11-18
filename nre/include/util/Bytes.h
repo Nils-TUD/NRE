@@ -21,8 +21,8 @@
 namespace nre {
 
 /**
- * Convenience class to print a size with the corresponding binary prefix, depending on how large
- * it is. To do that you can write an instance of it into an OStream.
+ * Convenience class to print a number of bytes with the corresponding binary prefix, depending on
+ * the bytecount. To do that you can write an instance of it into an OStream.
  */
 class Bytes {
 public:
@@ -30,26 +30,26 @@ public:
     static const size_t MIB = 1024 * KIB;
     static const size_t GIB = 1024 * MIB;
 
-    explicit Bytes(size_t size) : _size(size) {
+    explicit Bytes(size_t count) : _count(count) {
     }
 
-    size_t size() const {
-        return _size;
+    size_t count() const {
+        return _count;
     }
 
 private:
-    size_t _size;
+    size_t _count;
 };
 
 static inline OStream &operator<<(OStream &os, const Bytes &bp) {
-    if(bp.size() >= Bytes::GIB)
-        os << fmt(static_cast<double>(bp.size()) / Bytes::GIB, 0U, 1) << " GiB";
-    else if(bp.size() >= Bytes::MIB)
-        os << fmt(static_cast<double>(bp.size()) / Bytes::MIB, 0U, 1) << " MiB";
-    else if(bp.size() >= Bytes::KIB)
-        os << fmt(static_cast<double>(bp.size()) / Bytes::KIB, 0U, 1) << " KiB";
+    if(bp.count() >= Bytes::GIB)
+        os << fmt(static_cast<double>(bp.count()) / Bytes::GIB, 0U, 1) << " GiB";
+    else if(bp.count() >= Bytes::MIB)
+        os << fmt(static_cast<double>(bp.count()) / Bytes::MIB, 0U, 1) << " MiB";
+    else if(bp.count() >= Bytes::KIB)
+        os << fmt(static_cast<double>(bp.count()) / Bytes::KIB, 0U, 1) << " KiB";
     else
-        os << bp.size() << " Bytes";
+        os << bp.count() << " Bytes";
     return os;
 }
 
