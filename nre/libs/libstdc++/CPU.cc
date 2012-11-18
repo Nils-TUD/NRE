@@ -40,7 +40,7 @@ CPUInit::CPUInit() {
     CPU *last = nullptr;
     const Hip& hip = Hip::get();
     cpu_t i = 0, id = 0, offline = 0;
-    for(Hip::cpu_iterator it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
+    for(auto it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
         CPU &cpu = CPU::get(i);
         if(it->enabled())
             cpu._id = id++;

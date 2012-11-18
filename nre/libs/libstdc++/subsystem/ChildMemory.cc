@@ -22,7 +22,7 @@ namespace nre {
 
 OStream &operator<<(OStream &os, const ChildMemory &cm) {
     os << "\tDataspaces:\n";
-    for(ChildMemory::iterator it = cm.begin(); it != cm.end(); ++it) {
+    for(auto it = cm.begin(); it != cm.end(); ++it) {
         uint flags = it->desc().flags();
         os << "\t\t" << fmt(it->desc().virt(), "p") << " .. "
            << fmt(it->desc().virt() + it->desc().size(), "p")

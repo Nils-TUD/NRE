@@ -114,7 +114,7 @@ void PhysicalMemory::remove(uintptr_t addr, size_t size) {
 }
 
 void PhysicalMemory::map_all() {
-    for(RegionManager::iterator it = _mem.begin(); it != _mem.end(); ++it) {
+    for(auto it = _mem.begin(); it != _mem.end(); ++it) {
         if(it->size)
             Hypervisor::map_mem(it->addr, VirtualMemory::phys_to_virt(it->addr), it->size);
     }
@@ -127,7 +127,7 @@ bool PhysicalMemory::can_map(uintptr_t phys, size_t size, uint &flags) {
     if(phys + size < phys)
         return false;
     // check if its a module
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         if(it->type == HipMem::MB_MODULE) {
             uintptr_t end = Math::round_up<size_t>(it->addr + it->size, ExecEnv::PAGE_SIZE);
             if(phys >= it->addr && phys + size <= end) {
@@ -138,7 +138,7 @@ bool PhysicalMemory::can_map(uintptr_t phys, size_t size, uint &flags) {
         }
     }
     // check if the child wants to request none-device-memory
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // if addr is 0 its the BIOS area, which is ok
         if(it->addr != 0 && !it->reserved() && Math::overlapped(phys, size, it->addr, it->size))
             return false;

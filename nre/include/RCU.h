@@ -279,7 +279,7 @@ private:
 
         ScopedLock<UserSm> guard(&_ecsm);
         size_t i = 0;
-        for(SList<Thread>::iterator it = _ecs.begin(); it != _ecs.end(); ++it, ++i) {
+        for(auto it = _ecs.begin(); it != _ecs.end(); ++it, ++i) {
             // it's safe to delete it when either the Thread has re-entered the critical section
             // or if it's out of its critical section. in both cases the Thread would re-read the
             // pointer and thus, can't get the object again we're about to delete.
@@ -301,7 +301,7 @@ private:
         // update the version-numbers for all Ecs
         ScopedLock<UserSm> guard(&_ecsm);
         size_t i = 0;
-        for(SList<Thread>::iterator it = _ecs.begin(); it != _ecs.end(); ++it, ++i)
+        for(auto it = _ecs.begin(); it != _ecs.end(); ++it, ++i)
             _versions[i] = it->_rcu_counter;
     }
 

@@ -24,7 +24,7 @@ using namespace nre;
 int main() {
     // don't put it on the stack since its too large :)
     ChildManager *cm = new ChildManager();
-    for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
+    for(auto mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
         if(strstr(mem->cmdline(), "bin/apps/test") != nullptr) {
             ChildConfig cfg(0, mem->cmdline());
             DataSpace ds(mem->size, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::R, mem->addr);

@@ -107,7 +107,7 @@ CPU0Init::CPU0Init() {
 static void adjust_memory_map() {
     const Hip &hip = Hip::get();
     ChildHip *chip = new (nhip) ChildHip();
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         if(it->type == HipMem::AVAILABLE) {
             // if available memory isn't page-aligned, cut it off to ensure that we don't
             // hit reserved memory. this solves problems that arise when the memory map contains
@@ -145,14 +145,14 @@ int main() {
     LOG(PLATFORM, "CPU runs @ " << (Hip::get().freq_tsc / 1000) << " Mhz, bus @ "
                                 << (Hip::get().freq_bus / 1000) << " Mhz\n");
     // add all available memory
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // FIXME: why can't we use the memory above 4G?
         if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
             PhysicalMemory::add(it->addr, it->size);
     }
 
     // remove all not available memory
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // also remove the BIOS-area (make it available as device-memory)
         if(it->type != HipMem::AVAILABLE || it->addr == 0)
             PhysicalMemory::remove(it->addr, Math::round_up<size_t>(it->size, ExecEnv::PAGE_SIZE));
@@ -171,7 +171,7 @@ int main() {
     LOG(MEM_MAP, "Physical memory:\n" << PhysicalMemory::regions());
 
     LOG(CPUS, "CPUs:\n");
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         LOG(CPUS, "\tpackage=" << it->package() << ", core=" << it->core()
                                << ", thread=" << it->thread() << ", flags=" << it->flags() << "\n");
     }
@@ -184,7 +184,7 @@ int main() {
     Admission::init();
 
     // now init the stuff for all other CPUs (using dlmalloc)
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         if(it->log_id() != CPU::current().log_id()) {
             // again, different thread for ds portal
             LocalThread *dsec = LocalThread::create(it->log_id());
@@ -216,7 +216,7 @@ int main() {
     // change the Hip to allow us direct access to the mb-module-cmdlines
     char *cmdlines = new char[MAX_CMDLINES_LEN];
     char *curcmd = cmdlines;
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         if(it->type == HipMem::MB_MODULE) {
             char *cmdline = Hypervisor::map_string(it->aux);
             size_t len = strlen(cmdline) + 1;
@@ -231,7 +231,7 @@ int main() {
     }
 
     LOG(MEM_MAP, "Memory map:\n");
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         LOG(MEM_MAP, "\t" << "addr=" << fmt(it->addr, "p")
                           << " size=" << fmt(it->size, "#0x", 10)
                           << " type=" << fmt(it->type, "+")
@@ -269,7 +269,7 @@ static void start_childs() {
     size_t mod = 0, i = 0;
     ForwardCycler<CPU::iterator> cpus(CPU::begin(), CPU::end());
     const Hip &hip = Hip::get();
-    for(Hip::mem_iterator it = hip.mem_begin(); it != hip.mem_end(); ++it, ++mod) {
+    for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it, ++mod) {
         // we are the first one :)
         if(it->type == HipMem::MB_MODULE && i++ >= 1) {
             // map the memory of the module

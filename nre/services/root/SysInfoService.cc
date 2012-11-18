@@ -33,7 +33,7 @@ extern void *end;
 const char *SysInfoService::get_root_info(size_t &virt, size_t &phys, size_t &threads) {
     // find our own module; we're always the first one
     const char *cmdline = "";
-    for(Hip::mem_iterator mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
+    for(auto mem = Hip::get().mem_begin(); mem != Hip::get().mem_end(); ++mem) {
         if(mem->type == HipMem::MB_MODULE) {
             cmdline = mem->cmdline();
             break;

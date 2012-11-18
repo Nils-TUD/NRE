@@ -31,7 +31,7 @@ SList<Admission::SchedEntity> Admission::_list INIT_PRIO_ADM;
 
 void Admission::init() {
     // add idle Scs
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         char name[32];
         OStringStream stream(name, sizeof(name));
         stream << "CPU" << it->log_id() << "-idle";

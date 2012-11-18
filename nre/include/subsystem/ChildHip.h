@@ -101,7 +101,7 @@ private:
         // note that this assumes that MAX_CPUS is the same as NUM_CPU in NOVA
         cpu_offs = hip.cpu_offs;
         mem_offs = hip.mem_offs;
-        for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu) {
+        for(auto cpu = CPU::begin(); cpu != CPU::end(); ++cpu) {
             if(cpuset.get().is_set(cpu->log_id())) {
                 cpus[cpu->phys_id()].flags = cpu->flags();
                 cpus[cpu->phys_id()].thread = cpu->thread();

@@ -208,7 +208,7 @@ private:
     }
     void remove_sc(capsel_t sc) {
         ScopedLock<UserSm> guard(&_sm);
-        for(SList<SchedEntity>::iterator it = _scs.begin(); it != _scs.end(); ++it) {
+        for(auto it = _scs.begin(); it != _scs.end(); ++it) {
             if(it->cap() == sc) {
                 _scs.remove(&*it);
                 delete &*it;

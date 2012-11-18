@@ -134,7 +134,7 @@ private:
         uf.check_reply();
         _caps = caps.release();
         _sms = new Sm *[CPU::count()];
-        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+        for(auto it = CPU::begin(); it != CPU::end(); ++it)
             _sms[it->log_id()] = new Sm(_caps + it->log_id(), true);
     }
 

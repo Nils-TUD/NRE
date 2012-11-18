@@ -117,7 +117,7 @@ void HostATADevice::transferDMA(Operation op, const DataSpace &ds, const dma_typ
     // setup PRDTs
     ATA_LOGDETAIL("Setting PRDs");
     HostIDECtrl::PRD *prd = _ctrl.prdt();
-    for(dma_type::iterator it = dma.begin(); it != dma.end(); ) {
+    for(auto it = dma.begin(); it != dma.end(); ) {
         if(((static_cast<uint64_t>(ds.phys()) + it->offset + it->count) >= 0x100000000)) {
             VTHROW(Exception, E_ARGS_INVALID,
                    "Physical address " << fmt(ds.phys(), "p") << " is too large for DMA");

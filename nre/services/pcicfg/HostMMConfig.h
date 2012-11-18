@@ -88,7 +88,7 @@ public:
         return "MMConfig";
     }
     virtual bool contains(nre::BDF bdf, size_t offset) const {
-        for(nre::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {
+        for(auto it = _ranges.begin(); it != _ranges.end(); ++it) {
             if(it->contains(bdf, offset))
                 return true;
         }
@@ -109,7 +109,7 @@ public:
 
 private:
     MMConfigRange *find(nre::BDF bdf, size_t offset) {
-        for(nre::SList<MMConfigRange>::iterator it = _ranges.begin(); it != _ranges.end(); ++it) {
+        for(auto it = _ranges.begin(); it != _ranges.end(); ++it) {
             if(it->contains(bdf, offset))
                 return &*it;
         }

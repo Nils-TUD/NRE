@@ -87,7 +87,7 @@ void HostAHCIDevice::readwrite(Producer<Storage::Packet> *prod, Storage::tag_typ
         command = has_lba48() ? 0x35 : 0xca;
     set_command(command, sector, !write, length >> 13);
 
-    for(dma_type::iterator it = dma.begin(); it != dma.end(); ++it) {
+    for(auto it = dma.begin(); it != dma.end(); ++it) {
         if(it->offset > ds.size() || it->offset + it->count > ds.size()) {
             VTHROW(Exception, E_ARGS_INVALID,
                    "Device " << _id << ": Invalid offset(" << it->offset <<")/"

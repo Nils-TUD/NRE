@@ -45,8 +45,8 @@ public:
     }
     RunningVM *get(size_t idx) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
-        nre::SList<RunningVM>::iterator it;
-        for(it = _list.begin(); it != _list.end() && idx-- > 0; ++it)
+        auto it = _list.begin();
+        for(; it != _list.end() && idx-- > 0; ++it)
             ;
         if(it == _list.end())
             return nullptr;
@@ -54,7 +54,7 @@ public:
     }
     RunningVM *get_by_pd(capsel_t pd) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
-        for(nre::SList<RunningVM>::iterator it = _list.begin(); it != _list.end(); ++it) {
+        for(auto it = _list.begin(); it != _list.end(); ++it) {
             if(it->pd() == pd)
                 return &*it;
         }

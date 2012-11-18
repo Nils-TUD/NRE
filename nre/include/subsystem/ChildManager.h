@@ -247,7 +247,7 @@ private:
     void notify_services() {
         {
             ScopedLock<UserSm> guard(&_sm);
-            for(ServiceRegistry::iterator it = _registry.begin(); it != _registry.end(); ++it)
+            for(auto it = _registry.begin(); it != _registry.end(); ++it)
                 it->sm().up();
         }
         UtcbFrame uf;

@@ -27,7 +27,7 @@ void ScInfoPage::refresh_console(bool update) {
 
     // display header
     cs << fmt("Sc", MAX_NAME_LEN) << ": ";
-    for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
+    for(auto cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
         cs << " CPU" << cpu->log_id() << " ";
     cs << fmt("Total", MAX_SUMTIME_LEN + 1) << "\n";
     for(uint i = 0; i < Console::COLS; i++)
@@ -36,7 +36,7 @@ void ScInfoPage::refresh_console(bool update) {
     // determine the total time elapsed on each CPU. this way we don't assume that exactly 1sec
     // has passed since last update and are thus less dependend on the timer-service.
     static timevalue_t cputotal[Hip::MAX_CPUS];
-    for(CPU::iterator cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
+    for(auto cpu = CPU::begin(); cpu != CPU::end(); ++cpu)
         cputotal[cpu->log_id()] = _sysinfo.get_total_time(cpu->log_id(), update);
 
     for(size_t idx = _top, c = 0; c < ROWS; ++c, ++idx) {

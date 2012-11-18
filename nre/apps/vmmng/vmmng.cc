@@ -47,7 +47,7 @@ static void refresh_console() {
     cs << "Welcome to the interactive VM manager!\n\n";
     cs << "VM configurations:\n";
     size_t no = 1;
-    for(SList<VMConfig>::iterator it = configs.begin(); it != configs.end(); ++it, ++no)
+    for(auto it = configs.begin(); it != configs.end(); ++it, ++no)
         cs << "  [" << no << "] " << it->name() << "\n";
     cs << "\n";
 
@@ -82,8 +82,8 @@ static void input_thread(void*) {
             case Keyboard::VK_1 ... Keyboard::VK_9: {
                 if(pk->flags & Keyboard::RELEASE) {
                     size_t idx = pk->keycode - Keyboard::VK_1;
-                    SList<VMConfig>::iterator it;
-                    for(it = configs.begin(); it != configs.end() && idx-- > 0; ++it)
+                    auto it = configs.begin();
+                    for(; it != configs.end() && idx-- > 0; ++it)
                         ;
                     if(it != configs.end())
                         RunningVMList::get().add(cm, &*it, cpucyc.next()->log_id());
@@ -154,7 +154,7 @@ static void refresh_thread(void*) {
 int main() {
     const Hip &hip = Hip::get();
 
-    for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
+    for(auto mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
         if(strstr(mem->cmdline(), ".vmconfig")) {
             VMConfig *cfg = new VMConfig(mem->addr, mem->size, mem->cmdline());
             configs.append(cfg);

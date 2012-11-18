@@ -92,7 +92,7 @@ public:
     explicit StorageService(const char *name)
         : Service(name, CPUSet(CPUSet::ALL), portal) {
         // we want to accept two dataspaces
-        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+        for(auto it = CPU::begin(); it != CPU::end(); ++it) {
             LocalThread *ec = get_thread(it->log_id());
             UtcbFrameRef uf(ec->utcb());
             uf.accept_delegates(1);

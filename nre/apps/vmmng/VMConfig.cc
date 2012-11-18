@@ -39,7 +39,7 @@ void VMConfig::find_mods(size_t len) {
 
 Child::id_type VMConfig::start(ChildManager &cm, size_t console, cpu_t cpu) {
     static char args[MAX_ARGS_LEN];
-    SList<Module>::iterator first = _mods.begin();
+    auto first = _mods.begin();
     OStringStream os(args, sizeof(args));
     os << first->args() << " console:" << console << " constitle:" << _name;
 
@@ -51,7 +51,7 @@ Child::id_type VMConfig::start(ChildManager &cm, size_t console, cpu_t cpu) {
 
 Hip::mem_iterator VMConfig::get_module(const String &name) {
     const Hip &hip = Hip::get();
-    for(Hip::mem_iterator mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
+    for(auto mem = hip.mem_begin(); mem != hip.mem_end(); ++mem) {
         if(strcmp(mem->cmdline(), name.str()) == 0)
             return mem;
     }
@@ -60,7 +60,7 @@ Hip::mem_iterator VMConfig::get_module(const String &name) {
 
 OStream & operator<<(OStream &os, const VMConfig &cfg) {
     os << "VMConfig[" << cfg.name() << "]:\n";
-    for(SList<VMConfig::Module>::iterator it = cfg._mods.begin(); it != cfg._mods.end(); ++it)
+    for(auto it = cfg._mods.begin(); it != cfg._mods.end(); ++it)
         os << "  name='" << it->name() << "' args='" << it->args() << "'\n";
     return os;
 }

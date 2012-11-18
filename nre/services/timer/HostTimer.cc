@@ -69,7 +69,7 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
 
     // Initialize per cpu data structure
     _per_cpu = new PerCpu *[CPU::count()];
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+    for(auto it = CPU::begin(); it != CPU::end(); ++it)
         _per_cpu[it->log_id()] = new PerCpu(this, it->log_id());
 
     // Create remote slot mapping
@@ -93,7 +93,7 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
         _per_cpu[cpu]->slots = new RemoteSlot[n / parts];
     }
 
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         cpu_t cpu = it->log_id();
         if(!_per_cpu[cpu]->has_timer) {
             PerCpu &remote = *_per_cpu[cpu_cpu[cpu]];
@@ -115,7 +115,7 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
 
     _timer->update_ticks(true);
     uint xcpu_threads_started = 0;
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         cpu_t cpu = it->log_id();
         _timer->enable(_per_cpu[cpu]->timer, _per_cpu[cpu]->has_timer);
 

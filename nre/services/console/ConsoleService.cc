@@ -24,7 +24,7 @@ ConsoleService::ConsoleService(const char *name, uint modifier)
     : Service(name, CPUSet(CPUSet::ALL), ConsoleSessionData::portal), _rbcon("reboot"), _reboot(_rbcon),
       _screen(new HostVGA()), _cons(), _concyc(), _switcher(this), _modifier(modifier) {
     // we want to accept two dataspaces
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         LocalThread *t = get_thread(it->log_id());
         t->set_tls<ConsoleService*>(Thread::TLS_PARAM, this);
         UtcbFrameRef uf(t->utcb());

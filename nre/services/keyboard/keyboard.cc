@@ -67,7 +67,7 @@ public:
     explicit KeyboardService(const char *name, Pt::portal_func func)
         : Service(name, CPUSet(CPUSet::ALL), func) {
         // we want to accept one dataspaces
-        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+        for(auto it = CPU::begin(); it != CPU::end(); ++it) {
             LocalThread *ec = get_thread(it->log_id());
             UtcbFrameRef uf(ec->utcb());
             uf.accept_delegates(0);
@@ -100,8 +100,7 @@ static uint msgsi;
 template<class T>
 static void broadcast(KeyboardService<T> *srv, const T &data) {
     ScopedLock<RCULock> guard(&RCU::lock());
-    for(typename KeyboardService<T>::iterator it = srv->sessions_begin(); it != srv->sessions_end();
-        ++it) {
+    for(auto it = srv->sessions_begin(); it != srv->sessions_end(); ++it) {
         if(it->prod())
             it->prod()->produce(data);
     }

@@ -47,7 +47,7 @@ Hypervisor::Hypervisor() {
 }
 
 void Hypervisor::init() {
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         if(it->log_id() == CPU::current().log_id())
             continue;
         LocalThread *ec = LocalThread::create(it->log_id());

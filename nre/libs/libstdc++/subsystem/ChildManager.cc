@@ -33,7 +33,7 @@ ChildManager::ChildManager()
       _dsm(), _registry(), _sm(), _switchsm(), _slotsm(), _regsm(0), _diesm(0), _ecs(), _regecs() {
     _ecs = new LocalThread *[CPU::count()];
     _regecs = new LocalThread *[CPU::count()];
-    for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it) {
+    for(auto it = CPU::begin(); it != CPU::end(); ++it) {
         LocalThread **ecs[] = {_ecs, _regecs};
         for(size_t i = 0; i < ARRAY_SIZE(ecs); ++i) {
             ecs[i][it->log_id()] = LocalThread::create(it->log_id());

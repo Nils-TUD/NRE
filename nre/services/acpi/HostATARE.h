@@ -71,7 +71,7 @@ public:
             _head = add_refs(reinterpret_cast<uint8_t*>(item->start()), item->length(), _head);
 
         // and from the SSDTs
-        for(uint i = 0; (item = acpi.find("SSDT", i)) != 0; ++i)
+        for(uint i = 0; (item = acpi.find("SSDT", i)) != nullptr; ++i)
             _head = add_refs(reinterpret_cast<uint8_t*>(item->start()), item->length(), _head);
 
         add_routing(_head);

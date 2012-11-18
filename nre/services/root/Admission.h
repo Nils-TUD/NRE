@@ -91,7 +91,7 @@ public:
     static timevalue_t total_time(cpu_t cpu, bool update) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
         timevalue_t total = 0;
-        for(nre::SList<SchedEntity>::iterator s = _list.begin(); s != _list.end(); ++s) {
+        for(auto s = _list.begin(); s != _list.end(); ++s) {
             if(s->cpu() == cpu)
                 total += s->ms_last_sec(update);
         }
@@ -111,8 +111,8 @@ public:
                                  timevalue_t &totaltime) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
         if(idx < _list.length()) {
-            nre::SList<SchedEntity>::iterator s;
-            for(s = _list.begin(); idx > 0 && s != _list.end(); ++s, --idx)
+            auto s = _list.begin();
+            for(; idx > 0 && s != _list.end(); ++s, --idx)
                 ;
             name = s->name();
             cpu = s->cpu();
@@ -137,7 +137,7 @@ private:
     }
     static SchedEntity *remove_sc(capsel_t sc) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
-        for(nre::SList<SchedEntity>::iterator it = _list.begin(); it != _list.end(); ++it) {
+        for(auto it = _list.begin(); it != _list.end(); ++it) {
             if(it->cap() == sc) {
                 _list.remove(&*it);
                 return &*it;

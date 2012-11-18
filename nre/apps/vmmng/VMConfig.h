@@ -54,8 +54,8 @@ class VMConfig : public nre::SListItem {
         }
 
         virtual bool get_module(size_t i, nre::HipMem &mem) const {
-            nre::SList<Module>::iterator it;
-            for(it = _mods.begin(); it != _mods.end() && i-- > 0; ++it)
+            auto it = _mods.begin();
+            for(; it != _mods.end() && i-- > 0; ++it)
                 ;
             if(it == _mods.end())
                 return false;
@@ -75,8 +75,8 @@ public:
         find_mods(size);
     }
     ~VMConfig() {
-        for(nre::SList<Module>::iterator it = _mods.begin(); it != _mods.end(); ) {
-            nre::SList<Module>::iterator old = it++;
+        for(auto it = _mods.begin(); it != _mods.end(); ) {
+            auto old = it++;
             delete &*old;
         }
     }
@@ -85,7 +85,7 @@ public:
         return _name;
     }
     const nre::String &args() const {
-        nre::SList<Module>::iterator first = _mods.begin();
+        auto first = _mods.begin();
         return first->args();
     }
     nre::Child::id_type start(nre::ChildManager &cm, size_t console, cpu_t cpu);

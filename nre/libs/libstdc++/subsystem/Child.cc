@@ -35,7 +35,7 @@ void Child::release_gsis() {
 
 void Child::release_ports() {
     UtcbFrame uf;
-    for(RegionManager::iterator it = _io.begin(); it != _io.end(); ++it) {
+    for(auto it = _io.begin(); it != _io.end(); ++it) {
         if(it->size) {
             uf << Ports::RELEASE << it->addr << it->size;
             CPU::current().io_pt().call(uf);
@@ -46,19 +46,19 @@ void Child::release_ports() {
 
 void Child::release_scs() {
     UtcbFrame uf;
-    for(SList<SchedEntity>::iterator it = _scs.begin(); it != _scs.end(); ) {
+    for(auto it = _scs.begin(); it != _scs.end(); ) {
         uf << Sc::STOP;
         uf.translate(it->cap());
         CPU::current().sc_pt().call(uf);
         uf.clear();
-        SList<SchedEntity>::iterator cur = it++;
+        auto cur = it++;
         delete &*cur;
     }
 }
 
 void Child::release_regs() {
     ScopedLock<UserSm> guard(&_cm->_sm);
-    for(ChildMemory::iterator it = _regs.begin(); it != _regs.end(); ++it) {
+    for(auto it = _regs.begin(); it != _regs.end(); ++it) {
         DataSpaceDesc desc = it->desc();
         if(it->cap() != ObjCap::INVALID && desc.type() != DataSpaceDesc::VIRTUAL)
             _cm->_dsm.release(desc, it->cap());
@@ -69,7 +69,7 @@ OStream & operator<<(OStream &os, const Child &c) {
     os << "Child[cmdline='" << c.cmdline() << "' cpu=" << c._ec->cpu();
     os << " entry=" << fmt(reinterpret_cast<void*>(c.entry())) << "]:\n";
     os << "\tScs:\n";
-    for(SList<Child::SchedEntity>::iterator it = c.scs().begin(); it != c.scs().end(); ++it)
+    for(auto it = c.scs().begin(); it != c.scs().end(); ++it)
         os << "\t\t" << it->name() << " on CPU " << CPU::get(it->cpu()).phys_id() << "\n";
     os << "\tGSIs: " << c.gsis() << "\n";
     os << "\tPorts:\n" << c.io();

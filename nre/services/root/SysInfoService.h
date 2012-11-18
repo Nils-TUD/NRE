@@ -26,7 +26,7 @@ class SysInfoService : public nre::Service {
 public:
     SysInfoService(nre::ChildManager *cm)
         : nre::Service("sysinfo", nre::CPUSet(nre::CPUSet::ALL), portal), _cm(cm) {
-        for(nre::CPU::iterator it = nre::CPU::begin(); it != nre::CPU::end(); ++it) {
+        for(auto it = nre::CPU::begin(); it != nre::CPU::end(); ++it) {
             nre::LocalThread *ec = get_thread(it->log_id());
             ec->set_tls<SysInfoService*>(nre::Thread::TLS_PARAM, this);
         }

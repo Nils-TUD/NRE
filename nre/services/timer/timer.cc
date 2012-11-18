@@ -31,7 +31,7 @@ class TimerSessionData : public ServiceSession {
 public:
     explicit TimerSessionData(Service *s, size_t id, capsel_t cap, capsel_t caps, Pt::portal_func func)
         : ServiceSession(s, id, cap, caps, func), _data(new HostTimer::ClientData[CPU::count()]) {
-        for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+        for(auto it = CPU::begin(); it != CPU::end(); ++it)
             timer->setup_clientdata(id, _data + it->log_id(), it->log_id());
     }
     virtual ~TimerSessionData() {
@@ -71,7 +71,7 @@ PORTAL static void portal_timer(capsel_t pid) {
             case nre::Timer::GET_SMS:
                 uf.finish_input();
 
-                for(CPU::iterator it = CPU::begin(); it != CPU::end(); ++it)
+                for(auto it = CPU::begin(); it != CPU::end(); ++it)
                     uf.delegate(sess->data(it->log_id())->sm->sel(), it->log_id());
                 uf << E_SUCCESS;
                 break;

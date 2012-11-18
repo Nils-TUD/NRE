@@ -164,7 +164,7 @@ protected:
      */
     void write_backtrace(OStream &os) const {
         os << "Backtrace:\n";
-        for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
+        for(auto it = backtrace_begin(); it != backtrace_end(); ++it)
             os << "\t" << fmt(*it, "p") << "\n";
     }
 
@@ -172,7 +172,6 @@ protected:
     String _msg;
     uintptr_t _backtrace[MAX_TRACE_DEPTH];
     size_t _count;
-    static const char *_msgs[];
 };
 
 UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
