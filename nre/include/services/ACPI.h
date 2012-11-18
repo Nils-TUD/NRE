@@ -88,7 +88,7 @@ public:
         uf << ACPI::FIND_TABLE << name << instance;
         pt().call(uf);
         uf.check_reply();
-        return DataSpace(uf.get_delegated(0).offset());
+        return DataSpace(cap.release());
     }
 
     /**
