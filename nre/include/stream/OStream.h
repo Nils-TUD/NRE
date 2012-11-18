@@ -38,7 +38,8 @@ namespace nre {
  * to writef() in a correct way you would have to look at the "implementation" of the typedef, i.e.
  * the type it is mapped to. This makes it really hard to change typedefs afterwards. So, to avoid
  * that you would have to introduce a length modifier for each typedef in your code. Not only that
- * you'll run out of ASCII chars, this is simply not acceptable.
+ * you'll run out of ASCII chars, this is simply not acceptable. In summary, there is no reasonable
+ * way to specify the correct type for writef().
  *
  * Therefore we go a different way here. We try to use only shift operators and provide a quite
  * concise and simple way to add formatting parameters (in contrast to the really verbose concept
@@ -153,6 +154,8 @@ class OStream {
 
     /**
      * This class can be written into an OStream to apply formatting while using the stream operators
+     * It will be used by the freestanding fmt() function, which makes it shorter because of template
+     * parameter type inference.
      */
     template<typename T>
     class Format {
@@ -242,8 +245,9 @@ public:
     }
 
     /**
-     * Writes a value into the stream with formatting applied. This operator should not be used
-     * directly, but fmt() should be used instead (because its shorter).
+     * Writes a value into the stream with formatting applied. This operator should be used in
+     * combination with fmt():
+     * Serial::get() << fmt(0x123, "x") << "\n";
      */
     template<typename T>
     OStream & operator<<(const Format<T>& fmt) {
