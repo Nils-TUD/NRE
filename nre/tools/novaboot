@@ -535,9 +535,9 @@ sub trim($) {
 
 if (!(defined $dhcp_tftp || defined $serial || defined $iprelay || defined $server || defined $iso_image)) {
     # Qemu
-    @qemu_flags = split(/ /, trim($variables->{QEMU_FLAGS})) if exists $variables->{QEMU_FLAGS};
-    @qemu_flags = split(/ /, trim($qemu_flags_cmd)) if $qemu_flags_cmd;
-    push(@qemu_flags, split(/ /, trim($qemu_append)));
+    @qemu_flags = split(/ +/, trim($variables->{QEMU_FLAGS})) if exists $variables->{QEMU_FLAGS};
+    @qemu_flags = split(/ +/, trim($qemu_flags_cmd)) if $qemu_flags_cmd;
+    push(@qemu_flags, split(/ +/, trim($qemu_append)));
 
     if (defined $iso_image) {
 	# Boot NOVA with grub (and test the iso image)

@@ -32,7 +32,7 @@ fi
 if [ "$NRE_TARGET" = "x86_32" ]; then
     cross="i686-pc-nulnova"
     gdb=$NRE_GDB_X86_32
-    export QEMU_FLAGS=" -cpu phenom $QEMU_FLAGS"
+    export QEMU_FLAGS="-cpu phenom $QEMU_FLAGS"
 elif [ "$NRE_TARGET" = "x86_64" ]; then
     cross="x86_64-pc-nulnova"
     gdb=$NRE_GDB_X86_64
