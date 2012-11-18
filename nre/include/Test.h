@@ -111,13 +111,13 @@ class WvTest {
 #if WVTEST_PRINT_INFO_BEFORE
     void print_info()
     {
-        Serial::get().writef("! %s:%d %s ", file, line, condstr);
+        Serial::get() << "! " << file << ":" << line << " " << condstr << " ";
     }
 
     template<typename T>
     void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "")
     {
-        Serial::get().writef("%s%s%s %s\n", sb, suffix, se, resultstr(result));
+        Serial::get() << sb << suffix << se << " " << resultstr(result) << "\n";
     }
 #else
     template<typename T>
@@ -210,7 +210,7 @@ public:
 #if WVTEST_PRINT_INFO_BEFORE
         // If we are sure that nothing is printed during the "check", we can
         // print the info here, and the result after the "check" finishes.
-        print_info(true, file, line, condstr, 0);
+        print_info();
 #endif
     }
 
