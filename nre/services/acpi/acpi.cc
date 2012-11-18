@@ -17,6 +17,7 @@
 #include <ipc/Service.h>
 #include <services/ACPI.h>
 #include <services/PCIConfig.h>
+#include <Logging.h>
 
 #include "HostACPI.h"
 #include "HostATARE.h"
@@ -36,21 +37,21 @@ PORTAL static void portal_acpi(capsel_t) {
             throw Exception(E_NOT_FOUND, "No ACPI");
 
         switch(cmd) {
-            case ACPI::GET_MEM: {
-                uf.finish_input();
-                uf << E_SUCCESS << hostacpi->mem().desc();
-            }
-            break;
-
             case ACPI::FIND_TABLE: {
                 String name;
                 uint instance;
                 uf >> name >> instance;
                 uf.finish_input();
 
-                size_t len;
-                uintptr_t off = hostacpi->find(name.str(), instance, len);
-                uf << E_SUCCESS << off;
+                const HostACPI::ACPIListItem *item = hostacpi->find(name.str(), instance);
+                LOG(ACPI, "ACPI::FIND_TABLE '" << name << "' #" << instance
+                                               << " -> " << (item ? "found" : "not found") << "\n");
+                if(!item) {
+                    VTHROW(Exception, E_NOT_FOUND,
+                           "Unable to find APCI table '" << name << "' #" << instance);
+                }
+                uf.delegate(item->cap());
+                uf << E_SUCCESS;
             }
             break;
 
@@ -60,6 +61,7 @@ PORTAL static void portal_acpi(capsel_t) {
                 uf.finish_input();
 
                 uint gsi = hostacpi->irq_to_gsi(irq);
+                LOG(ACPI, "ACPI::IRQ_TO_GSI " << irq << " -> " << gsi << "\n");
                 uf << E_SUCCESS << gsi;
             }
             break;
@@ -71,6 +73,8 @@ PORTAL static void portal_acpi(capsel_t) {
                 uf.finish_input();
 
                 uint gsi = hostatare->get_gsi(bdf, pin, parentbdf);
+                LOG(ACPI, "ACPI::GET_GSI" << " bdf=" << bdf << ", pin=" << pin
+                                          << ", parent=" << parentbdf << " -> " << gsi << "\n");
                 uf << E_SUCCESS << gsi;
             }
             break;

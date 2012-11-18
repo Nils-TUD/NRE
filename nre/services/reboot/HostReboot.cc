@@ -48,25 +48,23 @@ void HostRebootPCIReset::reboot() {
 HostRebootACPI::HostRebootACPI()
     : HostRebootMethod(), _method(), _value(), _addr(), _con("acpi"), _sess(_con), _ports(), _ds() {
     LOG(REBOOT, "Trying reboot via ACPI...\n");
-    ACPI::RSDT *rsdt = _sess.find_table("FACP");
-    if(!rsdt)
-        throw Exception(E_NOT_FOUND, "FACP not found");
-
-    char *table = reinterpret_cast<char*>(rsdt);
+    DataSpace table = _sess.find_table("FACP");
+    ACPI::RSDT *rsdt = reinterpret_cast<ACPI::RSDT*>(table.virt());
+    char *raw = reinterpret_cast<char*>(table.virt());
     if(rsdt->length < 129)
         VTHROW(Exception, E_NOT_FOUND, "FACP too small (" << rsdt->length << ")");
-    if(~table[113] & 0x4)
+    if(~raw[113] & 0x4)
         throw Exception(E_NOT_FOUND, "Reset unsupported");
-    if(table[117] != 8)
-        VTHROW(Exception, E_NOT_FOUND, "Register width invalid (" << table[117] << ")");
-    if(table[118] != 0)
-        VTHROW(Exception, E_NOT_FOUND, "Register offset invalid (" << table[118] << ")");
-    if(table[119] > 1)
+    if(raw[117] != 8)
+        VTHROW(Exception, E_NOT_FOUND, "Register width invalid (" << raw[117] << ")");
+    if(raw[118] != 0)
+        VTHROW(Exception, E_NOT_FOUND, "Register offset invalid (" << raw[118] << ")");
+    if(raw[119] > 1)
         throw Exception(E_NOT_FOUND, "Byte access needed");
 
-    _method = table[116];
-    _value = table[128];
-    _addr = *reinterpret_cast<uint64_t*>(table + 120);
+    _method = raw[116];
+    _value = raw[128];
+    _addr = *reinterpret_cast<uint64_t*>(raw + 120);
     LOG(REBOOT, "Using method=" << fmt(_method, "#x") << ", value=" << fmt(_value, "#x")
                                 << ", addr=" << fmt(_addr, "#x") << "\n");
     switch(_method) {

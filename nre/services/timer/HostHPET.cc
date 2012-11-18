@@ -193,64 +193,63 @@ HostHPET::HostHPET(bool force_legacy)
 uint16_t HostHPET::get_rid(uint8_t block, uint comparator) {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table("DMAR");
-    if(!addr)
-        return 0;
+    try {
+        DataSpace table = sess.find_table("DMAR");
+        DmarTableParser p(reinterpret_cast<char*>(table.virt()));
+        DmarTableParser::Element e = p.get_element();
 
-    DmarTableParser p(reinterpret_cast<char*>(addr));
-    DmarTableParser::Element e = p.get_element();
-
-    uint16_t first_rid_found = 0;
-    do {
-        if(e.type() != DmarTableParser::DHRD)
-            continue;
-
-        DmarTableParser::Dhrd dhrd = e.get_dhrd();
-        if(!dhrd.has_scopes())
-            continue;
-
-        DmarTableParser::DeviceScope s = dhrd.get_scope();
+        uint16_t first_rid_found = 0;
         do {
-            if(s.type() != DmarTableParser::MSI_CAPABLE_HPET)
+            if(e.type() != DmarTableParser::DHRD)
                 continue;
 
-            // We assume the enumaration IDs correspond to timer blocks.
-            // XXX Is this true? We haven't seen an HPET with multiple blocks yet.
-            if(s.id() != block)
+            DmarTableParser::Dhrd dhrd = e.get_dhrd();
+            if(!dhrd.has_scopes())
                 continue;
 
-            if(first_rid_found == 0)
-                first_rid_found = s.rid();
+            DmarTableParser::DeviceScope s = dhrd.get_scope();
+            do {
+                if(s.type() != DmarTableParser::MSI_CAPABLE_HPET)
+                    continue;
 
-            // Return the RID for the right comparator.
-            if(comparator-- == 0)
-                return s.rid();
+                // We assume the enumaration IDs correspond to timer blocks.
+                // XXX Is this true? We haven't seen an HPET with multiple blocks yet.
+                if(s.id() != block)
+                    continue;
+
+                if(first_rid_found == 0)
+                    first_rid_found = s.rid();
+
+                // Return the RID for the right comparator.
+                if(comparator-- == 0)
+                    return s.rid();
+            }
+            while(s.has_next() and ((s = s.next()), true));
         }
-        while(s.has_next() and ((s = s.next()), true));
-    }
-    while(e.has_next() and ((e = e.next()), true));
+        while(e.has_next() and ((e = e.next()), true));
 
-    // When we get here, either we haven't found a single RID or only
-    // one. For the latter case, we assume it's the right one.
-    return first_rid_found;
+        // When we get here, either we haven't found a single RID or only
+        // one. For the latter case, we assume it's the right one.
+        return first_rid_found;
+    }
+    catch(...) {
+        return 0;
+    }
 }
 
 uintptr_t HostHPET::get_address() {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table("HPET");
-    if(!addr)
-        throw Exception(E_NOT_FOUND, "Unable to find HPET in ACPI tables");
-
+    DataSpace table = sess.find_table("HPET");
     struct HpetAcpiTable {
         char res[40];
         unsigned char gas[4];
         uint32_t address[2];
     };
-    HpetAcpiTable *table = reinterpret_cast<HpetAcpiTable*>(addr);
-    if(table->gas[0])
+    HpetAcpiTable *hpet = reinterpret_cast<HpetAcpiTable*>(table.virt());
+    if(hpet->gas[0])
         throw Exception(E_NOT_FOUND, "HPET access must be MMIO");
-    if(table->address[1])
+    if(hpet->address[1])
         throw Exception(E_NOT_FOUND, "HPET must be below 4G");
-    return table->address[0];
+    return hpet->address[0];
 }

@@ -25,72 +25,45 @@
 
 using namespace nre;
 
-HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
+HostACPI::HostACPI() : _tables() {
     // get rsdt
-    DataSpace *ds;
-    ds = new DataSpace(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::R, _rsdp->rsdtAddr);
-    ACPI::RSDT *rsdt =
-        reinterpret_cast<ACPI::RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
-    if(rsdt->length > ExecEnv::PAGE_SIZE) {
-        uintptr_t size = rsdt->length;
-        delete ds;
-        ds = new DataSpace(size, DataSpaceDesc::LOCKED, DataSpaceDesc::R, _rsdp->rsdtAddr);
-        rsdt = reinterpret_cast<ACPI::RSDT*>(ds->virt() + (_rsdp->rsdtAddr & (ExecEnv::PAGE_SIZE - 1)));
-    }
-
+    ACPI::RSDT *rsdt;
+    DataSpace ds = map_table(get_rsdp()->rsdtAddr, rsdt);
     if(checksum(reinterpret_cast<char*>(rsdt), rsdt->length) != 0)
         throw Exception(E_NOT_FOUND, "RSDT checksum invalid");
 
     // find out the address range of all tables to map them contiguously
     uint32_t *tables = reinterpret_cast<uint32_t*>(rsdt + 1);
-    uintptr_t min = 0xFFFFFFFF, max = 0;
     size_t count = (rsdt->length - sizeof(ACPI::RSDT)) / 4;
     for(size_t i = 0; i < count; i++) {
-        DataSpace tmp(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::R, tables[i]);
-        ACPI::RSDT *tbl =
-            reinterpret_cast<ACPI::RSDT*>(tmp.virt() + (tables[i] & (ExecEnv::PAGE_SIZE - 1)));
-        // determine the address range for the RSDT's
-        if(tables[i] < min)
-            min = tables[i];
-        if(tables[i] + tbl->length > max)
-            max = tables[i] + tbl->length;
-    }
-
-    // map them and put all pointers in an array
-    size_t size = (max + ExecEnv::PAGE_SIZE * 2 - 1) - (min & ~(ExecEnv::PAGE_SIZE - 1));
-    _ds = new DataSpace(size, DataSpaceDesc::LOCKED, DataSpaceDesc::R, min);
-    _count = count;
-    _tables = new ACPI::RSDT *[count];
-    for(size_t i = 0; i < count; i++) {
-        _tables[i] = reinterpret_cast<ACPI::RSDT*>(
-            _ds->virt() + (min & (ExecEnv::PAGE_SIZE - 1)) - min + tables[i]);
-        LOG(ACPI, "ACPI: found table " << fmt(_tables[i]->signature, 0U, 4) << "\n");
+        ACPI::RSDT *tbl;
+        DataSpace rsdt = map_table(tables[i], tbl);
+        _tables.append(new ACPIListItem(tbl));
+        LOG(ACPI, "ACPI: found table " << fmt(tbl->signature, 0U, 4) << "\n");
     }
 }
 
-uintptr_t HostACPI::find(const char *name, uint instance, size_t &length) {
-    for(size_t i = 0; i < _count; i++) {
-        if(memcmp(_tables[i]->signature, name, 4) == 0 && instance-- == 0) {
-            if(checksum(reinterpret_cast<char*>(_tables[i]), _tables[i]->length) != 0)
+const HostACPI::ACPIListItem *HostACPI::find(const char *name, uint instance) {
+    for(auto it = _tables.begin(); it != _tables.end(); ++it) {
+        if(memcmp(it->table()->signature, name, 4) == 0 && instance-- == 0) {
+            if(checksum(reinterpret_cast<const char*>(it->table()), it->length()) != 0)
                 VTHROW(Exception, E_NOT_FOUND, "Checksum of ACPI table '" << name << "' invalid");
-            length = _tables[i]->length;
-            return reinterpret_cast<uintptr_t>(_tables[i]) - _ds->virt();
+            return &*it;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 uint HostACPI::irq_to_gsi(uint irq) {
-    size_t len;
-    uintptr_t addr = find("APIC", 0, len);
-    if(addr) {
+    const ACPIListItem *item = find("APIC", 0);
+    if(item) {
         // search for interrupt source overrides in the MADT
-        MADT *madt = reinterpret_cast<MADT*>(_ds->virt() + addr);
-        for(APIC *apic = madt->apic;
-            reinterpret_cast<uintptr_t>(apic) < _ds->virt() + addr + madt->length;
-            apic = reinterpret_cast<APIC*>(reinterpret_cast<uintptr_t>(apic) + apic->length)) {
+        const MADT *madt = reinterpret_cast<const MADT*>(item->table());
+        for(const APIC *apic = madt->apic;
+            reinterpret_cast<uintptr_t>(apic) < item->end();
+            apic = reinterpret_cast<const APIC*>(reinterpret_cast<uintptr_t>(apic) + apic->length)) {
             if(apic->type == APIC::INTR) {
-                APICIntr *iso = reinterpret_cast<APICIntr*>(apic);
+                const APICIntr *iso = reinterpret_cast<const APICIntr*>(apic);
                 if(iso->irq == irq)
                     return iso->gsi;
             }
@@ -98,6 +71,25 @@ uint HostACPI::irq_to_gsi(uint irq) {
     }
     // if not found, assume identity mapping
     return irq;
+}
+
+DataSpace HostACPI::map_table(uintptr_t addr, ACPI::RSDT *&res) {
+    DataSpace ds(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::R, addr);
+    res = reinterpret_cast<ACPI::RSDT*>(ds.virt() + (addr & (ExecEnv::PAGE_SIZE - 1)));
+    if(res->length <= ExecEnv::PAGE_SIZE)
+        return ds;
+
+    uintptr_t size = res->length;
+    DataSpace ds2(size, DataSpaceDesc::LOCKED, DataSpaceDesc::R, addr);
+    res = reinterpret_cast<ACPI::RSDT*>(ds2.virt() + (addr & (ExecEnv::PAGE_SIZE - 1)));
+    return ds2;
+}
+
+char HostACPI::checksum(const char *table, unsigned count) {
+    char res = 0;
+    while(count--)
+        res += table[count];
+    return res;
 }
 
 HostACPI::RSDP *HostACPI::get_rsdp() {

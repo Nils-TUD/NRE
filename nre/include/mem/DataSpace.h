@@ -91,6 +91,14 @@ public:
     explicit DataSpace(capsel_t sel) : _desc(), _sel(sel), _unmapsel(ObjCap::INVALID) {
         join();
     }
+    /**
+     * Move constructor. Makes it possible to return create a dataspace in a function and return
+     * it to the caller without having to copy it.
+     */
+    DataSpace(DataSpace &&ds) : _desc(ds.desc()), _sel(ds.sel()), _unmapsel(ds.unmapsel()) {
+        // ensure that the old one doesn't get destroyed
+        ds._unmapsel = ObjCap::INVALID;
+    }
     ~DataSpace() throw() {
         destroy();
     }

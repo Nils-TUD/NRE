@@ -65,16 +65,14 @@ public:
     typedef nre::PCIConfig::value_type value_type;
 
     explicit HostATARE(HostACPI &acpi, uint debug) : _head(nullptr) {
-        size_t len;
-        uintptr_t addr;
         // add entries from the SSDT
-        addr = acpi.find("DSDT", 0, len);
-        if(addr)
-            _head = add_refs(reinterpret_cast<uint8_t*>(acpi.mem().virt() + addr), len, _head);
+        const HostACPI::ACPIListItem *item = acpi.find("DSDT", 0);
+        if(item)
+            _head = add_refs(reinterpret_cast<uint8_t*>(item->start()), item->length(), _head);
 
         // and from the SSDTs
-        for(uint i = 0; (addr = acpi.find("SSDT", i, len)) != 0; ++i)
-            _head = add_refs(reinterpret_cast<uint8_t*>(acpi.mem().virt() + addr), len, _head);
+        for(uint i = 0; (item = acpi.find("SSDT", i)) != 0; ++i)
+            _head = add_refs(reinterpret_cast<uint8_t*>(item->start()), item->length(), _head);
 
         add_routing(_head);
         if(debug & 1)

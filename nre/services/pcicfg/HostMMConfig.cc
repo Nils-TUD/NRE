@@ -26,11 +26,8 @@ using namespace nre;
 HostMMConfig::HostMMConfig() {
     Connection con("acpi");
     ACPISession sess(con);
-    ACPI::RSDT *addr = sess.find_table("MCFG");
-    if(addr == nullptr)
-        throw Exception(E_NOT_FOUND, "No MCFG table found");
-
-    AcpiMCFG *mcfg = reinterpret_cast<AcpiMCFG*>(addr);
+    DataSpace table = sess.find_table("MCFG");
+    AcpiMCFG *mcfg = reinterpret_cast<AcpiMCFG*>(table.virt());
     size_t count = (mcfg->len - sizeof(AcpiMCFG)) / sizeof(AcpiMCFG::Entry);
     for(size_t i = 0; i < count; ++i) {
         AcpiMCFG::Entry *entry = mcfg->entries + i;

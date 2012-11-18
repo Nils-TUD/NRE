@@ -36,7 +36,6 @@ public:
      * The available commands
      */
     enum Command {
-        GET_MEM,
         FIND_TABLE,
         IRQ_TO_GSI,
         GET_GSI,
@@ -71,14 +70,7 @@ public:
      *
      * @param con the connection
      */
-    explicit ACPISession(Connection &con) : PtClientSession(con), _ds() {
-        get_mem();
-    }
-    /**
-     * Destroys this session
-     */
-    virtual ~ACPISession() {
-        delete _ds;
+    explicit ACPISession(Connection &con) : PtClientSession(con) {
     }
 
     /**
@@ -86,17 +78,17 @@ public:
      *
      * @param name the name of the table
      * @param instance the instance that is encountered (0 = the first one, 1 = the second, ...)
-     * @return the RSDT or nullptr if not found
+     * @return a dataspace that contains the table
+     * @throws Exception if the table doesn't exist
      */
-    ACPI::RSDT *find_table(const String &name, uint instance = 0) const {
+    DataSpace find_table(const String &name, uint instance = 0) const {
+        ScopedCapSels cap;
         UtcbFrame uf;
+        uf.delegation_window(Crd(cap.get(), 0, Crd::OBJ_ALL));
         uf << ACPI::FIND_TABLE << name << instance;
         pt().call(uf);
-
         uf.check_reply();
-        uintptr_t offset;
-        uf >> offset;
-        return reinterpret_cast<ACPI::RSDT*>(offset == 0 ? 0 : _ds->virt() + offset);
+        return DataSpace(uf.get_delegated(0).offset());
     }
 
     /**
@@ -136,20 +128,6 @@ public:
         uf >> gsi;
         return gsi;
     }
-
-private:
-    void get_mem() {
-        UtcbFrame uf;
-        uf << ACPI::GET_MEM;
-        pt().call(uf);
-
-        uf.check_reply();
-        DataSpaceDesc desc;
-        uf >> desc;
-        _ds = new DataSpace(desc);
-    }
-
-    DataSpace *_ds;
 };
 
 }
