@@ -32,6 +32,7 @@
 #include "tests/PingpongXPd.h"
 #include "tests/MemOps.h"
 #include "tests/ThreadsTest.h"
+#include "tests/OStreamTest.h"
 
 using namespace nre;
 using namespace nre::test;
@@ -60,6 +61,8 @@ const TestCase testcases[] = {
     treaptest_revorder,
     treaptest_randorder,
     treaptest_perf,
+    ostream_writef,
+    ostream_strops,
 };
 
 int main() {

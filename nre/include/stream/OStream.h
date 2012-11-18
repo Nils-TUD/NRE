@@ -237,6 +237,13 @@ class OStream {
                 os.putspad(value, p.padding(), p.precision(), p.flags());
         }
     };
+    template<typename T>
+    class FormatImplFloat {
+    public:
+        void write(OStream &os, const FormatParams &p, const T &value) {
+            os.printdblpad(value, p.padding(), p.precision(), p.flags());
+        }
+    };
 
 public:
     explicit OStream() {
@@ -295,12 +302,19 @@ public:
         printu(u, 10, _hexchars_small);
         return *this;
     }
+    OStream & operator<<(float f) {
+        return operator<<(static_cast<double>(f));
+    }
+    OStream & operator<<(double f) {
+        printdbl(f);
+        return *this;
+    }
 
     /**
      * Writes the given string into the stream
      */
     OStream & operator<<(const char *str) {
-        puts(str, -1);
+        puts(str);
         return *this;
     }
     /**
@@ -318,26 +332,31 @@ public:
      * To give you at least the illusion of safety, FMT_PRINTF is used to warn you about errors ;)
      *
      * @param fmt the formatting specification
+     * @return the number of written characters
      */
-    FMT_PRINTF(2, 3) void writef(const char *fmt, ...) {
+    FMT_PRINTF(2, 3) int writef(const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
-        vwritef(fmt, ap);
+        int count = vwritef(fmt, ap);
         va_end(ap);
+        return count;
     }
-    void vwritef(const char *fmt, va_list ap);
+    int vwritef(const char *fmt, va_list ap);
 
 private:
     virtual void write(char c) = 0;
 
-    void putspad(const char *s, uint pad, uint prec, uint flags);
-    void printnpad(llong n, uint pad, uint flags);
-    void printupad(ullong u, uint base, uint pad, uint flags);
+    int printsignedprefix(llong n, uint flags);
+    int putspad(const char *s, uint pad, uint prec, uint flags);
+    int printnpad(llong n, uint pad, uint flags);
+    int printupad(ullong u, uint base, uint pad, uint flags);
+    int printdblpad(double d, uint pad, uint precision, uint flags);
     int printpad(int count, uint flags);
     int printu(ullong n, uint base, char *chars);
     int printn(llong n);
-    void printptr(uintptr_t u, uint flags);
-    int puts(const char *str, ulong prec);
+    int printdbl(double d, uint precision = -1);
+    int printptr(uintptr_t u, uint flags);
+    int puts(const char *str, ulong prec = -1);
 
     static char _hexchars_big[];
     static char _hexchars_small[];
@@ -389,6 +408,12 @@ class OStream::FormatImpl<char*> : public OStream::FormatImplStr<char*> {
 // this is necessary to be able to pass a string literal to fmt()
 template<int X>
 class OStream::FormatImpl<char [X]> : public OStream::FormatImplStr<char [X]> {
+};
+template<>
+class OStream::FormatImpl<float> : public OStream::FormatImplFloat<float> {
+};
+template<>
+class OStream::FormatImpl<double> : public OStream::FormatImplFloat<double> {
 };
 
 /**

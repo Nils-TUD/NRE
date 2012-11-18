@@ -16,6 +16,7 @@
 
 #include <stream/OStream.h>
 #include <util/Digits.h>
+#include <util/Float.h>
 #include <cstring>
 
 namespace nre {
@@ -125,7 +126,8 @@ OStream::FormatParams::FormatParams(const char *fmt, bool all, va_list *ap)
     _end = fmt;
 }
 
-void OStream::vwritef(const char *fmt, va_list ap0) {
+int OStream::vwritef(const char *fmt, va_list ap0) {
+    int count = 0;
     // depending on the implementation of va_list, we might not be able to get a pointer to a
     // va_list that has been passed in as a function parameter. as a workaround we use va_copy
     // to copy the arguments to a local va_list, so that we can pass a pointer to that to a
@@ -139,7 +141,8 @@ void OStream::vwritef(const char *fmt, va_list ap0) {
             write(c);
             // finished?
             if(c == '\0')
-                return;
+                return count;
+            count++;
         }
 
         // read format parameter
@@ -161,13 +164,13 @@ void OStream::vwritef(const char *fmt, va_list ap0) {
                     n = va_arg(ap, intptr_t);
                 else
                     n = va_arg(ap, int);
-                printnpad(n, p.padding(), p.flags());
+                count += printnpad(n, p.padding(), p.flags());
                 break;
 
             // pointer
             case 'p': {
                 uintptr_t u = va_arg(ap, uintptr_t);
-                printptr(u, p.flags());
+                count += printptr(u, p.flags());
                 break;
             }
 
@@ -188,14 +191,28 @@ void OStream::vwritef(const char *fmt, va_list ap0) {
                     u = va_arg(ap, uintptr_t);
                 else
                     u = va_arg(ap, uint);
-                printupad(u, p.base(), p.padding(), p.flags());
+                count += printupad(u, p.base(), p.padding(), p.flags());
+                break;
+            }
+
+            // floating points
+            case 'f': {
+                if(p.flags() & FormatParams::LONG) {
+                    double d = va_arg(ap, double);
+                    count += printdblpad(d, p.padding(), p.precision(), p.flags());
+                }
+                else {
+                    // 'float' is promoted to 'double' when passed through '...'
+                    float f = va_arg(ap, double);
+                    count += printdblpad(f, p.padding(), p.precision(), p.flags());
+                }
                 break;
             }
 
             // string
             case 's': {
                 char *s = va_arg(ap, char*);
-                putspad(s, p.padding(), p.precision(), p.flags());
+                count += putspad(s, p.padding(), p.precision(), p.flags());
                 break;
             }
 
@@ -203,27 +220,46 @@ void OStream::vwritef(const char *fmt, va_list ap0) {
             case 'c': {
                 char b = va_arg(ap, uint);
                 write(b);
+                count++;
                 break;
             }
 
             default:
                 write(c);
+                count++;
                 break;
         }
     }
 }
 
-void OStream::putspad(const char *s, uint pad, uint prec, uint flags) {
-    if(pad > 0 && !(flags & FormatParams::PADRIGHT)) {
-        ulong width = prec != static_cast<uint>(-1) ? prec : strlen(s);
-        printpad(pad - width, flags);
+int OStream::printsignedprefix(llong n, uint flags) {
+    int count = 0;
+    if(n > 0) {
+        if(flags & FormatParams::FORCESIGN) {
+            write('+');
+            count++;
+        }
+        else if(flags & FormatParams::SPACESIGN) {
+            write(' ');
+            count++;
+        }
     }
-    int n = puts(s, prec);
-    if(pad > 0 && (flags & FormatParams::PADRIGHT))
-        printpad(pad - n, flags);
+    return count;
 }
 
-void OStream::printnpad(llong n, uint pad, uint flags) {
+int OStream::putspad(const char *s, uint pad, uint prec, uint flags) {
+    int count = 0;
+    if(pad > 0 && !(flags & FormatParams::PADRIGHT)) {
+        ulong width = prec != static_cast<uint>(-1) ? prec : strlen(s);
+        count += printpad(pad - width, flags);
+    }
+    count += puts(s, prec);
+    if(pad > 0 && (flags & FormatParams::PADRIGHT))
+        count += printpad(pad - count, flags);
+    return count;
+}
+
+int OStream::printnpad(llong n, uint pad, uint flags) {
     int count = 0;
     // pad left
     if(!(flags & FormatParams::PADRIGHT) && pad > 0) {
@@ -232,25 +268,15 @@ void OStream::printnpad(llong n, uint pad, uint flags) {
             width++;
         count += printpad(pad - width, flags);
     }
-    // print '+' or ' ' instead of '-'
-    if(n > 0) {
-        if((flags & FormatParams::FORCESIGN)) {
-            write('+');
-            count++;
-        }
-        else if(((flags) & FormatParams::SPACESIGN)) {
-            write(' ');
-            count++;
-        }
-    }
-    // print number
+    count += printsignedprefix(n, flags);
     count += printn(n);
     // pad right
     if((flags & FormatParams::PADRIGHT) && pad > 0)
-        printpad(pad - count, flags);
+        count += printpad(pad - count, flags);
+    return count;
 }
 
-void OStream::printupad(ullong u, uint base, uint pad, uint flags) {
+int OStream::printupad(ullong u, uint base, uint pad, uint flags) {
     int count = 0;
     // pad left - spaces
     if(!(flags & FormatParams::PADRIGHT) && !(flags & FormatParams::PADZEROS) && pad > 0) {
@@ -281,7 +307,36 @@ void OStream::printupad(ullong u, uint base, uint pad, uint flags) {
         count += printu(u, base, _hexchars_small);
     // pad right
     if((flags & FormatParams::PADRIGHT) && pad > 0)
-        printpad(pad - count, flags);
+        count += printpad(pad - count, flags);
+    return count;
+}
+
+int OStream::printdblpad(double d, uint pad, uint precision, uint flags) {
+    int count = 0;
+    llong pre = static_cast<llong>(d);
+    // pad left
+    if(!(flags & FormatParams::PADRIGHT) && pad > 0) {
+        size_t width;
+        if(Float<double>::is_nan(d) || Float<double>::is_inf(d)) {
+            if(Float<double>::is_negative(d) ||
+                    (flags & (FormatParams::FORCESIGN | FormatParams::SPACESIGN)))
+                width = 4;
+            else
+                width = 3;
+        }
+        else
+            width = Digits::count_signed(pre, 10) + precision + 1;
+        if(pre > 0 && (flags & (FormatParams::FORCESIGN | FormatParams::SPACESIGN)))
+            width++;
+        if(pad > width)
+            count += printpad(pad - width, flags);
+    }
+    count += printsignedprefix(pre, flags);
+    count += printdbl(d, precision);
+    // pad right
+    if((flags & FormatParams::PADRIGHT) && static_cast<int>(pad) > count)
+        count += printpad(pad - count, flags);
+    return count;
 }
 
 int OStream::printpad(int count, uint flags) {
@@ -314,16 +369,50 @@ int OStream::printn(llong n) {
     return res + 1;
 }
 
-void OStream::printptr(uintptr_t u, uint flags) {
+int OStream::printdbl(double d, uint precision) {
+    uint prec = precision == static_cast<uint>(-1) ? 6 : precision;
+    int c = 0;
+    bool nan = Float<double>::is_nan(d);
+    if(nan || Float<double>::is_inf(d)) {
+        if(Float<double>::is_negative(d)) {
+            write('-');
+            c++;
+        }
+        c += puts(nan ? "nan" : "inf");
+    }
+    else {
+        llong val = static_cast<llong>(d);
+        c += printn(val);
+        d -= val;
+        if(d < 0)
+            d = -d;
+        write('.');
+        c++;
+        while(prec-- > 0) {
+            d *= 10;
+            val = static_cast<llong>(d);
+            write((val % 10) + '0');
+            d -= val;
+            c++;
+        }
+    }
+    return c;
+}
+
+int OStream::printptr(uintptr_t u, uint flags) {
+    int count = 0;
     size_t size = sizeof(uintptr_t);
     flags |= FormatParams::PADZEROS;
     // 2 hex-digits per byte and a ':' every 2 bytes
     while(size > 0) {
-        printupad((u >> (size * 8 - 16)) & 0xFFFF, 16, 4, flags);
+        count += printupad((u >> (size * 8 - 16)) & 0xFFFF, 16, 4, flags);
         size -= 2;
-        if(size > 0)
+        if(size > 0) {
             write(':');
+            count++;
+        }
     }
+    return count;
 }
 
 int OStream::puts(const char *str, ulong prec) {
