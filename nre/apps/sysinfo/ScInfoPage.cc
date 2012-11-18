@@ -47,16 +47,13 @@ void ScInfoPage::refresh_console(bool update) {
         size_t namelen = 0;
         const char *name = getname(tu.name(), namelen);
         namelen = Math::min<size_t>(namelen, MAX_NAME_LEN);
-        // writef doesn't support floats, so calculate it with 1000 as base and use the last decimal
-        // for the first fraction-digit.
-        timevalue_t permil;
+        double permil;
         if(tu.time() == 0)
             permil = 0;
         else
-            permil = (timevalue_t)(1000 / ((float)cputotal[tu.cpu()] / tu.time()));
+            permil = 100. / (static_cast<double>(cputotal[tu.cpu()]) / tu.time());
         cs << fmt(name, MAX_NAME_LEN, namelen) << ": " << fmt("", tu.cpu() * MAX_TIME_LEN)
-           << fmt(permil / 10, 3) << "." << (permil % 10)
-           << fmt("", (CPU::count() - tu.cpu() - 1) * MAX_TIME_LEN)
+           << fmt(permil, 5, 1) << fmt("", (CPU::count() - tu.cpu() - 1) * MAX_TIME_LEN)
            << fmt(tu.totaltime() / 1000, MAX_SUMTIME_LEN) << "ms\n";
     }
     display_footer(cs, 0);
