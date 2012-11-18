@@ -149,9 +149,9 @@ private:
 };
 
 static inline OStream &operator<<(OStream &os, const DataSpaceDesc &desc) {
-    os.writef("virt=%p phys=%p size=%zu org=%p flags=%#x align=%u",
-              reinterpret_cast<void*>(desc.virt()), reinterpret_cast<void*>(desc.phys()),
-              desc.size(), reinterpret_cast<void*>(desc.origin()), desc.flags(), desc.align());
+    os << "virt=" << fmt(desc.virt(), "p") << " phys=" << fmt(desc.phys(), "p")
+       << " size=" << desc.size() << " org=" << fmt(desc.origin(), "p")
+       << " flags=" << fmt(desc.flags(), "#x") << " align=" << desc.align();
     return os;
 }
 

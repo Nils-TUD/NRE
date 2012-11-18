@@ -43,8 +43,8 @@ static void test_threads() {
     }
 
     WVPERF(prof.avg(), "cycles for thread creation");
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
 
     for(size_t i = 0; i < TEST_COUNT; ++i)
         delete threads[i];

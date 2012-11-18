@@ -51,9 +51,9 @@ PORTAL static void portal_data(capsel_t) {
 static void print_result(AvgProfiler &prof, uint sum) {
     WVPERF(prof.avg(), "cycles");
     WVPASSEQ(sum, (1 + 2) * tries + (1 + 2 + 3) * tries);
-    WVPRINTF("sum: %u", sum);
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("sum: " << sum);
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
 }
 
 static void test_pingpong() {
@@ -68,7 +68,7 @@ static void test_pingpong() {
             pt.call(uf);
             prof.stop();
         }
-        WVPRINTF("Using portal_empty:");
+        WVPRINT("Using portal_empty:");
         print_result(prof, (1 + 2) * tries + (1 + 2 + 3) * tries);
     }
 
@@ -87,7 +87,7 @@ static void test_pingpong() {
             sum += x + y;
             prof.stop();
         }
-        WVPRINTF("Using portal_data:");
+        WVPRINT("Using portal_data:");
         print_result(prof, sum);
     }
 }

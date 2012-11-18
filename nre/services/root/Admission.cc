@@ -79,8 +79,7 @@ void Admission::portal_sc(capsel_t) {
                 uf.finish_input();
 
                 ScopedCapSels sc;
-                LOG(Logging::ADMISSION,
-                    Serial::get().writef("Root: Creating sc '%s' on cpu %u\n", name.str(), cpu));
+                LOG(ADMISSION, "Root: Creating sc '" << name << "' on cpu " << cpu << "\n");
                 Syscalls::create_sc(sc.get(), ec, qpd, Pd::current()->sel());
                 add_sc(new SchedEntity(name, cpu, sc.get()));
 
@@ -95,8 +94,8 @@ void Admission::portal_sc(capsel_t) {
                 uf.finish_input();
 
                 SchedEntity *se = remove_sc(sc);
-                LOG(Logging::ADMISSION, Serial::get().writef("Root: Destroying sc '%s' on cpu %u\n",
-                                                             se->name().str(), se->cpu()));
+                LOG(ADMISSION,
+                    "Root: Destroying sc '" << se->name() << "' on cpu " << se->cpu() << "\n");
                 delete se;
                 uf << E_SUCCESS;
             }

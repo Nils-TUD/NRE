@@ -55,7 +55,7 @@ Hip::mem_iterator VMConfig::get_module(const String &name) {
         if(strcmp(mem->cmdline(), name.str()) == 0)
             return mem;
     }
-    throw Exception(E_NOT_FOUND, 64, "Unable to find module '%s'", name.str());
+    VTHROW(Exception, E_NOT_FOUND, "Unable to find module '" << name << "'");
 }
 
 OStream & operator<<(OStream &os, const VMConfig &cfg) {

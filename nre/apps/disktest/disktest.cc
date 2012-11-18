@@ -63,7 +63,7 @@ static void prepare_buffer(const DataSpace &buffer, size_t offset, size_t size) 
 
 static void read_atapi(StorageSession &disk, Storage::Parameter &params, DataSpace &buffer) {
     clear_buffer(buffer);
-    WVPRINTF("Reading sector %Lu", cdsec);
+    WVPRINT("Reading sector " << cdsec);
     dma.clear();
     dma.push(DMADesc(offset, params.sector_size));
     disk.read(tag, cdsec, dma);
@@ -73,14 +73,14 @@ static void read_atapi(StorageSession &disk, Storage::Parameter &params, DataSpa
 
 static void read_write_ata(StorageSession &disk, Storage::Parameter &params, DataSpace &buffer) {
     for(Storage::sector_type s = 0; s < params.sectors; ++s) {
-        WVPRINTF("Writing to sector %Lu", s);
+        WVPRINT("Writing to sector " << s);
         prepare_buffer(buffer, offset, params.sector_size);
         dma.clear();
         dma.push(DMADesc(offset, params.sector_size));
         disk.write(tag, s, dma);
         wait_for(disk, tag);
         clear_buffer(buffer);
-        WVPRINTF("Reading back from sector %Lu", s);
+        WVPRINT("Reading back from sector " << s);
         dma.clear();
         dma.push(DMADesc(offset, params.sector_size));
         disk.read(tag, s, dma);
@@ -91,7 +91,7 @@ static void read_write_ata(StorageSession &disk, Storage::Parameter &params, Dat
 
 static void read_invalid_sector(StorageSession &disk, Storage::Parameter &params, DataSpace &buffer) {
     clear_buffer(buffer);
-    WVPRINTF("Reading invalid sector");
+    WVPRINT("Reading invalid sector");
     try {
         dma.clear();
         dma.push(DMADesc(offset, params.sector_size));
@@ -99,7 +99,7 @@ static void read_invalid_sector(StorageSession &disk, Storage::Parameter &params
         WVPASS(false);
     }
     catch(const Exception &e) {
-        WVPRINTF("Got exception: %s", e.msg());
+        WVPRINT("Got exception: " << e.msg());
         WVPASS(true);
     }
 }
@@ -119,7 +119,7 @@ static void runtest(Connection &storagecon, DataSpace &buffer, size_t d) {
         else
             read_write_ata(disk, params, buffer);
 
-        WVPRINTF("Testing flush cache");
+        WVPRINT("Testing flush cache");
         disk.flush(tag);
         wait_for(disk, tag++);
     }

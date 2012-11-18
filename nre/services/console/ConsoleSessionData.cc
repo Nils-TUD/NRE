@@ -26,7 +26,7 @@ void ConsoleSessionData::create(DataSpace *in_ds, DataSpace *out_ds, size_t con,
     if(_in_ds != nullptr)
         throw Exception(E_EXISTS, "Console session already initialized");
     if(con >= Console::SUBCONS)
-        throw Exception(E_ARGS_INVALID, 32, "Subconsole %zu does not exist", con);
+        VTHROW(Exception, E_ARGS_INVALID, "Subconsole " << con << " does not exist");
     _in_ds = in_ds;
     _out_ds = out_ds;
     if(_in_ds)

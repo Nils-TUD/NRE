@@ -31,7 +31,7 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
       _prdt(Storage::MAX_DMA_DESCS * 8, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _devs() {
     // check if the bus is empty
     if(!is_bus_responding())
-        throw Exception(E_NOT_FOUND, 32, "Bus %u is floating", _id);
+        VTHROW(Exception, E_NOT_FOUND, "Bus " << _id << " is floating");
 
     // start thread to wait for GSIs
     if(_irqs) {
@@ -47,10 +47,10 @@ HostIDECtrl::HostIDECtrl(uint id, uint gsi, Ports::port_t portbase,
     for(ssize_t j = 1; j >= 0; --j) {
         try {
             _devs[j] = detect_drive(_id * Storage::MAX_DRIVES + j);
-            LOG(nre::Logging::STORAGE, _devs[j]->print());
+            ATA_LOG(*_devs[j]);
         }
         catch(const Exception &e) {
-            ATA_LOGDETAIL("Identify failed: %s", e.msg());
+            ATA_LOGDETAIL("Identify failed: " << e.msg());
             _devs[j] = nullptr;
         }
     }
@@ -84,7 +84,7 @@ HostATADevice *HostIDECtrl::detect_drive(uint id) {
         dev = identify(id, COMMAND_IDENTIFY);
     }
     catch(const Exception &e) {
-        ATA_LOGDETAIL("Identify failed (%s), trying IDENTIFY_PACKET now", e.msg());
+        ATA_LOGDETAIL("Identify failed (" << e.msg() << "), trying IDENTIFY_PACKET now");
         dev = identify(id, COMMAND_IDENTIFY_PACKET);
     }
 
@@ -102,9 +102,10 @@ HostATADevice *HostIDECtrl::identify(uint id, uint cmd) {
     // check whether the drive exists
     outb(ATA_REG_COMMAND, cmd);
     uint8_t status = inb(ATA_REG_STATUS);
-    if(status == 0)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: Got 0 from status-port. Assuming its not present",
-                        id);
+    if(status == 0) {
+        VTHROW(Exception, E_NOT_FOUND,
+               "Device " << id << ": Got 0 from status-port. Assuming its not present");
+    }
 
     // TODO from the osdev-wiki: Because of some ATAPI drives that do not follow spec, at this point
     // you need to check the LBAmid and LBAhi ports (0x1F4 and 0x1F5) to see if they are
@@ -121,9 +122,11 @@ HostATADevice *HostIDECtrl::identify(uint id, uint cmd) {
     timevalue_t timeout = cmd == COMMAND_IDENTIFY_PACKET ? ATAPI_WAIT_TIMEOUT : ATA_WAIT_TIMEOUT;
     int res = wait_until(timeout, CMD_ST_DRQ, CMD_ST_BUSY);
     if(res == -1)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: Timeout reached while waiting on ready", id);
-    if(res != 0)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: Error %#x. Assuming its not present", id, res);
+        VTHROW(Exception, E_NOT_FOUND, "Device " << _id << ": Timeout reached while waiting on ready");
+    if(res != 0) {
+        VTHROW(Exception, E_NOT_FOUND,
+               "Device " << _id << ": Error " << fmt(res, "#x") << ". Assuming its not present");
+    }
 
     // drive is ready, read data
     HostATADevice::Identify info;
@@ -131,14 +134,18 @@ HostATADevice *HostIDECtrl::identify(uint id, uint cmd) {
 
     // wait until DRQ and BUSY bits are unset
     res = wait_until(ATA_WAIT_TIMEOUT, 0, CMD_ST_DRQ | CMD_ST_BUSY);
-    if(res == -1)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: Timeout reached while waiting DRQ bit to clear", id);
-    if(res != 0)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: Error %#x. Assuming its not present", id);
+    if(res == -1) {
+        VTHROW(Exception, E_NOT_FOUND,
+               "Device " << _id << ": Timeout reached while waiting DRQ bit to clear");
+    }
+    if(res != 0) {
+        VTHROW(Exception, E_NOT_FOUND,
+               "Device " << _id << ": Error " << fmt(res, "#x") << ". Assuming its not present");
+    }
 
     // we don't support CHS atm
     if(info.capabilities.LBA == 0)
-        throw Exception(E_NOT_FOUND, 64, "Device %u: LBA not supported", id);
+        VTHROW(Exception, E_NOT_FOUND, "Device " << _id << ": LBA not supported");
 
     if(info.general.isATAPI)
         return new HostATAPIDevice(*this, id, info);
@@ -179,7 +186,9 @@ int HostIDECtrl::wait_until(timevalue_t timeout, uint8_t set, uint8_t unset) {
 
 void HostIDECtrl::handle_status(uint device, int res, const char *name) {
     if(res == -1)
-        throw Exception(E_TIMEOUT, 64, "Device %u: Timeout during %s", device, name);
-    if(res != 0)
-        throw Exception(E_FAILURE, 64, "Device %u: %s failed: %#x", device, name, res);
+        VTHROW(Exception, E_TIMEOUT, "Device " << device << ": Timeout during " << name);
+    if(res != 0) {
+        VTHROW(Exception, E_FAILURE,
+               "Device " << device << ": " << name << " failed: " << fmt(res, "#x"));
+    }
 }

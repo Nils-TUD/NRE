@@ -56,7 +56,7 @@ PARAM_HANDLER(vcpus, " vcpus - instantiate the vcpus defined with 'ncpu'") {
 }
 
 void Vancouver::reset() {
-    Serial::get().writef("RESET device state\n");
+    Serial::get() << "RESET device state\n";
     MessageLegacy msg2(MessageLegacy::RESET, 0);
     _mb.bus_legacy.send_fifo(msg2);
     globalsm.up();
@@ -101,7 +101,7 @@ bool Vancouver::receive(MessageHostOp &msg) {
     switch(msg.type) {
         case MessageHostOp::OP_ALLOC_IOIO_REGION: {
             new Ports(msg.value >> 8, msg.value & 0xff);
-            Serial::get().writef("alloc ioio region %lx\n", msg.value);
+            Serial::get() << "alloc ioio region " << fmt(msg.value, "x") << "\n";
         }
         break;
 
@@ -125,7 +125,8 @@ bool Vancouver::receive(MessageHostOp &msg) {
             if(msg.value <= guest_size) {
                 guest_size -= msg.value;
                 msg.phys = guest_size;
-                Serial::get().writef("Allocating from guest %08lx+%lx\n", guest_size, msg.value);
+                Serial::get() << "Allocating from guest "
+                              << fmt(guest_size, "0x", 8) << "+" << fmt(msg.value, "x") << "\n";
             }
             else
                 res = false;
@@ -162,10 +163,11 @@ bool Vancouver::receive(MessageHostOp &msg) {
             // does it fit in guest mem?
             if(destaddr >= guest_mem->virt() + guest_mem->size() ||
                destaddr + it->size + msg.cmdlen > guest_mem->virt() + guest_mem->size()) {
-                Serial::get().writef("Can't copy module %#Lx..%#Lx to %p (RAM is only 0..%p)\n",
-                                     it->addr, it->addr + it->size + msg.cmdlen,
-                                     reinterpret_cast<void*>(destaddr - guest_mem->virt()),
-                                     reinterpret_cast<void*>(guest_size));
+                Serial::get() << "Can't copy module " << fmt(it->addr, "#x") << ".."
+                              << fmt(it->addr + it->size + msg.cmdlen, "#x") << " to "
+                              << fmt(reinterpret_cast<void*>(destaddr - guest_mem->virt()))
+                              << " (RAM is only 0.."
+                              << fmt(reinterpret_cast<void*>(guest_size)) << ")\n";
                 return false;
             }
 

@@ -75,7 +75,7 @@ Gsi *PCI::get_gsi(BDF bdf, uint nr, bool /*level*/, void *msix_table) {
     // normal GSIs -  ask atare
     value_type pin = conf_read(bdf, 0xf) >> 8;
     if(!pin)
-        throw PCIException(E_NOT_FOUND, 32, "No IRQ PINs connected on BDF %#x", bdf);
+        VTHROW(PCIException, E_NOT_FOUND, "No IRQ PINs connected on " << bdf);
 
     uint gsi;
     try {
@@ -103,8 +103,7 @@ size_t PCI::find_cap(BDF bdf, cap_type id) {
     catch(...) {
         // ignore
     }
-    LOG(nre::Logging::PCI,
-        nre::Serial::get().writef("Unable to find cap %#x for bdf %#x\n", id, bdf));
+    LOG(PCI, "Unable to find cap " << fmt(id, "#x") << " for bdf " << bdf << "\n");
     return 0;
 }
 
@@ -124,8 +123,7 @@ size_t PCI::find_extended_cap(BDF bdf, cap_type id) {
     catch(...) {
         // ignore
     }
-    LOG(nre::Logging::PCI,
-        nre::Serial::get().writef("Unable to find extended cap %#x for bdf %#x\n", id, bdf));
+    LOG(PCI, "Unable to find extended cap " << fmt(id, "#x") << " for bdf " << bdf << "\n");
     return 0;
 }
 

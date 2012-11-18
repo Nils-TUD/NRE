@@ -133,8 +133,11 @@ public:
     void irq();
 
     void debug() {
-        nre::Serial::get().writef("AHCI is %x ci %x ie %x cmd %x tfd %x tag %zx\n",
-                                  _regs->is, _regs->ci, _regs->ie, _regs->cmd, _regs->tfd, _tag);
+        auto &ser = nre::Serial::get();
+        ser << "AHCI is " << nre::fmt(_regs->is, "#x") << " ci " << nre::fmt(_regs->ci, "#x")
+            << " ie " << nre::fmt(_regs->ie, "#x") << " cmd " << nre::fmt(_regs->cmd, "#x")
+            << " tfd " << nre::fmt(_regs->tfd, "#x") << " tag " << nre::fmt(_tag, "#x")
+            << "\n";
     }
 
 private:

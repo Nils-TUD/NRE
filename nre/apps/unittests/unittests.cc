@@ -64,14 +64,14 @@ const TestCase testcases[] = {
 
 int main() {
     for(size_t i = 0; i < ARRAY_SIZE(testcases); ++i) {
-        Serial::get().writef("Testing %s...\n", testcases[i].name);
+        Serial::get() << "Testing " << testcases[i].name << "...\n";
         try {
             testcases[i].func();
         }
         catch(const Exception& e) {
             Serial::get() << e;
         }
-        Serial::get().writef("Done\n");
+        Serial::get() << "Done\n";
     }
     return 0;
 }

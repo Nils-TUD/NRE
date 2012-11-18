@@ -138,7 +138,7 @@ private:
 };
 
 static inline nre::OStream & operator<<(nre::OStream &os, const PhysicalMemory::RootDataSpace &ds) {
-    os.writef("RootDataSpace[sel=%#x, umsel=%#x]: ", ds.sel(), ds.unmapsel());
-    os << ds.desc();
+    os << "RootDataSpace[sel=" << nre::fmt(ds.sel(), "#x")
+       << ", umsel=" << nre::fmt(ds.unmapsel(), "#x") << "]: " << ds.desc();
     return os;
 }

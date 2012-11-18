@@ -52,9 +52,9 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
     // PIT:  PIT is programmed to run in periodic mode, if HPET didn't work for us.
 
     _clocks_per_tick = (static_cast<timevalue_t>(Hip::get().freq_tsc) * 1000 * CPT_RES) / _timer->freq();
-    LOG(Logging::TIMER,
-        Serial::get().writef("TIMER: %Lu+%04Lu/%u TSC ticks per timer tick.\n",
-                             _clocks_per_tick / CPT_RES, _clocks_per_tick % CPT_RES, CPT_RES));
+    LOG(TIMER, "TIMER: " << (_clocks_per_tick / CPT_RES) << "+"
+                         << fmt(_clocks_per_tick % CPT_RES, "0", 4) << "/" << CPT_RES
+                         << " TSC ticks per timer tick.\n");
 
     // Get wallclock time
     if(slow_rtc)
@@ -62,11 +62,8 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
     timevalue_t msecs = _rtc.timestamp();
     DateInfo date;
     Date::gmtime(msecs / Timer::WALLCLOCK_FREQ, &date);
-    LOG(Logging::TIMER,
-        Serial::get().writef("TIMER: timestamp: %Lu secs\n", msecs / Timer::WALLCLOCK_FREQ));
-    LOG(Logging::TIMER,
-        Serial::get().writef("TIMER: date: %02d.%02d.%04d %d:%02d:%02d\n",
-                             date.mday, date.mon, date.year, date.hour, date.min, date.sec));
+    LOG(TIMER, "TIMER: timestamp: " << (msecs / Timer::WALLCLOCK_FREQ) << " secs\n");
+    LOG(TIMER, "TIMER: date: " << date << "\n");
 
     _timer->start(Math::muldiv128(msecs, _timer->freq(), Timer::WALLCLOCK_FREQ));
 
@@ -85,7 +82,7 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
     // Bootstrap IRQ handlers. IRQs are disabled. Each worker enables its IRQ when it comes up.
     for(size_t i = 0; i < parts; i++) {
         cpu_t cpu = part_cpu[i];
-        LOG(Logging::TIMER_DETAIL, Serial::get().writef("TIMER: CPU%u owns Timer%zu.\n", cpu, i));
+        LOG(TIMER_DETAIL, "TIMER: CPU" << cpu << " owns Timer" << i << "\n");
 
         _per_cpu[cpu]->has_timer = true;
         _per_cpu[cpu]->timer = _timer->timer(i);
@@ -110,9 +107,8 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
             rslot->data.abstimeout = 0;
             rslot->data.nr = remote.abstimeouts.alloc(&rslot->data);
 
-            LOG(Logging::TIMER_DETAIL,
-                Serial::get().writef("TIMER: CPU%u maps to CPU%u slot %zu.\n",
-                                     cpu, cpu_cpu[cpu], remote.slot_count));
+            LOG(TIMER_DETAIL, "TIMER: CPU" << cpu << " maps to CPU" << cpu_cpu[cpu]
+                                           << " slot " << remote.slot_count << ".\n");
             remote.slot_count++;
         }
     }
@@ -140,11 +136,10 @@ HostTimer::HostTimer(bool force_pit, bool force_hpet_legacy, bool slow_rtc)
     }
 
     // XXX Do we need those when we have enough timers for all CPUs?
-    LOG(Logging::TIMER_DETAIL, Serial::get().writef(
-            "TIMER: Waiting for %u XCPU threads to come up.\n", xcpu_threads_started));
+    LOG(TIMER_DETAIL, "TIMER: Waiting for " << xcpu_threads_started << " XCPU threads to come up.\n");
     while(xcpu_threads_started-- > 0)
         _xcpu_up.down();
-    LOG(Logging::TIMER_DETAIL, Serial::get().writef("TIMER: Initialized!\n"));
+    LOG(TIMER_DETAIL, "TIMER: Initialized!\n");
 }
 
 bool HostTimer::per_cpu_handle_xcpu(PerCpu *per_cpu) {
@@ -184,7 +179,7 @@ bool HostTimer::per_cpu_client_request(PerCpu *per_cpu, ClientData *data) {
     // XXX Set abstimeout to zero here?
     // timer in the past?
     if(t == 0) {
-        LOG(Logging::TIMER_DETAIL, Serial::get().writef("Timeout in past\n"));
+        LOG(TIMER_DETAIL, "Timeout in past\n");
         data->sm->up();
         return false;
     }
@@ -250,7 +245,7 @@ again:
         per_cpu->timer->program_timeout(next_to);
         // Check whether we might have missed that interrupt.
         if(ht->_timer->is_in_past(next_to)) {
-            LOG(Logging::TIMER_DETAIL, Serial::get().writef("Missed interrupt...goto again\n"));
+            LOG(TIMER_DETAIL, "Missed interrupt...goto again\n");
             m.type = WorkerMessage::TIMER_IRQ;
             goto again;
         }
@@ -292,7 +287,7 @@ NORETURN void HostTimer::gsi_thread(void *) {
     WorkerMessage m;
     m.type = WorkerMessage::TIMER_IRQ;
     m.data = nullptr;
-    LOG(Logging::TIMER, Serial::get().writef("Listening to GSI %u\n", our->timer->gsi().gsi()));
+    LOG(TIMER, "Listening to GSI " << our->timer->gsi().gsi() << "\n");
     while(1) {
         our->timer->gsi().down();
 

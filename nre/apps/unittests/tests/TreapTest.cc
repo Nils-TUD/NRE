@@ -157,8 +157,8 @@ static void test_add_and_rem(int *vals) {
 }
 
 static void print_perf(const char *name, AvgProfiler &prof) {
-    WVPRINTF("%s", name);
+    WVPRINT(name);
     WVPERF(prof.avg(), "cycles");
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
 }

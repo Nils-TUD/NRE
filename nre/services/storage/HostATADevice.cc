@@ -84,7 +84,7 @@ void HostATADevice::transferPIO(Operation op, const DataSpace &ds, size_t secsiz
     int res;
     while(length > offset) {
         if(op == WRITE && dma.in(buffer(), secsize, offset, ds))
-            throw Exception(E_ARGS_INVALID, 64, "Device %u: Unable to copyin data", _id);
+            VTHROW(Exception, E_ARGS_INVALID, "Device " << _id << ": Unable to copyin data");
         if(offset > 0 || waitfirst) {
             if(op == READ)
                 _ctrl.wait_ready();
@@ -101,7 +101,7 @@ void HostATADevice::transferPIO(Operation op, const DataSpace &ds, size_t secsiz
                            sizeof(uint16_t));
 
         if(op == READ && dma.out(buffer(), secsize, offset, ds))
-            throw Exception(E_ARGS_INVALID, 64, "Device %u: Unable to copyout data", _id);
+            VTHROW(Exception, E_ARGS_INVALID, "Device " << _id << ": Unable to copyout data");
         offset += secsize;
     }
     if(prod)
@@ -118,12 +118,15 @@ void HostATADevice::transferDMA(Operation op, const DataSpace &ds, const dma_typ
     ATA_LOGDETAIL("Setting PRDs");
     HostIDECtrl::PRD *prd = _ctrl.prdt();
     for(dma_type::iterator it = dma.begin(); it != dma.end(); ) {
-        if(((static_cast<uint64_t>(ds.phys()) + it->offset + it->count) >= 0x100000000))
-            throw Exception(E_ARGS_INVALID, 64, "Physical address %p is too large for DMA", ds.phys());
+        if(((static_cast<uint64_t>(ds.phys()) + it->offset + it->count) >= 0x100000000)) {
+            VTHROW(Exception, E_ARGS_INVALID,
+                   "Physical address " << fmt(ds.phys(), "p") << " is too large for DMA");
+        }
 
         if(it->offset > ds.size() || it->offset + it->count > ds.size()) {
-            throw Exception(E_ARGS_INVALID, 64, "Device %u: Invalid offset(%zu)/count(%zu)",
-                            it->offset, it->count);
+            VTHROW(Exception, E_ARGS_INVALID,
+                   "Device " << _id << ": Invalid offset(" << it->offset <<")/"
+                                               << "count(" << it->count << ")");
         }
         prd->buffer = static_cast<uint32_t>(ds.phys() + it->offset);
         prd->byteCount = it->count;
@@ -170,9 +173,9 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
     uint8_t devValue;
     if(!has_lba48()) {
         if(sector & 0xFFFFFFFFF0000000LL)
-            throw Exception(E_ARGS_INVALID, 64, "Trying to read from %#Lx with LBA28", sector);
+            VTHROW(Exception, E_ARGS_INVALID, "Trying to read from " << sector << " with LBA28");
         if(count & 0xFF00)
-            throw Exception(E_ARGS_INVALID, 64, "Trying to read %Lu sectors with LBA28", count);
+            VTHROW(Exception, E_ARGS_INVALID, "Trying to read " << count << " sectors with LBA28");
 
         // For LBA28, the lowest 4 bits are bits 27-24 of LBA
         devValue = DEVICE_LBA | ((_id & SLAVE_BIT) << 4) | ((sector >> 24) & 0x0F);
@@ -183,7 +186,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_DRIVE_SELECT, devValue);
     }
 
-    ATA_LOGDETAIL("Selecting device %d (%s)", _id, is_atapi() ? "ATAPI" : "ATA");
+    ATA_LOGDETAIL("Selecting device " << _id << " (" << (is_atapi() ? "ATAPI" : "ATA") << ")");
     _ctrl.wait();
 
     ATA_LOGDETAIL("Resetting control-register");
@@ -195,7 +198,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_FEATURES, _ctrl.dma_enabled() && has_dma());
 
     if(has_lba48()) {
-        ATA_LOGDETAIL("LBA48: setting sector-count %Lu and LBA %Lu", count, sector);
+        ATA_LOGDETAIL("LBA48: setting sector-count " << count << " and LBA " << sector);
         // LBA: | LBA6 | LBA5 | LBA4 | LBA3 | LBA2 | LBA1 |
         //     48             32            16            0
         // sector-count high-byte
@@ -212,7 +215,7 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
         _ctrl.outb(ATA_REG_ADDRESS3, (uint8_t)(sector >> 16));
     }
     else {
-        ATA_LOGDETAIL("LBA28: setting sector-count %Lu and LBA %Lu", count, sector);
+        ATA_LOGDETAIL("LBA28: setting sector-count " << count << " and LBA " << sector);
         // send sector-count
         _ctrl.outb(ATA_REG_SECTOR_COUNT, (uint8_t)count);
         // LBA1, LBA2 and LBA3
@@ -222,6 +225,6 @@ void HostATADevice::setup_command(sector_type sector, sector_type count, uint cm
     }
 
     // send command
-    ATA_LOGDETAIL("Sending command %d", cmd);
+    ATA_LOGDETAIL("Sending command " << cmd);
     _ctrl.outb(ATA_REG_COMMAND, cmd);
 }

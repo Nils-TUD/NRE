@@ -24,27 +24,14 @@
 #include <String.h>
 
 /**
- * Defines all constructors of Exception for subclasses of it. I think, this is the best solution
- * atm since gcc does not support constructor inheritance yet. And without it, as you can see, it's
- * quite inconvenient to define the constructors for every class because of the variable argument
- * constructor. An alternative would be to use only Exception and no subclasses. But then we have
- * no way to distinguish exceptions and provide different catch blocks for them. Another way would
- * be to use the c++11-feature variadic templates to change the whole va_* stuff. But this is quite
- * radical and I'm not sure yet if we want that.
- * So, by providing this macro we can keep different exception classes with little effort and can
- * switch easily to the constructor inheritance concept as soon as its available in gcc.
+ * This macro throws an exception and passes a formatted string as its message. That is, you can
+ * use the stream operators to build the message. For example:
+ * VTHROW(Exception, E_EXISTS, "My exception " << 1 << "," << 2 << " message");
  */
-#define DEFINE_EXCONSTRS(className)                                                                      \
-    explicit className(ErrorCode code = E_FAILURE, const char *msg = nullptr) throw()                    \
-        : Exception(code, msg) {                                                                         \
-    }                                                                                                    \
-    explicit className(ErrorCode code, size_t bufsize, const char *fmt, ...) throw() : Exception(code) { \
-        va_list ap;                                                                                      \
-        va_start(ap, fmt);                                                                               \
-        _msg.vformat(bufsize, fmt, ap);                                                                  \
-        va_end(ap);                                                                                      \
-    }                                                                                                    \
-    explicit className(ErrorCode code, const String &msg) throw() : Exception(code, msg) {               \
+#define VTHROW(cls, errorcode, expr) {                            \
+        nre::OStringStream __os;                                  \
+        __os << expr;                                             \
+        throw nre::cls(nre::errorcode, __os.str());               \
     }
 
 namespace std {
@@ -116,24 +103,7 @@ public:
      * @param code the error-code
      * @param msg optionally, a message describing the error
      */
-    explicit Exception(ErrorCode code = E_FAILURE, const char *msg = nullptr) throw();
-
-    /**
-     * Constructor with a formatted string
-     *
-     * @param code the error-code
-     * @param bufsize the size of the buffer for string to create
-     * @param msg a message describing the error
-     */
-    explicit Exception(ErrorCode code, size_t bufsize, const char *fmt, ...) throw();
-
-    /**
-     * Constructor
-     *
-     * @param code the error-code
-     * @param msg a message describing the error
-     */
-    explicit Exception(ErrorCode code, const String &msg) throw();
+    explicit Exception(ErrorCode code = E_FAILURE, const String &msg = String()) throw();
 
     /**
      * Destructor
@@ -193,9 +163,9 @@ protected:
      * @param os the stream
      */
     void write_backtrace(OStream &os) const {
-        os.writef("Backtrace:\n");
+        os << "Backtrace:\n";
         for(backtrace_iterator it = backtrace_begin(); it != backtrace_end(); ++it)
-            os.writef("\t%p\n", reinterpret_cast<void*>(*it));
+            os << "\t" << fmt(*it, "p") << "\n";
     }
 
     ErrorCode _code;

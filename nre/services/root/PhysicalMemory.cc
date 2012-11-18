@@ -35,8 +35,9 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
     if(_desc.phys() != 0) {
         _desc.phys(Math::round_dn<uintptr_t>(_desc.phys(), ExecEnv::PAGE_SIZE));
         if(!PhysicalMemory::can_map(_desc.phys(), _desc.size(), flags)) {
-            throw DataSpaceException(E_ARGS_INVALID, 64, "Unable to map physical memory %p..%p",
-                                     _desc.phys(), _desc.phys() + _desc.size());
+            VTHROW(DataSpaceException, E_ARGS_INVALID,
+                   "Unable to map physical memory " << fmt(_desc.phys(), "p") << ".."
+                                                    << fmt(_desc.phys() + _desc.size(), "p"));
         }
         _desc.virt(VirtualMemory::alloc(_desc.size()));
         _desc.origin(_desc.phys());
@@ -56,7 +57,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
 PhysicalMemory::RootDataSpace::RootDataSpace(capsel_t pid)
     : _desc(), _map(0, true), _unmap(0, true), _next() {
     // if we want to join a dataspace that does not exist in the root-task, its always an error
-    throw DataSpaceException(E_NOT_FOUND, 32, "Dataspace %u not found in root", pid);
+    VTHROW(DataSpaceException, E_NOT_FOUND, "Dataspace " << pid << " not found in root");
 }
 
 PhysicalMemory::RootDataSpace::~RootDataSpace() {
@@ -164,8 +165,7 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
                 if(type != DataSpace::JOIN && desc.type() == DataSpaceDesc::VIRTUAL) {
                     uintptr_t addr = VirtualMemory::alloc(desc.size());
                     desc = DataSpaceDesc(desc.size(), desc.type(), desc.flags(), 0, addr);
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Allocated virtual ds " << desc << "\n");
+                    LOG(DATASPACES, "Root: Allocated virtual ds " << desc << "\n");
                     uf << E_SUCCESS << desc;
                 }
                 else {
@@ -174,12 +174,12 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
                                               : _dsmng.create(desc);
 
                     if(type == DataSpace::CREATE) {
-                        LOG(Logging::DATASPACES, Serial::get() << "Root: Created " << ds << "\n");
+                        LOG(DATASPACES, "Root: Created " << ds << "\n");
                         uf.delegate(ds.sel(), 0);
                         uf.delegate(ds.unmapsel(), 1);
                     }
                     else {
-                        LOG(Logging::DATASPACES, Serial::get() << "Root: Joined " << ds << "\n");
+                        LOG(DATASPACES, "Root: Joined " << ds << "\n");
                         uf.delegate(ds.unmapsel());
                     }
                     // pass back attributes so that the caller has the correct ones
@@ -189,13 +189,11 @@ void PhysicalMemory::portal_dataspace(capsel_t) {
 
             case DataSpace::DESTROY:
                 if(desc.type() == DataSpaceDesc::VIRTUAL) {
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Destroyed virtual ds: " << desc << "\n");
+                    LOG(DATASPACES, "Root: Destroyed virtual ds: " << desc << "\n");
                     VirtualMemory::free(desc.virt(), desc.size());
                 }
                 else {
-                    LOG(Logging::DATASPACES,
-                        Serial::get() << "Root: Destroyed ds " << sel << ": " << desc << "\n");
+                    LOG(DATASPACES, "Root: Destroyed ds " << sel << ": " << desc << "\n");
                     _dsmng.release(desc, sel);
                 }
                 uf << E_SUCCESS;

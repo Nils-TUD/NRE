@@ -164,7 +164,7 @@ static int shm_client(int, char *argv[]) {
     uint64_t end = Util::tsc();
     uint64_t total = end - start;
     uint64_t avg = total / ITEM_COUNT;
-    WVPRINTF("Transfered %u items", ITEM_COUNT);
+    WVPRINT("Transfered " << ITEM_COUNT << " items");
     WVPERF(total, "Cycles");
     WVPERF(avg, "Cycles");
     return 0;

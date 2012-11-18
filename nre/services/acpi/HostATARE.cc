@@ -22,24 +22,26 @@ using namespace nre;
 void HostATARE::debug_show_items() {
     NamedRef *ref = _head;
     for(unsigned i = 0; ref; ref = ref->next, i++) {
-        Serial::get().writef("at: %3d %p+%04x type %02x %.*s\n",
-                             i, ref->ptr, ref->len, ref->ptr[0], ref->namelen, ref->name);
+        Serial::get() << "at: " << fmt(i, 3) << " " << ref->ptr << "+" << fmt(ref->len, "0x", 4)
+                      << " type " << fmt(ref->ptr[0], "0x", 2) << " "
+                      << fmt(ref->name, 0U, ref->namelen) << "\n";
     }
 }
 
 void HostATARE::debug_show_routing() {
     if(!search_ref(_head, 0, "_PIC", false))
-        Serial::get().writef("at: APIC mode unavailable - no _PIC method\n");
+        Serial::get() << "at: APIC mode unavailable - no _PIC method\n";
 
     for(NamedRef *dev = _head; dev; dev = dev->next) {
         if(dev->ptr[0] == 0x82) {
             BDF bdf = get_device_bdf(_head, dev);
-            Serial::get().writef("at: %04x:%02x:%02x.%x tag %p name %.*s\n",
-                                 bdf.value() >> 16, bdf.bus(), bdf.device(), bdf.function(),
-                                 dev->ptr - 1, 4, dev->name + dev->namelen - 4);
+            Serial::get() << "at: " << fmt(bdf.value() >> 16, "0x", 4) << ":" << bdf
+                          << " tag " << (dev->ptr - 1)
+                          << " name " << fmt(dev->name, 0U, dev->namelen - 4) << "\n";
             for(PciRoutingEntry *p = dev->routing; p; p = p->next) {
-                Serial::get().writef("at:\t  parent %p addr %02x_%x gsi %x\n",
-                                     dev->ptr - 1, p->adr >> 16, p->pin, p->gsi);
+                Serial::get() << "at:\t parent " << (dev->ptr - 1) << " addr "
+                              << fmt(p->adr >> 16, "0x", 2) << "_" << p->pin
+                              << " gsi " << p->gsi << "\n";
             }
         }
     }

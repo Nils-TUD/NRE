@@ -31,7 +31,7 @@ static Config *find(BDF bdf, size_t offset) {
         return pcicfg;
     if(mmcfg && mmcfg->contains(bdf, offset))
         return mmcfg;
-    throw Exception(E_NOT_FOUND, 32, "BDF %#x+%#x not found", bdf, offset);
+    VTHROW(Exception, E_NOT_FOUND, bdf << "+" << fmt(offset, "#x") << " not found");
 }
 
 PORTAL static void portal_pcicfg(capsel_t) {
@@ -52,8 +52,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
             case PCIConfig::READ: {
                 uf.finish_input();
                 PCIConfig::value_type res = cfg->read(bdf, offset);
-                LOG(Logging::PCICFG, Serial::get().writef(
-                        "%s::READ bdf=%#x off=%#x: %#x\n", cfg->name(), bdf, offset, res));
+                LOG(PCICFG, cfg->name() << "::READ " << bdf << " off=" << fmt(offset, "#x")
+                                        << ": " << fmt(res, "#x") << "\n");
                 uf << E_SUCCESS << res;
             }
             break;
@@ -63,8 +63,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
                 uf >> value;
                 uf.finish_input();
                 cfg->write(bdf, offset, value);
-                LOG(Logging::PCICFG, Serial::get().writef(
-                        "%s::WRITE bdf=%#x off=%#x: %#x\n", cfg->name(), bdf, offset, value));
+                LOG(PCICFG, cfg->name() << "::WRITE " << bdf << " off=" << fmt(offset, "#x")
+                                        << ": " << fmt(value, "#x") << "\n");
                 uf << E_SUCCESS;
             }
             break;
@@ -72,8 +72,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
             case PCIConfig::ADDR: {
                 uf.finish_input();
                 uintptr_t res = mmcfg->addr(bdf, offset);
-                LOG(Logging::PCICFG, Serial::get().writef(
-                        "MMConfig::ADDR bdf=%#x off=%#x: %p\n", bdf, offset, res));
+                LOG(PCICFG, "MMConfig::ADDR " << bdf << " off=" << fmt(offset, "#x")
+                                              << ": " << fmt(res, "p") << "\n");
                 uf << E_SUCCESS << res;
             }
             break;
@@ -83,9 +83,10 @@ PORTAL static void portal_pcicfg(capsel_t) {
                 uf >> theclass >> subclass >> inst;
                 uf.finish_input();
                 BDF bdf = pcicfg->search_device(theclass, subclass, inst);
-                LOG(Logging::PCICFG, Serial::get().writef(
-                        "PCIConfig::SEARCH_DEVICE class=%#x subclass=%#x inst=%#x => %02x,%02x,%02x\n",
-                        theclass, subclass, inst, bdf.bus(), bdf.device(), bdf.function()));
+                LOG(PCICFG, "PCIConfig::SEARCH_DEVICE" << " class=" << fmt(theclass, "#x")
+                                                       << " subclass=" << fmt(subclass, "#x")
+                                                       << " inst=" << fmt(inst, "#x")
+                                                       << " => " << bdf << "\n");
                 uf << E_SUCCESS << bdf;
             }
             break;
@@ -95,9 +96,8 @@ PORTAL static void portal_pcicfg(capsel_t) {
                 uf >> bridge;
                 uf.finish_input();
                 BDF bdf = pcicfg->search_bridge(bridge);
-                LOG(Logging::PCICFG, Serial::get().writef(
-                        "PCIConfig::SEARCH_BRIDGE bridge=%#x => %02x,%02x,%02x\n",
-                        bridge, bdf.bus(), bdf.device(), bdf.function()));
+                LOG(PCICFG, "PCIConfig::SEARCH_BRIDGE bridge=" << fmt(bridge, "#x")
+                                                               << " => " << bdf << "\n");
                 uf << E_SUCCESS << bdf;
             }
             break;

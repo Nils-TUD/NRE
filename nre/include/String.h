@@ -75,33 +75,6 @@ public:
     }
 
     /**
-     * Formats this string according to <fmt>
-     *
-     * @param size the size of the buffer that is created
-     * @param fmt the format-string
-     */
-    void format(size_t size, const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        vformat(size, fmt, ap);
-        va_end(ap);
-    }
-    /**
-     * Formats this string according to <fmt>
-     *
-     * @param size the size of the buffer that is created
-     * @param fmt the format-string
-     * @param ap the arguments
-     */
-    void vformat(size_t size, const char *fmt, va_list ap) {
-        delete[] _str;
-        _str = new char[size];
-        OStringStream os(_str, size);
-        os.vwritef(fmt, ap);
-        _len = os.length();
-    }
-
-    /**
      * Resets the string to the given one. That is, it free's the current string and copies
      * the given one into a new place on the heap
      *

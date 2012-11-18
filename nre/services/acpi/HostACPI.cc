@@ -64,7 +64,7 @@ HostACPI::HostACPI() : _count(), _tables(), _rsdp(get_rsdp()) {
     for(size_t i = 0; i < count; i++) {
         _tables[i] = reinterpret_cast<ACPI::RSDT*>(
             _ds->virt() + (min & (ExecEnv::PAGE_SIZE - 1)) - min + tables[i]);
-        LOG(Logging::ACPI, Serial::get().writef("ACPI: found table %.4s\n", _tables[i]->signature));
+        LOG(ACPI, "ACPI: found table " << fmt(_tables[i]->signature, 0U, 4) << "\n");
     }
 }
 
@@ -72,7 +72,7 @@ uintptr_t HostACPI::find(const char *name, uint instance, size_t &length) {
     for(size_t i = 0; i < _count; i++) {
         if(memcmp(_tables[i]->signature, name, 4) == 0 && instance-- == 0) {
             if(checksum(reinterpret_cast<char*>(_tables[i]), _tables[i]->length) != 0)
-                throw Exception(E_NOT_FOUND, 64, "Checksum of ACPI table '%s' invalid", name);
+                VTHROW(Exception, E_NOT_FOUND, "Checksum of ACPI table '" << name << "' invalid");
             length = _tables[i]->length;
             return reinterpret_cast<uintptr_t>(_tables[i]) - _ds->virt();
         }
@@ -106,8 +106,7 @@ HostACPI::RSDP *HostACPI::get_rsdp() {
     char *area = reinterpret_cast<char*>(ds->virt());
     for(uintptr_t off = 0; off < BIOS_MEM_SIZE; off += 16) {
         if(memcmp(area + off, "RSD PTR ", 8) == 0 && checksum(area + off, 20) == 0) {
-            LOG(Logging::ACPI, Serial::get().writef(
-                    "ACPI: found RSDP in Bios readonly memory range @ %p\n", area + off));
+            LOG(ACPI, "ACPI: found RSDP in Bios readonly memory @ " << fmt(area + off, "p") << "\n");
             return reinterpret_cast<RSDP*>(area + off);
         }
     }
@@ -120,8 +119,7 @@ HostACPI::RSDP *HostACPI::get_rsdp() {
     area = reinterpret_cast<char*>(ds->virt() + ((ebda << 4) & (ExecEnv::PAGE_SIZE - 1)));
     for(uintptr_t off = 0; off < BIOS_EBDA_SIZE; off += 16) {
         if(memcmp(area + off, "RSD PTR ", 8) == 0 && checksum(area + off, 20) == 0) {
-            LOG(Logging::ACPI, Serial::get().writef(
-                    "ACPI: found RSDP in Bios EDBA @ %p\n", area + off));
+            LOG(ACPI, "ACPI: found RSDP in Bios EDBA @ " << fmt(area + off, "p") << "\n");
             return reinterpret_cast<RSDP*>(area + off);
         }
     }

@@ -209,8 +209,7 @@ private:
         while(1) {
             ctrl->_gsi->down();
 
-            LOG(nre::Logging::STORAGE_DETAIL,
-                nre::Serial::get() << "Got GSI " << ctrl->_gsi->gsi() << "\n");
+            LOG(STORAGE_DETAIL, "Got GSI " << ctrl->_gsi->gsi() << "\n");
             uint status = 0;
             if(ctrl->_tag.dma) {
                 int res = ctrl->wait_until(DMA_TRANSFER_TIMEOUT, 0, CMD_ST_BUSY | CMD_ST_DRQ);

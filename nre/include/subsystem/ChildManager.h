@@ -32,7 +32,9 @@ namespace nre {
  */
 class ElfException : public Exception {
 public:
-    DEFINE_EXCONSTRS(ElfException)
+    explicit ElfException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**
@@ -40,7 +42,9 @@ public:
  */
 class ChildException : public Exception {
 public:
-    DEFINE_EXCONSTRS(ChildException)
+    explicit ChildException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
+        : Exception(code, msg) {
+    }
 };
 
 /**
@@ -202,7 +206,7 @@ private:
     Child *get_child_at(size_t idx) {
         Child *c = rcu_dereference(_childs[idx]);
         if(!c)
-            throw ChildException(E_NOT_FOUND, 32, "Child with idx %zu does not exist", idx);
+            VTHROW(ChildException, E_NOT_FOUND, "Child with idx " << idx << " does not exist");
         return c;
     }
     static size_t per_child_caps() {
@@ -221,7 +225,7 @@ private:
         const ServiceRegistry::Service* s = registry().find(name);
         if(!s) {
             if(!_startup_info.child)
-                throw ChildException(E_NOT_FOUND, 64, "Unable to find service '%s'", name.str());
+                VTHROW(ChildException, E_NOT_FOUND, "Unable to find service '" << name << "'");
             BitField<Hip::MAX_CPUS> available;
             capsel_t pts = get_parent_service(name.str(), available);
             s = _registry.reg(0, name, pts, 1 << CPU::order(), available);

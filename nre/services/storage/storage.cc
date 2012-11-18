@@ -66,8 +66,10 @@ public:
 
     void init(DataSpace *ctrlds, DataSpace *data, size_t drive) {
         size_t ctrl = drive / Storage::MAX_DRIVES;
-        if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive))
-            throw Exception(E_ARGS_INVALID, 64, "Controller/drive (%zu,%zu) does not exist", ctrl, drive);
+        if(!mng->exists(ctrl) || !mng->get(ctrl)->exists(drive)) {
+            VTHROW(Exception, E_ARGS_INVALID,
+                   "Controller/drive (" << ctrl << "," << drive << ") does not exist");
+        }
         if(_ctrlds)
             throw Exception(E_EXISTS, "Already initialized");
         _ctrlds = ctrlds;
@@ -130,7 +132,7 @@ void StorageService::portal(capsel_t pid) {
                 Storage::tag_type tag;
                 uf >> tag;
                 uf.finish_input();
-                LOG(Logging::STORAGE_DETAIL, Serial::get().writef("[%zu,%#lx] FLUSH\n", sess->id(), tag));
+                LOG(STORAGE_DETAIL, "[" << sess->id() << "," << fmt(tag, "#x") << "] FLUSH\n");
                 mng->get(sess->ctrl())->flush(sess->drive(), sess->prod(), tag);
                 uf << E_SUCCESS;
             }
@@ -147,24 +149,24 @@ void StorageService::portal(capsel_t pid) {
                 if(!sess->initialized())
                     throw Exception(E_ARGS_INVALID, "Not initialized");
 
-                LOG(Logging::STORAGE_DETAIL,
-                    Serial::get().writef("[%zu,%#lx] %s @ %Lu with ", sess->id(), tag,
-                                         cmd == Storage::READ ? "READ" : "WRITE", sector);
-                    Serial::get() << dma << "\n");
+                LOG(STORAGE_DETAIL, "[" << sess->id() << "," << fmt(tag, "#x") << "] "
+                                        << (cmd == Storage::READ ? "READ" : "WRITE") << " @ " << sector
+                                        << " with " << dma << "\n");
 
                 // check offset and size
                 size_t size = dma.bytecount();
                 size_t count = size / sess->params().sector_size;
                 if(size == 0 || (size & (sess->params().sector_size - 1)))
-                    throw Exception(E_ARGS_INVALID, 64, "Invalid size (%zu)", size);
+                    VTHROW(Exception, E_ARGS_INVALID, "Invalid size (" << size << ")");
                 if(sector >= sess->params().sectors) {
-                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-                                    sector,
-                                    sess->params().sectors - 1);
+                    VTHROW(Exception, E_ARGS_INVALID,
+                           "Sector " << sector << " is invalid"
+                                     << " (available: 0.." << sess->params().sectors - 1 << ")");
                 }
                 if(sector + count > sess->params().sectors) {
-                    throw Exception(E_ARGS_INVALID, 64, "Sector %Lu is invalid (available: 0..%Lu)",
-                                    sector + count - 1, sess->params().sectors - 1);
+                    VTHROW(Exception, E_ARGS_INVALID,
+                           "Sector " << (sector + count - 1) << " is invalid"
+                                     << " (available: 0.." << sess->params().sectors - 1 << ")");
                 }
 
                 if(cmd == Storage::READ) {
@@ -195,7 +197,7 @@ int main(int argc, char *argv[]) {
     bool idedma = true;
     for(int i = 1; i < argc; ++i) {
         if(strcmp(argv[i], "noidedma") == 0) {
-            LOG(Logging::STORAGE, Serial::get() << "Disabling DMA for IDE devices\n");
+            LOG(STORAGE, "Disabling DMA for IDE devices\n");
             idedma = false;
         }
     }

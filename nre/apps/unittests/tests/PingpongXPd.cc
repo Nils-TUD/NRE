@@ -123,9 +123,9 @@ static int pingpong_client(int, char *argv[]) {
 
     WVPERF(prof.avg(), "cycles");
     WVPASSEQ(sum, (1 + 2) * tries + (1 + 2 + 3) * tries);
-    WVPRINTF("sum: %u", sum);
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("sum: " << sum);
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
     return 0;
 }
 
@@ -136,7 +136,7 @@ static void test_pingpong() {
     client_func clientfuncs[] = {client_empty, client_data};
     const char *names[] = {"empty", "data"};
     for(size_t i = 0; i < ARRAY_SIZE(funcs); ++i) {
-        WVPRINTF("Using the %s portal:", names[i]);
+        WVPRINT("Using the " << names[i] << " portal:");
         // map the memory of the module
         DataSpace ds(self->size, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::R, self->addr);
         {

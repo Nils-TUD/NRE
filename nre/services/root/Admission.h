@@ -143,7 +143,7 @@ private:
                 return &*it;
             }
         }
-        throw nre::Exception(nre::E_NOT_FOUND, 32, "Unable to find Sc %u", sc);
+        VTHROW(Exception, E_NOT_FOUND, "Unable to find Sc " << sc);
     }
 
     static nre::UserSm _sm;

@@ -49,7 +49,7 @@ static void test_catchex() {
 
     WVPERF(prof.avg(), "cycles");
     WVPASSEQ(sum, tries);
-    WVPRINTF("sum: %u", sum);
-    WVPRINTF("min: %Lu", prof.min());
-    WVPRINTF("max: %Lu", prof.max());
+    WVPRINT("sum: " << sum);
+    WVPRINT("min: " << prof.min());
+    WVPRINT("max: " << prof.max());
 }
