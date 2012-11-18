@@ -17,6 +17,7 @@
 #pragma once
 
 #include <services/Storage.h>
+#include <util/Bytes.h>
 #include <Compiler.h>
 
 // for printing debug-infos
@@ -402,8 +403,8 @@ protected:
 
 static inline nre::OStream &operator<<(nre::OStream &os, const Device &d) {
     os << d.type() << " drive " << d.id() << " present (" << d.name() << ")\n";
-    os << "  " << d.capacity() << " sectors with " << d.sector_size() << " bytes"
-       << " (" << ((d.capacity() * d.sector_size()) / (1024 * 1024)) << " MiB)"
+    os << "  " << d.capacity() << " sectors with " << nre::Bytes(d.sector_size())
+       << " (" << nre::Bytes(d.capacity() * d.sector_size()) << ")"
        << ", max " << d.max_requests() << " requests";
     return os;
 }

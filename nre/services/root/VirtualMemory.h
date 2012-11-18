@@ -43,6 +43,7 @@ public:
             return 0;
         if(RAM_BEGIN + phys + size > RAM_END)
             size = RAM_END - (RAM_BEGIN + phys);
+        _ramend = nre::Math::max(_ramend, RAM_BEGIN + phys + size);
         return RAM_BEGIN + phys;
     }
     /**
@@ -56,6 +57,19 @@ public:
      */
     static uintptr_t virt_to_phys(uintptr_t virt) {
         return virt - RAM_BEGIN;
+    }
+
+    /**
+     * @return the beginning of all RAM (virtual address)
+     */
+    static uintptr_t ram_begin() {
+        return RAM_BEGIN;
+    }
+    /**
+     * @return the end of available RAM (virtual address)
+     */
+    static uintptr_t ram_end() {
+        return _ramend;
     }
 
     /**
@@ -98,4 +112,5 @@ private:
     static nre::UserSm _sm;
     static VirtualMemory _init;
     static size_t _used;
+    static size_t _ramend;
 };

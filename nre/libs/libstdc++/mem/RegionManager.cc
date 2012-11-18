@@ -16,6 +16,7 @@
 
 #include <mem/RegionManager.h>
 #include <stream/OStream.h>
+#include <util/Bytes.h>
 
 namespace nre {
 
@@ -24,7 +25,7 @@ OStream &operator<<(OStream &os, const RegionManager &rm) {
         const RegionManager::Region *r = rm._regs + i;
         if(r->size > 0) {
             os << "\t" << i << ": " << fmt(r->addr, "p") << " .. " << fmt(r->addr + r->size, "p")
-               << " (" << r->size << ")\n";
+               << " (" << Bytes(r->size) << ")\n";
         }
     }
     return os;

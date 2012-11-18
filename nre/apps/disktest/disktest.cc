@@ -18,6 +18,7 @@
 #include <services/Console.h>
 #include <services/Storage.h>
 #include <stream/ConsoleStream.h>
+#include <util/Bytes.h>
 #include <Test.h>
 
 using namespace nre;
@@ -109,8 +110,8 @@ static void runtest(Connection &storagecon, DataSpace &buffer, size_t d) {
         StorageSession disk(storagecon, buffer, d);
         Storage::Parameter params = disk.get_params();
         Serial::get() << "Connected to disk '" << params.name << "' (";
-        Serial::get() << (params.sectors * params.sector_size) / (1024 * 1024) << " MiB in ";
-        Serial::get() << params.sectors << " sectors of " << params.sector_size << " bytes)\n";
+        Serial::get() << Bytes(params.sectors * params.sector_size) << " in ";
+        Serial::get() << params.sectors << " sectors of " << Bytes(params.sector_size) << ")\n";
 
         read_invalid_sector(disk, params, buffer);
 

@@ -22,6 +22,7 @@
 #include <ipc/Service.h>
 #include <util/Math.h>
 #include <util/Cycler.h>
+#include <util/Bytes.h>
 #include <String.h>
 #include <Hip.h>
 #include <CPU.h>
@@ -162,7 +163,11 @@ int main() {
 
     // now allocate the available memory from the hypervisor
     PhysicalMemory::map_all();
-    LOG(MEM_MAP, "Virtual memory:\n" << VirtualMemory::regions());
+    LOG(MEM_MAP, "Virtual memory for mappings:\n" << VirtualMemory::regions());
+    LOG(MEM_MAP, "Virtual memory for RAM:\n\t0: "
+                 << fmt(VirtualMemory::ram_begin(), "p") << " .. "
+                 << fmt(VirtualMemory::ram_end(), "p")
+                 << " (" << Bytes(VirtualMemory::ram_end() - VirtualMemory::ram_begin()) << ")\n");
     LOG(MEM_MAP, "Physical memory:\n" << PhysicalMemory::regions());
 
     LOG(CPUS, "CPUs:\n");

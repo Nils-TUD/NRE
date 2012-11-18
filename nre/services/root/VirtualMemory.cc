@@ -24,6 +24,7 @@ RegionManager VirtualMemory::_regs INIT_PRIO_VMEM;
 UserSm VirtualMemory::_sm INIT_PRIO_VMEM;
 VirtualMemory VirtualMemory::_init INIT_PRIO_VMEM;
 size_t VirtualMemory::_used = 0;
+size_t VirtualMemory::_ramend = 0;
 
 VirtualMemory::VirtualMemory() {
     uintptr_t begin = Math::round_up<uintptr_t>(reinterpret_cast<uintptr_t>(&edata), ExecEnv::PAGE_SIZE);
