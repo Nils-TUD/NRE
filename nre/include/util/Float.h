@@ -65,11 +65,11 @@ class Float<float> : public FloatBase {
     typedef FloatInt<float, uint32_t> union_type;
 public:
     static float nan() {
-        union_type val(0x7FC00000UL);
+        union_type val(static_cast<uint32_t>(0x7FC00000));
         return val.f;
     }
     static float inf() {
-        union_type val(0x7F800000UL);
+        union_type val(static_cast<uint32_t>(0x7F800000));
         return val.f;
     }
     static bool is_negative(float v) {
@@ -91,11 +91,11 @@ class Float<double> : public FloatBase {
     typedef FloatInt<double, uint64_t> union_type;
 public:
     static double nan() {
-        union_type val(0x7FF8000000000000ULL);
+        union_type val(static_cast<uint64_t>(0x7FF8000000000000));
         return val.f;
     }
     static double inf() {
-        union_type val(0x7FF0000000000000ULL);
+        union_type val(static_cast<uint64_t>(0x7FF0000000000000));
         return val.f;
     }
     static bool is_negative(double v) {
