@@ -146,8 +146,7 @@ int main() {
                                 << (Hip::get().freq_bus / 1000) << " Mhz\n");
     // add all available memory
     for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
-        // FIXME: why can't we use the memory above 4G?
-        if(it->type == HipMem::AVAILABLE && it->addr < 0x100000000)
+        if(it->type == HipMem::AVAILABLE)
             PhysicalMemory::add(it->addr, it->size);
     }
 
