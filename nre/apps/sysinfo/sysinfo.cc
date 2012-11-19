@@ -64,13 +64,21 @@ static void input_thread(void*) {
                     pages[page]->top(pages[page]->top() + SysInfoPage::ROWS);
                     changed = true;
                     break;
-                case Keyboard::VK_LEFT:
-                    page = (page - 1) % ARRAY_SIZE(pages);
-                    changed = update = true;
-                    break;
-                case Keyboard::VK_RIGHT:
+                case Keyboard::VK_TAB:
                     page = (page + 1) % ARRAY_SIZE(pages);
                     changed = update = true;
+                    break;
+                case Keyboard::VK_LEFT:
+                    if(pages[page]->left() > 0) {
+                        pages[page]->left(pages[page]->left() - 1);
+                        changed = true;
+                    }
+                    break;
+                case Keyboard::VK_RIGHT:
+                    if(pages[page]->left() < pages[page]->max_left()) {
+                        pages[page]->left(pages[page]->left() + 1);
+                        changed = true;
+                    }
                     break;
             }
         }

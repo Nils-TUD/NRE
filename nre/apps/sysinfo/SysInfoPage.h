@@ -25,11 +25,17 @@ public:
     static const size_t ROWS            = nre::Console::ROWS - 3;
 
     explicit SysInfoPage(nre::ConsoleSession &cons, nre::SysInfoSession &sysinfo)
-        : _top(0), _cons(cons), _sysinfo(sysinfo), _sm() {
+        : _left(0), _top(0), _cons(cons), _sysinfo(sysinfo), _sm() {
     }
     virtual ~SysInfoPage() {
     }
 
+    size_t left() const {
+        return _left;
+    }
+    void left(size_t left) {
+        _left = left;
+    }
     size_t top() const {
         return _top;
     }
@@ -37,6 +43,9 @@ public:
         _top = top;
     }
 
+    virtual size_t max_left() const {
+        return 0;
+    }
     virtual void refresh_console(bool update) = 0;
 
 protected:
@@ -63,6 +72,7 @@ protected:
         return name.str() + lastslash;
     }
 
+    size_t _left;
     size_t _top;
     nre::ConsoleSession &_cons;
     nre::SysInfoSession &_sysinfo;
@@ -70,11 +80,15 @@ protected:
 };
 
 class ScInfoPage : public SysInfoPage {
-    static const size_t MAX_TIME_LEN        = 6;
-    static const size_t MAX_SUMTIME_LEN = 12;
+    static const size_t MAX_TIME_LEN        = 7;
+    static const size_t MAX_SUMTIME_LEN     = 11;
+    static const size_t VISIBLE_CPUS        = 7;
 public:
     explicit ScInfoPage(nre::ConsoleSession &cons, nre::SysInfoSession &sysinfo)
         : SysInfoPage(cons, sysinfo) {
+    }
+    virtual size_t max_left() const {
+        return nre::CPU::count() > VISIBLE_CPUS ? nre::CPU::count() - VISIBLE_CPUS : 0;
     }
     virtual void refresh_console(bool update);
 };
