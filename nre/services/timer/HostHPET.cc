@@ -44,7 +44,7 @@ void HostHPET::HPETTimer::init(HostTimerDevice &dev, cpu_t cpu) {
 
         LOG(TIMER, "TIMER: Timer " << _no << " -> GSI " << _gsi->gsi() << " CPU " << cpu
                                    << " (" << fmt(_gsi->msi_addr(), "#x") << ":"
-                                   << fmt(_gsi->msi_value(), "#x") << "\n");
+                                   << fmt(_gsi->msi_value(), "#x") << ")\n");
 
         _ack = 0;
         _reg->msi[0] = _gsi->msi_value();
@@ -159,7 +159,7 @@ HostHPET::HostHPET(bool force_legacy)
 
     if(_usable_timers > CPU::count()) {
         _usable_timers = CPU::count();
-        LOG(TIMER, "TIMER: More timers than CPUs. " << " Use only " << _usable_timers << " timers.\n");
+        LOG(TIMER, "TIMER: More timers than CPUs. Use only " << _usable_timers << " timers.\n");
     }
 
     for(uint i = 0; i < _usable_timers; i++) {
