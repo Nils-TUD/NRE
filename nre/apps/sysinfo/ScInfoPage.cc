@@ -38,7 +38,7 @@ void ScInfoPage::refresh_console(bool update) {
     // determine the total time elapsed on each CPU. this way we don't assume that exactly 1sec
     // has passed since last update and are thus less dependend on the timer-service.
     static timevalue_t cputotal[Hip::MAX_CPUS];
-    for(size_t cpu = _left; cpu < end; ++cpu)
+    for(size_t cpu = 0; cpu < CPU::count(); ++cpu)
         cputotal[cpu] = _sysinfo.get_total_time(cpu, update);
 
     for(size_t idx = _top, c = 0; c < ROWS; ++c, ++idx) {
@@ -49,16 +49,16 @@ void ScInfoPage::refresh_console(bool update) {
         size_t namelen = 0;
         const char *name = getname(tu.name(), namelen);
         namelen = Math::min<size_t>(namelen, MAX_NAME_LEN);
-        double permil;
+        double percent;
         if(tu.time() == 0)
-            permil = 0;
+            percent = 0;
         else
-            permil = 100. / (static_cast<double>(cputotal[tu.cpu()]) / tu.time());
+            percent = 100. / (static_cast<double>(cputotal[tu.cpu()]) / tu.time());
 
         cs << fmt(name, MAX_NAME_LEN, namelen) << ":";
         // display the time only if its currently visible
         if(tu.cpu() >= _left && tu.cpu() < end) {
-            cs << fmt("", (tu.cpu() - _left) * MAX_TIME_LEN)<< fmt(permil, MAX_TIME_LEN, 1)
+            cs << fmt("", (tu.cpu() - _left) * MAX_TIME_LEN) << fmt(percent, MAX_TIME_LEN, 1)
                << fmt("", (end - tu.cpu() - 1) * MAX_TIME_LEN);
         }
         else

@@ -36,17 +36,19 @@ void PdInfoPage::refresh_console(bool) {
     size_t totalthreads = 0;
     size_t totalphys = 0;
     size_t totalvirt = 0;
-    for(size_t idx = _top, c = 0; c < ROWS; ++c, ++idx) {
+    for(size_t idx = 0, c = 0; c < ROWS; ++c, ++idx) {
         SysInfo::Child c;
         if(!_sysinfo.get_child(idx, c))
             break;
 
-        size_t namelen = 0;
-        const char *name = getname(c.cmdline(), namelen);
-        cs << fmt(name, MAX_NAME_LEN, namelen) << ": "
-           << fmt(c.virt_mem() / 1024, 20) << " KiB"
-           << fmt(c.phys_mem() / 1024, 20) << " KiB"
-           << fmt(c.threads(), 8) << "\n";
+        if(idx >= _top) {
+            size_t namelen = 0;
+            const char *name = getname(c.cmdline(), namelen);
+            cs << fmt(name, MAX_NAME_LEN, namelen) << ": "
+               << fmt(c.virt_mem() / 1024, 20) << " KiB"
+               << fmt(c.phys_mem() / 1024, 20) << " KiB"
+               << fmt(c.threads(), 8) << "\n";
+        }
         totalvirt += c.virt_mem();
         totalphys += c.phys_mem();
         totalthreads += c.threads();
