@@ -1,6 +1,6 @@
 # -*- Mode: Python -*-
 
-import sys, os, subprocess
+import sys, os
 
 target = os.environ.get('NRE_TARGET') or 'x86_64'
 if target == 'x86_32':
@@ -87,8 +87,6 @@ def NREProgram(env, target, source):
     if target != 'vancouver' and target != 'root':
         myenv.Append(LINKFLAGS = ' -Wl,--section-start=.init=' + ("0x%x" % env['LINK_ADDR']))
         env['LINK_ADDR'] += 0x100000
-    revision = subprocess.check_output(["git", "rev-parse", "HEAD"])
-    myenv['CXXFLAGS'] += ' -DNRE_REV=0x' + revision[0:7]
     prog = myenv.Program(
         target, source,
         LIBS = ['stdc++','supc++'],
