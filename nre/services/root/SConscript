@@ -1,22 +1,21 @@
 # -*- Mode: Python -*-
 
 Import('env')
-import subprocess, os
+import subprocess
 
 myenv = env.Clone()
 myenv['LINKFLAGS'] += ' -Wl,-T,services/root/linker_' + env['ARCH'] + '.ld'
 #myenv.Append(CXXFLAGS = ' -finstrument-functions -DPROFILE')
 
-with open(os.devnull, "w") as fnull:
-    proc = subprocess.Popen(
-        ['git', 'describe', '--dirty', '--always'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    (resout, reserr) = proc.communicate()
-    if reserr != "":
-        revision = "-unknown-"
-    else:
-        revision = resout.rstrip()
+proc = subprocess.Popen(
+    ['git', 'describe', '--dirty', '--always'],
+    stdout=subprocess.PIPE, stderr=subprocess.PIPE
+)
+(resout, reserr) = proc.communicate()
+if reserr != "":
+    revision = "-unknown-"
+else:
+    revision = resout.rstrip()
 myenv['CXXFLAGS'] += ' -DNRE_REV=\'\"' + revision + '\"\''
 
 myenv.NREProgram(myenv, 'root', Glob('*.cc'))
