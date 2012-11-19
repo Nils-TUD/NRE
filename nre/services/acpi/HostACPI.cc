@@ -76,11 +76,11 @@ uint HostACPI::irq_to_gsi(uint irq) {
 DataSpace HostACPI::map_table(uintptr_t addr, ACPI::RSDT *&res) {
     DataSpace ds(ExecEnv::PAGE_SIZE, DataSpaceDesc::LOCKED, DataSpaceDesc::R, addr);
     res = reinterpret_cast<ACPI::RSDT*>(ds.virt() + (addr & (ExecEnv::PAGE_SIZE - 1)));
-    if(res->length <= ExecEnv::PAGE_SIZE)
+    size_t effective_length = res->length + (addr & (ExecEnv::PAGE_SIZE - 1));
+    if(effective_length <= ExecEnv::PAGE_SIZE)
         return ds;
 
-    uintptr_t size = res->length;
-    DataSpace ds2(size, DataSpaceDesc::LOCKED, DataSpaceDesc::R, addr);
+    DataSpace ds2(effective_length, DataSpaceDesc::LOCKED, DataSpaceDesc::R, addr);
     res = reinterpret_cast<ACPI::RSDT*>(ds2.virt() + (addr & (ExecEnv::PAGE_SIZE - 1)));
     return ds2;
 }
