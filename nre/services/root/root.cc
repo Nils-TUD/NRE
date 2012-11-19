@@ -138,7 +138,8 @@ int main() {
     adjust_memory_map();
     const Hip &hip = Hip::get();
 
-    LOG(PLATFORM, "Welcome to NRE rev " << NRE_REV << " built with " << COMPILER_NAME << "\n");
+    LOG(PLATFORM, "Welcome to NRE" << " rev " << fmt(NRE_REV, "x")
+                                   << " built with " << COMPILER_NAME << "\n");
     LOG(PLATFORM, "Hip checksum is " << (hip.is_valid() ? "valid" : "not valid") << "\n");
     LOG(PLATFORM, "SEL: " << hip.cfg_cap << ", EXC: " << hip.cfg_exc
                           << ", VMI: " << hip.cfg_vm << ", GSI: " << hip.cfg_gsi << "\n");
