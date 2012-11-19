@@ -6,7 +6,7 @@ import subprocess
 myenv = env.Clone()
 myenv['LINKFLAGS'] += ' -Wl,-T,services/root/linker_' + env['ARCH'] + '.ld'
 #myenv.Append(CXXFLAGS = ' -finstrument-functions -DPROFILE')
-revision = subprocess.check_output(["git", "rev-parse", "HEAD"])
+revision = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
 myenv['CXXFLAGS'] += ' -DNRE_REV=0x' + revision[0:7]
 
 myenv.NREProgram(myenv, 'root', Glob('*.cc'))
