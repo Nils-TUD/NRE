@@ -58,19 +58,24 @@ static void refresh_console() {
         vmidx = RunningVMList::get().count() - 1;
     for(size_t i = 0; (vm = RunningVMList::get().get(i)) != nullptr; ++i) {
         const Child *c = cm.get(vm->id());
-        if(c) {
-            uint8_t oldcol = cs.color();
-            if(vmidx == i)
-                cs.color(CUR_ROW_COLOR);
-            size_t virt, phys;
-            c->reglist().memusage(virt, phys);
-            cs << "  [" << vm->console() << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
-            cs << "K CFG:" << vm->cfg()->name();
-            while(cs.x() != 0)
-                cs << ' ';
-            if(vmidx == i)
-                cs.color(oldcol);
+        // detect crashed VMs
+        if(!c) {
+            RunningVMList::get().remove(vm);
+            i--;
+            continue;
         }
+
+        uint8_t oldcol = cs.color();
+        if(vmidx == i)
+            cs.color(CUR_ROW_COLOR);
+        size_t virt, phys;
+        c->reglist().memusage(virt, phys);
+        cs << "  [" << vm->console() << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
+        cs << "K CFG:" << vm->cfg()->name();
+        while(cs.x() != 0)
+            cs << ' ';
+        if(vmidx == i)
+            cs.color(oldcol);
     }
     cs << "\nPress R to reset or K to kill the selected VM";
 }
