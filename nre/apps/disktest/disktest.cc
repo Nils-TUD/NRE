@@ -133,6 +133,7 @@ int main() {
     Connection conscon("console");
     ConsoleSession cons(conscon, 1, "DiskTest");
     ConsoleStream s(cons, 0);
+    cons.clear(0);
     s << "Welcome to the disk test program!\n\n";
     s << "WARNING: This test will write on every sector of all harddisks!!!\n";
     s << "ARE YOU SURE YOU WANT TO DO THAT (enter '4711' for yes): ";
