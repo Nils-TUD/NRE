@@ -23,7 +23,9 @@
 #include "RunningVM.h"
 
 class RunningVMList {
-    explicit RunningVMList() : _sm(), _list() {
+    static const size_t MAX_VMS     = 64;
+
+    explicit RunningVMList() : _sm(), _max(), _list(is_less), _consoles() {
     }
 
 public:
@@ -34,14 +36,24 @@ public:
     size_t count() const {
         return _list.length();
     }
+    size_t max_idx() const {
+        return _max;
+    }
     void add(nre::ChildManager &cm, VMConfig *cfg, cpu_t cpu) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
-        size_t console = count() + 1;
-        nre::Child::id_type id = cfg->start(cm, console, cpu);
-        nre::ScopedLock<nre::RCULock> rcuguard(&nre::RCU::lock());
-        const nre::Child *child = cm.get(id);
-        if(child)
-            _list.append(new RunningVM(cfg, id, child->pd()));
+        size_t console = alloc_console();
+        try {
+            nre::Child::id_type id = cfg->start(cm, console, cpu);
+            nre::ScopedLock<nre::RCULock> rcuguard(&nre::RCU::lock());
+            const nre::Child *child = cm.get(id);
+            assert(child);
+            _list.insert(new RunningVM(cfg, console, id, child->pd()));
+            _max = nre::Math::max(_max, console);
+        }
+        catch(...) {
+            free_console(console);
+            throw;
+        }
     }
     RunningVM *get(size_t idx) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
@@ -62,12 +74,38 @@ public:
     }
     void remove(RunningVM *vm) {
         nre::ScopedLock<nre::UserSm> guard(&_sm);
-        if(_list.remove(vm))
+        if(_list.remove(vm)) {
+            free_console(vm->console());
             delete vm;
+        }
     }
 
 private:
+    size_t alloc_console() {
+        // 0 is the management console
+        for(size_t i = 1; i < MAX_VMS; ++i) {
+            if(!_consoles[i]) {
+                _consoles[i] = true;
+                return i;
+            }
+        }
+        throw nre::Exception(nre::E_CAPACITY, "All VM consoles in use");
+    }
+    void free_console(size_t i) {
+        _consoles[i] = false;
+        for(size_t i = 1; i < MAX_VMS; ++i) {
+            if(_consoles[i])
+                _max = i;
+        }
+    }
+
+    static bool is_less(const RunningVM &a, const RunningVM &b) {
+        return a.console() < b.console();
+    }
+
     nre::UserSm _sm;
-    nre::SList<RunningVM> _list;
+    size_t _max;
+    nre::SortedSList<RunningVM> _list;
+    bool _consoles[MAX_VMS];
     static RunningVMList _inst;
 };

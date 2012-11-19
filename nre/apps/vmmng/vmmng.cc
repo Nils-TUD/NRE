@@ -64,7 +64,7 @@ static void refresh_console() {
                 cs.color(CUR_ROW_COLOR);
             size_t virt, phys;
             c->reglist().memusage(virt, phys);
-            cs << "  [" << (i + 1) << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
+            cs << "  [" << vm->console() << "] CPU:" << c->cpu() << " MEM:" << (phys / 1024);
             cs << "K CFG:" << vm->cfg()->name();
             while(cs.x() != 0)
                 cs << ' ';
@@ -76,6 +76,7 @@ static void refresh_console() {
 }
 
 static void input_thread(void*) {
+    RunningVMList &vml = RunningVMList::get();
     while(1) {
         Console::ReceivePacket *pk = cons.consumer().get();
         switch(pk->keycode) {
@@ -85,15 +86,21 @@ static void input_thread(void*) {
                     auto it = configs.begin();
                     for(; it != configs.end() && idx-- > 0; ++it)
                         ;
-                    if(it != configs.end())
-                        RunningVMList::get().add(cm, &*it, cpucyc.next()->log_id());
+                    if(it != configs.end()) {
+                        try {
+                            vml.add(cm, &*it, cpucyc.next()->log_id());
+                        }
+                        catch(const Exception &e) {
+                            Serial::get() << "Start of '" << it->name() << "' failed: " << e.msg();
+                        }
+                    }
                 }
             }
             break;
 
             case Keyboard::VK_R: {
                 ScopedLock<RCULock> guard(&RCU::lock());
-                RunningVM *vm = RunningVMList::get().get(vmidx);
+                RunningVM *vm = vml.get(vmidx);
                 if(vm && (pk->flags & Keyboard::RELEASE)) {
                     if(pk->keycode == Keyboard::VK_R)
                         vm->execute(VMManager::RESET);
@@ -111,7 +118,7 @@ static void input_thread(void*) {
                 break;
 
             case Keyboard::VK_DOWN:
-                if((~pk->flags & Keyboard::RELEASE) && vmidx + 1 < RunningVMList::get().count()) {
+                if((~pk->flags & Keyboard::RELEASE) && vmidx < vml.count()) {
                     vmidx++;
                     refresh_console();
                 }
@@ -122,10 +129,10 @@ static void input_thread(void*) {
                     Child::id_type id = ObjCap::INVALID;
                     {
                         ScopedLock<RCULock> guard(&RCU::lock());
-                        RunningVM *vm = RunningVMList::get().get(vmidx);
+                        RunningVM *vm = vml.get(vmidx);
                         if(vm) {
                             id = vm->id();
-                            RunningVMList::get().remove(vm);
+                            vml.remove(vm);
                         }
                     }
                     if(id != ObjCap::INVALID)

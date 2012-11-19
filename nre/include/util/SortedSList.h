@@ -82,9 +82,10 @@ public:
      * Does NOT expect that the item is in the list!
      *
      * @param e the list item
+     * @return true if the item has been found and removed
      */
-    void remove(T *e) {
-        _list.remove(e);
+    bool remove(T *e) {
+        return _list.remove(e);
     }
 
 private:

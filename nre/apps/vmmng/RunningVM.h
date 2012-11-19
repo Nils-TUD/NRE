@@ -25,12 +25,15 @@
 
 class RunningVM : public nre::SListItem {
 public:
-    explicit RunningVM(VMConfig *cfg, nre::Child::id_type id, capsel_t pd)
-        : nre::SListItem(), _cfg(cfg), _id(id), _pd(pd), _prod() {
+    explicit RunningVM(VMConfig *cfg, size_t console, nre::Child::id_type id, capsel_t pd)
+        : nre::SListItem(), _cfg(cfg), _console(console), _id(id), _pd(pd), _prod() {
     }
 
     const VMConfig *cfg() const {
         return _cfg;
+    }
+    size_t console() const {
+        return _console;
     }
     nre::Child::id_type id() const {
         return _id;
@@ -54,6 +57,7 @@ public:
 
 private:
     VMConfig *_cfg;
+    size_t _console;
     nre::Child::id_type _id;
     capsel_t _pd;
     nre::Producer<nre::VMManager::Packet> *_prod;
