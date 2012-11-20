@@ -20,7 +20,6 @@
 #include <arch/Defines.h>
 #include <stream/OStream.h>
 #include <util/Math.h>
-#include <Compiler.h>
 #include <cstring>
 #include <Assert.h>
 
@@ -58,7 +57,7 @@ public:
     explicit MaskField(size_t total)
         : _bits(total), _count(Math::blockcount<size_t>(total, (sizeof(word_t) * 8))),
           _words(new word_t[_count]) {
-        STATIC_ASSERT((BITS & (BITS - 1)) == 0);
+        static_assert((BITS & (BITS - 1)) == 0, "BITS has to be a power of 2");
     }
     ~MaskField() {
         delete[] _words;
