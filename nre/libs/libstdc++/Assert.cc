@@ -14,27 +14,14 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <Exception.h>
+#include <stream/OStream.h>
+#include <Assert.h>
 
 namespace nre {
 
-class SyscallException : public Exception {
-public:
-    explicit SyscallException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
-        : Exception(code, msg) {
-    }
-
-    virtual void write(OStream& os) const;
-};
-
+void AssertException::write(OStream &os) const {
+    os << "Assert '" << expr() << "' failed in " << file() << ", line " << line() << "\n";
+    write_backtrace(os);
 }
 
-#ifdef __i386__
-#    include <arch/x86_32/SyscallABI.h>
-#elif defined __x86_64__
-#    include <arch/x86_64/SyscallABI.h>
-#else
-#    error "Unsupported architecture"
-#endif
+}

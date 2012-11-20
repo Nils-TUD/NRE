@@ -19,7 +19,6 @@
 #include <arch/ExecEnv.h>
 #include <kobj/Thread.h>
 #include <kobj/Pd.h>
-#include <kobj/Sm.h>
 #include <Compiler.h>
 #include <Hip.h>
 

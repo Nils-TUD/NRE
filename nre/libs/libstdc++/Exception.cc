@@ -26,6 +26,25 @@ Exception::Exception(ErrorCode code, const String &msg) throw()
     LOG(EXCEPTIONS, *this);
 }
 
+void Exception::write(OStream &os) const {
+    os << "Exception: " << name() << " (" << code() << ")";
+    if(msg())
+        os << ": " << msg();
+    os << '\n';
+    write_backtrace(os);
+}
+
+void Exception::write_backtrace(OStream &os) const {
+    os << "Backtrace:\n";
+    for(auto it = backtrace_begin(); it != backtrace_end(); ++it)
+        os << "\t" << fmt(*it, "p") << "\n";
+}
+
+OStream &operator<<(OStream &os, const Exception &e) {
+    e.write(os);
+    return os;
+}
+
 UtcbFrameRef & operator<<(UtcbFrameRef &uf, const Exception &e) {
     uf << e.code() << e._msg;
     return uf;

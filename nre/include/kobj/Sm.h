@@ -18,8 +18,8 @@
 
 #include <kobj/ObjCap.h>
 #include <kobj/Pd.h>
-#include <arch/SyscallABI.h>
 #include <util/ScopedCapSels.h>
+#include <Syscalls.h>
 
 namespace nre {
 

@@ -19,7 +19,9 @@
 #include <arch/Types.h>
 #include <kobj/ObjCap.h>
 #include <mem/DataSpaceDesc.h>
+#include <cap/CapRange.h>
 #include <Exception.h>
+#include <Desc.h>
 
 namespace nre {
 
@@ -30,6 +32,7 @@ public:
     }
 };
 
+class OStream;
 class ClientSession;
 class UtcbFrameRef;
 template<class DS>
@@ -173,10 +176,6 @@ private:
     capsel_t _unmapsel;
 };
 
-static inline OStream &operator<<(OStream &os, const DataSpace &ds) {
-    os << "DataSpace[sel=" << fmt(ds.sel(), "#x") << ", umsel=" << fmt(ds.unmapsel(), "#x") << "]: "
-       << ds.desc();
-    return os;
-}
+OStream &operator<<(OStream &os, const DataSpace &ds);
 
 }

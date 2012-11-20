@@ -17,9 +17,10 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <stream/OStream.h>
 
 namespace nre {
+
+class OStream;
 
 /**
  * Holds all properties of a dataspace, which can be passed around to describe a dataspace.
@@ -148,11 +149,6 @@ private:
     Type _type;
 };
 
-static inline OStream &operator<<(OStream &os, const DataSpaceDesc &desc) {
-    os << "virt=" << fmt(desc.virt(), "p") << " phys=" << fmt(desc.phys(), "p")
-       << " size=" << desc.size() << " org=" << fmt(desc.origin(), "p")
-       << " flags=" << fmt(desc.flags(), "#x") << " align=" << desc.align();
-    return os;
-}
+OStream &operator<<(OStream &os, const DataSpaceDesc &desc);
 
 }

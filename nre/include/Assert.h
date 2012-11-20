@@ -57,10 +57,7 @@ public:
         return _line;
     }
 
-    virtual void write(OStream &os) const {
-        os << "Assert '" << expr() << "' failed in " << file() << ", line " << line() << "\n";
-        write_backtrace(os);
-    }
+    virtual void write(OStream &os) const;
 
 private:
     const char *_expr;

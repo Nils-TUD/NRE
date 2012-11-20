@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <Compiler.h>
 #include <arch/Types.h>
 #include <arch/Defines.h>
+#include <Compiler.h>
 
 #define PORTAL  REGPARMS(1)
 

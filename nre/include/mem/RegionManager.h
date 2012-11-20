@@ -17,8 +17,9 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <Exception.h>
 #include <util/Math.h>
+#include <stream/OStringStream.h>
+#include <Exception.h>
 
 namespace nre {
 

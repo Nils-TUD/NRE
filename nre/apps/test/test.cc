@@ -24,6 +24,7 @@
 #include <ipc/Consumer.h>
 #include <stream/OStringStream.h>
 #include <stream/ConsoleStream.h>
+#include <stream/Serial.h>
 #include <services/Console.h>
 #include <services/Keyboard.h>
 #include <services/Mouse.h>

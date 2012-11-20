@@ -17,7 +17,6 @@
 #pragma once
 
 #include <arch/Startup.h>
-#include <util/Util.h>
 
 namespace nre {
 

@@ -17,9 +17,11 @@
 #pragma once
 
 #include <arch/Types.h>
+#include <arch/ExecEnv.h>
 #include <kobj/ObjCap.h>
 #include <Exception.h>
 #include <mem/DataSpaceDesc.h>
+#include <stream/OStringStream.h>
 #include <util/MaskField.h>
 #include <util/SortedSList.h>
 #include <util/Math.h>

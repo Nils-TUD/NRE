@@ -116,4 +116,10 @@ void DataSpace::touch() {
     }
 }
 
+OStream &operator<<(OStream &os, const DataSpace &ds) {
+    os << "DataSpace[sel=" << fmt(ds.sel(), "#x") << ", umsel=" << fmt(ds.unmapsel(), "#x") << "]: "
+       << ds.desc();
+    return os;
+}
+
 }

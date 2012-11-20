@@ -17,9 +17,8 @@
 #pragma once
 
 #include <kobj/Thread.h>
-#include <cap/CapSelSpace.h>
-#include <Assert.h>
 #include <util/SList.h>
+#include <Assert.h>
 #include <Hip.h>
 
 namespace nre {

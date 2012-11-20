@@ -14,27 +14,13 @@
  * General Public License version 2 for more details.
  */
 
-#pragma once
-
-#include <Exception.h>
+#include <stream/OStream.h>
+#include <String.h>
 
 namespace nre {
 
-class SyscallException : public Exception {
-public:
-    explicit SyscallException(ErrorCode code = E_FAILURE, const String &msg = String()) throw()
-        : Exception(code, msg) {
-    }
-
-    virtual void write(OStream& os) const;
-};
-
+OStream &operator<<(OStream &os, const String &str) {
+    return os << str.str();
 }
 
-#ifdef __i386__
-#    include <arch/x86_32/SyscallABI.h>
-#elif defined __x86_64__
-#    include <arch/x86_64/SyscallABI.h>
-#else
-#    error "Unsupported architecture"
-#endif
+}

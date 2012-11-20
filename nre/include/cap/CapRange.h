@@ -17,10 +17,10 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <util/Math.h>
-#include <Syscalls.h>
 
 namespace nre {
+
+class OStream;
 
 /**
  * An object of CapRange represents a range of capabilities that can be passed around (not in the
@@ -54,16 +54,7 @@ public:
      *
      * @param self whether to revoke it from yourself as well
      */
-    void revoke(bool self) {
-        uintptr_t start = _start;
-        size_t count = _count;
-        while(count > 0) {
-            uint minshift = Math::minshift(start, count);
-            Syscalls::revoke(Crd(start, minshift, _attr), self);
-            start += 1 << minshift;
-            count -= 1 << minshift;
-        }
-    }
+    void revoke(bool self);
 
     /**
      * Limits count() to a value that ensures that at most <free_typed> typed items are necessary
@@ -71,19 +62,7 @@ public:
      *
      * @param free_typed the number of free typed items you have
      */
-    void limit_to(size_t free_typed) {
-        uintptr_t hs = hotspot() != CapRange::NO_HOTSPOT ? hotspot() : start();
-        size_t c = count();
-        uintptr_t st = start();
-        while(free_typed > 0 && c > 0) {
-            uint minshift = Math::minshift(st | hs, c);
-            st += 1 << minshift;
-            hs += 1 << minshift;
-            c -= 1 << minshift;
-            free_typed--;
-        }
-        _count = count() - c;
-    }
+    void limit_to(size_t free_typed);
 
     /**
      * The start of this range
@@ -129,10 +108,6 @@ private:
     uintptr_t _hotspot;
 };
 
-static inline OStream &operator<<(OStream &os, const CapRange &cr) {
-    os << "CapRange[start=" << fmt(cr.start(), "#x") << ", count=" << fmt(cr.count(), "#x")
-       << ", hotspot=" << fmt(cr.hotspot(), "#x") << ", attr=" << fmt(cr.attr(), "#x") << "]";
-    return os;
-}
+OStream &operator<<(OStream &os, const CapRange &cr);
 
 }

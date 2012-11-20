@@ -17,8 +17,8 @@
 #pragma once
 
 #include <utcb/UtcbBase.h>
-#include <Assert.h>
 #include <util/Math.h>
+#include <Assert.h>
 
 #if USE_UTCB_STACKING
 

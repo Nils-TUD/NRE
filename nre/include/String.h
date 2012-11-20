@@ -17,11 +17,11 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <stream/OStream.h>
-#include <stream/OStringStream.h>
 #include <cstring>
 
 namespace nre {
+
+class OStream;
 
 /**
  * Basic string class which primary purpose is to send strings around via IPC. It does not yet
@@ -118,8 +118,6 @@ static inline bool operator!=(const String &s1, const String &s2) {
  * @param str the string
  * @return the stream
  */
-static inline OStream &operator<<(OStream &os, const String &str) {
-    return os << str.str();
-}
+OStream &operator<<(OStream &os, const String &str);
 
 }

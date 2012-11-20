@@ -18,7 +18,6 @@
 
 #include <kobj/Sm.h>
 #include <util/Atomic.h>
-#include <stream/Serial.h>
 
 namespace nre {
 

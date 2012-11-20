@@ -16,6 +16,7 @@
 
 #include <ipc/Service.h>
 #include <utcb/UtcbFrame.h>
+#include <stream/Serial.h>
 #include <CPU.h>
 
 #include "HostReboot.h"

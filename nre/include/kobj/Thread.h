@@ -18,8 +18,6 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/Ec.h>
-#include <mem/DataSpace.h>
-#include <utcb/Utcb.h>
 #include <util/SList.h>
 #include <util/Atomic.h>
 #include <Syscalls.h>
@@ -29,6 +27,7 @@ namespace nre {
 class Pd;
 class RCU;
 class RCULock;
+class Utcb;
 
 /**
  * Represents a thread, i.e. an Ec that has a stack and a Utcb. It is the base class for the two

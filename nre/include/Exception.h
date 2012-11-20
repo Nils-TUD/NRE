@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include <arch/ExecEnv.h>
 #include <arch/Types.h>
-#include <stream/OStream.h>
 #include <Errors.h>
 #include <Compiler.h>
 #include <String.h>
@@ -77,11 +75,12 @@ bool uncaught_exception() throw();
 
 namespace nre {
 
+class OStream;
 class Exception;
 class UtcbFrameRef;
-static OStream &operator<<(OStream &os, const Exception &e);
 UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
 UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
+OStream &operator<<(OStream &os, const Exception &e);
 
 /**
  * The base class of all exceptions. All exceptions have an error-code, collect a backtrace and
@@ -148,13 +147,7 @@ public:
      *
      * @param os the stream
      */
-    virtual void write(OStream &os) const {
-        os << "Exception: " << name() << " (" << code() << ")";
-        if(msg())
-            os << ": " << msg();
-        os << '\n';
-        write_backtrace(os);
-    }
+    virtual void write(OStream &os) const;
 
 protected:
     /**
@@ -162,24 +155,12 @@ protected:
      *
      * @param os the stream
      */
-    void write_backtrace(OStream &os) const {
-        os << "Backtrace:\n";
-        for(auto it = backtrace_begin(); it != backtrace_end(); ++it)
-            os << "\t" << fmt(*it, "p") << "\n";
-    }
+    void write_backtrace(OStream &os) const;
 
     ErrorCode _code;
     String _msg;
     uintptr_t _backtrace[MAX_TRACE_DEPTH];
     size_t _count;
 };
-
-UtcbFrameRef &operator<<(UtcbFrameRef &uf, const Exception &e);
-UtcbFrameRef &operator>>(UtcbFrameRef &uf, Exception &e);
-
-static inline OStream &operator<<(OStream &os, const Exception &e) {
-    e.write(os);
-    return os;
-}
 
 }

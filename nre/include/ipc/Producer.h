@@ -22,8 +22,6 @@
 #include <util/Math.h>
 #include <cstdlib>
 
-#include <stream/Serial.h>
-
 namespace nre {
 
 /**

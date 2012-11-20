@@ -18,9 +18,10 @@
 
 #include <arch/Types.h>
 #include <arch/Defines.h>
-#include <stream/OStream.h>
 
 namespace nre {
+
+class OStream;
 
 /**
  * Base class for all decriptors. Note that we don't support polymorphism here.
@@ -104,12 +105,7 @@ public:
     }
 };
 
-static inline OStream &operator<<(OStream &os, const Crd &crd) {
-    static const char *types[] = {"NULL", "MEM", "IO", "OBJ"};
-    os << "Crd[type=" << types[crd.attr() & 0x3] << " offset=" << fmt(crd.offset(), "#x")
-       << " order=" << fmt(crd.order(), "#x") << " attr=" << fmt(crd.attr(), "#x") << "]";
-    return os;
-}
+OStream &operator<<(OStream &os, const Crd &crd);
 
 /**
  * A message-transfer descriptor
@@ -145,24 +141,7 @@ public:
     }
 };
 
-static inline OStream &operator<<(OStream &os, const Mtd &mtd) {
-    static const char *flags[] = {
-        "GPR_ACDB", "GPR_BSD", "RSP", "RIP_LEN", "RFLAGS", "DS_ES", "FS_GS", "CS_SS", "TR", "LDTR",
-        "GDTR", "IDTR", "CR", "DR", "SYSENTER", "QUAL", "CTRL", "INJ", "STATE", "TSC"
-    };
-    os << "Mtd[";
-    bool first = true;
-    for(size_t i = 0; i < ARRAY_SIZE(flags); ++i) {
-        if(mtd.value() & (1 << i)) {
-            if(!first)
-                os << " ";
-            os << flags[i];
-            first = false;
-        }
-    }
-    os << "]";
-    return os;
-}
+OStream &operator<<(OStream &os, const Mtd &mtd);
 
 /**
  * A quantum+period descriptor.
@@ -184,9 +163,6 @@ public:
     }
 };
 
-static inline OStream &operator<<(OStream &os, const Qpd &qpd) {
-    os << "Qpd[prio=" << qpd.prio() << " quantum=" << qpd.quantum() << "]";
-    return os;
-}
+OStream &operator<<(OStream &os, const Qpd &qpd);
 
 }

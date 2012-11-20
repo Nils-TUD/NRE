@@ -21,8 +21,6 @@
 #include <util/Sync.h>
 #include <util/Math.h>
 
-#include <stream/Serial.h>
-
 namespace nre {
 
 template<typename T>

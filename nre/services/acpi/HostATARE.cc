@@ -15,6 +15,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <stream/Serial.h>
+
 #include "HostATARE.h"
 
 using namespace nre;

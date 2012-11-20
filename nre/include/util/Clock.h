@@ -18,6 +18,7 @@
 #pragma once
 
 #include <util/Math.h>
+#include <util/Util.h>
 #include <Hip.h>
 
 namespace nre {

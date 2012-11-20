@@ -20,12 +20,12 @@
 #include <utcb/Utcb.h>
 #include <cap/CapRange.h>
 #include <cap/CapSelSpace.h>
-#include <Exception.h>
 #include <kobj/Thread.h>
-#include <String.h>
-#include <cstring>
-#include <Assert.h>
 #include <util/Math.h>
+#include <Exception.h>
+#include <String.h>
+#include <Assert.h>
+#include <cstring>
 
 namespace nre {
 

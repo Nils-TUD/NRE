@@ -18,8 +18,8 @@
 
 #include <arch/SpinLock.h>
 #include <arch/Types.h>
-#include <Exception.h>
 #include <util/ScopedLock.h>
+#include <Exception.h>
 #include <Hip.h>
 
 namespace nre {
