@@ -76,5 +76,9 @@ int main() {
         }
         Serial::get() << "Done\n";
     }
+    // until we have michals test-system...
+    Serial::get() << "\n============================================\n";
+    Serial::get() << "Total failures: " << WvTest::failures;
+    Serial::get() << "\n============================================\n";
     return 0;
 }

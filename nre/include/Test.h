@@ -118,12 +118,16 @@ class WvTest {
     void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "")
     {
         Serial::get() << sb << suffix << se << " " << resultstr(result) << "\n";
+        if(strcmp(resultstr(result), "FAILED") == 0)
+            failures++;
     }
 #else
     template<typename T>
     void print_result(T result, const char* suffix = "", const char *sb = "", const char *se = "") {
         Serial::get() << "! " << file << ":" << line << " " << condstr << " "
                       << sb << suffix << se << " " << resultstr(result) << "\n";
+        if(strcmp(resultstr(result), "FAILED") == 0)
+            failures++;
     }
 #endif
 
@@ -301,6 +305,8 @@ public:
         print_result(true, valstr, "= ");
         return val;
     }
+
+    static size_t failures;
 };
 
 }
