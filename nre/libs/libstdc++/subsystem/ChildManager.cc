@@ -536,7 +536,7 @@ void ChildManager::Portals::io(capsel_t pid) {
 
             // alloc() makes sure that nobody can free something from other childs.
             if(op == Ports::RELEASE)
-                c->io().alloc_region(base, count);
+                c->io().remove(base, count);
 
             {
                 UtcbFrame puf;
@@ -548,7 +548,7 @@ void ChildManager::Portals::io(capsel_t pid) {
             }
 
             if(op == Ports::ALLOC) {
-                c->io().free(base, count);
+                c->io().add(base, count);
                 uf.delegate(CapRange(base, count, Crd::IO_ALL));
             }
         }

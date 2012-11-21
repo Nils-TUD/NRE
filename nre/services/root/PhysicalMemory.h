@@ -18,8 +18,9 @@
 
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
-#include <mem/RegionManager.h>
 #include <mem/DataSpaceManager.h>
+#include <util/RegionManager.h>
+#include <util/Bytes.h>
 
 /**
  * Manages all physical memory. At the beginning, it is told what memory is available according
@@ -28,9 +29,57 @@
  * you can get the virtual address for a physical one by using VirtualMemory::phys_to_virt().
  */
 class PhysicalMemory {
-public:
     class RootDataSpace;
     friend class RootDataSpace;
+
+    /**
+     * A special region for root to provide custom new and delete operators (this is necessary
+     * because we're building dynamic memory with this stuff)
+     */
+    struct MemRegion : public nre::Region {
+        static void *operator new(size_t size) throw();
+        static void operator delete(void *ptr) throw();
+
+    private:
+        MemRegion *_next;
+        static MemRegion *_free;
+    };
+
+    /**
+     * Region manager for the physical memory
+     */
+    class MemRegManager : public nre::RegionManager<MemRegion> {
+        friend class MemRegion;
+
+    public:
+        explicit MemRegManager() : nre::RegionManager<MemRegion>() {
+        }
+
+        uintptr_t alloc_safe(size_t size) {
+            for(auto it = _regs.begin(); it != _regs.end(); ++it) {
+                // it has to be > because we can't free the region here
+                if(it->size > size) {
+                    it->addr += size;
+                    it->size -= size;
+                    return it->addr - size;
+                }
+            }
+            VTHROW(RegionManagerException, E_CAPACITY, "Unable to allocate " << size << " bytes");
+        }
+
+        friend nre::OStream &operator<<(nre::OStream &os, const MemRegManager &rm) {
+            for(auto it = rm.begin(); it != rm.end(); ++it) {
+                os << "\t" << nre::fmt(it->addr, "p") << " .. " << nre::fmt(it->addr + it->size, "p")
+                   << " (" << nre::Bytes(it->size) << ")\n";
+            }
+            return os;
+        }
+
+    private:
+        // we need a few regions at the beginning to be able to store available memory regions
+        static MemRegion _initial_regs[];
+        static bool _initial_added;
+    };
 
     /**
      * The DataSpace equivalent for the root-task which works slightly different because it is
@@ -59,6 +108,12 @@ public:
         static void *operator new(size_t size) throw();
         static void operator delete(void *ptr) throw();
 
+        friend nre::OStream & operator<<(nre::OStream &os, const RootDataSpace &ds) {
+            os << "RootDataSpace[sel=" << nre::fmt(ds.sel(), "#x")
+               << ", umsel=" << nre::fmt(ds.unmapsel(), "#x") << "]: " << ds.desc();
+            return os;
+        }
+
     private:
         static void revoke_mem(uintptr_t addr, size_t size, bool self = false);
 
@@ -69,6 +124,7 @@ public:
         static RootDataSpace *_free;
     };
 
+public:
     /**
      * Allocates <size> bytes from the physical memory.
      *
@@ -112,13 +168,13 @@ public:
      * @return the amount of still free physical memory
      */
     static size_t free_size() {
-        return _mem.total_size();
+        return _mem.total_count();
     }
 
     /**
      * @return the list of available physical memory regions
      */
-    static const nre::RegionManager &regions() {
+    static const MemRegManager &regions() {
         return _mem;
     }
 
@@ -133,12 +189,6 @@ private:
     PhysicalMemory();
 
     static size_t _totalsize;
-    static nre::RegionManager _mem;
+    static MemRegManager _mem;
     static nre::DataSpaceManager<RootDataSpace> _dsmng;
 };
-
-static inline nre::OStream & operator<<(nre::OStream &os, const PhysicalMemory::RootDataSpace &ds) {
-    os << "RootDataSpace[sel=" << nre::fmt(ds.sel(), "#x")
-       << ", umsel=" << nre::fmt(ds.unmapsel(), "#x") << "]: " << ds.desc();
-    return os;
-}

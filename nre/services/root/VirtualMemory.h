@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <mem/RegionManager.h>
 #include <kobj/UserSm.h>
+#include <util/RegionManager.h>
 #include <util/ScopedLock.h>
 
 /**
@@ -101,14 +101,14 @@ public:
     /**
      * @return the virtual memory regions
      */
-    static const nre::RegionManager &regions() {
+    static const nre::RegionManager<> &regions() {
         return _regs;
     }
 
 private:
     VirtualMemory();
 
-    static nre::RegionManager _regs;
+    static nre::RegionManager<> _regs;
     static nre::UserSm _sm;
     static VirtualMemory _init;
     static size_t _used;

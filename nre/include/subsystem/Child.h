@@ -24,7 +24,7 @@
 #include <kobj/Gsi.h>
 #include <kobj/Ports.h>
 #include <subsystem/ChildMemory.h>
-#include <mem/RegionManager.h>
+#include <util/PortManager.h>
 #include <util/BitField.h>
 #include <util/SList.h>
 #include <RCU.h>
@@ -153,10 +153,10 @@ public:
     /**
      * @return the allocated IO ports
      */
-    RegionManager &io() {
+    PortManager &io() {
         return _io;
     }
-    const RegionManager &io() const {
+    const PortManager &io() const {
         return _io;
     }
 
@@ -183,7 +183,7 @@ public:
 private:
     explicit Child(ChildManager *cm, id_type id, const String &cmdline)
         : RCUObject(), _cm(cm), _id(id), _cmdline(cmdline), _started(), _pd(), _ec(),
-          _pts(), _ptcount(), _regs(), _io(), _scs(), _gsis(),
+          _pts(), _ptcount(), _regs(), _io(PortManager::USED), _scs(), _gsis(),
           _gsi_caps(CapSelSpace::get().allocate(Hip::MAX_GSIS)), _gsi_next(), _entry(),
           _main(), _stack(), _utcb(), _hip(), _last_fault_addr(), _last_fault_cpu(), _sm() {
     }
@@ -234,7 +234,7 @@ private:
     Pt **_pts;
     size_t _ptcount;
     ChildMemory _regs;
-    RegionManager _io;
+    PortManager _io;
     SList<SchedEntity> _scs;
     BitField<Hip::MAX_GSIS> _gsis;
     capsel_t _gsi_caps;

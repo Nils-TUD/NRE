@@ -20,7 +20,7 @@ using namespace nre;
 
 extern void *edata;
 
-RegionManager VirtualMemory::_regs INIT_PRIO_VMEM;
+RegionManager<> VirtualMemory::_regs INIT_PRIO_VMEM;
 UserSm VirtualMemory::_sm INIT_PRIO_VMEM;
 VirtualMemory VirtualMemory::_init INIT_PRIO_VMEM;
 size_t VirtualMemory::_used = 0;

@@ -28,7 +28,7 @@ using namespace nre;
 
 uchar Hypervisor::_stack[ExecEnv::STACK_SIZE] ALIGNED(ARCH_STACK_SIZE);
 Pt *Hypervisor::_map_pts[Hip::MAX_CPUS];
-RegionManager Hypervisor::_io INIT_PRIO_HV;
+PortManager Hypervisor::_io INIT_PRIO_HV (PortManager::FREE);
 BitField<Hip::MAX_GSIS> Hypervisor::_gsis INIT_PRIO_HV;
 UserSm Hypervisor::_io_sm INIT_PRIO_HV;
 UserSm Hypervisor::_gsi_sm INIT_PRIO_HV;
@@ -43,7 +43,7 @@ Hypervisor::Hypervisor() {
                                           reinterpret_cast<uintptr_t>(_stack), ec_utcb);
     _map_pts[CPU::current().log_id()] = new Pt(ec, portal_map);
     // make all I/O ports available
-    _io.free(0, 0xFFFF);
+    _io.add(0, 0xFFFF);
 }
 
 void Hypervisor::init() {

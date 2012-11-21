@@ -22,10 +22,44 @@
 
 using namespace nre;
 
+PhysicalMemory::MemRegion *PhysicalMemory::MemRegion::_free = nullptr;
 PhysicalMemory::RootDataSpace *PhysicalMemory::RootDataSpace::_free = nullptr;
 size_t PhysicalMemory::_totalsize = 0;
-RegionManager PhysicalMemory::_mem INIT_PRIO_PMEM;
+PhysicalMemory::MemRegion PhysicalMemory::MemRegManager::_initial_regs[4];
+bool PhysicalMemory::MemRegManager::_initial_added = false;
+PhysicalMemory::MemRegManager PhysicalMemory::_mem INIT_PRIO_PMEM;
 DataSpaceManager<PhysicalMemory::RootDataSpace> PhysicalMemory::_dsmng INIT_PRIO_PMEM;
+
+void *PhysicalMemory::MemRegion::operator new(size_t) throw() {
+    if(!MemRegManager::_initial_added) {
+        for(size_t i = 0; i < ARRAY_SIZE(MemRegManager::_initial_regs); ++i) {
+            MemRegManager::_initial_regs[i]._next = _free;
+            _free = MemRegManager::_initial_regs + i;
+        }
+        MemRegManager::_initial_added = true;
+    }
+
+    if(_free == nullptr) {
+        uintptr_t phys = PhysicalMemory::_mem.alloc_safe(ExecEnv::PAGE_SIZE);
+        uintptr_t virt = VirtualMemory::phys_to_virt(phys);
+        MemRegion *reg = reinterpret_cast<MemRegion*>(virt);
+        for(size_t i = 0; i < ExecEnv::PAGE_SIZE / sizeof(MemRegion); ++i) {
+            reg->_next = _free;
+            _free = reg;
+            reg++;
+        }
+    }
+
+    MemRegion *res = _free;
+    _free = _free->_next;
+    return res;
+}
+
+void PhysicalMemory::MemRegion::operator delete(void *ptr) throw() {
+    MemRegion *reg = static_cast<MemRegion*>(ptr);
+    reg->_next = _free;
+    _free = reg;
+}
 
 PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
     : _desc(desc), _map(0), _unmap(0), _next() {
@@ -39,6 +73,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
                    "Unable to map physical memory " << fmt(_desc.phys(), "p") << ".."
                                                     << fmt(_desc.phys() + _desc.size(), "p"));
         }
+
         _desc.virt(VirtualMemory::alloc(_desc.size()));
         _desc.origin(_desc.phys());
         Hypervisor::map_mem(_desc.phys(), _desc.virt(), _desc.size());
@@ -47,6 +82,7 @@ PhysicalMemory::RootDataSpace::RootDataSpace(const DataSpaceDesc &desc)
         size_t align = 1UL << (_desc.align() + ExecEnv::PAGE_SHIFT);
         if(align < ExecEnv::BIG_PAGE_SIZE || _desc.size() < ExecEnv::BIG_PAGE_SIZE)
             flags &= ~DataSpaceDesc::BIGPAGES;
+
         _desc.phys(alloc(_desc.size(), align));
         _desc.origin(_desc.phys());
         _desc.virt(VirtualMemory::phys_to_virt(_desc.phys()));
@@ -75,7 +111,6 @@ PhysicalMemory::RootDataSpace::~RootDataSpace() {
 }
 
 void *PhysicalMemory::RootDataSpace::operator new(size_t) throw() {
-    RootDataSpace *res;
     if(_free == nullptr) {
         uintptr_t phys = alloc(ExecEnv::PAGE_SIZE);
         uintptr_t virt = VirtualMemory::alloc(ExecEnv::PAGE_SIZE);
@@ -87,7 +122,8 @@ void *PhysicalMemory::RootDataSpace::operator new(size_t) throw() {
             ds++;
         }
     }
-    res = _free;
+
+    RootDataSpace *res = _free;
     _free = _free->_next;
     return res;
 }
@@ -110,7 +146,7 @@ void PhysicalMemory::add(uintptr_t addr, size_t size) {
 }
 
 void PhysicalMemory::remove(uintptr_t addr, size_t size) {
-    _mem.remove(addr, size);
+    _mem.alloc_at(addr, size, false);
 }
 
 void PhysicalMemory::map_all() {
@@ -118,7 +154,7 @@ void PhysicalMemory::map_all() {
         if(it->size)
             Hypervisor::map_mem(it->addr, VirtualMemory::phys_to_virt(it->addr), it->size);
     }
-    _totalsize = _mem.total_size();
+    _totalsize = _mem.total_count();
 }
 
 bool PhysicalMemory::can_map(uintptr_t phys, size_t size, uint &flags) {
@@ -126,6 +162,7 @@ bool PhysicalMemory::can_map(uintptr_t phys, size_t size, uint &flags) {
     // check for overflow
     if(phys + size < phys)
         return false;
+
     // check if its a module
     for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         if(it->type == HipMem::MB_MODULE) {
@@ -137,6 +174,7 @@ bool PhysicalMemory::can_map(uintptr_t phys, size_t size, uint &flags) {
             }
         }
     }
+
     // check if the child wants to request none-device-memory
     for(auto it = hip.mem_begin(); it != hip.mem_end(); ++it) {
         // if addr is 0 its the BIOS area, which is ok

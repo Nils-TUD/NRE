@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <mem/RegionManager.h>
+#include <util/RegionManager.h>
 #include <util/ScopedPtr.h>
 
 #include "RegMngTest.h"
@@ -31,7 +31,7 @@ const TestCase regmng = {
 void test_regmng() {
     uintptr_t addr1, addr2, addr3;
     {
-        ScopedPtr<RegionManager> rm(new RegionManager());
+        ScopedPtr<RegionManager<>> rm(new RegionManager<>());
         rm->free(0x100000, 0x3000);
         rm->free(0x200000, 0x1000);
         rm->free(0x280000, 0x2000);
@@ -44,19 +44,20 @@ void test_regmng() {
         rm->free(addr2, 0x2000);
         rm->free(addr3, 0x2000);
 
-        RegionManager::iterator it = rm->begin();
-        WVPASSEQ(it->addr, static_cast<uintptr_t>(0x100000));
-        WVPASSEQ(it->size, static_cast<size_t>(0x3000));
-        ++it;
+        WVPASSEQ(rm->total_count(), static_cast<size_t>(0x6000));
+        auto it = rm->begin();
         WVPASSEQ(it->addr, static_cast<uintptr_t>(0x200000));
         WVPASSEQ(it->size, static_cast<size_t>(0x1000));
+        ++it;
+        WVPASSEQ(it->addr, static_cast<uintptr_t>(0x100000));
+        WVPASSEQ(it->size, static_cast<size_t>(0x3000));
         ++it;
         WVPASSEQ(it->addr, static_cast<uintptr_t>(0x280000));
         WVPASSEQ(it->size, static_cast<size_t>(0x2000));
     }
 
     {
-        ScopedPtr<RegionManager> rm(new RegionManager());
+        ScopedPtr<RegionManager<>> rm(new RegionManager<>());
         rm->free(0x100000, 0x3000);
         rm->free(0x200000, 0x1000);
         rm->free(0x280000, 0x2000);
@@ -69,14 +70,14 @@ void test_regmng() {
         rm->free(addr3, 0x1000);
         rm->free(addr2, 0x1000);
 
-        RegionManager::iterator it = rm->begin();
-        WVPASSEQ(it->addr, static_cast<uintptr_t>(0x100000));
-        WVPASSEQ(it->size, static_cast<size_t>(0x3000));
-        ++it;
+        auto it = rm->begin();
         WVPASSEQ(it->addr, static_cast<uintptr_t>(0x200000));
         WVPASSEQ(it->size, static_cast<size_t>(0x1000));
         ++it;
         WVPASSEQ(it->addr, static_cast<uintptr_t>(0x280000));
         WVPASSEQ(it->size, static_cast<size_t>(0x2000));
+        ++it;
+        WVPASSEQ(it->addr, static_cast<uintptr_t>(0x100000));
+        WVPASSEQ(it->size, static_cast<size_t>(0x3000));
     }
 }

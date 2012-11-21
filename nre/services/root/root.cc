@@ -163,7 +163,7 @@ int main() {
     // now allocate the available memory from the hypervisor
     PhysicalMemory::map_all();
     LOG(MEM_MAP, "Virtual memory for mappings:\n" << VirtualMemory::regions());
-    LOG(MEM_MAP, "Virtual memory for RAM:\n\t0: "
+    LOG(MEM_MAP, "Virtual memory for RAM:\n\t"
                  << fmt(VirtualMemory::ram_begin(), "p") << " .. "
                  << fmt(VirtualMemory::ram_end(), "p")
                  << " (" << Bytes(VirtualMemory::ram_end() - VirtualMemory::ram_begin()) << ")\n");

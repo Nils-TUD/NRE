@@ -19,7 +19,7 @@
 #include <kobj/Pt.h>
 #include <kobj/Ports.h>
 #include <cap/CapRange.h>
-#include <mem/RegionManager.h>
+#include <util/PortManager.h>
 #include <util/BitField.h>
 #include <Hip.h>
 
@@ -90,7 +90,7 @@ public:
      */
     static void allocate_ports(nre::Ports::port_t base, uint count) {
         nre::ScopedLock<nre::UserSm> guard(&_io_sm);
-        _io.alloc_region(base, count);
+        _io.remove(base, count);
     }
     /**
      * Releases the I/O ports <base>..<base>+<count>-1.
@@ -100,7 +100,7 @@ public:
      */
     static void release_ports(nre::Ports::port_t base, uint count) {
         nre::ScopedLock<nre::UserSm> guard(&_io_sm);
-        _io.free(base, count);
+        _io.add(base, count);
     }
 
     /**
@@ -130,7 +130,7 @@ private:
 
     static uchar _stack[];
     static nre::Pt *_map_pts[];
-    static nre::RegionManager _io;
+    static nre::PortManager _io;
     static nre::BitField<nre::Hip::MAX_GSIS> _gsis;
     static nre::UserSm _io_sm;
     static nre::UserSm _gsi_sm;
