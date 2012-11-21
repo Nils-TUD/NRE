@@ -326,7 +326,7 @@ static void portal_pagefault(capsel_t) {
     uintptr_t eip = uf->rip;
 
     Serial::get() << "Root: Pagefault for " << fmt(pfaddr, "p") << " @ " << fmt(eip, "p")
-                  << "on cpu " << CPU::current().phys_id() << ", error=" << fmt(error, "#x") << "\n";
+                  << " on cpu " << CPU::current().phys_id() << ", error=" << fmt(error, "#x") << "\n";
     ExecEnv::collect_backtrace(uf->rsp & ~(ExecEnv::PAGE_SIZE - 1), uf->rbp, addrs, 32);
     Util::write_backtrace(Serial::get(), addrs);
 
