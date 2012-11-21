@@ -106,12 +106,8 @@ static void input_thread(void*) {
             case Keyboard::VK_R: {
                 ScopedLock<RCULock> guard(&RCU::lock());
                 RunningVM *vm = vml.get(vmidx);
-                if(vm && (pk->flags & Keyboard::RELEASE)) {
-                    if(pk->keycode == Keyboard::VK_R)
-                        vm->execute(VMManager::RESET);
-                    else
-                        vm->execute(VMManager::KILL);
-                }
+                if(vm && (pk->flags & Keyboard::RELEASE))
+                    vm->execute(VMManager::RESET);
             }
             break;
 

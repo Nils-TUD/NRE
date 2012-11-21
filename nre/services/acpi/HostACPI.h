@@ -23,7 +23,7 @@
 #include <Compiler.h>
 
 class HostACPI {
-    static const uintptr_t BIOS_MEM_ADDR    = 0xe0000;
+    static const uintptr_t BIOS_MEM_ADDR    = 0xE0000;
     static const size_t BIOS_MEM_SIZE       = 0x20000;
     static const uintptr_t BIOS_ADDR        = 0x0;
     static const size_t BIOS_SIZE           = 0x1000;

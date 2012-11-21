@@ -19,15 +19,13 @@
 #include <arch/Types.h>
 #include <arch/ExecEnv.h>
 #include <kobj/ObjCap.h>
-#include <Exception.h>
 #include <mem/DataSpaceDesc.h>
 #include <stream/OStringStream.h>
 #include <util/MaskField.h>
 #include <util/SortedSList.h>
 #include <util/Math.h>
+#include <Exception.h>
 #include <Assert.h>
-
-extern void test_reglist();
 
 namespace nre {
 
@@ -39,16 +37,11 @@ public:
 };
 
 class OStream;
-class ChildMemory;
-OStream &operator<<(OStream &os, const ChildMemory &cm);
 
 /**
  * Manages the virtual memory of a child process
  */
 class ChildMemory {
-    friend void ::test_reglist();
-    friend OStream & operator<<(OStream &os, const ChildMemory &cm);
-
 public:
     enum Flags {
         R   = DataSpaceDesc::R,
@@ -304,5 +297,7 @@ private:
 
     SortedSList<DS> _list;
 };
+
+OStream &operator<<(OStream &os, const ChildMemory &cm);
 
 }
