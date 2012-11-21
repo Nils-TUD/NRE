@@ -28,10 +28,11 @@ class VMMngServiceSession : public nre::ServiceSession {
 public:
     explicit VMMngServiceSession(nre::Service *s, size_t id, capsel_t cap, capsel_t caps,
                                  nre::Pt::portal_func func)
-        : ServiceSession(s, id, cap, caps, func), _vm(), _ds(), _prod() {
+        : ServiceSession(s, id, cap, caps, func), _vm(), _ds(), _sm(), _prod() {
     }
     virtual ~VMMngServiceSession() {
         delete _ds;
+        delete _sm;
         delete _prod;
     }
 
@@ -39,7 +40,7 @@ public:
         RunningVMList::get().remove(_vm);
     }
 
-    void init(nre::DataSpace *ds, capsel_t pd) {
+    void init(nre::DataSpace *ds, nre::Sm *sm, capsel_t pd) {
         RunningVM *vm = RunningVMList::get().get_by_pd(pd);
         if(!vm)
             throw nre::Exception(nre::E_NOT_FOUND, "Corresponding VM not found");
@@ -47,13 +48,15 @@ public:
             throw nre::Exception(nre::E_EXISTS, "Already initialized");
         _vm = vm;
         _ds = ds;
-        _prod = new nre::Producer<nre::VMManager::Packet>(_ds, false);
+        _sm = sm;
+        _prod = new nre::Producer<nre::VMManager::Packet>(*_ds, *_sm, false);
         vm->set_producer(_prod);
     }
 
 private:
     RunningVM *_vm;
     nre::DataSpace *_ds;
+    nre::Sm *_sm;
     nre::Producer<nre::VMManager::Packet> *_prod;
 };
 
@@ -65,7 +68,7 @@ class VMMngService : public nre::Service {
             nre::LocalThread *ec = get_thread(it->log_id());
             nre::UtcbFrameRef uf(ec->utcb());
             uf.accept_translates();
-            uf.accept_delegates(0);
+            uf.accept_delegates(1);
         }
     }
 

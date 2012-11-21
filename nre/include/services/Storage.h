@@ -98,8 +98,8 @@ public:
      */
     explicit StorageSession(Connection &con, DataSpace &ds, size_t drive)
         : PtClientSession(con),
-          _ctrlds(ExecEnv::PAGE_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
-          _cons(&_ctrlds, true) {
+          _ctrlds(ExecEnv::PAGE_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _sm(0),
+          _cons(_ctrlds, _sm, true) {
         init(ds, drive);
     }
 
@@ -195,6 +195,7 @@ private:
         UtcbFrame uf;
         uf.delegate(_ctrlds.sel(), 0);
         uf.delegate(ds.sel(), 1);
+        uf.delegate(_sm.sel(), 2);
         uf << Storage::INIT << drive;
         pt().call(uf);
         uf.check_reply();
@@ -202,6 +203,7 @@ private:
     }
 
     DataSpace _ctrlds;
+    Sm _sm;
     Consumer<Storage::Packet> _cons;
     Storage::Parameter _params;
 };

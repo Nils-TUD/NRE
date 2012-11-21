@@ -658,10 +658,10 @@ void ChildManager::Portals::sc(capsel_t pid) {
 }
 
 void ChildManager::map(UtcbFrameRef &uf, Child *c, DataSpace::RequestType type) {
-    capsel_t sel = 0;
+    Crd crd(0);
     DataSpaceDesc desc;
     if(type == DataSpace::JOIN)
-        sel = uf.get_translated(0).offset();
+        crd = uf.get_translated(0);
     else
         uf >> desc;
     uf.finish_input();
@@ -678,14 +678,21 @@ void ChildManager::map(UtcbFrameRef &uf, Child *c, DataSpace::RequestType type) 
     }
     else {
         // create it or attach to the existing dataspace
-        const DataSpace &ds = type == DataSpace::JOIN ? _dsm.join(sel) : _dsm.create(desc);
+        const DataSpace &ds = type == DataSpace::JOIN ? _dsm.join(crd.offset()) : _dsm.create(desc);
 
         // add it to the regions of the child
+        uint flags = ds.flags();
         try {
-            uint flags = ds.flags();
             // only create creations and non-device-memory
             if(type != DataSpace::JOIN && desc.phys() == 0)
                 flags |= ChildMemory::OWN;
+            // restrict permissions based on semaphore permission bits
+            else if(type == DataSpace::JOIN) {
+                if(!(crd.attr() & Crd::SM_UP))
+                    flags &= ~ChildMemory::W;
+                if(!(crd.attr() & Crd::SM_DN))
+                    flags &= ~ChildMemory::X;
+            }
             size_t align = 1 << (desc.align() + ExecEnv::PAGE_SHIFT);
             addr = c->reglist().find_free(ds.size(), align);
             c->reglist().add(ds.desc(), addr, flags, ds.unmapsel());
@@ -706,8 +713,8 @@ void ChildManager::map(UtcbFrameRef &uf, Child *c, DataSpace::RequestType type) 
             uf.accept_delegates();
             uf.delegate(ds.unmapsel());
         }
-        uf << E_SUCCESS << DataSpaceDesc(ds.size(), ds.type(), ds.flags(), ds.phys(), addr, ds.virt(),
-                                         ds.desc().align());
+        uf << E_SUCCESS << DataSpaceDesc(ds.size(), ds.type(), ds.flags() & flags, ds.phys(), addr,
+                                         ds.virt(), ds.desc().align());
     }
 }
 

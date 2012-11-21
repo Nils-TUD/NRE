@@ -304,7 +304,16 @@ public:
      * @throws UtcbException if there is not enough space
      */
     void translate(capsel_t cap, uint attr = Crd::OBJ_ALL) {
-        add_typed(XltItem(Crd(cap, 0, attr)));
+        translate(Crd(cap, 0, attr));
+    }
+    /**
+     * Puts in a typed item to translate <crd>
+     *
+     * @param crd the capability range descriptor
+     * @throws UtcbException if there is not enough space
+     */
+    void translate(Crd crd) {
+        add_typed(XltItem(crd));
     }
     /**
      * Puts in as many typed items as required to translate the given CapRange. Note that the
@@ -331,10 +340,22 @@ public:
      * @param hotspot the hotspot to delegate it to (default 0)
      * @param flags the flags for the delegation (default NONE)
      * @param attr the attributes to delegate (default Crd::OBJ_ALL)
+     * @throws UtcbException if there is not enough space
      */
     void delegate(capsel_t cap, uintptr_t hotspot = CapRange::NO_HOTSPOT, DelFlags flags = NONE,
                   uint attr = Crd::OBJ_ALL) {
-        add_typed(DelItem(Crd(cap, 0, attr), flags, hotspot != CapRange::NO_HOTSPOT ? hotspot : cap));
+        delegate(Crd(cap, 0, attr), hotspot, flags);
+    }
+    /**
+     * Puts in a typed item to delegate <crd>
+     *
+     * @param crd the capability range descriptor
+     * @param hotspot the hotspot to delegate it to (default 0)
+     * @param flags the flags for the delegation (default NONE)
+     * @throws UtcbException if there is not enough space
+     */
+    void delegate(Crd crd, uintptr_t hotspot = CapRange::NO_HOTSPOT, DelFlags flags = NONE) {
+        add_typed(DelItem(crd, flags, hotspot != CapRange::NO_HOTSPOT ? hotspot : crd.offset()));
     }
     /**
      * Puts in as many typed items as required to delegate the given CapRange. Note that the
@@ -342,6 +363,7 @@ public:
      *
      * @param range the CapRange to delegate
      * @param flags the flags for the delegation (default NONE)
+     * @throws UtcbException if there is not enough space
      */
     void delegate(const CapRange& range, DelFlags flags = NONE) {
         uintptr_t hotspot = range.hotspot() != CapRange::NO_HOTSPOT ? range.hotspot() : range.start();

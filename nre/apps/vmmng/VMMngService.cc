@@ -25,11 +25,12 @@ void VMMngService::portal(capsel_t pid) {
     nre::UtcbFrameRef uf;
     VMMngServiceSession *sess = _inst->get_session<VMMngServiceSession>(pid);
     try {
-        capsel_t ds = uf.get_delegated(0).offset();
-        capsel_t pd = uf.get_translated(0).offset();
+        capsel_t dssel = uf.get_delegated(0).offset();
+        capsel_t smsel = uf.get_delegated(0).offset();
+        capsel_t pdsel = uf.get_translated(0).offset();
         uf.finish_input();
 
-        sess->init(new nre::DataSpace(ds), pd);
+        sess->init(new nre::DataSpace(dssel), new Sm(smsel, false), pdsel);
         uf.accept_delegates();
         uf << nre::E_SUCCESS;
     }

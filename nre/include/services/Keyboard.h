@@ -196,8 +196,8 @@ public:
      * @param con the connection
      */
     explicit KeyboardSession(Connection &con)
-        : PtClientSession(con),
-          _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _consumer(&_ds, true) {
+        : PtClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _sm(0),
+          _consumer(_ds, _sm, true) {
         share();
     }
 
@@ -236,13 +236,15 @@ public:
 private:
     void share() {
         UtcbFrame uf;
-        uf.delegate(_ds.sel());
+        uf.delegate(_ds.sel(), 0);
+        uf.delegate(_sm.sel(), 1);
         uf << Keyboard::SHARE_DS;
         pt().call(uf);
         uf.check_reply();
     }
 
     DataSpace _ds;
+    Sm _sm;
     Consumer<Keyboard::Packet> _consumer;
 };
 

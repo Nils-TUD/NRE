@@ -36,10 +36,11 @@ class KeyboardSessionData : public ServiceSession {
 public:
     explicit KeyboardSessionData(Service *s, size_t id, capsel_t cap, capsel_t caps,
                                  Pt::portal_func func)
-        : ServiceSession(s, id, cap, caps, func), _prod(), _ds() {
+        : ServiceSession(s, id, cap, caps, func), _prod(), _ds(), _sm() {
     }
     virtual ~KeyboardSessionData() {
         delete _ds;
+        delete _sm;
         delete _prod;
     }
 
@@ -47,16 +48,18 @@ public:
         return _prod;
     }
 
-    void set_ds(DataSpace *ds) {
+    void set_ds(DataSpace *ds, Sm *sm) {
         if(_ds != nullptr)
             throw Exception(E_EXISTS, "Keyboard session already initialized");
         _ds = ds;
-        _prod = new Producer<T>(ds, false);
+        _sm = sm;
+        _prod = new Producer<T>(*ds, *sm, false);
     }
 
 private:
     Producer<T> *_prod;
     DataSpace *_ds;
+    Sm *_sm;
 };
 
 template<class T>
@@ -70,7 +73,7 @@ public:
         for(auto it = CPU::begin(); it != CPU::end(); ++it) {
             LocalThread *ec = get_thread(it->log_id());
             UtcbFrameRef uf(ec->utcb());
-            uf.accept_delegates(0);
+            uf.accept_delegates(1);
         }
     }
 
@@ -129,13 +132,13 @@ static void mousehandler(void*) {
 }
 
 template<class T>
-static void handle_share(UtcbFrameRef &uf, KeyboardService<typename T::Packet> *srv,
-                         capsel_t pid) {
+static void handle_share(UtcbFrameRef &uf, KeyboardService<typename T::Packet> *srv, capsel_t pid) {
     typedef KeyboardSessionData<typename T::Packet> sessdata_t;
     sessdata_t *sess = srv->get_session(pid);
-    capsel_t sel = uf.get_delegated(0).offset();
+    capsel_t dssel = uf.get_delegated(0).offset();
+    capsel_t smsel = uf.get_delegated(0).offset();
     uf.finish_input();
-    sess->set_ds(new DataSpace(sel));
+    sess->set_ds(new DataSpace(dssel), new Sm(smsel, false));
 }
 
 PORTAL static void portal_keyboard(capsel_t pid) {

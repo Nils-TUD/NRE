@@ -28,7 +28,7 @@ ConsoleService::ConsoleService(const char *name, uint modifier)
         LocalThread *t = get_thread(it->log_id());
         t->set_tls<ConsoleService*>(Thread::TLS_PARAM, this);
         UtcbFrameRef uf(t->utcb());
-        uf.accept_delegates(1);
+        uf.accept_delegates(2);
     }
 
     // add dummy session for boot screen and HV screen
@@ -46,7 +46,7 @@ void ConsoleService::create_dummy(uint page, const String &title) {
     memcpy(reinterpret_cast<void*>(ds->virt() + sess->offset()),
            reinterpret_cast<void*>(_screen->mem().virt() + sess->offset()),
            ExecEnv::PAGE_SIZE);
-    sess->create(nullptr, ds, 0, title);
+    sess->create(nullptr, ds, 0, 0, title);
 }
 
 void ConsoleService::up() {

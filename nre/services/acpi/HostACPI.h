@@ -72,14 +72,12 @@ public:
     public:
         explicit ACPIListItem(const nre::ACPI::RSDT *tbl)
             : nre::SListItem(), _ds(tbl->length, nre::DataSpaceDesc::ANONYMOUS, nre::DataSpaceDesc::RW) {
-            // TODO unfortunatly we have to make the dataspace writable to copy the content. this
-            // means that our clients will get it writable as well since we have no concept of
-            // restricting access writes to shared dataspaces.
             memcpy(reinterpret_cast<void*>(_ds.virt()), tbl, tbl->length);
         }
 
-        capsel_t cap() const {
-            return _ds.sel();
+        nre::Crd cap() const {
+            // give them only read permissions
+            return _ds.crd(nre::DataSpaceDesc::R);
         }
         uintptr_t start() const {
             return _ds.virt();

@@ -34,14 +34,15 @@ public:
      * Creates a producer that uses the given dataspace for communication
      *
      * @param ds the dataspace
+     * @param sm the semaphore to use for signaling (has to be shared with the consumer of course)
      * @param init whether the producer should init the state. this should only be done by one
      *  party and preferably by the first one. That is, if the client is the producer it should
      *  init it (because it will create the dataspace and share it to the service).
      */
-    explicit Producer(DataSpace *ds, bool init = true)
-        : _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds->virt())),
-          _max(Math::prev_pow2((ds->size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T))),
-          _sm(_ds->sel(), true) {
+    explicit Producer(DataSpace &ds, Sm &sm, bool init = true)
+        : _ds(ds), _if(reinterpret_cast<typename Consumer<T>::Interface*>(ds.virt())),
+          _max(Math::prev_pow2((ds.size() - sizeof(typename Consumer<T>::Interface)) / sizeof(T))),
+          _sm(sm) {
         if(init) {
             _if->rpos = 0;
             _if->wpos = 0;
@@ -99,10 +100,10 @@ public:
     }
 
 private:
-    DataSpace *_ds;
+    DataSpace &_ds;
     typename Consumer<T>::Interface * _if;
     size_t _max;
-    Sm _sm;
+    Sm &_sm;
 };
 
 }

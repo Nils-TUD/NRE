@@ -107,13 +107,25 @@ public:
     }
 
     /**
-     * @return the selector (=identifier) of this dataspace. It always refers to a semaphore.
+     * Lets you restrict the permissions for this dataspace when delegating it.
+     *
+     * @param perms the permissions to bind to the cap
+     * @return the Crd to pass around
+     */
+    Crd crd(uint perms = DataSpaceDesc::W | DataSpaceDesc::X) const {
+        static_assert(Crd::SM_UP == (DataSpaceDesc::W << 1), "SM_UP != W");
+        static_assert(Crd::SM_DN == (DataSpaceDesc::X << 1), "SM_DN != X");
+        const uint base = Crd::OBJ_ALL & ~(Crd::SM_UP | Crd::SM_DN);
+        return Crd(sel(), 0, base | ((perms & (DataSpaceDesc::W | DataSpaceDesc::X)) << 1));
+    }
+    /**
+     * @return the selector (=identifier) of this dataspace.
      */
     capsel_t sel() const {
         return _sel;
     }
     /**
-     * @return the selector to unmap this dataspace. Does also refer to a semaphore
+     * @return the selector to unmap this dataspace.
      */
     capsel_t unmapsel() const {
         return _unmapsel;

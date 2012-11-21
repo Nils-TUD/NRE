@@ -50,8 +50,9 @@ public:
 private:
     static void switch_thread(void*);
 
-    nre::UserSm _sm;
+    nre::UserSm _usm;
     nre::DataSpace _ds;
+    nre::Sm _sm;
     nre::Producer<SwitchCommand> _prod;
     nre::Consumer<SwitchCommand> _cons;
     nre::GlobalThread *_ec;

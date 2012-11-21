@@ -51,11 +51,12 @@ public:
     explicit ShmSession(Service *s, size_t id, capsel_t cap, capsel_t caps, Pt::portal_func func)
         : ServiceSession(s, id, cap, caps, func),
           _ec(GlobalThread::create(receiver, CPU::current().log_id(), "shm-receiver")),
-          _cons(), _ds() {
+          _cons(), _ds(), _sm() {
         _ec->set_tls<capsel_t>(Thread::TLS_PARAM, caps);
     }
     virtual ~ShmSession() {
         delete _ds;
+        delete _sm;
         delete _cons;
     }
 
@@ -65,9 +66,10 @@ public:
         return _cons;
     }
 
-    void set_ds(DataSpace *ds) {
+    void set_ds(DataSpace *ds, Sm *sm) {
         _ds = ds;
-        _cons = new Consumer<Item>(ds);
+        _sm = sm;
+        _cons = new Consumer<Item>(*ds, *sm);
         _ec->start();
     }
 
@@ -77,13 +79,14 @@ private:
     GlobalThread *_ec;
     Consumer<Item> *_cons;
     DataSpace *_ds;
+    Sm *_sm;
 };
 
 class ShmService : public Service {
 public:
     explicit ShmService() : Service("shm", CPUSet(CPUSet::ALL), portal) {
         UtcbFrameRef uf(get_thread(CPU::current().log_id())->utcb());
-        uf.accept_delegates(0);
+        uf.accept_delegates(1);
     }
 
 private:
@@ -99,9 +102,10 @@ void ShmService::portal(capsel_t pid) {
     UtcbFrameRef uf;
     try {
         ShmSession *sess = srv->get_session<ShmSession>(pid);
-        capsel_t sel = uf.get_delegated(0).offset();
+        capsel_t dssel = uf.get_delegated(0).offset();
+        capsel_t smsel = uf.get_delegated(0).offset();
         uf.finish_input();
-        sess->set_ds(new DataSpace(sel));
+        sess->set_ds(new DataSpace(dssel), new Sm(smsel, false));
         uf << E_SUCCESS;
     }
     catch(const Exception &e) {
@@ -147,10 +151,12 @@ static int shm_client(int, char *argv[]) {
     Connection con("shm");
     ClientSession sess(con);
     DataSpace ds(ds_size, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW);
-    Producer<Item> prod(&ds, true);
+    Sm sm(0);
+    Producer<Item> prod(ds, sm, true);
     {
         UtcbFrame uf;
-        uf.delegate(ds.sel());
+        uf.delegate(ds.sel(), 0);
+        uf.delegate(sm.sel(), 1);
         Pt pt(sess.caps() + CPU::current().log_id());
         pt.call(uf);
         uf.check_reply();

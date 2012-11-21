@@ -53,8 +53,8 @@ public:
      * @param con the connection
      */
     explicit VMManagerSession(Connection &con)
-        : ClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
-          _consumer(&_ds, true) {
+        : ClientSession(con), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _sm(0),
+          _consumer(_ds, _sm, true) {
         create();
     }
 
@@ -68,7 +68,8 @@ public:
 private:
     void create() {
         UtcbFrame uf;
-        uf.delegate(_ds.sel());
+        uf.delegate(_ds.sel(), 0);
+        uf.delegate(_sm.sel(), 1);
         uf.translate(Pd::current()->sel());
         Pt pt(caps() + CPU::current().log_id());
         pt.call(uf);
@@ -76,6 +77,7 @@ private:
     }
 
     DataSpace _ds;
+    Sm _sm;
     Consumer<VMManager::Packet> _consumer;
 };
 

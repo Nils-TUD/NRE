@@ -27,7 +27,7 @@ public:
     ConsoleSessionData(ConsoleService *srv, size_t id, capsel_t cap, capsel_t caps,
                        nre::Pt::portal_func func)
         : ServiceSession(srv, id, cap, caps, func), DListItem(), _has_screen(false), _console(),
-          _title(), _sm(), _in_ds(), _out_ds(), _prod(), _regs(), _srv(srv) {
+          _title(), _sm(), _in_ds(), _out_ds(), _in_sm(), _prod(), _regs(), _srv(srv) {
         _regs.offset = nre::Console::TEXT_OFF >> 1;
         _regs.mode = 0;
         _regs.cursor_pos = (nre::Console::ROWS - 1) * nre::Console::COLS + (nre::Console::TEXT_OFF >> 1);
@@ -36,6 +36,7 @@ public:
     virtual ~ConsoleSessionData() {
         delete _prod;
         delete _in_ds;
+        delete _in_sm;
         delete _out_ds;
     }
 
@@ -65,7 +66,8 @@ public:
         return _out_ds;
     }
 
-    void create(nre::DataSpace *in_ds, nre::DataSpace *out_ds, size_t con, const nre::String &title);
+    void create(nre::DataSpace *in_ds, nre::DataSpace *out_ds, nre::Sm *sm, size_t con,
+                const nre::String &title);
 
     void to_front() {
         if(!_has_screen) {
@@ -109,6 +111,7 @@ private:
     nre::UserSm _sm;
     nre::DataSpace *_in_ds;
     nre::DataSpace *_out_ds;
+    nre::Sm *_in_sm;
     nre::Producer<nre::Console::ReceivePacket> *_prod;
     nre::Console::Register _regs;
     ConsoleService *_srv;

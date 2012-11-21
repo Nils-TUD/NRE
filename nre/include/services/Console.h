@@ -91,7 +91,8 @@ public:
      */
     explicit ConsoleSession(Connection &con, size_t console, const String &title)
         : ClientSession(con), _in_ds(IN_DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
-          _out_ds(OUT_DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _consumer(&_in_ds, true) {
+          _out_ds(OUT_DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _sm(0),
+          _consumer(_in_ds, _sm, true) {
         create(console, title);
     }
 
@@ -170,6 +171,7 @@ private:
         uf << Console::CREATE << console << title;
         uf.delegate(_in_ds.sel(), 0);
         uf.delegate(_out_ds.sel(), 1);
+        uf.delegate(_sm.sel(), 2);
         Pt pt(caps() + CPU::current().log_id());
         pt.call(uf);
         uf.check_reply();
@@ -177,6 +179,7 @@ private:
 
     DataSpace _in_ds;
     DataSpace _out_ds;
+    Sm _sm;
     Consumer<Console::ReceivePacket> _consumer;
 };
 

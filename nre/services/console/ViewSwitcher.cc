@@ -30,8 +30,8 @@ char ViewSwitcher::_backup[Screen::COLS * 2];
 char ViewSwitcher::_buffer[Screen::COLS + 1];
 
 ViewSwitcher::ViewSwitcher(ConsoleService *srv)
-    : _sm(1), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW),
-      _prod(&_ds, true), _cons(&_ds, false),
+    : _usm(1), _ds(DS_SIZE, DataSpaceDesc::ANONYMOUS, DataSpaceDesc::RW), _sm(0),
+      _prod(_ds, _sm, true), _cons(_ds, _sm, false),
       _ec(GlobalThread::create(switch_thread, CPU::current().log_id(), "console-vs")),
       _srv(srv) {
     _ec->set_tls<ViewSwitcher*>(Thread::TLS_PARAM, this);
@@ -43,7 +43,7 @@ void ViewSwitcher::switch_to(ConsoleSessionData *from, ConsoleSessionData *to) {
     cmd.sessid = to->id();
     LOG(CONSOLE, "Going to switch from " << cmd.oldsessid << " to " << cmd.sessid << "\n");
     // we can't access the producer concurrently
-    ScopedLock<UserSm> guard(&_sm);
+    ScopedLock<UserSm> guard(&_usm);
     _prod.produce(cmd);
 }
 
