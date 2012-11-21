@@ -22,8 +22,8 @@ namespace nre {
 
 template<class T>
 class DList;
-template<class T>
-class DListIterator;
+template<class T, class It>
+class DListIteratorBase;
 
 /**
  * A listitem for the doubly linked list. It is intended that you inherit from this class to add
@@ -32,8 +32,8 @@ class DListIterator;
 class DListItem {
     template<class T>
     friend class DList;
-    template<class T>
-    friend class DListIterator;
+    template<class T, class It>
+    friend class DListIteratorBase;
 
 public:
     /**
@@ -64,49 +64,73 @@ private:
  * Generic iterator for a doubly linked list. Expects the list node class to have a prev() and
  * next() method.
  */
-template<class T>
-class DListIterator {
+template<class T, class It>
+class DListIteratorBase {
 public:
-    explicit DListIterator(T *p = nullptr, T *n = nullptr) : _p(p), _n(n) {
+    explicit DListIteratorBase(T *p = nullptr, T *n = nullptr) : _p(p), _n(n) {
+    }
+
+    It& operator--() {
+        _n = _p;
+        if(_p)
+            _p = static_cast<T*>(_p->prev());
+        return static_cast<It&>(*this);
+    }
+    It operator--(int) {
+        It tmp(static_cast<It&>(*this));
+        operator--();
+        return tmp;
+    }
+    It& operator++() {
+        _p = _n;
+        _n = static_cast<T*>(_n->next());
+        return static_cast<It&>(*this);
+    }
+    It operator++(int) {
+        It tmp(static_cast<It&>(*this));
+        operator++();
+        return tmp;
+    }
+    bool operator==(const It& rhs) const {
+        return _n == rhs._n;
+    }
+    bool operator!=(const It& rhs) const {
+        return _n != rhs._n;
+    }
+
+protected:
+    T *_p;
+    T *_n;
+};
+
+template<class T>
+class DListIterator : public DListIteratorBase<T, DListIterator<T>> {
+public:
+    explicit DListIterator(T *p = nullptr, T *n = nullptr)
+        : DListIteratorBase<T, DListIterator<T>>(p, n) {
     }
 
     T & operator*() const {
-        return *_n;
+        return *this->_n;
     }
     T *operator->() const {
         return &operator*();
     }
-    DListIterator<T>& operator--() {
-        _n = _p;
-        if(_p)
-            _p = static_cast<T*>(_p->prev());
-        return *this;
-    }
-    DListIterator<T> operator--(int) {
-        DListIterator<T> tmp(*this);
-        operator--();
-        return tmp;
-    }
-    DListIterator<T>& operator++() {
-        _p = _n;
-        _n = static_cast<T*>(_n->next());
-        return *this;
-    }
-    DListIterator<T> operator++(int) {
-        DListIterator<T> tmp(*this);
-        operator++();
-        return tmp;
-    }
-    bool operator==(const DListIterator<T>& rhs) const {
-        return _n == rhs._n;
-    }
-    bool operator!=(const DListIterator<T>& rhs) const {
-        return _n != rhs._n;
+};
+
+template<class T>
+class DListConstIterator : public DListIteratorBase<T, DListConstIterator<T>> {
+public:
+    explicit DListConstIterator(T *p = nullptr, T *n = nullptr)
+        : DListIteratorBase<T, DListConstIterator<T>>(p, n) {
     }
 
-private:
-    T *_p;
-    T *_n;
+    const T & operator*() const {
+        return *this->_n;
+    }
+    const T *operator->() const {
+        return &operator*();
+    }
 };
 
 /**
@@ -118,6 +142,7 @@ template<class T>
 class DList {
 public:
     typedef DListIterator<T> iterator;
+    typedef DListConstIterator<T> const_iterator;
 
     /**
      * Constructor. Creates an empty list
@@ -133,16 +158,29 @@ public:
     }
 
     /**
-     * @return beginning of list
+     * @return beginning of list (you can change list elements)
      */
-    iterator begin() const {
+    iterator begin() {
         return iterator(nullptr, _head);
     }
     /**
      * @return end of list
      */
-    iterator end() const {
+    iterator end() {
         return iterator(_tail, nullptr);
+    }
+
+    /**
+     * @return beginning of list (you can NOT change list elements)
+     */
+    const_iterator cbegin() const {
+        return const_iterator(nullptr, _head);
+    }
+    /**
+     * @return end of list
+     */
+    const_iterator cend() const {
+        return const_iterator(_tail, nullptr);
     }
 
     /**

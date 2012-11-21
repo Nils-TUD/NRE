@@ -23,8 +23,8 @@ namespace nre {
 
 template<class T>
 class SList;
-template<class T>
-class SListIterator;
+template<class T, class It>
+class SListIteratorBase;
 
 /**
  * A listitem for the singly linked list. It is intended that you inherit from this class to add
@@ -33,8 +33,8 @@ class SListIterator;
 class SListItem {
     template<class T>
     friend class SList;
-    template<class T>
-    friend class SListIterator;
+    template<class T, class It>
+    friend class SListIteratorBase;
 
 public:
     /**
@@ -57,36 +57,58 @@ private:
 /**
  * Generic iterator for a singly linked list. Expects the list node class to have a next() method.
  */
-template<class T>
-class SListIterator {
+template<class T, class It>
+class SListIteratorBase {
 public:
-    explicit SListIterator(T *n = nullptr) : _n(n) {
+    explicit SListIteratorBase(T *n = nullptr) : _n(n) {
+    }
+
+    It& operator++() {
+        _n = static_cast<T*>(_n->next());
+        return static_cast<It&>(*this);
+    }
+    It operator++(int) {
+        It tmp(static_cast<It&>(*this));
+        operator++();
+        return tmp;
+    }
+    bool operator==(const It& rhs) const {
+        return _n == rhs._n;
+    }
+    bool operator!=(const It& rhs) const {
+        return _n != rhs._n;
+    }
+
+protected:
+    T *_n;
+};
+
+template<class T>
+class SListIterator : public SListIteratorBase<T, SListIterator<T> > {
+public:
+    explicit SListIterator(T *n = nullptr) : SListIteratorBase<T, SListIterator<T> >(n) {
     }
 
     T & operator*() const {
-        return *_n;
+        return *this->_n;
     }
     T *operator->() const {
         return &operator*();
     }
-    SListIterator<T>& operator++() {
-        _n = static_cast<T*>(_n->next());
-        return *this;
-    }
-    SListIterator<T> operator++(int) {
-        SListIterator<T> tmp(*this);
-        operator++();
-        return tmp;
-    }
-    bool operator==(const SListIterator<T>& rhs) const {
-        return _n == rhs._n;
-    }
-    bool operator!=(const SListIterator<T>& rhs) const {
-        return _n != rhs._n;
+};
+
+template<class T>
+class SListConstIterator : public SListIteratorBase<T, SListConstIterator<T> > {
+public:
+    explicit SListConstIterator(T *n = nullptr) : SListIteratorBase<T, SListConstIterator<T> >(n) {
     }
 
-private:
-    T *_n;
+    const T & operator*() const {
+        return *this->_n;
+    }
+    const T *operator->() const {
+        return &operator*();
+    }
 };
 
 /**
@@ -98,6 +120,7 @@ template<class T>
 class SList {
 public:
     typedef SListIterator<T> iterator;
+    typedef SListConstIterator<T> const_iterator;
 
     /**
      * Constructor. Creates an empty list
@@ -113,22 +136,41 @@ public:
     }
 
     /**
-     * @return beginning of list
+     * @return beginning of list (you can change the list items)
      */
-    iterator begin() const {
+    iterator begin() {
         return iterator(_head);
     }
     /**
      * @return end of list
      */
-    iterator end() const {
+    iterator end() {
         return iterator();
     }
     /**
      * @return tail of the list, i.e. the last valid item
      */
-    iterator tail() const {
+    iterator tail() {
         return iterator(_tail);
+    }
+
+    /**
+     * @return beginning of list (you can NOT change the list items)
+     */
+    const_iterator cbegin() const {
+        return const_iterator(_head);
+    }
+    /**
+     * @return end of list
+     */
+    const_iterator cend() const {
+        return const_iterator();
+    }
+    /**
+     * @return tail of the list, i.e. the last valid item (NOT changeable)
+     */
+    const_iterator ctail() const {
+        return const_iterator(_tail);
     }
 
     /**

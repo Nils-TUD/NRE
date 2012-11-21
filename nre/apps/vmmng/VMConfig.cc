@@ -60,7 +60,7 @@ Hip::mem_iterator VMConfig::get_module(const String &name) {
 
 OStream & operator<<(OStream &os, const VMConfig &cfg) {
     os << "VMConfig[" << cfg.name() << "]:\n";
-    for(auto it = cfg._mods.begin(); it != cfg._mods.end(); ++it)
+    for(auto it = cfg._mods.cbegin(); it != cfg._mods.cend(); ++it)
         os << "  name='" << it->name() << "' args='" << it->args() << "'\n";
     return os;
 }

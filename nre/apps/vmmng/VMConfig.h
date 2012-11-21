@@ -54,10 +54,10 @@ class VMConfig : public nre::SListItem {
         }
 
         virtual bool get_module(size_t i, nre::HipMem &mem) const {
-            auto it = _mods.begin();
-            for(; it != _mods.end() && i-- > 0; ++it)
+            auto it = _mods.cbegin();
+            for(; it != _mods.cend() && i-- > 0; ++it)
                 ;
-            if(it == _mods.end())
+            if(it == _mods.cend())
                 return false;
             mem = *VMConfig::get_module(it->name());
             mem.aux = reinterpret_cast<word_t>(it->args().str());
@@ -85,7 +85,7 @@ public:
         return _name;
     }
     const nre::String &args() const {
-        auto first = _mods.begin();
+        auto first = _mods.cbegin();
         return first->args();
     }
     nre::Child::id_type start(nre::ChildManager &cm, size_t console, cpu_t cpu);

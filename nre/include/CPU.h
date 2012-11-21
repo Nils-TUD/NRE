@@ -33,12 +33,11 @@ class CPUInit;
  * Every CPU has a logical and physical id. The physical id is the index in the Hip, where it
  * appears. The logical id is assigned from 0..(n-1).
  */
-class CPU {
+class CPU : public SListItem {
     friend class CPUInit;
-    friend class SListIterator<CPU>;
 
 public:
-    typedef SListIterator<CPU> iterator;
+    typedef SList<CPU>::iterator iterator;
 
     /**
      * @return the current CPU, i.e. the CPU you're running on
@@ -59,7 +58,7 @@ public:
      * @return the number of online CPUs
      */
     static size_t count() {
-        return _count;
+        return _online.length();
     }
     /**
      * @return the next order of online CPUs, i.e. Math::next_pow2_shift(count())
@@ -72,13 +71,13 @@ public:
      * @return iterator beginning of the list of online CPUs. They are always sorted by logical id.
      */
     static iterator begin() {
-        return SListIterator<CPU>(_online);
+        return _online.begin();
     }
     /**
      * @return iterator end of the list of online CPUs
      */
     static iterator end() {
-        return SListIterator<CPU>();
+        return _online.end();
     }
 
     /**
@@ -167,18 +166,13 @@ public:
 
 private:
     CPU()
-        : _id(), _next(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
+        : SListItem(), _id(), _flags(), _thread(), _core(), _package(), _ds_pt(), _io_pt(),
           _gsi_pt(), _srv_pt(), _sc_pt() {
     }
     CPU(const CPU&);
     CPU& operator=(const CPU&);
 
-    CPU *next() {
-        return _next;
-    }
-
     cpu_t _id;
-    CPU *_next;
     uint8_t _flags;
     uint8_t _thread;
     uint8_t _core;
@@ -188,9 +182,8 @@ private:
     Pt *_gsi_pt;
     Pt *_srv_pt;
     Pt *_sc_pt;
-    static size_t _count;
     static uint _order;
-    static CPU *_online;
+    static SList<CPU> _online;
     static CPU _cpus[Hip::MAX_CPUS];
     static cpu_t _logtophys[Hip::MAX_CPUS];
 };

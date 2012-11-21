@@ -108,7 +108,8 @@ public:
         BitField<Hip::MAX_CPUS> _available;
     };
 
-    typedef SListIterator<Service> iterator;
+    typedef SList<Service>::iterator iterator;
+    typedef SList<Service>::const_iterator const_iterator;
 
     /**
      * Creates an empty service registry
@@ -119,8 +120,8 @@ public:
      * Deletes all registered services
      */
     ~ServiceRegistry() {
-        for(iterator it = _srvs.begin(); it != _srvs.end(); ) {
-            iterator old = it++;
+        for(auto it = _srvs.begin(); it != _srvs.end(); ) {
+            auto old = it++;
             delete &*old;
         }
     }
@@ -128,14 +129,20 @@ public:
     /**
      * @return beginning of services
      */
-    iterator begin() const {
+    iterator begin() {
         return _srvs.begin();
+    }
+    const_iterator cbegin() const {
+        return _srvs.cbegin();
     }
     /**
      * @return end of services
      */
-    iterator end() const {
+    iterator end() {
         return _srvs.end();
+    }
+    const_iterator cend() const {
+        return _srvs.cend();
     }
 
     /**
@@ -190,7 +197,7 @@ public:
      * @param child the child
      */
     void remove(Child *child) {
-        for(iterator it = _srvs.begin(); it != _srvs.end(); ) {
+        for(auto it = _srvs.begin(); it != _srvs.end(); ) {
             if(it->child() == child) {
                 _srvs.remove(&*it);
                 delete &*it;
@@ -202,8 +209,11 @@ public:
     }
 
 private:
-    Service *search(const String &name) const {
-        for(iterator it = _srvs.begin(); it != _srvs.end(); ++it) {
+    Service *search(const String &name) {
+        return const_cast<Service*>(const_cast<const ServiceRegistry*>(this)->search(name));
+    }
+    const Service *search(const String &name) const {
+        for(auto it = _srvs.cbegin(); it != _srvs.cend(); ++it) {
             if(it->name() == name)
                 return &*it;
         }

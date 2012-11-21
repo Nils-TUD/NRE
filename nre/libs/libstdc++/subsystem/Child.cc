@@ -69,7 +69,7 @@ OStream & operator<<(OStream &os, const Child &c) {
     os << "Child[cmdline='" << c.cmdline() << "' cpu=" << c._ec->cpu();
     os << " entry=" << fmt(reinterpret_cast<void*>(c.entry())) << "]:\n";
     os << "\tScs:\n";
-    for(auto it = c.scs().begin(); it != c.scs().end(); ++it)
+    for(auto it = c.scs().cbegin(); it != c.scs().cend(); ++it)
         os << "\t\t" << it->name() << " on CPU " << CPU::get(it->cpu()).phys_id() << "\n";
     os << "\tGSIs: " << c.gsis() << "\n";
     os << "\tPorts:\n" << c.io();

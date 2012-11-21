@@ -141,7 +141,7 @@ public:
         MaskField<4> _perms;
     };
 
-    typedef SListIterator<DS> iterator;
+    typedef SList<DS>::const_iterator iterator;
 
     /**
      * Constructor
@@ -178,13 +178,13 @@ public:
      * @return the first dataspace
      */
     iterator begin() const {
-        return _list.begin();
+        return _list.cbegin();
     }
     /**
      * @return end of dataspaces
      */
     iterator end() const {
-        return _list.end();
+        return _list.cend();
     }
 
     /**
@@ -203,7 +203,7 @@ public:
      * @return the dataspace or nullptr if not found
      */
     DS *find_by_addr(uintptr_t addr) {
-        for(iterator it = begin(); it != end(); ++it) {
+        for(auto it = _list.begin(); it != _list.end(); ++it) {
             if(addr >= it->desc().virt() && addr < it->desc().virt() + it->desc().size())
                 return &*it;
         }
@@ -220,7 +220,7 @@ public:
      */
     uintptr_t find_free(size_t size, size_t align = 1) const {
         // the list is sorted, so use the last ds
-        uintptr_t e = _list.length() > 0 ? _list.tail()->desc().virt() + _list.tail()->desc().size() : 0;
+        uintptr_t e = _list.length() > 0 ? _list.ctail()->desc().virt() + _list.ctail()->desc().size() : 0;
         // leave one page space (earlier error detection)
         e = (e + ExecEnv::PAGE_SIZE * 2 - 1) & ~(ExecEnv::PAGE_SIZE - 1);
         // align it
@@ -273,7 +273,7 @@ public:
 
 private:
     DS *get(capsel_t sel) {
-        for(iterator it = begin(); it != end(); ++it) {
+        for(auto it = _list.begin(); it != _list.end(); ++it) {
             if(it->cap() == sel)
                 return &*it;
         }

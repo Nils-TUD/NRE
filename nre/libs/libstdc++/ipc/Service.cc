@@ -38,8 +38,7 @@ void Service::check_sessions() {
         sid = ObjCap::INVALID;
         {
             ScopedLock<RCULock> guard(&RCU::lock());
-            SessionIterator<ServiceSession> it = sessions_begin<ServiceSession>();
-            for(; it != sessions_end<ServiceSession>(); ++it) {
+            for(auto it = sessions_begin<ServiceSession>(); it != sessions_end<ServiceSession>(); ++it) {
                 // if the capability is NULL, it has been revoked which means that the client is dead
                 Crd crd = Syscalls::lookup(Crd(it->cap(), 0, Crd::OBJ));
                 if(crd.is_null()) {

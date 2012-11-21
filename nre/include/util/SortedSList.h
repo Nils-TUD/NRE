@@ -27,6 +27,7 @@ template<class T>
 class SortedSList {
 public:
     typedef typename SList<T>::iterator iterator;
+    typedef typename SList<T>::const_iterator const_iterator;
     typedef bool (*cmp_func)(const T &a, const T &b);
 
     /**
@@ -45,22 +46,41 @@ public:
     }
 
     /**
-     * @return beginning of list
+     * @return beginning of list (you can change the list items)
      */
-    iterator begin() const {
+    iterator begin() {
         return _list.begin();
     }
     /**
      * @return end of list
      */
-    iterator end() const {
+    iterator end() {
         return _list.end();
     }
     /**
      * @return tail of the list, i.e. the last valid item
      */
-    iterator tail() const {
+    iterator tail() {
         return _list.tail();
+    }
+
+    /**
+     * @return beginning of list (you can NOT change the list items)
+     */
+    const_iterator cbegin() const {
+        return _list.cbegin();
+    }
+    /**
+     * @return end of list
+     */
+    const_iterator cend() const {
+        return _list.cend();
+    }
+    /**
+     * @return tail of the list, i.e. the last valid item (NOT changeable)
+     */
+    const_iterator ctail() const {
+        return _list.ctail();
     }
 
     /**

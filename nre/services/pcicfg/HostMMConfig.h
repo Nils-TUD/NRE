@@ -59,10 +59,10 @@ class HostMMConfig : public Config {
         uintptr_t addr() const {
             return _ds.phys();
         }
-        bool contains(nre::BDF bdf, size_t offset) {
+        bool contains(nre::BDF bdf, size_t offset) const {
             return offset < 0x400 && nre::Math::in_range(bdf.value(), _start, _size);
         }
-        value_type read(nre::BDF bdf, size_t offset) {
+        value_type read(nre::BDF bdf, size_t offset) const {
             return *field(bdf, offset);
         }
         void write(nre::BDF bdf, size_t offset, value_type value) {
@@ -88,7 +88,7 @@ public:
         return "MMConfig";
     }
     virtual bool contains(nre::BDF bdf, size_t offset) const {
-        for(auto it = _ranges.begin(); it != _ranges.end(); ++it) {
+        for(auto it = _ranges.cbegin(); it != _ranges.cend(); ++it) {
             if(it->contains(bdf, offset))
                 return true;
         }

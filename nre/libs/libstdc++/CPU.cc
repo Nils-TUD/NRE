@@ -29,15 +29,13 @@ class CPUInit {
     static CPUInit init;
 };
 
-size_t CPU::_count = 0;
 uint CPU::_order = 0;
-CPU *CPU::_online = nullptr;
+SList<CPU> CPU::_online INIT_PRIO_CPUS;
 CPU CPU::_cpus[Hip::MAX_CPUS] INIT_PRIO_CPUS;
 cpu_t CPU::_logtophys[Hip::MAX_CPUS];
 CPUInit CPUInit::init INIT_PRIO_CPUS;
 
 CPUInit::CPUInit() {
-    CPU *last = nullptr;
     const Hip& hip = Hip::get();
     cpu_t i = 0, id = 0, offline = 0;
     for(auto it = hip.cpu_begin(); it != hip.cpu_end(); ++it, ++i) {
@@ -51,13 +49,7 @@ CPUInit::CPUInit() {
             continue;
 
         // build a list of all online CPUs
-        CPU::_count++;
-        if(last)
-            last->_next = &cpu;
-        else
-            CPU::_online = &cpu;
-        cpu._next = nullptr;
-        last = &cpu;
+        CPU::_online.append(&cpu);
 
         // copy attributes from Hip-CPU
         cpu._flags = it->flags;
@@ -80,7 +72,7 @@ CPUInit::CPUInit() {
             }
         }
     }
-    CPU::_order = Math::next_pow2_shift(CPU::_count);
+    CPU::_order = Math::next_pow2_shift(CPU::count());
 }
 
 }
