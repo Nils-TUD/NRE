@@ -162,7 +162,12 @@ int main() {
 
     // now allocate the available memory from the hypervisor
     PhysicalMemory::map_all();
-    LOG(MEM_MAP, "Virtual memory for mappings:\n" << VirtualMemory::regions());
+
+    LOG(MEM_MAP, "Virtual memory for mappings:\n");
+    const RegionManager<> &vmregs = VirtualMemory::regions();
+    for(auto it = vmregs.begin(); it != vmregs.end(); ++it)
+        LOG(MEM_MAP, "\t" << fmt(it->addr, "p") << " .. " << fmt(it->addr + it->size, "p")
+                          << " (" << Bytes(it->size) << ")\n");
     LOG(MEM_MAP, "Virtual memory for RAM:\n\t"
                  << fmt(VirtualMemory::ram_begin(), "p") << " .. "
                  << fmt(VirtualMemory::ram_end(), "p")
