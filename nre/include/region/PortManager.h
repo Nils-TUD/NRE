@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <util/RegionManager.h>
+#include <region/RegionManager.h>
 #include <kobj/Ports.h>
 
 namespace nre {

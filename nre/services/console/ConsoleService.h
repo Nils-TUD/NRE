@@ -20,8 +20,8 @@
 #include <ipc/Connection.h>
 #include <services/Keyboard.h>
 #include <services/Reboot.h>
-#include <util/Cycler.h>
-#include <util/DList.h>
+#include <collection/Cycler.h>
+#include <collection/DList.h>
 
 #include "Screen.h"
 #include "ViewSwitcher.h"

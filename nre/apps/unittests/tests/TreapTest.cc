@@ -14,8 +14,8 @@
  * General Public License version 2 for more details.
  */
 
+#include <collection/Treap.h>
 #include <util/Profiler.h>
-#include <util/Treap.h>
 #include <util/Random.h>
 
 #include "TreapTest.h"

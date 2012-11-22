@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/SortedSList.h>
+#include <collection/SortedSList.h>
 
 #include "SortedSListTest.h"
 

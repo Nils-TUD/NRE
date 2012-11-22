@@ -19,7 +19,7 @@
 #include <kobj/Pt.h>
 #include <kobj/UserSm.h>
 #include <mem/DataSpaceManager.h>
-#include <util/RegionManager.h>
+#include <region/RegionManager.h>
 #include <util/Bytes.h>
 
 /**

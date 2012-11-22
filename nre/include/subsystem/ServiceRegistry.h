@@ -17,8 +17,8 @@
 #pragma once
 
 #include <subsystem/Child.h>
-#include <util/BitField.h>
-#include <util/SList.h>
+#include <bits/BitField.h>
+#include <collection/SList.h>
 #include <Exception.h>
 
 namespace nre {

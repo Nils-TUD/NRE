@@ -18,7 +18,7 @@
 
 #include <kobj/UserSm.h>
 #include <services/Console.h>
-#include <util/DList.h>
+#include <collection/DList.h>
 
 #include "ConsoleService.h"
 

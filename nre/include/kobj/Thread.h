@@ -18,7 +18,7 @@
 
 #include <arch/ExecEnv.h>
 #include <kobj/Ec.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 #include <util/Atomic.h>
 #include <Syscalls.h>
 

@@ -17,8 +17,8 @@
 #pragma once
 
 #include <kobj/UserSm.h>
+#include <collection/SList.h>
 #include <util/ScopedLock.h>
-#include <util/SList.h>
 
 #include "RunningVM.h"
 

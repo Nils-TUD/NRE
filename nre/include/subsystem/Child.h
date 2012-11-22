@@ -24,9 +24,9 @@
 #include <kobj/Gsi.h>
 #include <kobj/Ports.h>
 #include <subsystem/ChildMemory.h>
-#include <util/PortManager.h>
-#include <util/BitField.h>
-#include <util/SList.h>
+#include <collection/SList.h>
+#include <region/PortManager.h>
+#include <bits/BitField.h>
 #include <RCU.h>
 #include <String.h>
 

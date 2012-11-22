@@ -19,8 +19,8 @@
 #include <arch/Types.h>
 #include <stream/OStream.h>
 #include <stream/OStringStream.h>
+#include <collection/DList.h>
 #include <util/Math.h>
-#include <util/DList.h>
 #include <util/Bytes.h>
 #include <Exception.h>
 

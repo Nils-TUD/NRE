@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/RegionManager.h>
+#include <region/RegionManager.h>
 #include <util/ScopedPtr.h>
 
 #include "RegMngTest.h"

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <util/SList.h>
+#include <collection/SList.h>
 
 namespace nre {
 

@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/SList.h>
+#include <collection/SList.h>
 
 #include "SListTest.h"
 

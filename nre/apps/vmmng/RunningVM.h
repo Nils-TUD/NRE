@@ -19,7 +19,7 @@
 #include <subsystem/Child.h>
 #include <ipc/Producer.h>
 #include <services/VMManager.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 
 #include "VMConfig.h"
 

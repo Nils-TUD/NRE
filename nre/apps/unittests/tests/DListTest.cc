@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/DList.h>
+#include <collection/DList.h>
 
 #include "DListTest.h"
 

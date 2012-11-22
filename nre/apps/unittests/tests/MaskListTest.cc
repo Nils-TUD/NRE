@@ -14,7 +14,7 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/MaskField.h>
+#include <bits/MaskField.h>
 
 #include "MaskFieldTest.h"
 

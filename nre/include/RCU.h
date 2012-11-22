@@ -18,10 +18,10 @@
 
 #include <kobj/Thread.h>
 #include <kobj/UserSm.h>
+#include <collection/SList.h>
 #include <util/ScopedLock.h>
 #include <util/Sync.h>
 #include <util/Util.h>
-#include <util/SList.h>
 
 /**
  * Usage:

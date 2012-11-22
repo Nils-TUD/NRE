@@ -19,7 +19,7 @@
 
 #include <arch/Types.h>
 #include <services/ACPI.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 #include <Compiler.h>
 
 class HostACPI {

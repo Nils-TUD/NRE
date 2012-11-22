@@ -20,7 +20,7 @@
 
 #include <arch/Types.h>
 #include <mem/DataSpace.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 #include <util/Math.h>
 #include <Compiler.h>
 

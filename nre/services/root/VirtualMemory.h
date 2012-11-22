@@ -17,7 +17,7 @@
 #pragma once
 
 #include <kobj/UserSm.h>
-#include <util/RegionManager.h>
+#include <region/RegionManager.h>
 #include <util/ScopedLock.h>
 
 /**

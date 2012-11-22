@@ -20,7 +20,7 @@
 #include <ipc/Service.h>
 #include <cap/CapSelSpace.h>
 #include <kobj/Pt.h>
-#include <util/BitField.h>
+#include <bits/BitField.h>
 #include <CPU.h>
 
 namespace nre {

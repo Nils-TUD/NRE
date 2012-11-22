@@ -18,7 +18,7 @@
 #pragma once
 
 #include <arch/Types.h>
-#include <util/QuickSort.h>
+#include <collection/QuickSort.h>
 #include <CPU.h>
 
 namespace nre {

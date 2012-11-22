@@ -27,7 +27,7 @@
 #include <Exception.h>
 #include <util/ScopedPtr.h>
 #include <util/CPUSet.h>
-#include <util/BitField.h>
+#include <bits/BitField.h>
 #include <RCU.h>
 #include <CPU.h>
 #include <util/Math.h>

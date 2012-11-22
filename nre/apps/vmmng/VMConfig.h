@@ -18,7 +18,7 @@
 
 #include <mem/DataSpace.h>
 #include <subsystem/ChildManager.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 
 class VMConfig;
 

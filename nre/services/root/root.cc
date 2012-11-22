@@ -20,8 +20,8 @@
 #include <subsystem/ChildManager.h>
 #include <subsystem/ChildHip.h>
 #include <ipc/Service.h>
+#include <collection/Cycler.h>
 #include <util/Math.h>
-#include <util/Cycler.h>
 #include <util/Bytes.h>
 #include <String.h>
 #include <Hip.h>

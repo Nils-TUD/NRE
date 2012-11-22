@@ -35,7 +35,7 @@ public:
      * @param begin the iterator-beginning
      * @param end the iterator-end
      */
-    BaseCycler(It begin, It end) : LockPolicy(), _begin(begin), _end(end), _it(begin) {
+    explicit BaseCycler(It begin, It end) : LockPolicy(), _begin(begin), _end(end), _it(begin) {
     }
 
     /**
@@ -87,7 +87,7 @@ public:
      * @param begin the iterator-beginning
      * @param end the iterator-end
      */
-    ForwardCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
+    explicit ForwardCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
     }
 
     /**
@@ -119,7 +119,7 @@ public:
      * @param begin the iterator-beginning
      * @param end the iterator-end
      */
-    BackwardsCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
+    explicit BackwardsCycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end) {
     }
 
     /**
@@ -151,9 +151,9 @@ public:
      * @param begin the iterator-beginning
      * @param end the iterator-end
      */
-    Cycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end),
-                               ForwardCycler<It, LockPolicy>(begin, end),
-                               BackwardsCycler<It, LockPolicy>(begin, end) {
+    explicit Cycler(It begin, It end) : BaseCycler<It, LockPolicy>(begin, end),
+                                        ForwardCycler<It, LockPolicy>(begin, end),
+                                        BackwardsCycler<It, LockPolicy>(begin, end) {
     }
 };
 

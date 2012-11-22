@@ -19,8 +19,8 @@
 #include <services/Timer.h>
 #include <stream/Serial.h>
 #include <stream/ConsoleStream.h>
+#include <collection/Cycler.h>
 #include <util/Clock.h>
-#include <util/Cycler.h>
 #include <Hip.h>
 
 #include "VMConfig.h"

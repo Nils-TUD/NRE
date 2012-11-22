@@ -32,7 +32,7 @@
 #include <services/Timer.h>
 #include <util/DMA.h>
 #include <util/Date.h>
-#include <util/MaskField.h>
+#include <bits/MaskField.h>
 #include <Exception.h>
 
 using namespace nre;

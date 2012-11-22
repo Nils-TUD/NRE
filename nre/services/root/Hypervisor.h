@@ -19,8 +19,8 @@
 #include <kobj/Pt.h>
 #include <kobj/Ports.h>
 #include <cap/CapRange.h>
-#include <util/PortManager.h>
-#include <util/BitField.h>
+#include <region/PortManager.h>
+#include <bits/BitField.h>
 #include <Hip.h>
 
 /**

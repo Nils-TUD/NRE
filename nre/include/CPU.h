@@ -17,7 +17,7 @@
 #pragma once
 
 #include <kobj/Thread.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 #include <Assert.h>
 #include <Hip.h>
 

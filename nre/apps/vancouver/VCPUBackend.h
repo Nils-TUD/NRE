@@ -24,7 +24,7 @@
 #include <kobj/VCpu.h>
 #include <kobj/Sc.h>
 #include <utcb/UtcbFrame.h>
-#include <util/SList.h>
+#include <collection/SList.h>
 #include <Assert.h>
 #include <Compiler.h>
 

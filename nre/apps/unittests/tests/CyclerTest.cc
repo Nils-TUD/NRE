@@ -14,9 +14,9 @@
  * General Public License version 2 for more details.
  */
 
-#include <util/SList.h>
-#include <util/DList.h>
-#include <util/Cycler.h>
+#include <collection/SList.h>
+#include <collection/DList.h>
+#include <collection/Cycler.h>
 
 #include "CyclerTest.h"
 

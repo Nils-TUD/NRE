@@ -18,7 +18,7 @@
 
 #include <mem/DataSpace.h>
 #include <kobj/UserSm.h>
-#include <util/Treap.h>
+#include <collection/Treap.h>
 #include <Exception.h>
 
 namespace nre {
