@@ -89,10 +89,10 @@ Reporting errors:
 
 If you encounter a bug, you'll often see a backtrace that looks like this:
 
-> [4] Backtrace:
-> [4] 0000:0003:0030:a4d2
-> [4] 0000:0003:0030:2210
-> [4] 0000:0003:0030:fd5c
+> [4] Backtrace:  
+> [4] 0000:0003:0030:a4d2  
+> [4] 0000:0003:0030:2210  
+> [4] 0000:0003:0030:fd5c  
 
 You can start `./b trace=<app>`, where `<app>` is e.g. `root`, and simply paste
 the backtrace in there to decode it. Please always post the decoded backtrace,
