@@ -36,7 +36,7 @@ Please take the following steps:
     the help of the script. For a quick start use `./b qemu boot/test` to run
     the test application in qemu.
 6.  To use `./b srv <script>`, you have to generate the novaboot-config by:  
-    `./tools/novaboot --dump-config > ~/.novaboot`
+    `./tools/novaboot --dump-config > ~/.novaboot`  
     You might want to adjust it afterwards
 
 Note that there are few boot-scripts that require additional binaries and
@@ -63,6 +63,41 @@ can also be changed via modifier=x in the cmdline of console:
 * ctrl + up/down: switch between subconsoles
 * ctrl + 0..9: switch to console 0..9. You can also use esc to get to console 0
 * ctrl + end: reboot the host-machine
+
+
+Debugging:
+----------
+
+In case you experience a problem and would like to debug it, here are a few
+general suggestions on how to hunt it down:
+
+* Do always use the debug build of NRE to find errors, as long as they occur in
+  debug mode.
+* You can enable/disable logging output in nre/include/Logging.h. Especially,
+  it might be helpful to turn on EXCEPTIONS in order to see every thrown
+  exception.
+* It might also help to enable logging in NOVA by enabling some log-types in
+  kernel/nova/include/stdio.h.
+* To remote debug the system running in qemu via gdb, you can use
+  `./b dbg=<app> <bootscript>`. This will start `<bootscript>` and use the
+  debugging symbols of `<app>`. Since every NRE application is linked to a
+  different address you shouldn't interfere with others.
+
+
+Reporting errors:
+-----------------
+
+If you encounter a bug, you'll often see a backtrace that looks like this:
+
+> [4] Backtrace:
+> [4] 0000:0003:0030:a4d2
+> [4] 0000:0003:0030:2210
+> [4] 0000:0003:0030:fd5c
+
+You can start `./b trace=<app>`, where `<app>` is e.g. `root`, and simply paste
+the backtrace in there to decode it. Please always post the decoded backtrace,
+because the addresses might map to different code for different people.
+Errors should be reported via the [issue tracker on github](https://github.com/TUD-OS/NRE/issues).
 
 
 Limitations:
